@@ -758,7 +758,7 @@ class CubBot:
                 return False
             return True
         except Exception as e:
-            logger.debug(f'Helix send failed in #{channel}: {e}')
+            logger.warning(f'Helix send failed in #{channel}: {e}')
             return False
 
     def timeout(self, user, channel, seconds=600, reason=''):

@@ -871,8 +871,9 @@ def admin_callback():
     import json as _json
     creds_path = _data_dir() / 'bot_credentials.json'
     creds_path.write_text(_json.dumps({
-        'oauth_token': access_token,
-        'bot_nick':    nick,
+        'oauth_token':   access_token,
+        'refresh_token': token_data.get('refresh_token', ''),
+        'bot_nick':      nick,
     }, indent=2))
 
     bot = get_bot()

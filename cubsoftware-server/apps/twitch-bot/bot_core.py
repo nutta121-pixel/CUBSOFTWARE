@@ -15,6 +15,7 @@ import ast
 import operator
 import urllib.request
 import urllib.parse
+import urllib.error
 import datetime
 import os
 import logging
@@ -714,6 +715,80 @@ class CubBot:
             self._bot_user_id = uid
         return uid
 
+    def _refresh_bot_token(self) -> str:
+        """Refresh the bot's user access token using the stored refresh token.
+        Saves the new token to bot_credentials.json. Returns new token or ''."""
+        creds_path = _data_dir() / 'bot_credentials.json'
+        try:
+            creds = json.loads(creds_path.read_text()) if creds_path.exists() else {}
+        except Exception:
+            return ''
+        refresh_token = creds.get('refresh_token', '')
+        if not refresh_token:
+            return ''
+        client_id     = os.environ.get('TWITCH_CLIENT_ID', '9n9yjc79p44kpsluv81kvvh6h9bxvu')
+        client_secret = os.environ.get('TWITCH_CLIENT_SECRET', '')
+        if not client_secret:
+            return ''
+        try:
+            payload = urllib.parse.urlencode({
+                'grant_type':    'refresh_token',
+                'refresh_token': refresh_token,
+                'client_id':     client_id,
+                'client_secret': client_secret,
+            }).encode()
+            req = urllib.request.Request(
+                'https://id.twitch.tv/oauth2/token',
+                data=payload, method='POST',
+            )
+            with urllib.request.urlopen(req, timeout=10) as r:
+                data = json.loads(r.read())
+            new_token = data.get('access_token', '')
+            if new_token:
+                creds['oauth_token']   = new_token
+                creds['refresh_token'] = data.get('refresh_token', refresh_token)
+                creds_path.write_text(json.dumps(creds, indent=2))
+                logger.info('CubAssist: bot token refreshed')
+            return new_token
+        except Exception as e:
+            logger.warning(f'Bot token refresh failed: {e}')
+            return ''
+
+    def _helix_send_with_token(self, token: str, broadcaster_id: str,
+                                bot_user_id: str, message: str):
+        """POST to /helix/chat/messages. Returns True on success, None on 401, False on other error."""
+        client_id = os.environ.get('TWITCH_CLIENT_ID', '9n9yjc79p44kpsluv81kvvh6h9bxvu')
+        try:
+            payload = json.dumps({
+                'broadcaster_id': broadcaster_id,
+                'sender_id':      bot_user_id,
+                'message':        message,
+            }).encode()
+            req = urllib.request.Request(
+                'https://api.twitch.tv/helix/chat/messages',
+                data=payload, method='POST',
+                headers={
+                    'Client-Id':     client_id,
+                    'Authorization': f'Bearer {token}',
+                    'Content-Type':  'application/json',
+                },
+            )
+            with urllib.request.urlopen(req, timeout=5) as r:
+                resp = json.loads(r.read())
+            drop = (resp.get('data') or [{}])[0].get('drop_reason')
+            if drop:
+                logger.warning(f'Helix message dropped: {drop}')
+                return False
+            return True
+        except urllib.error.HTTPError as e:
+            if e.code == 401:
+                return None   # signal: token expired, caller should refresh
+            logger.warning(f'Helix send HTTP error: {e.code} {e.reason}')
+            return False
+        except Exception as e:
+            logger.warning(f'Helix send error: {e}')
+            return False
+
     # ── Sending ───────────────────────────────────────────────────────────
 
     def send(self, message, channel):
@@ -725,38 +800,25 @@ class CubBot:
             self._raw(f'PRIVMSG #{channel} :{message}')
 
     def _try_helix_send(self, message: str, channel: str) -> bool:
-        """POST to /helix/chat/messages with app access token for the Chat Bot badge.
-        Returns True on success, False if unavailable or failed (IRC fallback kicks in)."""
+        """POST to /helix/chat/messages using bot user token (gives Chat Bot badge).
+        Auto-refreshes token on 401. Falls back to IRC on failure."""
         try:
-            app_token      = self._get_app_token()
-            if not app_token:
+            # Use the bot's user access token (user:write:chat scope)
+            creds = get_bot_credentials()
+            token = creds.get('oauth_token', '').replace('oauth:', '').strip()
+            if not token:
                 return False
             broadcaster_id = self._get_broadcaster_id(channel)
             bot_user_id    = self._get_bot_user_id()
             if not broadcaster_id or not bot_user_id:
                 return False
-            client_id = os.environ.get('TWITCH_CLIENT_ID', '9n9yjc79p44kpsluv81kvvh6h9bxvu')
-            payload = json.dumps({
-                'broadcaster_id': broadcaster_id,
-                'sender_id':      bot_user_id,
-                'message':        message,
-            }).encode()
-            req = urllib.request.Request(
-                'https://api.twitch.tv/helix/chat/messages',
-                data=payload, method='POST',
-                headers={
-                    'Client-Id':     client_id,
-                    'Authorization': f'Bearer {app_token}',
-                    'Content-Type':  'application/json',
-                },
-            )
-            with urllib.request.urlopen(req, timeout=5) as r:
-                resp = json.loads(r.read())
-            drop = (resp.get('data') or [{}])[0].get('drop_reason')
-            if drop:
-                logger.warning(f'Helix message dropped in #{channel}: {drop}')
-                return False
-            return True
+            result = self._helix_send_with_token(token, broadcaster_id, bot_user_id, message)
+            if result is None:
+                # 401 — token expired, try to refresh
+                new_token = self._refresh_bot_token()
+                if new_token:
+                    result = self._helix_send_with_token(new_token, broadcaster_id, bot_user_id, message)
+            return bool(result)
         except Exception as e:
             logger.warning(f'Helix send failed in #{channel}: {e}')
             return False

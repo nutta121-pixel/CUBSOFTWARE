@@ -111,7 +111,10 @@ const defaultSettings = {
     accentColor: '#5865f2',
     opacity: 100,
     collapsedSections: [],
-    previewAppName: ''
+    previewAppName: '',
+    autoStartRotation: false,
+    savedRotationProfiles: [],
+    savedRotationInterval: 60
 };
 
 let settings = { ...defaultSettings };

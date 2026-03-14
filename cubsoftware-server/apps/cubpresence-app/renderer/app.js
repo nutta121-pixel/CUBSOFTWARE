@@ -122,6 +122,10 @@ function applySettingsToUI() {
     setVal('settingHotkeyConnect', settings.globalHotkeyConnect || '');
     setVal('settingHotkeyDisconnect', settings.globalHotkeyDisconnect || '');
     setVal('settingPreviewAppName', settings.previewAppName || '');
+    set('autoStartRotation', settings.autoStartRotation);
+
+    const rotationIntervalEl = document.getElementById('rotationInterval');
+    if (rotationIntervalEl && settings.savedRotationInterval) rotationIntervalEl.value = settings.savedRotationInterval;
 
     const opacityLabel = document.getElementById('opacityLabel');
     if (opacityLabel) opacityLabel.textContent = (settings.opacity ?? 100) + '%';
@@ -225,6 +229,21 @@ function updateStatus(state, message, connTime) {
     if (state === 'connected') {
         setConnectedUI();
         if (connTime) startConnectionTimer(connTime);
+        if (settings.autoStartRotation && !rotationActive) {
+            const savedProfiles = settings.savedRotationProfiles || [];
+            const interval = settings.savedRotationInterval || 60;
+            if (savedProfiles.length >= 2) {
+                window.cubpresence.startRotation({ profiles: savedProfiles, interval }).then(ok => {
+                    if (ok) {
+                        rotationActive = true;
+                        const btn = document.getElementById('rotationBtn');
+                        if (btn) { btn.textContent = 'Stop Rotation'; btn.classList.add('btn-danger-state'); }
+                        const info = document.getElementById('rotationInfo');
+                        if (info) info.textContent = 'Rotation active (auto-started)';
+                    }
+                });
+            }
+        }
     } else if (state === 'disconnected' || state === 'error') {
         setDisconnectedUI();
         stopConnectionTimer();
@@ -650,6 +669,16 @@ function updateRotationProfileList() {
             <span>${escapeHtml(name)}</span>
         </label>
     `).join('') || '<p class="hint">No saved profiles yet</p>';
+
+    // Restore saved selections
+    const saved = settings.savedRotationProfiles || [];
+    container.querySelectorAll('.rotation-profile-cb').forEach(cb => {
+        if (saved.includes(cb.value)) cb.checked = true;
+        cb.addEventListener('change', () => {
+            settings.savedRotationProfiles = [...document.querySelectorAll('.rotation-profile-cb:checked')].map(c => c.value);
+            saveSettings();
+        });
+    });
 }
 
 async function toggleRotation() {
@@ -664,6 +693,9 @@ async function toggleRotation() {
             await window.cubpresence.showMessageBox({ type: 'warning', title: 'Rotation', message: 'Select at least 2 profiles to rotate between.', buttons: ['OK'] });
             return;
         }
+        settings.savedRotationProfiles = selected;
+        settings.savedRotationInterval = interval;
+        saveSettings();
         const ok = await window.cubpresence.startRotation({ profiles: selected, interval });
         if (ok) {
             rotationActive = true;
@@ -869,6 +901,14 @@ function setupEventListeners() {
 
     // Rotation
     document.getElementById('rotationBtn').addEventListener('click', toggleRotation);
+    document.getElementById('autoStartRotation')?.addEventListener('change', (e) => {
+        settings.autoStartRotation = e.target.checked;
+        saveSettings();
+    });
+    document.getElementById('rotationInterval')?.addEventListener('change', (e) => {
+        settings.savedRotationInterval = Math.max(5, parseInt(e.target.value, 10) || 60);
+        saveSettings();
+    });
 
     // Section collapse toggles
     document.querySelectorAll('.section-toggle').forEach(btn => {
@@ -1039,7 +1079,8 @@ async function clearAllData() {
         autoReconnect: true, alwaysOnTop: false, trayOnlyMode: false,
         compactMode: false, fontSize: 'normal', accentColor: '#5865f2',
         opacity: 100, collapsedSections: [], previewAppName: '',
-        globalHotkeyConnect: 'Ctrl+Shift+C', globalHotkeyDisconnect: 'Ctrl+Shift+D'
+        globalHotkeyConnect: 'Ctrl+Shift+C', globalHotkeyDisconnect: 'Ctrl+Shift+D',
+        autoStartRotation: false, savedRotationProfiles: [], savedRotationInterval: 60
     };
     await window.cubpresence.saveSettings(settings);
     applySettingsToUI();

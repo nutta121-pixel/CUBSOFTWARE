@@ -10094,10 +10094,11 @@ def get_user_bot_guilds(user_guilds):
 
     # Also include guilds that have an enabled custom bot — these act as the main bot
     custom_bots_data = _load_custom_bots()
-    custom_bot_guild_ids = {
-        gid for gid, entry in custom_bots_data.get('guilds', {}).items()
+    custom_bot_entries = {
+        gid: entry for gid, entry in custom_bots_data.get('guilds', {}).items()
         if entry.get('enabled') and entry.get('token')
     }
+    custom_bot_guild_ids = set(custom_bot_entries.keys())
 
     # A guild qualifies if either the main bot OR a custom bot is present
     all_covered_guild_ids = bot_guild_ids | custom_bot_guild_ids
@@ -10108,33 +10109,51 @@ def get_user_bot_guilds(user_guilds):
 
     shared_guilds = []
     for guild in user_guilds:
-        if guild['id'] in all_covered_guild_ids:
-            permissions = int(guild.get('permissions', 0))
-            is_owner = guild.get('owner', False)
-            is_admin = (permissions & 0x8) == 0x8 or (permissions & 0x20) == 0x20
-            is_bot_master = user_id in bot_masters_data.get(guild['id'], [])
+        if guild['id'] not in all_covered_guild_ids:
+            continue
 
-            if is_owner:
-                role_label = 'Owner'
-                role_class = 'owner'
-            elif is_admin or is_bot_master:
-                role_label = 'Bot Master'
-                role_class = 'admin'
-            else:
-                role_label = 'Member'
-                role_class = 'member'
+        permissions = int(guild.get('permissions', 0))
+        is_owner = guild.get('owner', False)
+        is_admin = (permissions & 0x8) == 0x8 or (permissions & 0x20) == 0x20
+        is_bot_master = user_id in bot_masters_data.get(guild['id'], [])
 
-            shared_guilds.append({
-                'id': guild['id'],
-                'name': guild['name'],
-                'icon': guild.get('icon'),
-                'owner': is_owner,
-                'permissions': permissions,
-                'role_label': role_label,
-                'role_class': role_class,
-                'member_count': bot_guild_counts.get(guild['id']),
-                'has_custom_bot': guild['id'] in custom_bot_guild_ids,
-            })
+        if is_owner:
+            role_label = 'Owner'
+            role_class = 'owner'
+        elif is_admin or is_bot_master:
+            role_label = 'Bot Master'
+            role_class = 'admin'
+        else:
+            role_label = 'Member'
+            role_class = 'member'
+
+        # Member count: from main bot if present, otherwise fetch via custom bot token
+        member_count = bot_guild_counts.get(guild['id'])
+        if member_count is None and guild['id'] in custom_bot_entries:
+            try:
+                token = custom_bot_entries[guild['id']]['token']
+                resp = requests.get(
+                    f"https://discord.com/api/v10/guilds/{guild['id']}",
+                    headers={'Authorization': f'Bot {token}', 'Content-Type': 'application/json'},
+                    params={'with_counts': 'true'},
+                    timeout=5,
+                )
+                if resp.status_code == 200:
+                    member_count = resp.json().get('approximate_member_count')
+            except Exception:
+                pass
+
+        shared_guilds.append({
+            'id': guild['id'],
+            'name': guild['name'],
+            'icon': guild.get('icon'),
+            'owner': is_owner,
+            'permissions': permissions,
+            'role_label': role_label,
+            'role_class': role_class,
+            'member_count': member_count,
+            'has_custom_bot': guild['id'] in custom_bot_guild_ids,
+        })
 
     return shared_guilds
 

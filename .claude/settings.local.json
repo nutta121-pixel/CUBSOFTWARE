@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "WebFetch(domain:help.twitch.tv)",
+      "WebFetch(domain:dev.twitch.tv)",
+      "WebSearch",
+      "WebFetch(domain:discuss.dev.twitch.com)"
+    ]
+  }
+}

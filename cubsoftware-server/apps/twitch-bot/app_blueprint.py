@@ -22,6 +22,8 @@ from bot_core import (
     load_channel_config, save_channel_config,
     register_channel, unregister_channel, get_channels,
     load_config,
+    _load_watchtime, _load_warnings, _save_warnings,
+    _load_user_notes, _save_user_notes,
 )
 
 cubassist_bp = Blueprint(
@@ -97,7 +99,7 @@ def login():
         'client_id':     TWITCH_CLIENT_ID,
         'redirect_uri':  LOGIN_REDIRECT_URI,
         'response_type': 'code',
-        'scope':         'user:write:chat moderation:read',
+        'scope':         'user:write:chat moderation:read channel:bot',
         'state':         state,
         'force_verify':  'true',
     })
@@ -429,6 +431,250 @@ def api_delete_customvar(name):
     save_channel_config(channel, cfg)
     return jsonify({'ok': True})
 
+# ── Giveaway ────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/giveaway', methods=['GET'])
+def api_giveaway_get():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    state   = get_bot()._channels.get(channel)
+    if not state:
+        return jsonify({'active': False, 'entries_open': False, 'prize': '', 'entries': [], 'winner': None, 'started_ts': 0})
+    gw = dict(state.giveaway)
+    gw['entry_count'] = len(gw.get('entries', []))
+    return jsonify(gw)
+
+@cubassist_bp.route('/api/giveaway/start', methods=['POST'])
+def api_giveaway_start():
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    prize   = body.get('prize', 'a prize').strip() or 'a prize'
+    channel = _user_channel()
+    bot     = get_bot()
+    state   = bot._channels.get(channel)
+    if not state:
+        return jsonify({'error': 'Bot not connected to channel'}), 400
+    state.giveaway = {'active': True, 'entries_open': True, 'prize': prize,
+                      'entries': [], 'winner': None, 'started_ts': int(time.time())}
+    bot.send(f'🎉 Giveaway started! Prize: {prize} — type !enter to join!', channel)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/giveaway/draw', methods=['POST'])
+def api_giveaway_draw():
+    err = _require_auth()
+    if err: return err
+    import random as _random
+    body    = request.get_json(silent=True) or {}
+    redraw  = body.get('redraw', False)
+    channel = _user_channel()
+    bot     = get_bot()
+    state   = bot._channels.get(channel)
+    if not state or not state.giveaway.get('active'):
+        return jsonify({'error': 'No active giveaway'}), 400
+    entries = state.giveaway.get('entries', [])
+    if redraw:
+        prev    = (state.giveaway.get('winner') or {}).get('user_id', '')
+        entries = [e for e in entries if e.get('user_id') != prev]
+    if not entries:
+        return jsonify({'error': 'No entries'}), 400
+    winner = _random.choice(entries)
+    state.giveaway['winner'] = winner
+    state.giveaway['entries_open'] = False
+    label = 'Redraw! New winner' if redraw else 'The winner is'
+    bot.send(f'🎊 {label}: @{winner["nick"]}! Congratulations! 🎉', channel)
+    return jsonify({'ok': True, 'winner': winner})
+
+@cubassist_bp.route('/api/giveaway/end', methods=['POST'])
+def api_giveaway_end():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    bot     = get_bot()
+    state   = bot._channels.get(channel)
+    if state:
+        state.giveaway = {'active': False, 'entries_open': False, 'prize': '',
+                          'entries': [], 'winner': None, 'started_ts': 0}
+        bot.send('Giveaway ended.', channel)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/giveaway/toggle-entries', methods=['POST'])
+def api_giveaway_toggle_entries():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    bot     = get_bot()
+    state   = bot._channels.get(channel)
+    if not state or not state.giveaway.get('active'):
+        return jsonify({'error': 'No active giveaway'}), 400
+    state.giveaway['entries_open'] = not state.giveaway.get('entries_open', False)
+    open_ = state.giveaway['entries_open']
+    msg   = '✅ Entries are open! Type !enter to join!' if open_ else f'🔒 Entries closed. {len(state.giveaway["entries"])} in the draw.'
+    bot.send(msg, channel)
+    return jsonify({'ok': True, 'entries_open': open_})
+
+# ── Poll ─────────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/poll', methods=['GET'])
+def api_poll_get():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    state   = get_bot()._channels.get(channel)
+    if not state:
+        return jsonify({'active': False, 'question': '', 'options': [], 'votes': {}, 'started_ts': 0})
+    p = dict(state.poll)
+    p.pop('voted', None)  # don't expose the set of user IDs
+    p['total_votes'] = sum(p.get('votes', {}).values())
+    return jsonify(p)
+
+@cubassist_bp.route('/api/poll/start', methods=['POST'])
+def api_poll_start():
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    question = body.get('question', '').strip()
+    options  = [o.strip() for o in body.get('options', []) if str(o).strip()]
+    if not question or len(options) < 2:
+        return jsonify({'error': 'Question and at least 2 options required'}), 400
+    channel = _user_channel()
+    bot     = get_bot()
+    state   = bot._channels.get(channel)
+    if not state:
+        return jsonify({'error': 'Bot not connected to channel'}), 400
+    state.poll = {
+        'active': True, 'question': question, 'options': options,
+        'votes':  {str(i + 1): 0 for i in range(len(options))},
+        'voted':  set(), 'started_ts': int(time.time()),
+    }
+    opts_str = ' | '.join(f'{i+1}) {o}' for i, o in enumerate(options))
+    bot.send(f'📊 Poll: {question} · {opts_str} · Vote: !vote <number>', channel)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/poll/end', methods=['POST'])
+def api_poll_end():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    bot     = get_bot()
+    state   = bot._channels.get(channel)
+    if not state or not state.poll.get('active'):
+        return jsonify({'error': 'No active poll'}), 400
+    state.poll['active'] = False
+    bot.send(bot._poll_results_str(state.poll), channel)
+    return jsonify({'ok': True, 'results': {k: v for k, v in state.poll['votes'].items()}})
+
+# ── Points ───────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/points', methods=['GET'])
+def api_points_get():
+    err = _require_auth()
+    if err: return err
+    from bot_core import _load_points
+    channel  = _user_channel()
+    cfg      = load_channel_config(channel)
+    pts      = _load_points(channel)
+    top      = sorted(pts.items(), key=lambda x: x[1], reverse=True)[:50]
+    pts_cfg  = cfg.get('points_config', {'enabled': False, 'name': 'points', 'per_message': 0, 'per_minute': 0})
+    return jsonify({'config': pts_cfg, 'leaderboard': [{'nick': n, 'balance': b} for n, b in top], 'total_users': len(pts)})
+
+@cubassist_bp.route('/api/points/config', methods=['POST'])
+def api_points_config():
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    channel = _user_channel()
+    cfg     = load_channel_config(channel)
+    current = cfg.get('points_config', {})
+    if 'enabled'     in body: current['enabled']     = bool(body['enabled'])
+    if 'name'        in body: current['name']        = str(body['name']).strip() or 'points'
+    if 'per_message' in body: current['per_message'] = max(0, int(body.get('per_message', 0)))
+    if 'per_minute'  in body: current['per_minute']  = max(0, int(body.get('per_minute', 0)))
+    cfg['points_config'] = current
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True, 'config': current})
+
+@cubassist_bp.route('/api/points/adjust', methods=['POST'])
+def api_points_adjust():
+    err = _require_auth()
+    if err: return err
+    from bot_core import _load_points, _save_points
+    body    = request.get_json(silent=True) or {}
+    nick    = body.get('nick', '').strip().lower()
+    amount  = int(body.get('amount', 0))
+    if not nick:
+        return jsonify({'error': 'nick required'}), 400
+    channel = _user_channel()
+    pts     = _load_points(channel)
+    pts[nick] = max(0, pts.get(nick, 0) + amount)
+    _save_points(channel, pts)
+    return jsonify({'ok': True, 'nick': nick, 'balance': pts[nick]})
+
+# ── Queue ────────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/queue', methods=['GET'])
+def api_queue_get():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    state   = get_bot()._channels.get(channel)
+    if not state:
+        return jsonify({'open': False, 'queue': []})
+    return jsonify({'open': state.queue_open, 'queue': state.queue})
+
+@cubassist_bp.route('/api/queue/open', methods=['POST'])
+def api_queue_open():
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    channel = _user_channel()
+    bot     = get_bot()
+    state   = bot._channels.get(channel)
+    if not state:
+        return jsonify({'error': 'Bot not connected'}), 400
+    open_   = bool(body.get('open', True))
+    state.queue_open = open_
+    if open_:
+        bot.send('✅ Queue is now open! Type !queue to join.', channel)
+    else:
+        bot.send(f'🔒 Queue closed. {len(state.queue)} in queue.', channel)
+    return jsonify({'ok': True, 'open': open_})
+
+@cubassist_bp.route('/api/queue/next', methods=['POST'])
+def api_queue_next():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    bot     = get_bot()
+    state   = bot._channels.get(channel)
+    if not state or not state.queue:
+        return jsonify({'error': 'Queue is empty'}), 400
+    entry = state.queue.pop(0)
+    content_str = f' [{entry["content"]}]' if entry.get('content') else ''
+    bot.send(f'🎮 Next up: @{entry["user"]}{content_str}! ({len(state.queue)} remaining)', channel)
+    return jsonify({'ok': True, 'entry': entry, 'remaining': len(state.queue)})
+
+@cubassist_bp.route('/api/queue/remove/<int:idx>', methods=['DELETE'])
+def api_queue_remove(idx):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    state   = get_bot()._channels.get(channel)
+    if state and 0 <= idx < len(state.queue):
+        state.queue.pop(idx)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/queue/clear', methods=['POST'])
+def api_queue_clear():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    state   = get_bot()._channels.get(channel)
+    if state:
+        state.queue = []
+    return jsonify({'ok': True})
+
 # ── Quotes ──────────────────────────────────────────────────────────────────────
 
 @cubassist_bp.route('/api/quotes', methods=['GET'])
@@ -655,6 +901,325 @@ def api_save_global_settings():
         gs['bot_auto_start'] = bool(body['bot_auto_start'])
     _save_global_settings(gs)
     return jsonify({'ok': True, **gs})
+
+# ── Song Queue ──────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/songs', methods=['GET'])
+def api_songs_get():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    state   = get_bot()._channels.get(channel)
+    cfg     = load_channel_config(channel)
+    return jsonify({
+        'open':   getattr(state, 'songs_open', True) if state else True,
+        'queue':  getattr(state, 'song_queue', []) if state else [],
+        'config': cfg.get('song_requests', {'enabled': False, 'max_per_user': 3}),
+    })
+
+@cubassist_bp.route('/api/songs/config', methods=['POST'])
+def api_songs_config():
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    channel = _user_channel()
+    cfg     = load_channel_config(channel)
+    sr      = cfg.setdefault('song_requests', {})
+    if 'enabled'      in body: sr['enabled']      = bool(body['enabled'])
+    if 'max_per_user' in body: sr['max_per_user'] = max(1, int(body.get('max_per_user', 3)))
+    save_channel_config(channel, cfg)
+    state = get_bot()._channels.get(channel)
+    if state and 'open' in body: state.songs_open = bool(body['open'])
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/songs/next', methods=['POST'])
+def api_songs_next():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    state   = get_bot()._channels.get(channel)
+    if not state or not state.song_queue:
+        return jsonify({'error': 'Queue is empty'}), 400
+    song = state.song_queue.pop(0)
+    get_bot().send(f'⏭ Now playing: {song["content"]} (requested by {song["user"]})', channel)
+    return jsonify({'ok': True, 'song': song})
+
+@cubassist_bp.route('/api/songs/remove/<int:idx>', methods=['DELETE'])
+def api_songs_remove(idx):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    state   = get_bot()._channels.get(channel)
+    if state and 0 <= idx < len(state.song_queue):
+        state.song_queue.pop(idx)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/songs/clear', methods=['POST'])
+def api_songs_clear():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    state   = get_bot()._channels.get(channel)
+    if state: state.song_queue = []
+    return jsonify({'ok': True})
+
+# ── Warnings ────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/warnings', methods=['GET'])
+def api_warnings_get():
+    err = _require_auth()
+    if err: return err
+    return jsonify(_load_warnings(_user_channel()))
+
+@cubassist_bp.route('/api/warnings/<nick>', methods=['DELETE'])
+def api_warnings_clear(nick):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    warns   = _load_warnings(channel)
+    warns.pop(nick.lower(), None)
+    _save_warnings(channel, warns)
+    return jsonify({'ok': True})
+
+# ── User Notes ──────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/notes', methods=['GET'])
+def api_notes_get():
+    err = _require_auth()
+    if err: return err
+    return jsonify(_load_user_notes(_user_channel()))
+
+@cubassist_bp.route('/api/notes', methods=['POST'])
+def api_notes_add():
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    nick    = body.get('nick', '').strip().lower()
+    note    = body.get('note', '').strip()
+    if not nick or not note:
+        return jsonify({'error': 'nick and note required'}), 400
+    channel = _user_channel()
+    user    = _authed()
+    notes   = _load_user_notes(channel)
+    notes.setdefault(nick, []).append({'note': note, 'by': user.get('login', 'dashboard'), 'ts': int(time.time())})
+    _save_user_notes(channel, notes)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/notes/<nick>/<int:idx>', methods=['DELETE'])
+def api_notes_delete(nick, idx):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    notes   = _load_user_notes(channel)
+    user_notes = notes.get(nick.lower(), [])
+    if 0 <= idx < len(user_notes):
+        user_notes.pop(idx)
+    _save_user_notes(channel, notes)
+    return jsonify({'ok': True})
+
+# ── Watchtime ───────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/watchtime', methods=['GET'])
+def api_watchtime_get():
+    err = _require_auth()
+    if err: return err
+    wt  = _load_watchtime(_user_channel())
+    top = sorted(wt.items(), key=lambda x: x[1], reverse=True)[:50]
+    return jsonify([{'nick': n, 'seconds': s} for n, s in top])
+
+# ── Ranks ────────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/ranks', methods=['GET'])
+def api_ranks_get():
+    err = _require_auth()
+    if err: return err
+    return jsonify(load_channel_config(_user_channel()).get('ranks', []))
+
+@cubassist_bp.route('/api/ranks', methods=['POST'])
+def api_ranks_save():
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    channel = _user_channel()
+    cfg     = load_channel_config(channel)
+    cfg['ranks'] = body.get('ranks', [])
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True})
+
+# ── Stream controls ─────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/stream/update', methods=['POST'])
+def api_stream_update():
+    """Change title and/or game via Helix API using broadcaster's token."""
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    user    = _authed()
+    token   = user.get('access_token', '')
+    user_id = user.get('id', '')
+    if not token or not user_id:
+        return jsonify({'error': 'Session expired — please re-login'}), 401
+
+    # Look up game_id if game name provided
+    game_name = body.get('game', '').strip()
+    game_id   = ''
+    if game_name:
+        try:
+            req = urllib.request.Request(
+                f'https://api.twitch.tv/helix/games?name={urllib.parse.quote(game_name)}',
+                headers={'Authorization': f'Bearer {token}', 'Client-Id': TWITCH_CLIENT_ID}
+            )
+            with urllib.request.urlopen(req, timeout=8) as r:
+                gdata = json.loads(r.read()).get('data', [])
+            if gdata:
+                game_id = gdata[0]['id']
+        except Exception:
+            pass
+
+    patch = {}
+    if 'title' in body and body['title']:
+        patch['title'] = body['title']
+    if game_id:
+        patch['game_id'] = game_id
+
+    if not patch:
+        return jsonify({'error': 'Nothing to update'}), 400
+
+    data = json.dumps(patch).encode()
+    req  = urllib.request.Request(
+        f'https://api.twitch.tv/helix/channels?broadcaster_id={user_id}',
+        data=data, method='PATCH',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Client-Id':     TWITCH_CLIENT_ID,
+            'Content-Type':  'application/json',
+        }
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=8) as r:
+            pass
+        return jsonify({'ok': True})
+    except urllib.error.HTTPError as e:
+        return jsonify({'error': f'Twitch API: {e.read().decode()}'}), 502
+
+@cubassist_bp.route('/api/stream/chatmode', methods=['POST'])
+def api_stream_chatmode():
+    """Send chat mode commands as the bot (slow, sub-only, emote-only)."""
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    mode    = body.get('mode', '')   # slow, slowoff, subscribers, subscribersoff, emoteonly, emoteonlyoff, clear
+    channel = _user_channel()
+    valid   = {'slow', 'slowoff', 'subscribers', 'subscribersoff', 'emoteonly', 'emoteonlyoff', 'clear'}
+    if mode not in valid:
+        return jsonify({'error': 'Invalid mode'}), 400
+    cmd = f'/{mode}'
+    if mode == 'slow' and 'seconds' in body:
+        cmd = f'/slow {int(body["seconds"])}'
+    get_bot().send(cmd, channel)
+    return jsonify({'ok': True})
+
+# ── Raid response config ─────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/raid-response', methods=['GET'])
+def api_raid_response_get():
+    err = _require_auth()
+    if err: return err
+    return jsonify(load_channel_config(_user_channel()).get('raid_response', {}))
+
+@cubassist_bp.route('/api/raid-response', methods=['POST'])
+def api_raid_response_save():
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    channel = _user_channel()
+    cfg     = load_channel_config(channel)
+    current = cfg.get('raid_response', {})
+    if 'enabled' in body: current['enabled'] = bool(body['enabled'])
+    if 'message' in body: current['message'] = str(body['message'])
+    cfg['raid_response'] = current
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True})
+
+# ── Discord Webhook ──────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/discord-webhook', methods=['GET'])
+def api_discord_webhook_get():
+    err = _require_auth()
+    if err: return err
+    cfg = load_channel_config(_user_channel())
+    url = cfg.get('discord_webhook', '')
+    masked = (url[:40] + '...') if len(url) > 40 else url
+    return jsonify({'configured': bool(url), 'masked': masked})
+
+@cubassist_bp.route('/api/discord-webhook', methods=['POST'])
+def api_discord_webhook_save():
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    url     = body.get('url', '').strip()
+    channel = _user_channel()
+    cfg     = load_channel_config(channel)
+    cfg['discord_webhook'] = url
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/discord-webhook/test', methods=['POST'])
+def api_discord_webhook_test():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    cfg     = load_channel_config(channel)
+    url     = cfg.get('discord_webhook', '')
+    if not url:
+        return jsonify({'error': 'No webhook configured'}), 400
+    user  = _authed()
+    data  = json.dumps({'content': f'✅ CubAssist webhook test from **{user.get("display_name", channel)}**\'s channel!'}).encode()
+    req   = urllib.request.Request(url, data=data, method='POST',
+                                   headers={'Content-Type': 'application/json'})
+    try:
+        with urllib.request.urlopen(req, timeout=8) as r:
+            pass
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 502
+
+# ── Analytics ───────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/analytics', methods=['GET'])
+def api_analytics():
+    err = _require_auth()
+    if err: return err
+    from bot_core import _load_points, _load_watchtime
+    channel = _user_channel()
+    state   = get_bot()._channels.get(channel)
+    logs    = state.chat_log[-500:] if state else []
+
+    # Top chatters from log
+    chatter_count = {}
+    for m in logs:
+        key = m['nick'].lower()
+        chatter_count[key] = chatter_count.get(key, 0) + 1
+    top_chatters = sorted(chatter_count.items(), key=lambda x: x[1], reverse=True)[:10]
+
+    # Command usage from config
+    cfg  = load_channel_config(channel)
+    cmds = cfg.get('commands', {})
+    cmd_usage = sorted(
+        [{'name': k, 'count': v.get('count', 0)} for k, v in cmds.items()],
+        key=lambda x: x['count'], reverse=True
+    )[:10]
+
+    pts = _load_points(channel)
+    wt  = _load_watchtime(channel)
+
+    return jsonify({
+        'top_chatters':  [{'nick': n, 'messages': c} for n, c in top_chatters],
+        'cmd_usage':     cmd_usage,
+        'total_points_users':    len(pts),
+        'total_watchtime_users': len(wt),
+        'messages_tracked':      len(logs),
+    })
 
 # ── Auto-start ──────────────────────────────────────────────────────────────────
 

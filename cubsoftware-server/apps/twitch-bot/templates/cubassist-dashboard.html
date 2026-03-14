@@ -99,7 +99,7 @@ body { overflow: hidden; }
 /* ── Main content ───────────────────────────────────────────────────── */
 .app-main { flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
 .tab { display: none; flex: 1; overflow-y: auto; padding: 28px 32px; }
-.tab.active { display: flex; flex-direction: column; gap: 24px; }
+.tab.active { display: flex; flex-direction: column; gap: 20px; }
 
 /* ── Cards ──────────────────────────────────────────────────────────── */
 .card {
@@ -301,6 +301,38 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 <span class="ni">🛡</span> AutoMod
             </div>
             <div class="nav-divider"></div>
+            <div class="nav-section-label">Live Tools</div>
+            <div class="nav-item" onclick="openTab('giveaway')" data-tab="giveaway">
+                <span class="ni">🎉</span> Giveaway
+            </div>
+            <div class="nav-item" onclick="openTab('polls')" data-tab="polls">
+                <span class="ni">📊</span> Polls
+            </div>
+            <div class="nav-item" onclick="openTab('points')" data-tab="points">
+                <span class="ni">🪙</span> Points
+            </div>
+            <div class="nav-item" onclick="openTab('queue')" data-tab="queue">
+                <span class="ni">🎮</span> Queue
+            </div>
+            <div class="nav-item" onclick="openTab('songs')" data-tab="songs">
+                <span class="ni">🎵</span> Song Queue
+            </div>
+            <div class="nav-item" onclick="openTab('minigames')" data-tab="minigames">
+                <span class="ni">🎰</span> Mini-Games
+            </div>
+            <div class="nav-item" onclick="openTab('modtools')" data-tab="modtools">
+                <span class="ni">🔨</span> Mod Tools
+            </div>
+            <div class="nav-item" onclick="openTab('analytics')" data-tab="analytics">
+                <span class="ni">📈</span> Analytics
+            </div>
+            <div class="nav-item" onclick="openTab('integrations')" data-tab="integrations">
+                <span class="ni">🔗</span> Integrations
+            </div>
+            <div class="nav-divider"></div>
+            <div class="nav-item" onclick="openVarWiki()" data-tab="">
+                <span class="ni">📖</span> Variable Wiki
+            </div>
             <div class="nav-item" onclick="openTab('settings')" data-tab="settings">
                 <span class="ni">⚙</span> Settings
             </div>
@@ -389,7 +421,7 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
             </div>
 
             <!-- Commands tab -->
-            <div class="tab" id="tab-commands" style="display:flex;flex-direction:column;gap:16px">
+            <div class="tab" id="tab-commands">
                 <div class="card">
                     <div class="card-title" style="justify-content:space-between">
                         <span>⚡ Custom Commands</span>
@@ -520,6 +552,338 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                             <textarea id="am_blacklist" rows="5" placeholder="badword&#10;another phrase" onchange="saveAutomod()"></textarea>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Giveaway tab -->
+            <div class="tab" id="tab-giveaway">
+                <div class="card" id="gwActiveCard" style="display:none">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>🎉 Active Giveaway</span>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-ghost btn-sm" id="gwToggleBtn" onclick="gwToggleEntries()">Close Entries</button>
+                            <button class="btn btn-primary btn-sm" onclick="gwDraw()">🎲 Draw Winner</button>
+                            <button class="btn btn-ghost btn-sm" onclick="gwDraw(true)">Redraw</button>
+                            <button class="btn btn-danger btn-sm" onclick="gwEnd()">End</button>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px">
+                        <div><span style="font-size:12px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px">Prize</span><div id="gwPrize" style="font-size:18px;font-weight:700;margin-top:4px"></div></div>
+                        <div><span style="font-size:12px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px">Entries</span><div id="gwCount" style="font-size:28px;font-weight:700;font-family:'Orbitron',sans-serif;margin-top:2px">0</div></div>
+                        <div><span style="font-size:12px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px">Status</span><div id="gwStatus" style="margin-top:6px"></div></div>
+                        <div id="gwWinnerBox" style="display:none"><span style="font-size:12px;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px">Winner</span><div id="gwWinner" style="font-size:16px;font-weight:700;color:var(--success);margin-top:4px"></div></div>
+                    </div>
+                    <p class="hint">Users type <code>!enter</code> in chat to join. Use <code>!giveaway close</code> to stop entries, then draw the winner.</p>
+                </div>
+                <div class="card" id="gwStartCard">
+                    <div class="card-title">🎉 Start a Giveaway</div>
+                    <div class="form-row" style="margin-bottom:14px">
+                        <div class="form-group">
+                            <label>Prize</label>
+                            <input type="text" id="gwPrizeInput" placeholder="e.g. Discord Nitro, Game Key, £10 Amazon Voucher">
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="gwStart()">🎉 Start Giveaway</button>
+                </div>
+            </div>
+
+            <!-- Polls tab -->
+            <div class="tab" id="tab-polls">
+                <div class="card" id="pollActiveCard" style="display:none">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>📊 Active Poll</span>
+                        <button class="btn btn-danger btn-sm" onclick="pollEnd()">End Poll</button>
+                    </div>
+                    <div id="pollQuestion" style="font-size:16px;font-weight:700;margin-bottom:16px"></div>
+                    <div id="pollBars" style="display:flex;flex-direction:column;gap:10px"></div>
+                    <p class="hint" style="margin-top:12px">Users vote with <code>!vote 1</code>, <code>!vote 2</code>, etc. Results update every 4 seconds.</p>
+                </div>
+                <div class="card" id="pollCreateCard">
+                    <div class="card-title">📊 Create a Poll</div>
+                    <div class="form-group" style="margin-bottom:14px">
+                        <label>Question</label>
+                        <input type="text" id="pollQInput" placeholder="What should we play next?">
+                    </div>
+                    <div id="pollOptionsContainer" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+                        <div class="form-group"><label>Option 1</label><input type="text" class="poll-opt" placeholder="Minecraft"></div>
+                        <div class="form-group"><label>Option 2</label><input type="text" class="poll-opt" placeholder="Fortnite"></div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-bottom:14px">
+                        <button class="btn btn-ghost btn-sm" onclick="pollAddOption()">+ Add Option</button>
+                        <button class="btn btn-ghost btn-sm" onclick="pollRemoveOption()">− Remove Option</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="pollStart()">📊 Start Poll</button>
+                </div>
+            </div>
+
+            <!-- Points tab -->
+            <div class="tab" id="tab-points">
+                <div class="card-row">
+                    <div class="card" style="flex:1">
+                        <div class="card-title">🪙 Points Settings</div>
+                        <div class="toggle-row">
+                            <div class="toggle-info"><strong>Enable Points System</strong><small>Track and award points to viewers</small></div>
+                            <label class="toggle"><input type="checkbox" id="pts_enabled" onchange="savePointsConfig()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="form-row" style="margin-top:16px">
+                            <div class="form-group">
+                                <label>Currency Name</label>
+                                <input type="text" id="pts_name" placeholder="points" oninput="savePointsConfig()">
+                            </div>
+                            <div class="form-group">
+                                <label>Earn per Message</label>
+                                <input type="number" id="pts_per_msg" value="1" min="0" max="100" oninput="savePointsConfig()">
+                            </div>
+                            <div class="form-group">
+                                <label>Earn per Minute (active viewers)</label>
+                                <input type="number" id="pts_per_min" value="5" min="0" max="1000" oninput="savePointsConfig()">
+                            </div>
+                        </div>
+                        <p class="hint" style="margin-top:10px">Chat commands: <code>!points</code> — check balance · <code>!leaderboard</code> — top 5 · <code>!addpoints @user N</code> (mod)</p>
+                    </div>
+                    <div class="card" style="flex:1">
+                        <div class="card-title" style="justify-content:space-between">
+                            <span>🏆 Leaderboard</span>
+                            <button class="btn btn-ghost btn-sm" onclick="loadPoints()">↻ Refresh</button>
+                        </div>
+                        <div id="ptsLeaderboard"><p class="hint">Loading...</p></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">✏️ Adjust Points</div>
+                    <div class="form-row" style="margin-bottom:12px">
+                        <div class="form-group">
+                            <label>Username (lowercase)</label>
+                            <input type="text" id="ptsAdjNick" placeholder="username">
+                        </div>
+                        <div class="form-group">
+                            <label>Amount (negative to remove)</label>
+                            <input type="number" id="ptsAdjAmount" placeholder="100">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="ptsAdjust()">Apply</button>
+                </div>
+            </div>
+
+            <!-- Queue tab -->
+            <div class="tab" id="tab-queue">
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>🎮 Queue</span>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <span id="queueStatusBadge" class="connected-badge off">Closed</span>
+                            <button class="btn btn-success btn-sm" id="queueOpenBtn" onclick="queueSetOpen(true)">Open Queue</button>
+                            <button class="btn btn-ghost btn-sm" id="queueCloseBtn" onclick="queueSetOpen(false)" style="display:none">Close Queue</button>
+                            <button class="btn btn-primary btn-sm" onclick="queueNext()">⏭ Next</button>
+                            <button class="btn btn-danger btn-sm" onclick="queueClear()">Clear</button>
+                        </div>
+                    </div>
+                    <p class="hint" style="margin-bottom:16px">Users type <code>!queue</code> to join, <code>!queue leave</code> to leave, <code>!queue pos</code> for position. Use <code>!queue MyIGN</code> to join with a note.</p>
+                    <div id="queueList"><p class="hint">Queue is empty.</p></div>
+                </div>
+            </div>
+
+            <!-- Songs tab -->
+            <div class="tab" id="tab-songs">
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>🎵 Song Requests</span>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <span id="songsStatusBadge" class="connected-badge off">Closed</span>
+                            <button class="btn btn-success btn-sm" id="songsOpenBtn" onclick="songsSetOpen(true)">Open Requests</button>
+                            <button class="btn btn-ghost btn-sm" id="songsCloseBtn" onclick="songsSetOpen(false)" style="display:none">Close Requests</button>
+                            <button class="btn btn-primary btn-sm" onclick="songsNext()">⏭ Skip</button>
+                            <button class="btn btn-danger btn-sm" onclick="songsClear()">Clear</button>
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-bottom:16px">
+                        <div class="form-group" style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                            <label class="toggle" style="flex-shrink:0"><input type="checkbox" id="sr_enabled" onchange="saveSongsConfig()"><span class="toggle-slider"></span></label>
+                            <span style="font-size:13px">Enable <code>!sr</code> command</span>
+                            <div class="form-group" style="min-width:120px">
+                                <label>Max per user</label>
+                                <input type="number" id="sr_max" value="3" min="1" max="20" oninput="saveSongsConfig()">
+                            </div>
+                        </div>
+                    </div>
+                    <p class="hint" style="margin-bottom:16px">Users type <code>!sr song name</code> or <code>!sr URL</code>. Mods: <code>!skipsong</code> · <code>!clearsongs</code></p>
+                    <div id="songsList"><p class="hint">Queue is empty.</p></div>
+                </div>
+            </div>
+
+            <!-- Mini-Games tab -->
+            <div class="tab" id="tab-minigames">
+                <div class="card">
+                    <div class="card-title">🎰 Mini-Games &amp; Gambling</div>
+                    <p class="hint" style="margin-bottom:16px">All games require the <strong>Points</strong> system to be enabled. Configure points in the <a href="#" onclick="openTab('points');return false" style="color:var(--accent)">Points tab</a>.</p>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">🪙 Coin Flip</div>
+                            <p class="hint">!coinflip heads 100</p>
+                            <p class="hint" style="margin-top:4px">50/50 chance. Bet optional.</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">🎱 Magic 8-Ball</div>
+                            <p class="hint">!8ball will I win today?</p>
+                            <p class="hint" style="margin-top:4px">18 possible answers. No points needed.</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">🎰 Gamble</div>
+                            <p class="hint">!gamble 100</p>
+                            <p class="hint" style="margin-top:4px">7% jackpot (3x) · 38% win (1.5x) · 55% lose</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">🎰 Slots</div>
+                            <p class="hint">!slots 100</p>
+                            <p class="hint" style="margin-top:4px">3 matching = jackpot · 2 matching = 1.5x · 7️⃣7️⃣7️⃣ = 10x</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">⚔️ Duel</div>
+                            <p class="hint">!duel @user 200</p>
+                            <p class="hint" style="margin-top:4px">Challenge another viewer. They type !accept or !decline (60s)</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">🏴‍☠️ Heist</div>
+                            <p class="hint">!heist 100</p>
+                            <p class="hint" style="margin-top:4px">Group event — join within 45s. 55% survival rate each.</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">❓ Trivia</div>
+                            <p class="hint">!trivia</p>
+                            <div class="form-group" style="margin-top:8px">
+                                <label>Trivia Reward (points)</label>
+                                <input type="number" id="trivia_reward" value="100" min="1" oninput="saveTriviaReward()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🏅 Ranks</div>
+                    <p class="hint" style="margin-bottom:14px">Viewers earn ranks based on their points. Chat: <code>!rank</code></p>
+                    <div id="ranksList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px"></div>
+                    <button class="btn btn-ghost btn-sm" onclick="addRank()">+ Add Rank</button>
+                    <button class="btn btn-primary btn-sm" style="margin-left:8px" onclick="saveRanks()">Save Ranks</button>
+                </div>
+            </div>
+
+            <!-- Mod Tools tab -->
+            <div class="tab" id="tab-modtools">
+                <div class="card-row">
+                    <div class="card" style="flex:1">
+                        <div class="card-title">💬 Chat Modes</div>
+                        <p class="hint" style="margin-bottom:14px">Bot must be a moderator to use these.</p>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px">
+                            <button class="btn btn-ghost" onclick="chatMode('subscribers')">🔒 Sub-only ON</button>
+                            <button class="btn btn-ghost" onclick="chatMode('subscribersoff')">🔓 Sub-only OFF</button>
+                            <button class="btn btn-ghost" onclick="chatMode('emoteonly')">😀 Emote-only ON</button>
+                            <button class="btn btn-ghost" onclick="chatMode('emoteonlyoff')">💬 Emote-only OFF</button>
+                            <button class="btn btn-ghost" onclick="chatModeSlowPrompt()">🐢 Slow mode ON</button>
+                            <button class="btn btn-ghost" onclick="chatMode('slowoff')">⚡ Slow mode OFF</button>
+                            <button class="btn btn-danger" onclick="chatMode('clear')">🧹 Clear Chat</button>
+                        </div>
+                    </div>
+                    <div class="card" style="flex:1">
+                        <div class="card-title">🚨 Raid Response</div>
+                        <div class="toggle-row">
+                            <div class="toggle-info"><strong>Auto-respond to raids</strong><small>Bot sends a message when your channel is raided</small></div>
+                            <label class="toggle"><input type="checkbox" id="raid_enabled" onchange="saveRaidResponse()"><span class="toggle-slider"></span></label>
+                        </div>
+                        <div class="form-group" style="margin-top:12px">
+                            <label>Raid Message</label>
+                            <textarea id="raid_message" rows="2" placeholder="🚨 Welcome @$(raider) and their $(viewers) raiders!" oninput="saveRaidResponse()"></textarea>
+                            <p class="hint" style="margin-top:4px">Variables: <code>$(raider)</code> <code>$(viewers)</code></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>⚠️ User Warnings</span>
+                        <button class="btn btn-ghost btn-sm" onclick="loadModTools()">↻ Refresh</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:12px">Chat: <code>!warn @user reason</code> · Auto-timeout at 3 warnings. <code>!clearwarnings @user</code> to reset.</p>
+                    <div id="warningsList"><p class="hint">No warnings on record.</p></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📝 Mod Notes</div>
+                    <p class="hint" style="margin-bottom:12px">Private notes about viewers. Not visible to chat. Chat: <code>!note @user text</code></p>
+                    <div class="form-row" style="margin-bottom:12px">
+                        <div class="form-group">
+                            <label>Username</label>
+                            <input type="text" id="noteNick" placeholder="username">
+                        </div>
+                        <div class="form-group" style="flex:2">
+                            <label>Note</label>
+                            <input type="text" id="noteText" placeholder="Note about this user...">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="addNote()">Save Note</button>
+                    <div id="notesList" style="margin-top:16px"></div>
+                </div>
+            </div>
+
+            <!-- Analytics tab -->
+            <div class="tab" id="tab-analytics">
+                <div class="stat-grid" id="analyticsStats" style="margin-bottom:0"></div>
+                <div class="card-row">
+                    <div class="card" style="flex:1">
+                        <div class="card-title">💬 Top Chatters (recent)</div>
+                        <div id="topChatters"><p class="hint">Loading...</p></div>
+                    </div>
+                    <div class="card" style="flex:1">
+                        <div class="card-title">⚡ Most Used Commands</div>
+                        <div id="cmdUsage"><p class="hint">Loading...</p></div>
+                    </div>
+                </div>
+                <div class="card-row">
+                    <div class="card" style="flex:1">
+                        <div class="card-title">⏱ Watch Time Leaders</div>
+                        <div id="wtLeaderboard"><p class="hint">Loading...</p></div>
+                    </div>
+                    <div class="card" style="flex:1">
+                        <div class="card-title">🪙 Points Leaders</div>
+                        <div id="ptsLeaderboard2"><p class="hint">Loading...</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integrations tab -->
+            <div class="tab" id="tab-integrations">
+                <div class="card">
+                    <div class="card-title">📺 Stream Controls</div>
+                    <p class="hint" style="margin-bottom:14px">Update your stream title and game without opening Twitch.</p>
+                    <div class="form-row" style="margin-bottom:12px">
+                        <div class="form-group">
+                            <label>Stream Title</label>
+                            <input type="text" id="stream_title" placeholder="My awesome stream!">
+                        </div>
+                        <div class="form-group">
+                            <label>Category / Game</label>
+                            <input type="text" id="stream_game" placeholder="Just Chatting">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="updateStream()">Update Stream</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🔔 Discord Webhook</div>
+                    <p class="hint" style="margin-bottom:14px">Post a message to a Discord channel. Create a webhook in your Discord Server Settings → Integrations.</p>
+                    <div id="webhookStatus" class="hint" style="margin-bottom:10px"></div>
+                    <div class="form-group" style="margin-bottom:12px">
+                        <label>Webhook URL</label>
+                        <input type="text" id="webhook_url" placeholder="https://discord.com/api/webhooks/...">
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <button class="btn btn-primary" onclick="saveWebhook()">Save Webhook</button>
+                        <button class="btn btn-ghost" onclick="testWebhook()">Test</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🌤 Weather Command</div>
+                    <p class="hint">Chat command: <code>!weather London</code> — uses wttr.in (no API key needed). Works out of the box.</p>
+                    <div style="margin-top:10px;background:rgba(87,242,135,.08);border:1px solid rgba(87,242,135,.2);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--success)">✓ Ready — no configuration needed</div>
                 </div>
             </div>
 
@@ -822,9 +1186,19 @@ let _pollInterval;
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 async function init() {
-    await Promise.all([loadStatus(), loadConfig(), loadCommands(), loadTimers(), loadAutomod(), loadGlobalSettings(), loadCustomVars(), loadQuotes()]);
+    await Promise.all([loadStatus(), loadConfig(), loadCommands(), loadTimers(), loadAutomod(), loadGlobalSettings(), loadCustomVars(), loadQuotes(), loadGiveaway(), loadPoll(), loadPoints(), loadQueue(), loadSongs(), loadMinigames(), loadModTools(), loadAnalytics(), loadIntegrations()]);
     pollLogs();
-    _pollInterval = setInterval(() => { loadStatus(); pollLogs(); }, 4000);
+    _pollInterval = setInterval(() => {
+        loadStatus(); pollLogs();
+        const activeTab = document.querySelector('.tab.active')?.id;
+        if (activeTab === 'tab-giveaway')    loadGiveaway();
+        if (activeTab === 'tab-polls')       loadPoll();
+        if (activeTab === 'tab-points')      loadPoints();
+        if (activeTab === 'tab-queue')       loadQueue();
+        if (activeTab === 'tab-songs')       loadSongs();
+        if (activeTab === 'tab-analytics')   loadAnalytics();
+        if (activeTab === 'tab-modtools')    loadModTools();
+    }, 4000);
 }
 
 // ── Tabs ───────────────────────────────────────────────────────────────────────
@@ -1427,6 +1801,631 @@ async function saveGlobalSetting(key, value) {
         body: JSON.stringify({ [key]: value })
     });
     if (res.ok) showToast('Setting saved', 'success');
+}
+
+// ── Giveaway ───────────────────────────────────────────────────────────────────
+let _gw = {};
+
+async function loadGiveaway() {
+    try {
+        const r = await fetch('/cubassist/api/giveaway');
+        _gw = await r.json();
+        renderGiveaway();
+    } catch {}
+}
+
+function renderGiveaway() {
+    const active = document.getElementById('gwActiveCard');
+    const start  = document.getElementById('gwStartCard');
+    if (!_gw.active) {
+        active.style.display = 'none';
+        start.style.display  = '';
+        return;
+    }
+    active.style.display = '';
+    start.style.display  = 'none';
+    document.getElementById('gwPrize').textContent = _gw.prize;
+    document.getElementById('gwCount').textContent = _gw.entry_count ?? (_gw.entries?.length ?? 0);
+    const open = _gw.entries_open;
+    document.getElementById('gwStatus').innerHTML = open
+        ? '<span class="connected-badge on">Entries Open</span>'
+        : '<span class="connected-badge off">Entries Closed</span>';
+    document.getElementById('gwToggleBtn').textContent = open ? 'Close Entries' : 'Open Entries';
+    const wb = document.getElementById('gwWinnerBox');
+    if (_gw.winner) {
+        wb.style.display = '';
+        document.getElementById('gwWinner').textContent = '@' + _gw.winner.nick;
+    } else {
+        wb.style.display = 'none';
+    }
+}
+
+async function gwStart() {
+    const prize = document.getElementById('gwPrizeInput').value.trim() || 'a prize';
+    await fetch('/cubassist/api/giveaway/start', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({prize})
+    });
+    document.getElementById('gwPrizeInput').value = '';
+    await loadGiveaway();
+    showToast('Giveaway started!', 'success');
+}
+
+async function gwToggleEntries() {
+    await fetch('/cubassist/api/giveaway/toggle-entries', { method: 'POST' });
+    await loadGiveaway();
+}
+
+async function gwDraw(redraw = false) {
+    const r = await fetch('/cubassist/api/giveaway/draw', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({redraw})
+    });
+    const d = await r.json();
+    if (!r.ok) { showToast(d.error || 'No entries', 'error'); return; }
+    await loadGiveaway();
+    showToast('Winner drawn: @' + d.winner?.nick, 'success');
+}
+
+async function gwEnd() {
+    if (!confirm('End the giveaway?')) return;
+    await fetch('/cubassist/api/giveaway/end', { method: 'POST' });
+    await loadGiveaway();
+    showToast('Giveaway ended');
+}
+
+// ── Polls ──────────────────────────────────────────────────────────────────────
+let _poll = {};
+
+async function loadPoll() {
+    try {
+        const r = await fetch('/cubassist/api/poll');
+        _poll = await r.json();
+        renderPoll();
+    } catch {}
+}
+
+function renderPoll() {
+    const active = document.getElementById('pollActiveCard');
+    const create = document.getElementById('pollCreateCard');
+    if (!_poll.active && !_poll.question) {
+        active.style.display = 'none';
+        create.style.display = '';
+        return;
+    }
+    if (_poll.active) {
+        active.style.display = '';
+        create.style.display = 'none';
+    } else {
+        active.style.display = '';
+        create.style.display = '';
+    }
+    document.getElementById('pollQuestion').textContent = _poll.question + (_poll.active ? '' : ' (ended)');
+    const total = _poll.total_votes || 0;
+    const bars  = document.getElementById('pollBars');
+    const opts  = _poll.options || [];
+    const votes = _poll.votes || {};
+    bars.innerHTML = opts.map((opt, i) => {
+        const count = votes[String(i + 1)] || 0;
+        const pct   = total ? Math.round(count / total * 100) : 0;
+        return `<div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+                <span><strong>${i+1})</strong> ${escHtml(opt)}</span>
+                <span style="color:var(--text-sec)">${count} vote${count !== 1 ? 's' : ''} · ${pct}%</span>
+            </div>
+            <div style="height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden">
+                <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:4px;transition:width .4s"></div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function pollAddOption() {
+    const c = document.getElementById('pollOptionsContainer');
+    const n = c.querySelectorAll('.poll-opt').length + 1;
+    const d = document.createElement('div'); d.className = 'form-group';
+    d.innerHTML = `<label>Option ${n}</label><input type="text" class="poll-opt" placeholder="Option ${n}">`;
+    c.appendChild(d);
+}
+
+function pollRemoveOption() {
+    const c   = document.getElementById('pollOptionsContainer');
+    const els = c.querySelectorAll('.form-group');
+    if (els.length > 2) els[els.length - 1].remove();
+}
+
+async function pollStart() {
+    const question = document.getElementById('pollQInput').value.trim();
+    const options  = [...document.querySelectorAll('.poll-opt')].map(i => i.value.trim()).filter(Boolean);
+    if (!question || options.length < 2) { showToast('Question and 2+ options required', 'error'); return; }
+    const r = await fetch('/cubassist/api/poll/start', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({question, options})
+    });
+    if (r.ok) { await loadPoll(); showToast('Poll started!', 'success'); }
+    else { const d = await r.json(); showToast(d.error || 'Error', 'error'); }
+}
+
+async function pollEnd() {
+    const r = await fetch('/cubassist/api/poll/end', { method: 'POST' });
+    if (r.ok) { await loadPoll(); showToast('Poll ended', 'success'); }
+    else { const d = await r.json(); showToast(d.error || 'No active poll', 'error'); }
+}
+
+// ── Points ─────────────────────────────────────────────────────────────────────
+let _pts = {};
+
+async function loadPoints() {
+    try {
+        const r = await fetch('/cubassist/api/points');
+        _pts = await r.json();
+        renderPoints();
+    } catch {}
+}
+
+function renderPoints() {
+    const cfg = _pts.config || {};
+    const el  = document.getElementById('pts_enabled');
+    if (el) el.checked = !!cfg.enabled;
+    const pn = document.getElementById('pts_name');
+    if (pn && !pn._dirty) pn.value = cfg.name || 'points';
+    const pm = document.getElementById('pts_per_msg');
+    if (pm && !pm._dirty) pm.value = cfg.per_message ?? 1;
+    const pp = document.getElementById('pts_per_min');
+    if (pp && !pp._dirty) pp.value = cfg.per_minute ?? 5;
+
+    const lb = document.getElementById('ptsLeaderboard');
+    if (!lb) return;
+    const top = _pts.leaderboard || [];
+    if (!top.length) { lb.innerHTML = '<p class="hint">No points earned yet.</p>'; return; }
+    lb.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>User</th><th>${escHtml(cfg.name || 'Points')}</th><th></th></tr></thead>
+        <tbody>${top.map((e, i) => `<tr>
+            <td style="color:var(--text-sec);font-size:12px">#${i+1}</td>
+            <td style="font-weight:600">${escHtml(e.nick)}</td>
+            <td style="font-family:'Fira Code',monospace;color:var(--success)">${e.balance.toLocaleString()}</td>
+            <td><div class="action-btns">
+                <button class="btn btn-ghost btn-sm" onclick="ptsQuickAdjust('${escHtml(e.nick)}')">Edit</button>
+            </div></td>
+        </tr>`).join('')}
+        </tbody></table></div>`;
+}
+
+let _ptsDebounce;
+function savePointsConfig() {
+    clearTimeout(_ptsDebounce);
+    _ptsDebounce = setTimeout(async () => {
+        const body = {
+            enabled:     document.getElementById('pts_enabled').checked,
+            name:        document.getElementById('pts_name').value.trim() || 'points',
+            per_message: parseInt(document.getElementById('pts_per_msg').value) || 0,
+            per_minute:  parseInt(document.getElementById('pts_per_min').value) || 0,
+        };
+        await fetch('/cubassist/api/points/config', {
+            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+        });
+        showToast('Points settings saved', 'success');
+    }, 700);
+}
+
+function ptsQuickAdjust(nick) {
+    document.getElementById('ptsAdjNick').value   = nick;
+    document.getElementById('ptsAdjAmount').value = '';
+    document.getElementById('ptsAdjAmount').focus();
+}
+
+async function ptsAdjust() {
+    const nick   = document.getElementById('ptsAdjNick').value.trim().toLowerCase();
+    const amount = parseInt(document.getElementById('ptsAdjAmount').value);
+    if (!nick || isNaN(amount)) { showToast('Nick and amount required', 'error'); return; }
+    const r = await fetch('/cubassist/api/points/adjust', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({nick, amount})
+    });
+    const d = await r.json();
+    if (r.ok) { await loadPoints(); showToast(`${nick}: ${d.balance.toLocaleString()} pts`, 'success'); }
+}
+
+// ── Queue ──────────────────────────────────────────────────────────────────────
+let _queue = { open: false, queue: [] };
+
+async function loadQueue() {
+    try {
+        const r = await fetch('/cubassist/api/queue');
+        _queue = await r.json();
+        renderQueue();
+    } catch {}
+}
+
+function renderQueue() {
+    const open   = _queue.open;
+    const badge  = document.getElementById('queueStatusBadge');
+    const openBtn  = document.getElementById('queueOpenBtn');
+    const closeBtn = document.getElementById('queueCloseBtn');
+    if (badge) {
+        badge.textContent = open ? 'Open' : 'Closed';
+        badge.className   = 'connected-badge ' + (open ? 'on' : 'off');
+    }
+    if (openBtn)  openBtn.style.display  = open ? 'none' : '';
+    if (closeBtn) closeBtn.style.display = open ? '' : 'none';
+
+    const el = document.getElementById('queueList');
+    if (!el) return;
+    const q = _queue.queue || [];
+    if (!q.length) { el.innerHTML = '<p class="hint">Queue is empty.</p>'; return; }
+    el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>User</th><th>Note</th><th>Time</th><th></th></tr></thead>
+        <tbody>${q.map((e, i) => `<tr>
+            <td style="color:var(--text-sec);font-weight:700">#${i+1}</td>
+            <td style="font-weight:600">${escHtml(e.user)}</td>
+            <td style="color:var(--text-sec);font-size:12px;font-family:'Fira Code',monospace">${escHtml(e.content || '—')}</td>
+            <td style="font-size:11px;color:var(--text-sec)">${new Date(e.ts * 1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>
+            <td><div class="action-btns">
+                <button class="btn btn-primary btn-sm" onclick="queuePickThis(${i})">↑ Pick</button>
+                <button class="btn btn-danger btn-sm" onclick="queueRemove(${i})">✕</button>
+            </div></td>
+        </tr>`).join('')}</tbody>
+    </table></div><p class="hint" style="margin-top:8px">${q.length} in queue</p>`;
+}
+
+async function queueSetOpen(open) {
+    await fetch('/cubassist/api/queue/open', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({open})
+    });
+    await loadQueue();
+    showToast(open ? 'Queue opened' : 'Queue closed', 'success');
+}
+
+async function queueNext() {
+    const r = await fetch('/cubassist/api/queue/next', { method: 'POST' });
+    if (r.ok) { const d = await r.json(); await loadQueue(); showToast('Next: @' + d.entry?.user, 'success'); }
+    else showToast('Queue is empty', 'error');
+}
+
+async function queuePickThis(idx) {
+    const entry = (_queue.queue || [])[idx];
+    if (!entry) return;
+    await fetch(`/cubassist/api/queue/remove/${idx}`, { method: 'DELETE' });
+    const channel = _status.channel || _cfg.channel || '';
+    if (channel) await fetch('/cubassist/api/chat', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({message: `🎮 @${entry.user} you're up!${entry.content ? ' [' + entry.content + ']' : ''}`})
+    });
+    await loadQueue();
+    showToast('Picked @' + entry.user, 'success');
+}
+
+async function queueRemove(idx) {
+    await fetch(`/cubassist/api/queue/remove/${idx}`, { method: 'DELETE' });
+    await loadQueue();
+    showToast('Removed from queue');
+}
+
+async function queueClear() {
+    if (!confirm('Clear the entire queue?')) return;
+    await fetch('/cubassist/api/queue/clear', { method: 'POST' });
+    await loadQueue();
+    showToast('Queue cleared');
+}
+
+// ── Songs ──────────────────────────────────────────────────────────────────────
+let _songs = { open: false, queue: [], config: {} };
+
+async function loadSongs() {
+    try {
+        const r = await fetch('/cubassist/api/songs');
+        _songs = await r.json();
+        renderSongs();
+    } catch {}
+}
+
+function renderSongs() {
+    const open     = _songs.open;
+    const cfg      = _songs.config || {};
+    const openBtn  = document.getElementById('songsOpenBtn');
+    const closeBtn = document.getElementById('songsCloseBtn');
+    const badge    = document.getElementById('songsStatusBadge');
+    const srEn     = document.getElementById('sr_enabled');
+    const srMax    = document.getElementById('sr_max');
+    if (badge)   { badge.textContent = open ? 'Open' : 'Closed'; badge.className = 'connected-badge ' + (open ? 'on' : 'off'); }
+    if (openBtn)  openBtn.style.display  = open ? 'none' : '';
+    if (closeBtn) closeBtn.style.display = open ? '' : 'none';
+    if (srEn && !srEn._dirty)  srEn.checked = !!cfg.enabled;
+    if (srMax && !srMax._dirty) srMax.value  = cfg.max_per_user || 3;
+
+    const el = document.getElementById('songsList');
+    if (!el) return;
+    const q = _songs.queue || [];
+    if (!q.length) { el.innerHTML = '<p class="hint">Queue is empty.</p>'; return; }
+    el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>Song / URL</th><th>Requested by</th><th>Time</th><th></th></tr></thead>
+        <tbody>${q.map((s, i) => `<tr>
+            <td style="color:var(--text-sec);font-weight:700">#${i+1}</td>
+            <td style="font-family:'Fira Code',monospace;font-size:12px">${escHtml(s.content)}</td>
+            <td style="font-size:12px;color:var(--text-sec)">${escHtml(s.user)}</td>
+            <td style="font-size:11px;color:var(--text-sec)">${new Date(s.ts*1000).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</td>
+            <td><div class="action-btns">
+                ${i === 0 ? '<button class="btn btn-primary btn-sm" onclick="songsNext()">▶ Play</button>' : ''}
+                <button class="btn btn-danger btn-sm" onclick="songsRemove('+i+')">✕</button>
+            </div></td>
+        </tr>`).join('')}</tbody></table></div>
+        <p class="hint" style="margin-top:8px">${q.length} in queue</p>`;
+}
+
+let _srDebounce;
+function saveSongsConfig() {
+    clearTimeout(_srDebounce);
+    _srDebounce = setTimeout(async () => {
+        const body = {
+            enabled: document.getElementById('sr_enabled').checked,
+            max_per_user: parseInt(document.getElementById('sr_max').value) || 3,
+        };
+        await fetch('/cubassist/api/songs/config', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        showToast('Song settings saved', 'success');
+    }, 600);
+}
+
+async function songsSetOpen(open) {
+    await fetch('/cubassist/api/songs/config', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ open }) });
+    await loadSongs();
+    showToast(open ? 'Requests opened' : 'Requests closed', 'success');
+}
+async function songsNext() {
+    const r = await fetch('/cubassist/api/songs/next', { method: 'POST' });
+    if (r.ok) { await loadSongs(); showToast('Skipped to next', 'success'); }
+    else showToast('Queue empty', 'error');
+}
+async function songsRemove(idx) {
+    await fetch(`/cubassist/api/songs/remove/${idx}`, { method: 'DELETE' });
+    await loadSongs();
+}
+async function songsClear() {
+    if (!confirm('Clear the song queue?')) return;
+    await fetch('/cubassist/api/songs/clear', { method: 'POST' });
+    await loadSongs();
+    showToast('Queue cleared');
+}
+
+// ── Mini-games ─────────────────────────────────────────────────────────────────
+let _ranks = [];
+let _triviaRewardDebounce;
+
+async function loadMinigames() {
+    try {
+        const r = await fetch('/cubassist/api/ranks');
+        _ranks = await r.json();
+        renderRanks();
+    } catch {}
+}
+
+function renderRanks() {
+    const el = document.getElementById('ranksList');
+    if (!el) return;
+    el.innerHTML = _ranks.map((r, i) => `
+        <div style="display:flex;gap:10px;align-items:center">
+            <input type="text" value="${escHtml(r.name)}" placeholder="Rank name" style="flex:1" oninput="_ranks[${i}].name=this.value">
+            <input type="number" value="${r.min_points}" min="0" style="width:120px" placeholder="Min points" oninput="_ranks[${i}].min_points=parseInt(this.value)||0">
+            <button class="btn btn-danger btn-sm" onclick="_ranks.splice(${i},1);renderRanks()">✕</button>
+        </div>
+    `).join('');
+}
+
+function addRank() {
+    _ranks.push({ name: 'New Rank', min_points: 0 });
+    renderRanks();
+}
+
+async function saveRanks() {
+    const r = await fetch('/cubassist/api/ranks', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ ranks: _ranks })
+    });
+    if (r.ok) showToast('Ranks saved', 'success');
+}
+
+function saveTriviaReward() {
+    clearTimeout(_triviaRewardDebounce);
+    _triviaRewardDebounce = setTimeout(async () => {
+        const reward = parseInt(document.getElementById('trivia_reward').value) || 100;
+        const pts_cfg = { ...(_cfg.points_config || {}), trivia_reward: reward };
+        await fetch('/cubassist/api/points/config', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(pts_cfg)
+        });
+        showToast('Trivia reward saved', 'success');
+    }, 600);
+}
+
+// ── Mod Tools ──────────────────────────────────────────────────────────────────
+let _warns = {}, _notes = {};
+
+async function loadModTools() {
+    try {
+        const [wr, nr, rr] = await Promise.all([
+            fetch('/cubassist/api/warnings').then(r => r.json()),
+            fetch('/cubassist/api/notes').then(r => r.json()),
+            fetch('/cubassist/api/raid-response').then(r => r.json()),
+        ]);
+        _warns = wr;
+        _notes = nr;
+        renderWarnings();
+        renderNotes();
+        const re = document.getElementById('raid_enabled');
+        const rm = document.getElementById('raid_message');
+        if (re) re.checked = !!rr.enabled;
+        if (rm && !rm._dirty) rm.value = rr.message || '';
+    } catch {}
+}
+
+function renderWarnings() {
+    const el = document.getElementById('warningsList');
+    if (!el) return;
+    const entries = Object.entries(_warns);
+    if (!entries.length) { el.innerHTML = '<p class="hint">No warnings on record.</p>'; return; }
+    el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>User</th><th>Warnings</th><th>Latest Reason</th><th></th></tr></thead>
+        <tbody>${entries.map(([nick, ws]) => `<tr>
+            <td style="font-weight:600">${escHtml(nick)}</td>
+            <td><span style="background:${ws.length>=3?'rgba(237,66,69,.2)':'rgba(245,158,11,.15)'};color:${ws.length>=3?'var(--danger)':'var(--warn)'};border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600">${ws.length}</span></td>
+            <td style="font-size:12px;color:var(--text-sec)">${escHtml(ws[ws.length-1]?.reason || '')}</td>
+            <td><button class="btn btn-ghost btn-sm" onclick="clearWarning('${escHtml(nick)}')">Clear</button></td>
+        </tr>`).join('')}</tbody></table></div>`;
+}
+
+async function clearWarning(nick) {
+    await fetch(`/cubassist/api/warnings/${nick}`, { method: 'DELETE' });
+    delete _warns[nick];
+    renderWarnings();
+    showToast('Warnings cleared for ' + nick);
+}
+
+function renderNotes() {
+    const el = document.getElementById('notesList');
+    if (!el) return;
+    const entries = Object.entries(_notes).filter(([, ns]) => ns.length > 0);
+    if (!entries.length) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="table-wrap" style="margin-top:8px"><table>
+        <thead><tr><th>User</th><th>Note</th><th>By</th><th></th></tr></thead>
+        <tbody>${entries.flatMap(([nick, ns]) => ns.map((n, i) => `<tr>
+            <td style="font-weight:600">${escHtml(nick)}</td>
+            <td style="font-size:13px">${escHtml(n.note)}</td>
+            <td style="font-size:11px;color:var(--text-sec)">${escHtml(n.by)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteNote('${escHtml(nick)}',${i})">✕</button></td>
+        </tr>`)).join('')}</tbody></table></div>`;
+}
+
+async function addNote() {
+    const nick = document.getElementById('noteNick').value.trim().toLowerCase();
+    const note = document.getElementById('noteText').value.trim();
+    if (!nick || !note) { showToast('Nick and note required', 'error'); return; }
+    await fetch('/cubassist/api/notes', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({nick, note}) });
+    document.getElementById('noteNick').value = '';
+    document.getElementById('noteText').value = '';
+    await loadModTools();
+    showToast('Note saved', 'success');
+}
+
+async function deleteNote(nick, idx) {
+    await fetch(`/cubassist/api/notes/${nick}/${idx}`, { method: 'DELETE' });
+    await loadModTools();
+}
+
+async function chatMode(mode) {
+    const r = await fetch('/cubassist/api/stream/chatmode', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({mode})
+    });
+    if (r.ok) showToast('Chat mode: ' + mode, 'success');
+    else showToast('Failed (bot must be mod)', 'error');
+}
+
+async function chatModeSlowPrompt() {
+    const secs = prompt('Slow mode — seconds between messages:', '30');
+    if (!secs) return;
+    const r = await fetch('/cubassist/api/stream/chatmode', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({mode:'slow', seconds: parseInt(secs)||30})
+    });
+    if (r.ok) showToast('Slow mode enabled (' + secs + 's)', 'success');
+}
+
+let _raidDebounce;
+async function saveRaidResponse() {
+    clearTimeout(_raidDebounce);
+    _raidDebounce = setTimeout(async () => {
+        const body = {
+            enabled: document.getElementById('raid_enabled').checked,
+            message: document.getElementById('raid_message').value,
+        };
+        await fetch('/cubassist/api/raid-response', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+        showToast('Raid response saved', 'success');
+    }, 600);
+}
+
+// ── Analytics ──────────────────────────────────────────────────────────────────
+async function loadAnalytics() {
+    try {
+        const [ar, ptr, wtr] = await Promise.all([
+            fetch('/cubassist/api/analytics').then(r => r.json()),
+            fetch('/cubassist/api/points').then(r => r.json()),
+            fetch('/cubassist/api/watchtime').then(r => r.json()),
+        ]);
+        renderAnalytics(ar, ptr, wtr);
+    } catch {}
+}
+
+function renderAnalytics(data, pts, wt) {
+    const statsEl = document.getElementById('analyticsStats');
+    if (statsEl) statsEl.innerHTML = `
+        <div class="stat-card"><div class="stat-val">${data.messages_tracked || 0}</div><div class="stat-label">Messages Tracked</div></div>
+        <div class="stat-card"><div class="stat-val">${data.total_points_users || 0}</div><div class="stat-label">Points Earners</div></div>
+        <div class="stat-card"><div class="stat-val">${data.total_watchtime_users || 0}</div><div class="stat-label">Watch Time Tracked</div></div>
+        <div class="stat-card"><div class="stat-val">${(pts.leaderboard||[]).length > 0 ? (pts.leaderboard[0].balance||0).toLocaleString() : '—'}</div><div class="stat-label">Top Balance</div></div>`;
+
+    const tc = document.getElementById('topChatters');
+    if (tc) tc.innerHTML = renderStatList(data.top_chatters||[], 'nick', 'messages', 'messages');
+
+    const cu = document.getElementById('cmdUsage');
+    if (cu) cu.innerHTML = renderStatList(data.cmd_usage||[], 'name', 'count', 'uses', '!');
+
+    const wtel = document.getElementById('wtLeaderboard');
+    if (wtel) wtel.innerHTML = renderStatList(wt.slice(0,10), 'nick', 'seconds', '', '', s => {
+        const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+        return h + 'h ' + m + 'm';
+    });
+
+    const ptel = document.getElementById('ptsLeaderboard2');
+    if (ptel) ptel.innerHTML = renderStatList(pts.leaderboard||[], 'nick', 'balance', (pts.config?.name||'pts'), '', b => b.toLocaleString());
+}
+
+function renderStatList(items, nameKey, valKey, unit='', prefix='', fmt=null) {
+    if (!items.length) return '<p class="hint">No data yet.</p>';
+    return `<div style="display:flex;flex-direction:column;gap:6px">${items.slice(0,10).map((item, i) => {
+        const val = fmt ? fmt(item[valKey]) : item[valKey];
+        const pct = items[0][valKey] > 0 ? (item[valKey] / items[0][valKey] * 100) : 0;
+        return `<div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+                <span><span style="color:var(--text-sec);font-size:11px;margin-right:6px">#${i+1}</span>${escHtml(prefix + item[nameKey])}</span>
+                <span style="color:var(--text-sec)">${val} ${unit}</span>
+            </div>
+            <div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px">
+                <div style="height:100%;width:${pct}%;background:var(--accent);border-radius:2px;transition:width .3s"></div>
+            </div>
+        </div>`;
+    }).join('')}</div>`;
+}
+
+// ── Integrations ───────────────────────────────────────────────────────────────
+async function loadIntegrations() {
+    try {
+        const r = await fetch('/cubassist/api/discord-webhook');
+        const d = await r.json();
+        const el = document.getElementById('webhookStatus');
+        if (el) el.innerHTML = d.configured
+            ? `<span style="color:var(--success)">✓ Webhook configured: <code>${escHtml(d.masked)}</code></span>`
+            : '<span style="color:var(--text-sec)">No webhook configured.</span>';
+    } catch {}
+}
+
+async function saveWebhook() {
+    const url = document.getElementById('webhook_url').value.trim();
+    const r = await fetch('/cubassist/api/discord-webhook', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({url})
+    });
+    if (r.ok) { await loadIntegrations(); document.getElementById('webhook_url').value = ''; showToast('Webhook saved', 'success'); }
+}
+
+async function testWebhook() {
+    const r = await fetch('/cubassist/api/discord-webhook/test', { method: 'POST' });
+    const d = await r.json();
+    if (r.ok) showToast('Test message sent to Discord!', 'success');
+    else showToast(d.error || 'Failed', 'error');
+}
+
+async function updateStream() {
+    const title = document.getElementById('stream_title').value.trim();
+    const game  = document.getElementById('stream_game').value.trim();
+    if (!title && !game) { showToast('Enter a title or game', 'error'); return; }
+    const r = await fetch('/cubassist/api/stream/update', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({title, game})
+    });
+    const d = await r.json();
+    if (r.ok) showToast('Stream updated!', 'success');
+    else showToast(d.error || 'Failed', 'error');
 }
 
 // ── Variable Wiki ──────────────────────────────────────────────────────────────

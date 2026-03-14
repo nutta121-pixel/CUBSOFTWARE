@@ -356,12 +356,6 @@ function createWindow() {
 
     mainWindow.loadFile('renderer/index.html');
 
-    // Shift+D opens/closes DevTools (Ctrl+Shift+D is used for disconnect hotkey)
-    mainWindow.webContents.on('before-input-event', (event, input) => {
-        if (input.type === 'keyDown' && input.shift && input.key === 'D' && !input.control && !input.alt) {
-            mainWindow.webContents.toggleDevTools();
-        }
-    });
 
     mainWindow.once('ready-to-show', () => {
         if (!settings.startMinimized && !settings.trayOnlyMode) mainWindow.show();
@@ -825,6 +819,9 @@ ipcMain.handle('get-version', () => app.getVersion());
 
 // External links
 ipcMain.handle('open-external', (event, url) => { return shell.openExternal(url).catch(() => {}); });
+
+// DevTools (password checked in renderer)
+ipcMain.handle('open-devtools', () => { if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.toggleDevTools(); });
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 

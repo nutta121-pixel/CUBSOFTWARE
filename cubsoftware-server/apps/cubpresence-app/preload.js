@@ -45,6 +45,9 @@ contextBridge.exposeInMainWorld('cubpresence', {
     // External
     openExternal: (url) => ipcRenderer.invoke('open-external', url),
 
+    // DevTools
+    openDevTools: () => ipcRenderer.invoke('open-devtools'),
+
     // Events
     onStatus:          (cb) => ipcRenderer.on('status',           (e, d) => cb(d)),
     onUpdateStatus:    (cb) => ipcRenderer.on('update-status',    (e, d) => cb(d)),

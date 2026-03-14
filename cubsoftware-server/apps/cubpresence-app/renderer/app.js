@@ -955,6 +955,75 @@ function setupEventListeners() {
     });
 }
 
+// ─── DevTools password prompt ─────────────────────────────────────────────────
+
+document.addEventListener('keydown', (e) => {
+    if (e.shiftKey && e.code === 'Numpad5' && !e.ctrlKey && !e.altKey) {
+        showDevToolsPrompt();
+    }
+});
+
+function showDevToolsPrompt() {
+    if (document.getElementById('devtools-overlay')) return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'devtools-overlay';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:99999;display:flex;align-items:center;justify-content:center;';
+
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#1e1e2e;border:1px solid #3a3a5c;border-radius:10px;padding:28px 24px;min-width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
+
+    const label = document.createElement('p');
+    label.textContent = 'Enter password to open DevTools:';
+    label.style.cssText = 'margin:0 0 14px;color:#cdd6f4;font-size:14px;font-weight:500;';
+
+    const input = document.createElement('input');
+    input.type = 'password';
+    input.placeholder = 'Password';
+    input.style.cssText = 'width:100%;padding:9px 10px;background:#2a2a3e;border:1px solid #4a4a6a;border-radius:6px;color:#cdd6f4;font-size:14px;box-sizing:border-box;margin-bottom:14px;outline:none;';
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:8px;justify-content:flex-end;';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.style.cssText = 'padding:7px 18px;background:#3a3a5c;border:none;border-radius:6px;color:#cdd6f4;cursor:pointer;font-size:13px;';
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.textContent = 'Open';
+    confirmBtn.style.cssText = 'padding:7px 18px;background:#5865f2;border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:13px;';
+
+    const close = () => { const el = document.getElementById('devtools-overlay'); if (el) document.body.removeChild(el); };
+
+    const submit = () => {
+        if (input.value === 'Live+') {
+            close();
+            window.cubpresence.openDevTools();
+        } else {
+            input.style.border = '1px solid #f38ba8';
+            input.value = '';
+            input.placeholder = 'Incorrect password';
+        }
+    };
+
+    cancelBtn.addEventListener('click', close);
+    confirmBtn.addEventListener('click', submit);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') submit();
+        if (e.key === 'Escape') close();
+    });
+
+    btnRow.appendChild(cancelBtn);
+    btnRow.appendChild(confirmBtn);
+    box.appendChild(label);
+    box.appendChild(input);
+    box.appendChild(btnRow);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    setTimeout(() => input.focus(), 50);
+}
+
 async function clearAllData() {
     const result = await window.cubpresence.showMessageBox({
         type: 'warning', title: 'Clear All Data',

@@ -65,26 +65,50 @@ const CUSTOM_BOTS_FILE = path.join(__dirname, '..', 'cubsoftware-website', 'data
 // Cache of guilds that have an active custom bot (main bot skips these guilds)
 let _cbGuildsCache = null;
 let _cbGuildsCacheTime = 0;
+let _cbNamesCache = {}; // guildId → display name
 const CB_CACHE_TTL = 5000; // refresh every 5 seconds — fast enough to react to bot removal
+
+function _refreshCbCache() {
+    const now = Date.now();
+    if (_cbGuildsCache && now - _cbGuildsCacheTime <= CB_CACHE_TTL) return;
+    const prevGuilds = _cbGuildsCache ? new Set(_cbGuildsCache) : null;
+    try {
+        const raw = fs.readFileSync(CUSTOM_BOTS_FILE, 'utf8');
+        const data = JSON.parse(raw);
+        _cbGuildsCache = new Set();
+        _cbNamesCache = {};
+        for (const [gid, e] of Object.entries(data.guilds || {})) {
+            if (e.enabled && e.token) {
+                _cbGuildsCache.add(gid);
+                _cbNamesCache[gid] = e.display_name || e.bot_name || 'the custom bot';
+            }
+        }
+    } catch (_) {
+        _cbGuildsCache = new Set();
+        _cbNamesCache = {};
+    }
+    _cbGuildsCacheTime = now;
+    // Auto-sync commands for any guilds whose custom bot status just changed
+    if (!CUSTOM_GUILD_ID && prevGuilds && client.isReady()) {
+        const changed = [
+            ...[..._cbGuildsCache].filter(g => !prevGuilds.has(g)), // custom bot just enabled
+            ...[...prevGuilds].filter(g => !_cbGuildsCache.has(g)), // custom bot just disabled
+        ];
+        for (const gid of changed) {
+            syncGuildCommands(gid).catch(e => console.error(`[Commands] Auto-sync failed for ${gid}:`, e.message));
+        }
+    }
+}
 
 function guildHasCustomBot(guildId) {
     if (CUSTOM_GUILD_ID) return false; // we ARE a custom bot instance — never skip
-    const now = Date.now();
-    if (!_cbGuildsCache || now - _cbGuildsCacheTime > CB_CACHE_TTL) {
-        try {
-            const raw = fs.readFileSync(CUSTOM_BOTS_FILE, 'utf8');
-            const data = JSON.parse(raw);
-            _cbGuildsCache = new Set(
-                Object.entries(data.guilds || {})
-                    .filter(([, e]) => e.enabled && e.token)
-                    .map(([gid]) => gid)
-            );
-        } catch (_) {
-            _cbGuildsCache = new Set();
-        }
-        _cbGuildsCacheTime = now;
-    }
+    _refreshCbCache();
     return _cbGuildsCache.has(String(guildId));
+}
+
+function getCustomBotName(guildId) {
+    _refreshCbCache();
+    return _cbNamesCache[String(guildId)] || 'the custom bot';
 }
 
 // Apply the saved presence for this custom bot instance
@@ -967,6 +991,11 @@ const client = new Client({
 });
 
 // ============================================================
+// Commands the main bot keeps active even when a custom bot is running in a guild.
+// All other commands are registered only in guilds without a custom bot.
+const MAIN_BOT_SHARED_COMMANDS = new Set(['help', 'website', 'invite', 'cubsoftware']);
+
+// ============================================================
 // Slash Commands Definition
 // ============================================================
 const commands = [
@@ -1800,10 +1829,30 @@ const commands = [
 // ============================================================
 // Register Commands
 // ============================================================
+// Returns the right command list for a guild — full set or shared-only if a custom bot is active.
+function _commandsForGuild(guildId) {
+    if (guildHasCustomBot(guildId)) {
+        return commands.filter(c => MAIN_BOT_SHARED_COMMANDS.has(c.name));
+    }
+    return commands;
+}
+
+// Register (or update) slash commands for a single guild using the correct set.
+async function syncGuildCommands(guildId) {
+    if (!CLIENT_ID || !TOKEN) return;
+    const rest = new REST({ version: '10' }).setToken(TOKEN);
+    try {
+        const body = _commandsForGuild(guildId).map(c => c.toJSON());
+        await rest.put(Routes.applicationGuildCommands(CLIENT_ID, guildId), { body });
+        console.log(`[Commands] Guild ${guildId}: registered ${body.length} commands`);
+    } catch (e) {
+        console.error(`[Commands] Failed to sync guild ${guildId}:`, e.message);
+    }
+}
+
 async function registerCommands() {
     const rest = new REST({ version: '10' }).setToken(TOKEN);
     try {
-        // Register global commands (available in all servers, may take up to 1 hour to propagate)
         if (CUSTOM_GUILD_ID) {
             // Custom bot mode: register guild-specific commands (instant, no propagation delay)
             console.log(`Registering guild commands for custom bot (guild: ${CUSTOM_GUILD_ID})...`);
@@ -1812,18 +1861,17 @@ async function registerCommands() {
             });
             console.log('Custom bot guild commands registered!');
         } else {
-            console.log('Registering global slash commands...');
-            await rest.put(Routes.applicationCommands(CLIENT_ID), {
-                body: commands.map(c => c.toJSON()),
-            });
-            console.log('Global slash commands registered successfully!');
-            // If DEV_GUILD_ID is set, also register guild commands for instant propagation in dev server
-            if (DEV_GUILD_ID) {
-                await rest.put(Routes.applicationGuildCommands(CLIENT_ID, DEV_GUILD_ID), {
-                    body: commands.map(c => c.toJSON()),
-                });
-                console.log(`Dev guild commands registered instantly (guild: ${DEV_GUILD_ID})!`);
+            // Main bot: clear global commands and register per-guild instead.
+            // Guild-specific commands take priority over globals immediately; the global
+            // deletion propagates within ~1 hour.
+            console.log('Clearing global commands and registering per-guild...');
+            await rest.put(Routes.applicationCommands(CLIENT_ID), { body: [] });
+            const guilds = [...client.guilds.cache.values()];
+            console.log(`Syncing commands for ${guilds.length} guild(s)...`);
+            for (const guild of guilds) {
+                await syncGuildCommands(guild.id);
             }
+            console.log('Per-guild command registration complete.');
         }
     } catch (error) {
         console.error('Failed to register commands:', error);
@@ -3550,7 +3598,10 @@ client.on('messageReactionAdd', async (reaction, user) => {
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
     if (CUSTOM_GUILD_ID && interaction.guildId !== CUSTOM_GUILD_ID) return;
-    if (guildHasCustomBot(interaction.guildId)) return;
+    if (guildHasCustomBot(interaction.guildId) && !MAIN_BOT_SHARED_COMMANDS.has(interaction.commandName)) {
+        const botName = getCustomBotName(interaction.guildId);
+        return interaction.reply({ content: `This server uses **${botName}**. Please use that bot for commands instead.`, ephemeral: true });
+    }
 
     const { commandName, member, guild } = interaction;
 
@@ -7281,7 +7332,9 @@ function buildHelpPage(categories, categoryId, page) {
 // ============================================================
 client.on('interactionCreate', async (interaction) => {
     if (CUSTOM_GUILD_ID && interaction.guildId !== CUSTOM_GUILD_ID) return;
-    if (guildHasCustomBot(interaction.guildId)) return;
+    // Allow help navigation interactions through even when a custom bot is active
+    const _isHelpInteraction = interaction.customId?.startsWith('help_') || interaction.customId === 'help_select';
+    if (guildHasCustomBot(interaction.guildId) && !_isHelpInteraction) return;
     const commandName = interaction.isChatInputCommand() ? interaction.commandName : null;
     const guild = interaction.guild;
     const member = interaction.member;
@@ -9723,9 +9776,33 @@ async function endGiveaway(guildId, messageId) {
 // joins the target guild. This handles the case where the bot was started
 // before being invited, so the ready-event registration attempt got a 403.
 client.on('guildCreate', async (guild) => {
-    if (CUSTOM_GUILD_ID && guild.id === CUSTOM_GUILD_ID) {
-        console.log(`[CustomBot] Joined guild ${guild.id} — registering commands...`);
-        await registerCommands();
+    if (CUSTOM_GUILD_ID) {
+        if (guild.id === CUSTOM_GUILD_ID) {
+            console.log(`[CustomBot] Joined guild ${guild.id} — registering commands...`);
+            await registerCommands();
+        }
+    } else {
+        // Main bot joined a new guild — register the appropriate command set immediately
+        console.log(`[Commands] Bot joined guild ${guild.id} — syncing commands...`);
+        await syncGuildCommands(guild.id);
+    }
+});
+
+// When the custom bot is removed from its guild, mark it as disabled so the main bot
+// knows to restore its full command set for that guild.
+client.on('guildDelete', async (guild) => {
+    if (!CUSTOM_GUILD_ID || guild.id !== CUSTOM_GUILD_ID) return;
+    console.log(`[CustomBot] Removed from guild ${guild.id} — marking as disabled.`);
+    try {
+        const raw = fs.readFileSync(CUSTOM_BOTS_FILE, 'utf8');
+        const data = JSON.parse(raw);
+        if (data.guilds?.[CUSTOM_GUILD_ID]) {
+            data.guilds[CUSTOM_GUILD_ID].enabled = false;
+            fs.writeFileSync(CUSTOM_BOTS_FILE, JSON.stringify(data, null, 2));
+            console.log(`[CustomBot] Marked guild ${CUSTOM_GUILD_ID} as disabled in custom_bots.json`);
+        }
+    } catch (e) {
+        console.error('[CustomBot] Failed to update custom_bots.json on guildDelete:', e.message);
     }
 });
 

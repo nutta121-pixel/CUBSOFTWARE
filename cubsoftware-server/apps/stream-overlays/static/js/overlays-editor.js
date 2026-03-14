@@ -730,7 +730,7 @@ if (bgSpeedSlider && bgSpeedVal) {
 document.querySelectorAll('input.ov-range[data-key]').forEach(slider => {
     const span = slider.nextElementSibling;
     if (!span || !span.classList.contains('ov-range-val')) return;
-    const unit = span.textContent.replace(/[\d.]+/, '') || 'px';
+    const unit = span.textContent.replace(/[\d.]+/, '');
     slider.addEventListener('input', () => { span.textContent = slider.value + unit; });
 });
 

@@ -9982,13 +9982,14 @@ def _set_cache(key, data):
         for k in expired:
             del _discord_api_cache[k]
 
-def cub_protector_bot_request(endpoint_or_method, endpoint_or_none=None, method='GET', json_data=None, json=None, params=None, bypass_cache=False):
+def cub_protector_bot_request(endpoint_or_method, endpoint_or_none=None, method='GET', json_data=None, json=None, params=None, bypass_cache=False, token=None):
     """Make a request to Discord API using the CUB PROTECTOR bot token (with rate limit retry + caching for GETs).
     Supports two calling conventions:
       cub_protector_bot_request('/endpoint')  -- old style
       cub_protector_bot_request('GET', '/endpoint')  -- new style
       cub_protector_bot_request('POST', '/endpoint', json={...})  -- new style with json
     Pass bypass_cache=True to always fetch fresh (skips read and write of cache).
+    Pass token=... to override the default bot token (e.g. for custom bots).
     """
     import time as _time
     # Handle both calling conventions
@@ -10010,7 +10011,8 @@ def cub_protector_bot_request(endpoint_or_method, endpoint_or_none=None, method=
         if cached is not None:
             return cached
 
-    token = get_cub_protector_token()
+    if token is None:
+        token = get_cub_protector_token()
     if not token:
         app.logger.error('CUB PROTECTOR token not found')
         return None
@@ -10415,7 +10417,7 @@ def cub_protector_create_hub(guild_id):
     ownership_lock = req_data.get('ownership_lock', -1)
 
     # Create the hub voice channel via Discord API
-    channel_data = cub_protector_bot_request(f'/guilds/{guild_id}/channels', method='POST', json_data={
+    channel_data = _guild_bot_request(guild_id, f'/guilds/{guild_id}/channels', method='POST', json_data={
         'name': hub_name,
         'type': 2,  # GUILD_VOICE
         'parent_id': category_id,
@@ -10550,7 +10552,7 @@ def cub_protector_get_voice_mods(guild_id):
 
     # Resolve role names from bot API
     roles_info = []
-    guild_roles = cub_protector_bot_request(f'/guilds/{guild_id}/roles')
+    guild_roles = _guild_bot_request(guild_id, f'/guilds/{guild_id}/roles')
     role_map = {r['id']: r['name'] for r in (guild_roles or [])}
     for role_id in mods.get('roles', []):
         roles_info.append({'id': role_id, 'name': role_map.get(role_id, role_id)})
@@ -10823,7 +10825,7 @@ def cub_protector_categories(guild_id):
         return jsonify({'error': 'Access denied'}), 403
 
     # Get all channels from the guild
-    channels = cub_protector_bot_request(f'/guilds/{guild_id}/channels')
+    channels = _guild_bot_request(guild_id, f'/guilds/{guild_id}/channels')
     if not channels:
         return jsonify({'categories': []})
 
@@ -11157,7 +11159,7 @@ def cub_protector_welcome_test(guild_id):
 def cub_protector_channels(guild_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
-    channels = cub_protector_bot_request(f'/guilds/{guild_id}/channels')
+    channels = _guild_bot_request(guild_id, f'/guilds/{guild_id}/channels')
     if not channels:
         return jsonify({'channels': []})
     return jsonify({'channels': [{'id': c['id'], 'name': c['name'], 'type': c.get('type', 0)} for c in channels]})
@@ -11167,7 +11169,7 @@ def cub_protector_channels(guild_id):
 def cub_protector_roles(guild_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
-    roles = cub_protector_bot_request(f'/guilds/{guild_id}/roles')
+    roles = _guild_bot_request(guild_id, f'/guilds/{guild_id}/roles')
     if not roles:
         return jsonify({'roles': []})
     # Filter out @everyone and managed/bot roles, sort by position descending
@@ -12360,7 +12362,7 @@ def cub_protector_mod_action(guild_id):
                 })
         except Exception:
             pass
-        result = cub_protector_bot_request('PUT', f'/guilds/{guild_id}/bans/{user_id}', json={
+        result = _guild_bot_request(guild_id, 'PUT', f'/guilds/{guild_id}/bans/{user_id}', json={
             'delete_message_seconds': delete_days * 86400,
             'reason': reason
         })
@@ -12382,7 +12384,7 @@ def cub_protector_mod_action(guild_id):
         return jsonify({'error': 'Failed to ban user'}), 500
 
     elif action == 'kick':
-        result = cub_protector_bot_request('DELETE', f'/guilds/{guild_id}/members/{user_id}', json={'reason': reason})
+        result = _guild_bot_request(guild_id, 'DELETE', f'/guilds/{guild_id}/members/{user_id}', json={'reason': reason})
         if result is not None:
             data = load_cp_json(CUB_PROTECTOR_MODERATION_FILE)
             if 'guilds' not in data: data['guilds'] = {}
@@ -12405,7 +12407,7 @@ def cub_protector_mod_action(guild_id):
         except (ValueError, TypeError):
             duration = 3600
         expires_at = datetime.utcnow() + timedelta(seconds=duration)
-        result = cub_protector_bot_request('PATCH', f'/guilds/{guild_id}/members/{user_id}', json={
+        result = _guild_bot_request(guild_id, 'PATCH', f'/guilds/{guild_id}/members/{user_id}', json={
             'communication_disabled_until': expires_at.isoformat() + 'Z'
         })
         if result is not None:
@@ -12426,7 +12428,7 @@ def cub_protector_mod_action(guild_id):
         return jsonify({'error': 'Failed to mute user'}), 500
 
     elif action == 'unmute':
-        result = cub_protector_bot_request('PATCH', f'/guilds/{guild_id}/members/{user_id}', json={
+        result = _guild_bot_request(guild_id, 'PATCH', f'/guilds/{guild_id}/members/{user_id}', json={
             'communication_disabled_until': None
         })
         if result is not None:
@@ -12450,7 +12452,7 @@ def cub_protector_mod_action(guild_id):
         return jsonify({'error': 'Failed to unmute user'}), 500
 
     elif action == 'unban':
-        result = cub_protector_bot_request('DELETE', f'/guilds/{guild_id}/bans/{user_id}')
+        result = _guild_bot_request(guild_id, 'DELETE', f'/guilds/{guild_id}/bans/{user_id}')
         if result is not None:
             data = load_cp_json(CUB_PROTECTOR_MODERATION_FILE)
             if 'guilds' not in data: data['guilds'] = {}
@@ -12677,6 +12679,23 @@ def _load_custom_bots():
 def _save_custom_bots(data):
     with open(CUSTOM_BOTS_FILE, 'w') as f:
         json.dump(data, f, indent=2)
+
+def _get_guild_bot_token(guild_id):
+    """Return the effective Discord bot token for a guild.
+    Uses the custom bot token if the guild has an active custom bot, else falls back to the main bot token."""
+    try:
+        cb_data = _load_custom_bots()
+        entry = cb_data.get('guilds', {}).get(str(guild_id), {})
+        if entry.get('enabled') and entry.get('token'):
+            return entry['token']
+    except Exception:
+        pass
+    return get_cub_protector_token()
+
+def _guild_bot_request(guild_id, *args, **kwargs):
+    """Like cub_protector_bot_request but automatically picks the correct bot token for the guild."""
+    kwargs.setdefault('token', _get_guild_bot_token(guild_id))
+    return cub_protector_bot_request(*args, **kwargs)
 
 @app.route('/api/cub-protector/guilds/<guild_id>/custom-bot', methods=['GET'])
 @cub_protector_auth_required
@@ -12943,15 +12962,15 @@ def cub_protector_backups_create(guild_id):
         return jsonify({'error': 'Access denied'}), 403
 
     # Fetch guild info via Discord API
-    guild_data = cub_protector_bot_request('GET', f'/guilds/{guild_id}?with_counts=true')
+    guild_data = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}?with_counts=true')
     if not guild_data:
         return jsonify({'error': 'Failed to fetch guild data'}), 500
 
     # Fetch channels
-    channels = cub_protector_bot_request('GET', f'/guilds/{guild_id}/channels') or []
+    channels = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/channels') or []
 
     # Fetch roles
-    roles = cub_protector_bot_request('GET', f'/guilds/{guild_id}/roles') or []
+    roles = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/roles') or []
 
     import uuid
     backup = {
@@ -13055,7 +13074,7 @@ def cub_protector_backups_restore(guild_id, backup_id):
     # Restore roles (create missing roles)
     if 'roles' in restore_what:
         for role in sorted(backup.get('roles', []), key=lambda r: r.get('position', 0)):
-            cub_protector_bot_request('POST', f'/guilds/{guild_id}/roles', json={
+            _guild_bot_request(guild_id, 'POST', f'/guilds/{guild_id}/roles', json={
                 'name': role['name'],
                 'color': role['color'],
                 'permissions': str(role['permissions']),
@@ -13073,7 +13092,7 @@ def cub_protector_backups_restore(guild_id, backup_id):
                 payload['parent_id'] = ch['parent_id']
             if ch.get('topic'):
                 payload['topic'] = ch['topic']
-            cub_protector_bot_request('POST', f'/guilds/{guild_id}/channels', json=payload)
+            _guild_bot_request(guild_id, 'POST', f'/guilds/{guild_id}/channels', json=payload)
         restored.append('channels')
 
     return jsonify({'success': True, 'restored': restored})
@@ -13365,7 +13384,7 @@ def cub_protector_audit_log(guild_id):
     params = {'limit': limit}
     if filter_type in action_type_map:
         params['action_type'] = action_type_map[filter_type][0]
-    audit_data = cub_protector_bot_request('GET', f'/guilds/{guild_id}/audit-logs', params=params)
+    audit_data = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/audit-logs', params=params)
     if not audit_data:
         return jsonify({'entries': []})
     action_names = {
@@ -13418,12 +13437,12 @@ def cub_protector_members_search(guild_id):
     if not query:
         return jsonify({'members': []})
     if query.isdigit():
-        m = cub_protector_bot_request('GET', f'/guilds/{guild_id}/members/{query}')
+        m = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/members/{query}')
         if m and isinstance(m, dict) and 'user' in m:
             user = m.get('user', {})
             avatar = f"https://cdn.discordapp.com/avatars/{user['id']}/{user.get('avatar')}.png" if user.get('avatar') else ''
             return jsonify({'members': [{'id': user['id'], 'username': user.get('username', user['id']), 'avatar': avatar, 'roles': m.get('roles', []), 'joined_at': m.get('joined_at', '')}]})
-    result = cub_protector_bot_request('GET', f'/guilds/{guild_id}/members/search', params={'query': query, 'limit': 5})
+    result = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/members/search', params={'query': query, 'limit': 5})
     if not result or not isinstance(result, list):
         return jsonify({'members': []})
     members = []
@@ -13438,7 +13457,7 @@ def cub_protector_members_search(guild_id):
 def cub_protector_member_add_role(guild_id, member_id, role_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
-    result = cub_protector_bot_request('PUT', f'/guilds/{guild_id}/members/{member_id}/roles/{role_id}')
+    result = _guild_bot_request(guild_id, 'PUT', f'/guilds/{guild_id}/members/{member_id}/roles/{role_id}')
     if result is not None:
         return jsonify({'success': True})
     return jsonify({'error': 'Failed to add role'}), 400
@@ -13448,7 +13467,7 @@ def cub_protector_member_add_role(guild_id, member_id, role_id):
 def cub_protector_member_remove_role(guild_id, member_id, role_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
-    result = cub_protector_bot_request('DELETE', f'/guilds/{guild_id}/members/{member_id}/roles/{role_id}')
+    result = _guild_bot_request(guild_id, 'DELETE', f'/guilds/{guild_id}/members/{member_id}/roles/{role_id}')
     if result is not None:
         return jsonify({'success': True})
     return jsonify({'error': 'Failed to remove role'}), 400
@@ -13467,7 +13486,7 @@ def cub_protector_bulk_role(guild_id):
     members = []
     after = '0'
     for _ in range(10):
-        batch = cub_protector_bot_request('GET', f'/guilds/{guild_id}/members', params={'limit': 1000, 'after': after})
+        batch = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/members', params={'limit': 1000, 'after': after})
         if not batch or not isinstance(batch, list):
             break
         if not batch:
@@ -13481,10 +13500,10 @@ def cub_protector_bulk_role(guild_id):
         uid = m.get('user', {}).get('id')
         has_role = role_id in m.get('roles', [])
         if action == 'add' and not has_role:
-            cub_protector_bot_request('PUT', f'/guilds/{guild_id}/members/{uid}/roles/{role_id}')
+            _guild_bot_request(guild_id, 'PUT', f'/guilds/{guild_id}/members/{uid}/roles/{role_id}')
             count += 1
         elif action == 'remove' and has_role:
-            cub_protector_bot_request('DELETE', f'/guilds/{guild_id}/members/{uid}/roles/{role_id}')
+            _guild_bot_request(guild_id, 'DELETE', f'/guilds/{guild_id}/members/{uid}/roles/{role_id}')
             count += 1
     return jsonify({'success': True, 'message': f'{action.title()}d role for {count} members'})
 
@@ -13735,7 +13754,7 @@ def cub_protector_counters_create(guild_id):
         }
         if category_id:
             ch_payload['parent_id'] = category_id
-        ch_data = cub_protector_bot_request('POST', f'/guilds/{guild_id}/channels', json_data=ch_payload)
+        ch_data = _guild_bot_request(guild_id, 'POST', f'/guilds/{guild_id}/channels', json_data=ch_payload)
         if ch_data and 'id' in ch_data:
             channel_id = ch_data['id']
     except Exception:
@@ -13849,7 +13868,7 @@ def cp_lockdown_activate(guild_id):
     message = settings.get('message', '')
     # Get channels to lock
     if lock_all:
-        guild_channels = cub_protector_bot_request('GET', f'/guilds/{guild_id}/channels')
+        guild_channels = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/channels')
         if guild_channels:
             channels = [c['id'] for c in guild_channels if c.get('type') in (0, 5)]
     locked = []
@@ -13982,7 +14001,7 @@ def cp_nicknames_bulk(guild_id):
     if not search:
         return jsonify({'error': 'Search text is required'}), 400
     # Fetch guild members (up to 1000)
-    members = cub_protector_bot_request('GET', f'/guilds/{guild_id}/members', params={'limit': 1000})
+    members = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/members', params={'limit': 1000})
     if not members:
         return jsonify({'error': 'Failed to fetch members'}), 500
     renamed = 0
@@ -13990,7 +14009,7 @@ def cp_nicknames_bulk(guild_id):
         display = member.get('nick') or member.get('user', {}).get('username', '')
         if search.lower() in display.lower():
             new_nick = display.replace(search, replace) if replace else replace
-            result = cub_protector_bot_request('PATCH', f'/guilds/{guild_id}/members/{member["user"]["id"]}', json={'nick': new_nick or None})
+            result = _guild_bot_request(guild_id, 'PATCH', f'/guilds/{guild_id}/members/{member["user"]["id"]}', json={'nick': new_nick or None})
             if result is not None:
                 renamed += 1
     return jsonify({'success': True, 'count': renamed})
@@ -14654,7 +14673,7 @@ def cp_color_roles_add(guild_id):
     if not re.match(r'^#[0-9A-Fa-f]{6}$', hex_color):
         return jsonify({'error': 'Invalid hex color — use format #FF0000'}), 400
     color_int = int(hex_color.lstrip('#'), 16)
-    role_resp = cub_protector_bot_request('POST', f'/guilds/{guild_id}/roles', json={'name': name, 'color': color_int})
+    role_resp = _guild_bot_request(guild_id, 'POST', f'/guilds/{guild_id}/roles', json={'name': name, 'color': color_int})
     if not role_resp or 'id' not in role_resp:
         return jsonify({'error': 'Failed to create Discord role — check bot permissions'}), 500
     role_id = role_resp['id']
@@ -14669,7 +14688,7 @@ def cp_color_roles_add(guild_id):
 def cp_color_roles_delete(guild_id, role_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
-    cub_protector_bot_request('DELETE', f'/guilds/{guild_id}/roles/{role_id}')
+    _guild_bot_request(guild_id, 'DELETE', f'/guilds/{guild_id}/roles/{role_id}')
     data = load_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE)
     if guild_id in data.get('guilds', {}):
         cr = data['guilds'][guild_id].get('color_roles', {})
@@ -15337,7 +15356,7 @@ def ban_appeal_verify_code():
                 if existing:
                     latest = existing[-1]
                     status = latest.get('status', 'pending')
-                    guild_info = cub_protector_bot_request('GET', f'/guilds/{guild_id}')
+                    guild_info = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}')
                     guild_name = guild_info.get('name', 'Unknown Server') if guild_info else 'Unknown Server'
                     invite_link = None
                     if status == 'approved':
@@ -15345,7 +15364,7 @@ def ban_appeal_verify_code():
                         invite_link = latest.get('invite_link')
                         if not invite_link:
                             # Generate a fresh 1-use, 7-day invite
-                            guild_channels = cub_protector_bot_request('GET', f'/guilds/{guild_id}/channels')
+                            guild_channels = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/channels')
                             invite_channel_id = None
                             if guild_channels:
                                 for ch in guild_channels:
@@ -15390,7 +15409,7 @@ def ban_appeal_verify_code():
                         return jsonify({'error': f'You must wait {remaining} more day(s) before appealing.'}), 400
 
                 # Get guild name
-                guild_info = cub_protector_bot_request('GET', f'/guilds/{guild_id}')
+                guild_info = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}')
                 guild_name = guild_info.get('name', 'Unknown Server') if guild_info else 'Unknown Server'
 
                 # Get custom questions (fall back to default if none configured)
@@ -15645,12 +15664,12 @@ def cp_appeal_review(guild_id, appeal_id):
     dm_user = appeal_settings.get('dm_user', True)
 
     # Get guild name for DM
-    guild_info = cub_protector_bot_request('GET', f'/guilds/{guild_id}')
+    guild_info = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}')
     guild_name = guild_info.get('name', 'a server') if guild_info else 'a server'
 
     if action == 'approve':
         # Unban the user
-        cub_protector_bot_request('DELETE', f'/guilds/{guild_id}/bans/{user_id}')
+        _guild_bot_request(guild_id, 'DELETE', f'/guilds/{guild_id}/bans/{user_id}')
 
         # DM the user
         if dm_user:

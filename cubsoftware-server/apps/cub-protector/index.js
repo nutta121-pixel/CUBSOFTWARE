@@ -299,9 +299,10 @@ async function sendLog(guild, eventType, embed) {
 function loadWelcomeData() { return loadJsonFile(WELCOME_FILE); }
 function saveWelcomeData(data) { saveJsonFile(WELCOME_FILE, data); }
 function getWelcomeGuild(data, guildId) {
+    if (!data.guilds) data.guilds = {};
     if (!data.guilds[guildId]) {
         data.guilds[guildId] = {
-            welcome: { enabled: false, channel_id: null, message: 'Welcome to {server}, {user}!', dm_message: null, auto_roles: [] },
+            welcome: { enabled: false, channel_id: null, message: 'Welcome to {server}, {user}!', dm_message: null, auto_roles: [], autorole_enabled: false, autorole_delay: 0 },
             goodbye: { enabled: false, channel_id: null, message: 'Goodbye {user}, we\'ll miss you!' },
         };
     }

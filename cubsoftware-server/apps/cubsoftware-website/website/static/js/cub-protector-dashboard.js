@@ -1699,11 +1699,12 @@
             }
         };
         try {
-            await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/welcome`, {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/welcome`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            showToast('Welcome config saved', 'success');
+            if (res.ok) showToast('Welcome config saved', 'success');
+            else showToast('Failed to save welcome config', 'error');
         } catch (e) { showToast('Failed to save', 'error'); }
     };
 

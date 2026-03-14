@@ -19,9 +19,36 @@ app.on('second-instance', () => {
     }
 });
 
-// Ensure Discord IPC socket is discoverable on Linux
-if (process.platform === 'linux' && !process.env.XDG_RUNTIME_DIR) {
-    process.env.XDG_RUNTIME_DIR = `/run/user/${process.getuid()}`;
+// Ensure Discord IPC socket is discoverable on Linux (including Flatpak/Snap installs)
+if (process.platform === 'linux') {
+    if (!process.env.XDG_RUNTIME_DIR) {
+        process.env.XDG_RUNTIME_DIR = `/run/user/${process.getuid()}`;
+    }
+}
+
+function ensureLinuxDiscordSockets() {
+    if (process.platform !== 'linux') return;
+    const xdgDir = process.env.XDG_RUNTIME_DIR;
+    const altPrefixes = [
+        path.join(xdgDir, 'app', 'com.discordapp.Discord'),
+        path.join(xdgDir, 'app', 'com.discordapp.DiscordPTB'),
+        path.join(xdgDir, 'app', 'com.discordapp.DiscordCanary'),
+        path.join(xdgDir, 'snap.discord'),
+    ];
+    for (let i = 0; i < 10; i++) {
+        const socketName = `discord-ipc-${i}`;
+        const standardPath = path.join(xdgDir, socketName);
+        try { fs.accessSync(standardPath); continue; } catch (e) {}
+        for (const prefix of altPrefixes) {
+            const altPath = path.join(prefix, socketName);
+            try {
+                fs.accessSync(altPath);
+                try { fs.unlinkSync(standardPath); } catch (e) {}
+                fs.symlinkSync(altPath, standardPath);
+                break;
+            } catch (e) {}
+        }
+    }
 }
 
 let mainWindow = null;
@@ -329,6 +356,13 @@ function createWindow() {
 
     mainWindow.loadFile('renderer/index.html');
 
+    // Shift+D opens/closes DevTools (Ctrl+Shift+D is used for disconnect hotkey)
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+        if (input.type === 'keyDown' && input.shift && input.key === 'D' && !input.control && !input.alt) {
+            mainWindow.webContents.toggleDevTools();
+        }
+    });
+
     mainWindow.once('ready-to-show', () => {
         if (!settings.startMinimized && !settings.trayOnlyMode) mainWindow.show();
     });
@@ -449,6 +483,7 @@ async function connect(clientId, activity) {
         });
 
         rpcClient.on('disconnected', () => {
+            const wasConnected = isConnected;
             isConnected = false;
             connectionTime = null;
             currentPartyId = null;
@@ -456,6 +491,8 @@ async function connect(clientId, activity) {
             stopKeepalive();
             updateTrayIcon(false);
             updateTray();
+            // If we were never fully connected, the catch block handles reconnect — don't double-schedule
+            if (!wasConnected) return;
             if (settings.autoReconnect && !app.isQuitting && !isManualDisconnect) {
                 scheduleReconnect();
             } else {
@@ -463,6 +500,7 @@ async function connect(clientId, activity) {
             }
         });
 
+        ensureLinuxDiscordSockets();
         await rpcClient.login({ clientId });
 
     } catch (error) {

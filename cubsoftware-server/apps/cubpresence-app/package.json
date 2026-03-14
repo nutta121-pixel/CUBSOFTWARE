@@ -1,6 +1,6 @@
 {
   "name": "cubpresence",
-  "version": "1.3.17",
+  "version": "1.3.18",
   "description": "Discord Custom Rich Presence - Set your Discord activity from a simple app",
   "main": "main.js",
   "author": {

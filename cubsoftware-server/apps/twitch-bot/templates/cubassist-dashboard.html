@@ -223,6 +223,21 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
 .connected-badge.on  { background: rgba(87,242,135,.15); color: var(--success); border: 1px solid rgba(87,242,135,.3); }
 .connected-badge.off { background: rgba(237,66,69,.1);   color: var(--danger);  border: 1px solid rgba(237,66,69,.2); }
 
+/* ── Variable wiki ──────────────────────────────────────────────────── */
+.wiki-btn { font-size: 11px; background: rgba(88,101,242,.15); border: 1px solid rgba(88,101,242,.35); border-radius: 6px; padding: 3px 10px; color: var(--accent); cursor: pointer; transition: border-color .15s; font-family: 'Poppins', sans-serif; font-weight: 600; }
+.wiki-btn:hover { border-color: var(--accent); background: rgba(88,101,242,.25); }
+.wiki-section { margin-bottom: 22px; }
+.wiki-section:last-child { margin-bottom: 0; }
+.wiki-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.wiki-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.wiki-table td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: top; line-height: 1.5; }
+.wiki-table tr:last-child td { border-bottom: none; }
+.wiki-table tr:hover td { background: rgba(255,255,255,.025); }
+.wiki-var { font-family: 'Fira Code', monospace; color: #a78bfa; white-space: nowrap; cursor: pointer; }
+.wiki-var:hover { color: #c4b5fd; text-decoration: underline; }
+.wiki-desc { color: var(--text-sec); padding: 0 12px; }
+.wiki-ex { font-family: 'Fira Code', monospace; color: var(--success); font-size: 11px; opacity: .8; white-space: nowrap; }
+
 /* ── Responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
     .app-sidebar { width: 56px; }
@@ -382,46 +397,20 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                     </div>
 
                     <div class="hint" style="margin-bottom:16px">
-                        Available variables:
-                        <div class="var-chips" style="margin-top:6px">
-                            <span class="var-chip" title="Display name of user who ran the command" onclick="insertVar('$(user)')">$(user)</span>
-                            <span class="var-chip" title="First word of args, or user if none" onclick="insertVar('$(touser)')">$(touser)</span>
-                            <span class="var-chip" title="IRC lowercase username" onclick="insertVar('$(nick)')">$(nick)</span>
-                            <span class="var-chip" title="Twitch user ID" onclick="insertVar('$(userid)')">$(userid)</span>
-                            <span class="var-chip" title="User's chat color (hex)" onclick="insertVar('$(color)')">$(color)</span>
-                            <span class="var-chip" title="Full argument text" onclick="insertVar('$(query)')">$(query)</span>
-                            <span class="var-chip" title="First argument word" onclick="insertVar('$(args 1)')">$(args 1)</span>
-                            <span class="var-chip" title="Second argument word" onclick="insertVar('$(args 2)')">$(args 2)</span>
-                            <span class="var-chip" title="Bot account name" onclick="insertVar('$(bot)')">$(bot)</span>
-                            <span class="var-chip" title="Channel name" onclick="insertVar('$(channel)')">$(channel)</span>
-                            <span class="var-chip" title="1 if user is mod+" onclick="insertVar('$(ismod)')">$(ismod)</span>
-                            <span class="var-chip" title="1 if user is VIP+" onclick="insertVar('$(isvip)')">$(isvip)</span>
-                            <span class="var-chip" title="1 if user is subscriber+" onclick="insertVar('$(issub)')">$(issub)</span>
-                            <span class="var-chip" title="How many times this command has been used" onclick="insertVar('$(count)')">$(count)</span>
-                            <span class="var-chip" title="How many times this user has used this command" onclick="insertVar('$(usercount)')">$(usercount)</span>
-                            <span class="var-chip" title="Random number between two values" onclick="insertVar('$(random 1 100)')">$(random 1 100)</span>
-                            <span class="var-chip" title="Pick a random option" onclick="insertVar('$(choose opt1|opt2|opt3)')">$(choose)</span>
-                            <span class="var-chip" title="Math expression" onclick="insertVar('$(math 1+2)')">$(math)</span>
-                            <span class="var-chip" title="Uppercase text" onclick="insertVar('$(upper text)')">$(upper)</span>
-                            <span class="var-chip" title="Lowercase text" onclick="insertVar('$(lower text)')">$(lower)</span>
-                            <span class="var-chip" title="Length of text" onclick="insertVar('$(length text)')">$(length)</span>
-                            <span class="var-chip" title="Repeat text N times" onclick="insertVar('$(repeat text|3)')">$(repeat)</span>
-                            <span class="var-chip" title="Conditional: if condition is truthy" onclick="insertVar('$(if $(ismod)|yes|no)')">$(if)</span>
+                        Available variables: <span class="wiki-btn" onclick="openVarWiki()" style="margin-left:6px">📖 Variable Wiki</span>
+                        <div class="var-chips" style="margin-top:8px">
+                            <span class="var-chip" title="Display name of user who triggered the command" onclick="insertVar('$(user)')">$(user)</span>
+                            <span class="var-chip" title="First argument word, or sender name if none" onclick="insertVar('$(touser)')">$(touser)</span>
+                            <span class="var-chip" title="Everything typed after the command" onclick="insertVar('$(query)')">$(query)</span>
+                            <span class="var-chip" title="First word of the input" onclick="insertVar('$(args 1)')">$(args 1)</span>
+                            <span class="var-chip" title="Total times this command has been used" onclick="insertVar('$(count)')">$(count)</span>
+                            <span class="var-chip" title="Random number in range" onclick="insertVar('$(random 1 100)')">$(random 1 100)</span>
+                            <span class="var-chip" title="Pick one option at random" onclick="insertVar('$(choose opt1|opt2|opt3)')">$(choose)</span>
                             <span class="var-chip" title="Stream uptime" onclick="insertVar('$(uptime)')">$(uptime)</span>
-                            <span class="var-chip" title="Current game" onclick="insertVar('$(game)')">$(game)</span>
-                            <span class="var-chip" title="Stream title" onclick="insertVar('$(title)')">$(title)</span>
+                            <span class="var-chip" title="Current game/category" onclick="insertVar('$(game)')">$(game)</span>
                             <span class="var-chip" title="Live viewer count" onclick="insertVar('$(viewers)')">$(viewers)</span>
-                            <span class="var-chip" title="Follower count" onclick="insertVar('$(followers)')">$(followers)</span>
                             <span class="var-chip" title="Today's date" onclick="insertVar('$(date)')">$(date)</span>
-                            <span class="var-chip" title="Current time HH:MM" onclick="insertVar('$(time)')">$(time)</span>
-                            <span class="var-chip" title="Current hour" onclick="insertVar('$(hours)')">$(hours)</span>
-                            <span class="var-chip" title="Current minute" onclick="insertVar('$(minutes)')">$(minutes)</span>
-                            <span class="var-chip" title="Day of week name" onclick="insertVar('$(dayofweek)')">$(dayofweek)</span>
-                            <span class="var-chip" title="Current year" onclick="insertVar('$(year)')">$(year)</span>
-                            <span class="var-chip" title="Month name" onclick="insertVar('$(monthname)')">$(monthname)</span>
-                            <span class="var-chip" title="Day of month" onclick="insertVar('$(day)')">$(day)</span>
-                            <span class="var-chip" title="Random saved quote" onclick="insertVar('$(quote)')">$(quote)</span>
-                            <span class="var-chip" title="Specific quote by number" onclick="insertVar('$(quote 1)')">$(quote N)</span>
+                            <span class="var-chip" title="Current time" onclick="insertVar('$(time)')">$(time)</span>
                             <span class="var-chip" title="Persistent channel variable" onclick="insertVar('$(customvar name)')">$(customvar)</span>
                             <span class="var-chip" title="Fetch text from a URL" onclick="insertVar('$(urlfetch https://)')">$(urlfetch)</span>
                         </div>
@@ -611,46 +600,21 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
             <label>Response</label>
             <textarea id="cmdResponse" rows="3" placeholder="Hello $(user)! This command has been used $(count) times."></textarea>
             <div class="var-chips">
-                <span class="var-chip" title="Display name" onclick="insertModalVar('$(user)')">$(user)</span>
-                <span class="var-chip" title="First arg or user" onclick="insertModalVar('$(touser)')">$(touser)</span>
-                <span class="var-chip" title="IRC lowercase nick" onclick="insertModalVar('$(nick)')">$(nick)</span>
-                <span class="var-chip" title="Twitch user ID" onclick="insertModalVar('$(userid)')">$(userid)</span>
-                <span class="var-chip" title="User's chat color" onclick="insertModalVar('$(color)')">$(color)</span>
-                <span class="var-chip" title="Full argument text" onclick="insertModalVar('$(query)')">$(query)</span>
+                <span class="var-chip" title="Display name of user" onclick="insertModalVar('$(user)')">$(user)</span>
+                <span class="var-chip" title="First arg, or sender name" onclick="insertModalVar('$(touser)')">$(touser)</span>
+                <span class="var-chip" title="Everything after the command" onclick="insertModalVar('$(query)')">$(query)</span>
                 <span class="var-chip" title="First argument word" onclick="insertModalVar('$(args 1)')">$(args 1)</span>
-                <span class="var-chip" title="Second argument word" onclick="insertModalVar('$(args 2)')">$(args 2)</span>
-                <span class="var-chip" title="Bot account name" onclick="insertModalVar('$(bot)')">$(bot)</span>
-                <span class="var-chip" title="Channel name" onclick="insertModalVar('$(channel)')">$(channel)</span>
-                <span class="var-chip" title="1 if mod+" onclick="insertModalVar('$(ismod)')">$(ismod)</span>
-                <span class="var-chip" title="1 if VIP+" onclick="insertModalVar('$(isvip)')">$(isvip)</span>
-                <span class="var-chip" title="1 if sub+" onclick="insertModalVar('$(issub)')">$(issub)</span>
-                <span class="var-chip" title="Command use count" onclick="insertModalVar('$(count)')">$(count)</span>
-                <span class="var-chip" title="Per-user use count" onclick="insertModalVar('$(usercount)')">$(usercount)</span>
-                <span class="var-chip" title="Random number" onclick="insertModalVar('$(random 1 100)')">$(random 1 100)</span>
-                <span class="var-chip" title="Random option" onclick="insertModalVar('$(choose opt1|opt2|opt3)')">$(choose)</span>
-                <span class="var-chip" title="Math expression" onclick="insertModalVar('$(math 1+2)')">$(math)</span>
-                <span class="var-chip" title="Uppercase" onclick="insertModalVar('$(upper text)')">$(upper)</span>
-                <span class="var-chip" title="Lowercase" onclick="insertModalVar('$(lower text)')">$(lower)</span>
-                <span class="var-chip" title="String length" onclick="insertModalVar('$(length text)')">$(length)</span>
-                <span class="var-chip" title="Repeat text" onclick="insertModalVar('$(repeat text|3)')">$(repeat)</span>
-                <span class="var-chip" title="Conditional" onclick="insertModalVar('$(if $(ismod)|yes|no)')">$(if)</span>
+                <span class="var-chip" title="Total uses of this command" onclick="insertModalVar('$(count)')">$(count)</span>
+                <span class="var-chip" title="Random number in range" onclick="insertModalVar('$(random 1 100)')">$(random 1 100)</span>
+                <span class="var-chip" title="Pick one option at random" onclick="insertModalVar('$(choose opt1|opt2|opt3)')">$(choose)</span>
                 <span class="var-chip" title="Stream uptime" onclick="insertModalVar('$(uptime)')">$(uptime)</span>
-                <span class="var-chip" title="Current game" onclick="insertModalVar('$(game)')">$(game)</span>
-                <span class="var-chip" title="Stream title" onclick="insertModalVar('$(title)')">$(title)</span>
-                <span class="var-chip" title="Live viewers" onclick="insertModalVar('$(viewers)')">$(viewers)</span>
-                <span class="var-chip" title="Follower count" onclick="insertModalVar('$(followers)')">$(followers)</span>
+                <span class="var-chip" title="Current game/category" onclick="insertModalVar('$(game)')">$(game)</span>
+                <span class="var-chip" title="Live viewer count" onclick="insertModalVar('$(viewers)')">$(viewers)</span>
                 <span class="var-chip" title="Today's date" onclick="insertModalVar('$(date)')">$(date)</span>
                 <span class="var-chip" title="Current time" onclick="insertModalVar('$(time)')">$(time)</span>
-                <span class="var-chip" title="Current hour" onclick="insertModalVar('$(hours)')">$(hours)</span>
-                <span class="var-chip" title="Current minute" onclick="insertModalVar('$(minutes)')">$(minutes)</span>
-                <span class="var-chip" title="Day of week" onclick="insertModalVar('$(dayofweek)')">$(dayofweek)</span>
-                <span class="var-chip" title="Year" onclick="insertModalVar('$(year)')">$(year)</span>
-                <span class="var-chip" title="Month name" onclick="insertModalVar('$(monthname)')">$(monthname)</span>
-                <span class="var-chip" title="Day of month" onclick="insertModalVar('$(day)')">$(day)</span>
-                <span class="var-chip" title="Random quote" onclick="insertModalVar('$(quote)')">$(quote)</span>
-                <span class="var-chip" title="Specific quote" onclick="insertModalVar('$(quote 1)')">$(quote N)</span>
-                <span class="var-chip" title="Custom variable" onclick="insertModalVar('$(customvar name)')">$(customvar)</span>
-                <span class="var-chip" title="Fetch from URL" onclick="insertModalVar('$(urlfetch https://)')">$(urlfetch)</span>
+                <span class="var-chip" title="Persistent channel variable" onclick="insertModalVar('$(customvar name)')">$(customvar)</span>
+                <span class="var-chip" title="Fetch text from a URL" onclick="insertModalVar('$(urlfetch https://)')">$(urlfetch)</span>
+                <span class="wiki-btn" onclick="openVarWiki(true)" style="align-self:center">📖 All Variables</span>
             </div>
         </div>
         <div class="form-row">
@@ -735,6 +699,111 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
         <div class="modal-footer">
             <button class="btn btn-ghost" onclick="closeModal('timerModal')">Cancel</button>
             <button class="btn btn-primary" onclick="saveTimer()">Save Timer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Variable Wiki Modal -->
+<div class="modal-backdrop" id="varWikiModal">
+    <div class="modal" style="width:680px;max-height:88vh">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-shrink:0">
+            <div class="modal-title" style="margin-bottom:0">📖 Variable Reference</div>
+            <button class="btn btn-ghost btn-sm" onclick="closeModal('varWikiModal')">✕ Close</button>
+        </div>
+        <p class="hint" style="margin-bottom:18px">Click any variable to copy it. Variables marked <span style="color:var(--success)">●</span> work in timers too.</p>
+
+        <div class="wiki-section">
+            <div class="wiki-section-title">👤 User Info</div>
+            <table class="wiki-table">
+                <tr><td class="wiki-var" onclick="wikiCopy('$(user)')">$(user)</td><td class="wiki-desc">Display name of the user who triggered the command</td><td class="wiki-ex">CubSoftware</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(nick)')">$(nick)</td><td class="wiki-desc">IRC lowercase username</td><td class="wiki-ex">cubsoftware</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(userid)')">$(userid)</td><td class="wiki-desc">Twitch user ID number</td><td class="wiki-ex">123456789</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(touser)')">$(touser)</td><td class="wiki-desc">First argument stripped of @, or the sender if no args given</td><td class="wiki-ex">Friend</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(color)')">$(color)</td><td class="wiki-desc">User's chosen chat colour (hex code)</td><td class="wiki-ex">#FF4500</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ismod)')">$(ismod)</td><td class="wiki-desc">Returns 1 if the user is a Moderator or above, else 0</td><td class="wiki-ex">1</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(isvip)')">$(isvip)</td><td class="wiki-desc">Returns 1 if the user is a VIP or above, else 0</td><td class="wiki-ex">0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(issub)')">$(issub)</td><td class="wiki-desc">Returns 1 if the user is a Subscriber or above, else 0</td><td class="wiki-ex">1</td></tr>
+            </table>
+        </div>
+
+        <div class="wiki-section">
+            <div class="wiki-section-title">✏️ Input & Arguments</div>
+            <table class="wiki-table">
+                <tr><td class="wiki-var" onclick="wikiCopy('$(query)')">$(query)</td><td class="wiki-desc">Everything typed after the command name</td><td class="wiki-ex">hello world</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(args 1)')">$(args 1)</td><td class="wiki-desc">First word of input. Change number for 2nd, 3rd, etc.</td><td class="wiki-ex">hello</td></tr>
+            </table>
+        </div>
+
+        <div class="wiki-section">
+            <div class="wiki-section-title">🔢 Counters</div>
+            <table class="wiki-table">
+                <tr><td class="wiki-var" onclick="wikiCopy('$(count)')">$(count)</td><td class="wiki-desc">How many times this command has been used in total. Increments on every use.</td><td class="wiki-ex">42</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(usercount)')">$(usercount)</td><td class="wiki-desc">How many times this specific user has used this command</td><td class="wiki-ex">7</td></tr>
+            </table>
+        </div>
+
+        <div class="wiki-section">
+            <div class="wiki-section-title">🎲 Random & Logic</div>
+            <table class="wiki-table">
+                <tr><td class="wiki-var" onclick="wikiCopy('$(random 1 100)')">$(random 1 100)</td><td class="wiki-desc">Random integer between two numbers (inclusive)</td><td class="wiki-ex">73</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(choose opt1|opt2|opt3)')">$(choose a|b|c)</td><td class="wiki-desc">Pick one of the pipe-separated options at random</td><td class="wiki-ex">b</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(math 1+2)')">$(math 1+2)</td><td class="wiki-desc">Evaluate a math expression. Supports + - * / ** % //</td><td class="wiki-ex">3</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(if $(ismod)|yes|no)')">$(if cond|yes|no)</td><td class="wiki-desc">Return the second value if condition is truthy (non-empty, non-zero), else the third</td><td class="wiki-ex">yes</td></tr>
+            </table>
+        </div>
+
+        <div class="wiki-section">
+            <div class="wiki-section-title">🔤 String Manipulation</div>
+            <table class="wiki-table">
+                <tr><td class="wiki-var" onclick="wikiCopy('$(upper text)')">$(upper text)</td><td class="wiki-desc">Convert text to UPPERCASE. Can wrap other variables, e.g. <code style="font-size:11px;color:#a78bfa">$(upper $(game))</code></td><td class="wiki-ex">TEXT</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(lower text)')">$(lower text)</td><td class="wiki-desc">Convert text to lowercase</td><td class="wiki-ex">text</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(length text)')">$(length text)</td><td class="wiki-desc">Number of characters in the text</td><td class="wiki-ex">4</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(repeat text|3)')">$(repeat text|N)</td><td class="wiki-desc">Repeat text N times (max 20). Separate text and count with a pipe.</td><td class="wiki-ex">texttexttext</td></tr>
+            </table>
+        </div>
+
+        <div class="wiki-section">
+            <div class="wiki-section-title">📺 Stream Info <small style="font-weight:400;opacity:.6;font-size:10px">(live streams only)</small></div>
+            <table class="wiki-table">
+                <tr><td class="wiki-var" onclick="wikiCopy('$(uptime)')">$(uptime)</td><td class="wiki-desc">How long the stream has been live</td><td class="wiki-ex">2h 30m</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(game)')">$(game)</td><td class="wiki-desc">Current game or category</td><td class="wiki-ex">Minecraft</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(title)')">$(title)</td><td class="wiki-desc">Stream title</td><td class="wiki-ex">Sunday chill stream</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(viewers)')">$(viewers)</td><td class="wiki-desc">Current live viewer count</td><td class="wiki-ex">248</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(followers)')">$(followers)</td><td class="wiki-desc">Channel follower count (requires bot to have moderator:read:followers scope)</td><td class="wiki-ex">1024</td></tr>
+            </table>
+        </div>
+
+        <div class="wiki-section">
+            <div class="wiki-section-title">🕐 Date & Time <small style="font-weight:400;opacity:.6;font-size:10px">(server time)</small></div>
+            <table class="wiki-table">
+                <tr><td class="wiki-var" onclick="wikiCopy('$(date)')">$(date)</td><td class="wiki-desc">Full date <span style="color:var(--success)">●</span></td><td class="wiki-ex">March 14, 2025</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(time)')">$(time)</td><td class="wiki-desc">Current time as HH:MM <span style="color:var(--success)">●</span></td><td class="wiki-ex">20:35</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(hours)')">$(hours)</td><td class="wiki-desc">Current hour (24h)</td><td class="wiki-ex">20</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(minutes)')">$(minutes)</td><td class="wiki-desc">Current minute</td><td class="wiki-ex">35</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(dayofweek)')">$(dayofweek)</td><td class="wiki-desc">Name of the day <span style="color:var(--success)">●</span></td><td class="wiki-ex">Saturday</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(monthname)')">$(monthname)</td><td class="wiki-desc">Full month name</td><td class="wiki-ex">March</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(monthnum)')">$(monthnum)</td><td class="wiki-desc">Month as a two-digit number</td><td class="wiki-ex">03</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(day)')">$(day)</td><td class="wiki-desc">Day of the month (padded)</td><td class="wiki-ex">14</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(year)')">$(year)</td><td class="wiki-desc">Current year</td><td class="wiki-ex">2025</td></tr>
+            </table>
+        </div>
+
+        <div class="wiki-section">
+            <div class="wiki-section-title">🤖 Bot & Channel</div>
+            <table class="wiki-table">
+                <tr><td class="wiki-var" onclick="wikiCopy('$(bot)')">$(bot)</td><td class="wiki-desc">The bot's Twitch account name <span style="color:var(--success)">●</span></td><td class="wiki-ex">cubassist</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(channel)')">$(channel)</td><td class="wiki-desc">The channel name the command ran in <span style="color:var(--success)">●</span></td><td class="wiki-ex">cubsoftware</td></tr>
+            </table>
+        </div>
+
+        <div class="wiki-section">
+            <div class="wiki-section-title">📦 Data & Custom</div>
+            <table class="wiki-table">
+                <tr><td class="wiki-var" onclick="wikiCopy('$(customvar name)')">$(customvar name)</td><td class="wiki-desc">Value of a saved channel variable. Set one with <code style="font-size:11px;color:#a78bfa">!setvar name value</code> in chat or the Custom Variables panel.</td><td class="wiki-ex">5</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(quote)')">$(quote)</td><td class="wiki-desc">A random saved quote from the Quotes list</td><td class="wiki-ex">#3: Something funny</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(quote 1)')">$(quote N)</td><td class="wiki-desc">A specific quote by its number</td><td class="wiki-ex">#1: First quote</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(urlfetch https://example.com/api)')">$(urlfetch url)</td><td class="wiki-desc">Fetch the raw text body of a URL (max 500 chars, 5s timeout). Good for external APIs that return plain text.</td><td class="wiki-ex">72°F</td></tr>
+            </table>
         </div>
     </div>
 </div>
@@ -835,7 +904,6 @@ async function loadConfig() {
     _cfg = await r.json();
     document.getElementById('cfg_channel').value = _cfg.channel || '';
     document.getElementById('cfg_prefix').value  = _cfg.command_prefix || '!';
-    document.getElementById('cfg_enabled').checked = !!_cfg.enabled;
 
     const nickEl = document.getElementById('settingsNick');
     if (_cfg.bot_nick) {
@@ -1359,6 +1427,24 @@ async function saveGlobalSetting(key, value) {
         body: JSON.stringify({ [key]: value })
     });
     if (res.ok) showToast('Setting saved', 'success');
+}
+
+// ── Variable Wiki ──────────────────────────────────────────────────────────────
+let _wikiFromModal = false;
+
+function openVarWiki(fromModal = false) {
+    _wikiFromModal = fromModal;
+    document.getElementById('varWikiModal').classList.add('open');
+}
+
+function wikiCopy(v) {
+    if (_wikiFromModal) {
+        insertModalVar(v);
+        closeModal('varWikiModal');
+    } else {
+        navigator.clipboard?.writeText(v);
+        showToast('Copied: ' + v);
+    }
 }
 
 // ── Modals ─────────────────────────────────────────────────────────────────────

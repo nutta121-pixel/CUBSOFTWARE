@@ -24,6 +24,12 @@ from bot_core import (
     load_config,
     _load_watchtime, _load_warnings, _save_warnings,
     _load_user_notes, _save_user_notes,
+    _load_counters, _save_counters,
+    _load_shop, _save_shop,
+    _load_lore, _save_lore,
+    _load_trusted, _save_trusted,
+    _load_daily_claims,
+    _load_watchlist, _save_watchlist,
 )
 
 cubassist_bp = Blueprint(
@@ -228,6 +234,8 @@ def api_save_config():
         cfg['command_prefix'] = str(body['command_prefix']).strip() or '!'
     if 'enabled' in body:
         cfg['enabled'] = bool(body['enabled'])
+    if 'welcome_new_chatters' in body:
+        cfg['welcome_new_chatters'] = bool(body['welcome_new_chatters'])
     save_channel_config(channel, cfg)
     return jsonify({'ok': True})
 
@@ -1223,6 +1231,406 @@ def api_analytics():
         'total_watchtime_users': len(wt),
         'messages_tracked':      len(logs),
     })
+
+# ── Integration status ───────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/integration-status')
+def api_integration_status():
+    """Returns whether Stream Overlays and CubDeck are loaded in the same process
+    and whether this channel's Twitch account is linked to either."""
+    import sys
+    channel = _user_channel()
+
+    overlays_mod  = sys.modules.get('overlays_blueprint')
+    cubdeck_mod   = sys.modules.get('cubdeck_blueprint')
+    overlays_live = bool(overlays_mod and hasattr(overlays_mod, 'notify_alert_event'))
+    cubdeck_live  = bool(cubdeck_mod  and hasattr(cubdeck_mod,  '_overlay_events'))
+
+    overlay_linked    = False
+    overlay_discord   = ''
+    if overlays_live and channel:
+        try:
+            all_tokens = overlays_mod.load_twitch_tokens()
+            for discord_id, token_data in all_tokens.items():
+                if token_data.get('twitch_login', '').lower() == channel.lower():
+                    overlay_linked  = True
+                    overlay_discord = discord_id
+                    break
+        except Exception:
+            pass
+
+    cubdeck_linked = False
+    if cubdeck_live and overlay_discord:
+        # Check if that discord_id has any CubDeck decks
+        try:
+            import os as _os
+            cubdeck_data_dir = getattr(cubdeck_mod, 'CUBDECK_DATA_DIR', '')
+            if cubdeck_data_dir and _os.path.isdir(_os.path.join(cubdeck_data_dir, overlay_discord)):
+                cubdeck_linked = True
+        except Exception:
+            pass
+
+    return jsonify({
+        'stream_overlays': {
+            'available': overlays_live,
+            'linked':    overlay_linked,
+            'discord_id': overlay_discord if overlay_linked else '',
+        },
+        'cubdeck': {
+            'available': cubdeck_live,
+            'linked':    cubdeck_linked,
+        },
+    })
+
+# ── Counters ─────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/counters', methods=['GET'])
+def api_counters_get():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    return jsonify(_load_counters(channel))
+
+@cubassist_bp.route('/api/counters', methods=['POST'])
+def api_counters_save():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    body = request.get_json(silent=True) or {}
+    c = _load_counters(channel)
+    for key in ('deaths', 'wins', 'losses', 'score'):
+        if key in body:
+            c[key] = body[key]
+    if 'custom' in body:
+        c['custom'] = body['custom']
+    _save_counters(channel, c)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/counters/custom', methods=['POST'])
+def api_counter_add():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    body = request.get_json(silent=True) or {}
+    name = body.get('name', '').strip().lower()
+    if not name or not re.match(r'^[a-z0-9_]+$', name):
+        return jsonify({'error': 'Invalid name'}), 400
+    c = _load_counters(channel)
+    c.setdefault('custom', {})[name] = int(body.get('value', 0))
+    _save_counters(channel, c)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/counters/custom/<name>', methods=['DELETE'])
+def api_counter_delete(name):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    c = _load_counters(channel)
+    c.setdefault('custom', {}).pop(name, None)
+    _save_counters(channel, c)
+    return jsonify({'ok': True})
+
+# ── Shop ─────────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/shop', methods=['GET'])
+def api_shop_get():
+    err = _require_auth()
+    if err: return err
+    return jsonify(_load_shop(_user_channel()))
+
+@cubassist_bp.route('/api/shop', methods=['POST'])
+def api_shop_add():
+    err = _require_auth()
+    if err: return err
+    body = request.get_json(silent=True) or {}
+    name = body.get('name', '').strip()
+    cost = int(body.get('cost', 0))
+    if not name or cost < 0:
+        return jsonify({'error': 'name and cost required'}), 400
+    channel = _user_channel()
+    shop = _load_shop(channel)
+    sid = body.get('id') or secrets.token_hex(4)
+    existing = next((s for s in shop if s.get('id') == sid), None)
+    entry = {
+        'id':       sid,
+        'name':     name,
+        'cost':     cost,
+        'response': body.get('response', ''),
+        'stock':    int(body.get('stock', -1)),  # -1 = unlimited
+    }
+    if existing:
+        existing.update(entry)
+    else:
+        shop.append(entry)
+    _save_shop(channel, shop)
+    return jsonify({'ok': True, 'id': sid})
+
+@cubassist_bp.route('/api/shop/<sid>', methods=['DELETE'])
+def api_shop_delete(sid):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    shop = _load_shop(channel)
+    _save_shop(channel, [s for s in shop if s.get('id') != sid])
+    return jsonify({'ok': True})
+
+# ── Lore ─────────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/lore', methods=['GET'])
+def api_lore_get():
+    err = _require_auth()
+    if err: return err
+    return jsonify(_load_lore(_user_channel()))
+
+@cubassist_bp.route('/api/lore', methods=['POST'])
+def api_lore_add():
+    err = _require_auth()
+    if err: return err
+    body = request.get_json(silent=True) or {}
+    text = body.get('text', '').strip()
+    if not text:
+        return jsonify({'error': 'text required'}), 400
+    channel = _user_channel()
+    user = _authed()
+    lore = _load_lore(channel)
+    lore.append({'text': text, 'added_by': user.get('login', 'dashboard'), 'ts': int(time.time())})
+    _save_lore(channel, lore)
+    return jsonify({'ok': True, 'id': len(lore) - 1, 'total': len(lore)})
+
+@cubassist_bp.route('/api/lore/<int:idx>', methods=['PUT'])
+def api_lore_edit(idx):
+    err = _require_auth()
+    if err: return err
+    body = request.get_json(silent=True) or {}
+    text = body.get('text', '').strip()
+    if not text:
+        return jsonify({'error': 'text required'}), 400
+    channel = _user_channel()
+    lore = _load_lore(channel)
+    if 0 <= idx < len(lore):
+        lore[idx]['text'] = text
+        _save_lore(channel, lore)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/lore/<int:idx>', methods=['DELETE'])
+def api_lore_delete(idx):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    lore = _load_lore(channel)
+    if 0 <= idx < len(lore):
+        del lore[idx]
+        _save_lore(channel, lore)
+    return jsonify({'ok': True})
+
+# ── Trusted users ─────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/trusted', methods=['GET'])
+def api_trusted_get():
+    err = _require_auth()
+    if err: return err
+    return jsonify(_load_trusted(_user_channel()))
+
+@cubassist_bp.route('/api/trusted', methods=['POST'])
+def api_trusted_add():
+    err = _require_auth()
+    if err: return err
+    body = request.get_json(silent=True) or {}
+    nick_t = body.get('nick', '').strip().lower()
+    if not nick_t:
+        return jsonify({'error': 'nick required'}), 400
+    channel = _user_channel()
+    trusted = _load_trusted(channel)
+    if nick_t not in trusted:
+        trusted.append(nick_t)
+        _save_trusted(channel, trusted)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/trusted/<nick_t>', methods=['DELETE'])
+def api_trusted_remove(nick_t):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    trusted = _load_trusted(channel)
+    if nick_t in trusted:
+        trusted.remove(nick_t)
+        _save_trusted(channel, trusted)
+    return jsonify({'ok': True})
+
+# ── Watchlist ─────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/watchlist', methods=['GET'])
+def api_watchlist_get():
+    err = _require_auth()
+    if err: return err
+    return jsonify(_load_watchlist(_user_channel()))
+
+@cubassist_bp.route('/api/watchlist', methods=['POST'])
+def api_watchlist_add():
+    err = _require_auth()
+    if err: return err
+    body = request.get_json(silent=True) or {}
+    nick_w = body.get('nick', '').strip().lower()
+    reason = body.get('reason', '').strip()
+    if not nick_w:
+        return jsonify({'error': 'nick required'}), 400
+    channel = _user_channel()
+    user    = _authed()
+    wl = _load_watchlist(channel)
+    if not any(e['nick'] == nick_w for e in wl):
+        wl.append({'nick': nick_w, 'reason': reason or 'No reason', 'by': user.get('login', 'dashboard'), 'ts': int(time.time())})
+        _save_watchlist(channel, wl)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/watchlist/<nick_w>', methods=['DELETE'])
+def api_watchlist_remove(nick_w):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    wl = _load_watchlist(channel)
+    _save_watchlist(channel, [e for e in wl if e['nick'] != nick_w.lower()])
+    return jsonify({'ok': True})
+
+# ── Stream Clip ───────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/stream/clip', methods=['POST'])
+def api_stream_clip():
+    """Create a Twitch clip using the broadcaster's session token."""
+    err = _require_auth()
+    if err: return err
+    user    = _authed()
+    token   = user.get('access_token', '')
+    user_id = user.get('id', '')
+    if not token or not user_id:
+        return jsonify({'error': 'Session expired — please re-login'}), 401
+    import urllib.error as _uerr
+    data = json.dumps({'broadcaster_id': user_id}).encode()
+    req  = urllib.request.Request(
+        'https://api.twitch.tv/helix/clips',
+        data=data, method='POST',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Client-Id':     TWITCH_CLIENT_ID,
+            'Content-Type':  'application/json',
+        }
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            result = json.loads(r.read())
+        edit_url = result.get('data', [{}])[0].get('edit_url', '')
+        clip_id  = result.get('data', [{}])[0].get('id', '')
+        return jsonify({'ok': True, 'edit_url': edit_url, 'clip_id': clip_id})
+    except urllib.error.HTTPError as e:
+        return jsonify({'error': f'Twitch API: {e.read().decode()}'}), 502
+    except Exception as e:
+        return jsonify({'error': str(e)}), 502
+
+# ── Stream Marker ─────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/stream/marker', methods=['POST'])
+def api_stream_marker():
+    """Create a stream marker using the broadcaster's session token."""
+    err = _require_auth()
+    if err: return err
+    user    = _authed()
+    token   = user.get('access_token', '')
+    user_id = user.get('id', '')
+    if not token or not user_id:
+        return jsonify({'error': 'Session expired — please re-login'}), 401
+    body = request.get_json(silent=True) or {}
+    description = body.get('description', 'CubAssist marker')[:140]
+    data = json.dumps({'user_id': user_id, 'description': description}).encode()
+    req = urllib.request.Request(
+        'https://api.twitch.tv/helix/streams/markers',
+        data=data, method='POST',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Client-Id':     TWITCH_CLIENT_ID,
+            'Content-Type':  'application/json',
+        }
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            result = json.loads(r.read())
+        marker = result.get('data', [{}])[0]
+        return jsonify({'ok': True, 'marker': marker})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 502
+
+# ── Overlay scene config ──────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/overlay-scenes', methods=['GET'])
+def api_overlay_scenes_get():
+    err = _require_auth()
+    if err: return err
+    cfg = load_channel_config(_user_channel())
+    return jsonify(cfg.get('overlay_scenes', {'default': ''}))
+
+@cubassist_bp.route('/api/overlay-scenes', methods=['POST'])
+def api_overlay_scenes_save():
+    err = _require_auth()
+    if err: return err
+    body = request.get_json(silent=True) or {}
+    channel = _user_channel()
+    cfg = load_channel_config(channel)
+    cfg.setdefault('overlay_scenes', {})['default'] = body.get('default', '').strip()
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/overlay-scenes/state', methods=['GET'])
+def api_overlay_scenes_state():
+    """Return the current widget config of the configured overlay scene."""
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    cfg = load_channel_config(channel)
+    scene_id = cfg.get('overlay_scenes', {}).get('default', '').strip()
+    if not scene_id:
+        return jsonify({'scene_id': '', 'config': {}})
+    try:
+        overlays_mod = sys.modules.get('overlays_blueprint')
+        if not overlays_mod:
+            return jsonify({'scene_id': scene_id, 'config': {}, 'error': 'Stream Overlays not loaded'})
+        data  = overlays_mod.load_overlays_data()
+        scene = data.get('scenes', {}).get(scene_id)
+        if not scene:
+            return jsonify({'scene_id': scene_id, 'config': {}, 'error': 'Scene not found'})
+        return jsonify({'scene_id': scene_id, 'config': scene.get('config', {}), 'name': scene.get('name', '')})
+    except Exception as e:
+        return jsonify({'scene_id': scene_id, 'config': {}, 'error': str(e)})
+
+@cubassist_bp.route('/api/overlay-scenes/patch', methods=['POST'])
+def api_overlay_scenes_patch():
+    """Patch the configured overlay scene's widget config from the dashboard."""
+    err = _require_auth()
+    if err: return err
+    channel  = _user_channel()
+    cfg      = load_channel_config(channel)
+    scene_id = cfg.get('overlay_scenes', {}).get('default', '').strip()
+    if not scene_id:
+        return jsonify({'error': 'No scene configured'}), 400
+    body    = request.get_json(silent=True) or {}
+    updates = body.get('config', {})
+    if not isinstance(updates, dict):
+        return jsonify({'error': 'Invalid config'}), 400
+    try:
+        overlays_mod = sys.modules.get('overlays_blueprint')
+        if not overlays_mod:
+            return jsonify({'error': 'Stream Overlays not loaded'}), 503
+        data  = overlays_mod.load_overlays_data()
+        scene = data.get('scenes', {}).get(scene_id)
+        if not scene:
+            return jsonify({'error': 'Scene not found'}), 404
+        scene.setdefault('config', {}).update(updates)
+        scene['updated'] = int(time.time())
+        overlays_mod.save_overlays_data(data)
+        overlays_mod.notify_scene_update(
+            scene_id,
+            {'template': scene.get('template', 'minimal'), **scene['config']},
+        )
+        return jsonify({'ok': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ── Auto-start ──────────────────────────────────────────────────────────────────
 

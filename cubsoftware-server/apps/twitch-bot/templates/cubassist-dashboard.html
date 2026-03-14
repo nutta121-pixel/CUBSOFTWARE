@@ -223,6 +223,17 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
 .hint { font-size: 12px; color: var(--text-sec); line-height: 1.5; }
 .hint code { font-family: 'Fira Code', monospace; background: rgba(255,255,255,.07); padding: 1px 6px; border-radius: 4px; font-size: 11px; color: #a78bfa; }
 
+/* ── Overlay control sections ───────────────────────────────────────── */
+.ov-section { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+.ov-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.ov-section-title { font-size: 12px; font-weight: 600; color: var(--text-sec); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+.ov-widget-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); cursor: pointer; font-size: 11px; min-width: 70px; transition: all .15s; }
+.ov-widget-btn:hover { background: rgba(255,255,255,.08); }
+.ov-widget-btn.active { background: rgba(87,242,135,.1); border-color: rgba(87,242,135,.3); color: var(--success); }
+.ov-effect-btn { padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); cursor: pointer; font-size: 12px; transition: all .15s; color: var(--text); }
+.ov-effect-btn:hover { background: rgba(255,255,255,.1); }
+.ov-effect-btn.active { background: rgba(88,101,242,.2); border-color: var(--accent); color: var(--accent); }
+
 /* ── Variable chips ─────────────────────────────────────────────────── */
 .var-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .var-chip { font-family: 'Fira Code', monospace; font-size: 11px; background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; color: #a78bfa; cursor: pointer; transition: border-color .15s; }
@@ -332,6 +343,21 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
             </div>
             <div class="nav-item" onclick="openTab('modtools')" data-tab="modtools">
                 <span class="ni">🔨</span> Mod Tools
+            </div>
+            <div class="nav-item" onclick="openTab('counters')" data-tab="counters">
+                <span class="ni">🔢</span> Counters
+            </div>
+            <div class="nav-item" onclick="openTab('shop')" data-tab="shop">
+                <span class="ni">🛒</span> Loyalty Shop
+            </div>
+            <div class="nav-item" onclick="openTab('lore')" data-tab="lore">
+                <span class="ni">📜</span> Lore
+            </div>
+            <div class="nav-item" onclick="openTab('trusted')" data-tab="trusted">
+                <span class="ni">✅</span> Trusted
+            </div>
+            <div class="nav-item" onclick="openTab('watchlist')" data-tab="watchlist">
+                <span class="ni">👁</span> Watchlist
             </div>
             <div class="nav-item" onclick="openTab('analytics')" data-tab="analytics">
                 <span class="ni">📈</span> Analytics
@@ -551,6 +577,22 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
 
                     <div class="toggle-row">
                         <div class="toggle-info">
+                            <strong>💥 Symbol Spam Filter</strong>
+                            <small>Delete messages with excessive symbols (e.g. !!!###@@@). Min 10 chars to trigger.</small>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="am_symbols" onchange="saveAutomod()"><span class="toggle-slider"></span></label>
+                    </div>
+                    <div id="symbolsSubOptions" style="padding:12px 0 0 0;display:none">
+                        <div class="form-row" style="margin-bottom:12px">
+                            <div class="form-group">
+                                <label>Max Symbol % (0–100)</label>
+                                <input type="number" id="am_symbols_pct" value="60" min="10" max="100" onchange="saveAutomod()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
                             <strong>🚫 Word Blacklist</strong>
                             <small>Delete any message containing these words/phrases.</small>
                         </div>
@@ -648,8 +690,12 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                                 <label>Earn per Minute (active viewers)</label>
                                 <input type="number" id="pts_per_min" value="5" min="0" max="1000" oninput="savePointsConfig()">
                             </div>
+                            <div class="form-group">
+                                <label>Daily Reward (!daily)</label>
+                                <input type="number" id="pts_daily_reward" value="100" min="1" max="100000" oninput="savePointsConfig()">
+                            </div>
                         </div>
-                        <p class="hint" style="margin-top:10px">Chat commands: <code>!points</code> — check balance · <code>!leaderboard</code> — top 5 · <code>!addpoints @user N</code> (mod)</p>
+                        <p class="hint" style="margin-top:10px">Chat commands: <code>!points</code> — check balance · <code>!leaderboard</code> — top 5 · <code>!addpoints @user N</code> (mod) · <code>!daily</code> — daily bonus · <code>!fish</code> — fishing · <code>!gift @user N</code> — gift points · <code>!rob @user</code> — rob</p>
                     </div>
                     <div class="card" style="flex:1">
                         <div class="card-title" style="justify-content:space-between">
@@ -765,6 +811,36 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                                 <input type="number" id="trivia_reward" value="100" min="1" oninput="saveTriviaReward()">
                             </div>
                         </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">🎣 Fishing</div>
+                            <p class="hint">!fish</p>
+                            <p class="hint" style="margin-top:4px">60s cooldown. Win up to 1000 pts. Miss = -5 pts.</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">🎁 Daily Bonus</div>
+                            <p class="hint">!daily</p>
+                            <p class="hint" style="margin-top:4px">24h cooldown. Streak bonus up to 30 days. Configure reward in Points tab.</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">🦹 Rob</div>
+                            <p class="hint">!rob @user</p>
+                            <p class="hint" style="margin-top:4px">45% success · 30% caught (fine) · 25% arrested (timeout)</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">🎁 Gift Points</div>
+                            <p class="hint">!gift @user 100</p>
+                            <p class="hint" style="margin-top:4px">Transfer points to another viewer.</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">🎮 Hangman</div>
+                            <p class="hint">!hangman start [word]</p>
+                            <p class="hint" style="margin-top:4px">Mod starts game. Chat uses !guess &lt;letter or word&gt;. Win = 50× lives left.</p>
+                        </div>
+                        <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:16px">
+                            <div style="font-size:20px;margin-bottom:6px">🔤 Anagram</div>
+                            <p class="hint">!anagram [word]</p>
+                            <p class="hint" style="margin-top:4px">Mod starts. 60s to solve. First correct answer wins 75 pts.</p>
+                        </div>
                     </div>
                 </div>
                 <div class="card">
@@ -804,6 +880,18 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                             <p class="hint" style="margin-top:4px">Variables: <code>$(raider)</code> <code>$(viewers)</code></p>
                         </div>
                     </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">💬 Chat Settings</div>
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <strong>👋 Welcome New Chatters</strong>
+                            <small>Bot sends a welcome message when a first-time chatter joins.</small>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="welcome_new_chatters" onchange="saveWelcomeNewChatters()"><span class="toggle-slider"></span></label>
+                    </div>
+                    <p class="hint" style="margin-top:8px">Chat modes: <code>!chatmode slow 30</code> · <code>!chatmode sub</code> · <code>!chatmode emote</code> · <code>!chatmode followers</code> · <code>!chatmode off</code></p>
                 </div>
 
                 <div class="card">
@@ -891,9 +979,285 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 </div>
 
                 <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>🎨 Stream Overlays Integration</span>
+                        <button class="btn btn-ghost btn-sm" onclick="loadIntegrations()">↻ Refresh</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:14px">When your Twitch account is linked to <strong>Stream Overlays</strong>, CubAssist automatically pushes follow, sub, cheer, and raid events to your overlay alerts — no extra setup needed.</p>
+                    <div id="overlaysIntegStatus" style="padding:12px 16px;border-radius:8px;font-size:13px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
+                        Loading…
+                    </div>
+                    <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+                        To link your account: visit <a href="/overlays" target="_blank" style="color:var(--accent)">Stream Overlays</a> and connect your Twitch account. Once linked, alerts will fire automatically for subs, raids, cheers, and follows.
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🎛️ CubDeck Integration</div>
+                    <p class="hint" style="margin-bottom:14px">When connected, your <strong>CubDeck</strong> gets a <strong>CubAssist Bot</strong> plugin with buttons to control the bot directly from your stream deck — start giveaways, draw winners, add deaths, toggle chat modes, send messages, and more.</p>
+                    <div id="cubdeckIntegStatus" style="padding:12px 16px;border-radius:8px;font-size:13px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">
+                        Loading…
+                    </div>
+                    <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+                        To use: open <a href="/cubdeck" target="_blank" style="color:var(--accent)">CubDeck</a> and add a button → choose <strong>CubAssist Bot</strong> from the plugin list.
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>🎬 Chat → Overlay Control</span>
+                        <button class="btn btn-ghost btn-sm" onclick="loadOverlayScenes()">↻ Refresh</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:14px">Let moderators control your <strong>Stream Overlay</strong> widgets directly from Twitch chat. Configure your target scene ID below, then use <code>!overlay</code> commands in chat.</p>
+
+                    <div class="form-group" style="margin-bottom:12px">
+                        <label>Target Scene ID <span class="hint" style="font-weight:400;font-size:11px;margin-left:4px">(<a href="/overlays" target="_blank" style="color:var(--accent)">find it in Stream Overlays</a> → your scene URL)</span></label>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            <input type="text" id="overlaySceneId" placeholder="e.g. abc123xyz" style="flex:1;font-family:monospace">
+                            <button class="btn btn-primary btn-sm" onclick="saveOverlayScene()">Save</button>
+                        </div>
+                        <div id="overlaySceneStatus" class="hint" style="margin-top:6px"></div>
+                    </div>
+
+                    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:14px;font-size:12px;line-height:1.8">
+                        <div style="font-weight:600;color:var(--text-sec);margin-bottom:8px">Available chat commands (broadcaster + mods only):</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px">
+                            <div><code>!overlay timer 5m</code> <span class="hint">— start 5-min countdown</span></div>
+                            <div><code>!overlay timer off</code> <span class="hint">— hide timer</span></div>
+                            <div><code>!overlay goal 50 100 Subs</code> <span class="hint">— set goal bar</span></div>
+                            <div><code>!overlay goal +10</code> <span class="hint">— increment goal</span></div>
+                            <div><code>!overlay counter +1</code> <span class="hint">— increment counter</span></div>
+                            <div><code>!overlay counter reset</code> <span class="hint">— reset counter</span></div>
+                            <div><code>!overlay ticker "text"</code> <span class="hint">— update ticker</span></div>
+                            <div><code>!overlay ticker off</code> <span class="hint">— hide ticker</span></div>
+                            <div><code>!overlay title New Title</code> <span class="hint">— change title text</span></div>
+                            <div><code>!overlay subtitle text</code> <span class="hint">— change subtitle</span></div>
+                            <div><code>!overlay widget clock on</code> <span class="hint">— toggle any widget</span></div>
+                            <div><code>!overlay effect starfield</code> <span class="hint">— set BG effect</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="overlayControlCard" style="display:none">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>🎮 Live Overlay Controls</span>
+                        <button class="btn btn-ghost btn-sm" onclick="loadOverlayState()">↻ Refresh State</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:16px">Control your overlay widgets directly from the dashboard. Changes apply live.</p>
+
+                    <div id="overlayStateError" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:8px;background:rgba(237,66,69,.08);border:1px solid rgba(237,66,69,.2);font-size:13px;color:var(--danger)"></div>
+
+                    <!-- Timer -->
+                    <div class="ov-section">
+                        <div class="ov-section-title">⏱ Countdown Timer</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                            <input type="text" id="ovTimerInput" placeholder="5m, 1h30m, 90s, 5:00" style="width:160px">
+                            <button class="btn btn-primary btn-sm" onclick="ovSetTimer()">Set Timer</button>
+                            <button class="btn btn-ghost btn-sm" onclick="ovPatch({show_countdown:false})">Hide</button>
+                            <span id="ovTimerState" class="hint" style="font-size:12px"></span>
+                        </div>
+                    </div>
+
+                    <!-- Goal Bar -->
+                    <div class="ov-section">
+                        <div class="ov-section-title">🎯 Goal Bar</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                            <input type="number" id="ovGoalCurrent" placeholder="Current" style="width:90px" min="0">
+                            <span style="color:var(--text-sec);font-size:13px">/</span>
+                            <input type="number" id="ovGoalMax" placeholder="Max" style="width:90px" min="1">
+                            <input type="text" id="ovGoalLabel" placeholder="Label (optional)" style="width:150px">
+                            <button class="btn btn-primary btn-sm" onclick="ovSetGoal()">Set Goal</button>
+                            <button class="btn btn-ghost btn-sm" onclick="ovPatch({goal_bar:false})">Hide</button>
+                        </div>
+                        <div id="ovGoalState" class="hint" style="margin-top:6px;font-size:12px"></div>
+                    </div>
+
+                    <!-- Counter -->
+                    <div class="ov-section">
+                        <div class="ov-section-title">🔢 Counter Widget</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                            <input type="number" id="ovCounterValue" placeholder="Value" style="width:90px">
+                            <input type="text" id="ovCounterLabel" placeholder="Label (optional)" style="width:150px">
+                            <button class="btn btn-primary btn-sm" onclick="ovSetCounter()">Set</button>
+                            <button class="btn btn-ghost btn-sm" onclick="ovCounterDelta(1)">+1</button>
+                            <button class="btn btn-ghost btn-sm" onclick="ovCounterDelta(-1)">−1</button>
+                            <button class="btn btn-ghost btn-sm" onclick="ovPatch({counter_widget:true,counter_value:0})">Reset</button>
+                            <button class="btn btn-ghost btn-sm" onclick="ovPatch({counter_widget:false})">Hide</button>
+                        </div>
+                        <div id="ovCounterState" class="hint" style="margin-top:6px;font-size:12px"></div>
+                    </div>
+
+                    <!-- Text -->
+                    <div class="ov-section">
+                        <div class="ov-section-title">📝 Text</div>
+                        <div style="display:flex;flex-direction:column;gap:8px">
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <label style="width:72px;font-size:12px;color:var(--text-sec);flex-shrink:0">Title</label>
+                                <input type="text" id="ovTitle" placeholder="Stream title text" style="flex:1">
+                                <button class="btn btn-primary btn-sm" onclick="ovPatch({title:document.getElementById('ovTitle').value})">Set</button>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <label style="width:72px;font-size:12px;color:var(--text-sec);flex-shrink:0">Subtitle</label>
+                                <input type="text" id="ovSubtitle" placeholder="Subtitle text" style="flex:1">
+                                <button class="btn btn-primary btn-sm" onclick="ovPatch({subtitle:document.getElementById('ovSubtitle').value})">Set</button>
+                            </div>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <label style="width:72px;font-size:12px;color:var(--text-sec);flex-shrink:0">Ticker</label>
+                                <input type="text" id="ovTicker" placeholder="Scrolling ticker text" style="flex:1">
+                                <button class="btn btn-primary btn-sm" onclick="ovPatch({ticker_widget:true,ticker_label:document.getElementById('ovTicker').value})">Set</button>
+                                <button class="btn btn-ghost btn-sm" onclick="ovPatch({ticker_widget:false})">Hide</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Widget Toggles -->
+                    <div class="ov-section">
+                        <div class="ov-section-title">🪟 Widget Visibility</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px" id="ovWidgetToggles">
+                            <!-- populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Background Effect -->
+                    <div class="ov-section">
+                        <div class="ov-section-title">✨ Background Effect</div>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px" id="ovEffectBtns">
+                            <!-- populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
                     <div class="card-title">🌤 Weather Command</div>
                     <p class="hint">Chat command: <code>!weather London</code> — uses wttr.in (no API key needed). Works out of the box.</p>
                     <div style="margin-top:10px;background:rgba(87,242,135,.08);border:1px solid rgba(87,242,135,.2);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--success)">✓ Ready — no configuration needed</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⚡ Quick Stream Actions</div>
+                    <p class="hint" style="margin-bottom:14px">One-click stream tools using your broadcaster account token.</p>
+                    <div style="display:flex;flex-direction:column;gap:14px">
+                        <div>
+                            <div style="font-size:13px;font-weight:600;margin-bottom:8px">📎 Create Clip</div>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <button class="btn btn-primary" onclick="createClip()">🎬 Create Clip Now</button>
+                                <span id="clipResult" class="hint"></span>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size:13px;font-weight:600;margin-bottom:8px">📌 Create Stream Marker</div>
+                            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                                <input type="text" id="markerDesc" placeholder="Marker description..." style="flex:1;min-width:200px">
+                                <button class="btn btn-primary" onclick="createMarker()">📌 Add Marker</button>
+                            </div>
+                            <p class="hint" style="margin-top:6px">Creates a chapter marker at the current stream position. Chat command: <code>!marker description</code></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Counters tab -->
+            <div class="tab" id="tab-counters">
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>💀 Stream Counters</span>
+                        <button class="btn btn-ghost btn-sm" onclick="loadCounters()">↻ Refresh</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:16px">Track deaths, wins/losses, and score. Chat: <code>!deaths</code> · <code>!wins</code> · <code>!wl</code> · <code>!score</code> · Mods: <code>!adddeaths</code> · <code>!setdeaths N</code> · <code>!resetdeaths</code> · <code>!addwins</code> · <code>!setscore A-B</code></p>
+                    <div class="form-row" style="margin-bottom:16px">
+                        <div class="form-group">
+                            <label>Deaths</label>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <input type="number" id="cnt_deaths" value="0" min="0" style="width:100px">
+                                <button class="btn btn-ghost btn-sm" onclick="counterIncrement('deaths', 1)">+1</button>
+                                <button class="btn btn-ghost btn-sm" onclick="counterReset('deaths')">Reset</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Wins</label>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <input type="number" id="cnt_wins" value="0" min="0" style="width:100px">
+                                <button class="btn btn-ghost btn-sm" onclick="counterIncrement('wins', 1)">+1</button>
+                                <button class="btn btn-ghost btn-sm" onclick="counterReset('wins')">Reset</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Losses</label>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <input type="number" id="cnt_losses" value="0" min="0" style="width:100px">
+                                <button class="btn btn-ghost btn-sm" onclick="counterIncrement('losses', 1)">+1</button>
+                                <button class="btn btn-ghost btn-sm" onclick="counterReset('losses')">Reset</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Score (text)</label>
+                            <div style="display:flex;gap:8px;align-items:center">
+                                <input type="text" id="cnt_score" placeholder="3-2" style="width:120px">
+                                <button class="btn btn-ghost btn-sm" onclick="saveScore()">Set</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-bottom:8px">
+                        <button class="btn btn-primary btn-sm" onclick="saveCounters()">Save Counters</button>
+                        <span id="wlDisplay" class="hint"></span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>🔢 Custom Counters</span>
+                        <button class="btn btn-primary btn-sm" onclick="openCustomCounterModal()">+ Add Counter</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:12px">Create named counters. Chat: <code>!name</code> to show · <code>!name+</code> to increment · <code>!name-</code> to decrement (mods). Dashboard: <code>!counter add name</code> · <code>!counter list</code></p>
+                    <div id="customCountersList"><p class="hint">Loading...</p></div>
+                </div>
+            </div>
+
+            <!-- Shop tab -->
+            <div class="tab" id="tab-shop">
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>🛒 Loyalty Shop</span>
+                        <button class="btn btn-primary btn-sm" onclick="openShopModal()">+ Add Item</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:16px">Viewers redeem items with their points. Chat: <code>!shop</code> to browse · <code>!redeem N</code> or <code>!redeem item name</code> to purchase.</p>
+                    <div id="shopList"><p class="hint">Loading...</p></div>
+                </div>
+            </div>
+
+            <!-- Lore tab -->
+            <div class="tab" id="tab-lore">
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>📜 Channel Lore</span>
+                        <button class="btn btn-primary btn-sm" onclick="openLoreModal()">+ Add Lore</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:16px">Save stream lore/history entries. Chat: <code>!lore</code> for a random entry · <code>!lore N</code> for a specific one · Mods: <code>!lore add text</code> · <code>!lore remove N</code></p>
+                    <div id="loreList"><p class="hint">Loading...</p></div>
+                </div>
+            </div>
+
+            <!-- Trusted users tab -->
+            <div class="tab" id="tab-trusted">
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>✅ Trusted Users</span>
+                        <button class="btn btn-primary btn-sm" onclick="openTrustedModal()">+ Add Trusted User</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:16px">Trusted users have elevated trust in certain bot systems. Chat (mods): <code>!trust @user</code> · <code>!untrust @user</code> · <code>!trusted</code></p>
+                    <div id="trustedList"><p class="hint">Loading...</p></div>
+                </div>
+            </div>
+
+            <!-- Watchlist tab -->
+            <div class="tab" id="tab-watchlist">
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>👁 Watchlist</span>
+                        <button class="btn btn-primary btn-sm" onclick="openWatchlistModal()">+ Add to Watchlist</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:16px">Keep an eye on specific users. Not visible to chat. Chat (mods): <code>!watchlist</code> · <code>!addwatch @user reason</code> · <code>!delwatch @user</code></p>
+                    <div id="watchlistEntries"><p class="hint">Loading...</p></div>
                 </div>
             </div>
 
@@ -956,6 +1320,111 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
     </footer>
 
 </div><!-- /main-container -->
+
+<!-- Custom Counter modal -->
+<div class="modal-backdrop" id="customCounterModal">
+    <div class="modal" style="width:420px">
+        <div class="modal-title" id="customCounterModalTitle">Add Custom Counter</div>
+        <input type="hidden" id="counterEditName">
+        <div class="form-row" style="margin-bottom:14px">
+            <div class="form-group">
+                <label>Counter Name (letters, numbers, underscores)</label>
+                <input type="text" id="counterName" placeholder="kills" oninput="this.value=this.value.replace(/[^a-z0-9_]/gi,'').toLowerCase()">
+            </div>
+            <div class="form-group">
+                <label>Starting Value</label>
+                <input type="number" id="counterStartVal" value="0" min="0">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('customCounterModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveCustomCounter()">Save Counter</button>
+        </div>
+    </div>
+</div>
+
+<!-- Shop item modal -->
+<div class="modal-backdrop" id="shopModal">
+    <div class="modal" style="width:500px">
+        <div class="modal-title" id="shopModalTitle">Add Shop Item</div>
+        <input type="hidden" id="shopEditId">
+        <div class="form-row" style="margin-bottom:14px">
+            <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" id="shopName" placeholder="VIP for a stream">
+            </div>
+            <div class="form-group">
+                <label>Cost (points)</label>
+                <input type="number" id="shopCost" value="500" min="0">
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+            <label>Response Message (optional)</label>
+            <textarea id="shopResponse" rows="2" placeholder="$(user) just redeemed $(item)! Let's go!"></textarea>
+            <p class="hint" style="margin-top:4px">Use <code>$(user)</code> and <code>$(item)</code>. Leave blank to use default message.</p>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+            <label>Stock (-1 = unlimited)</label>
+            <input type="number" id="shopStock" value="-1" min="-1">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('shopModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveShopItem()">Save Item</button>
+        </div>
+    </div>
+</div>
+
+<!-- Lore modal -->
+<div class="modal-backdrop" id="loreModal">
+    <div class="modal" style="width:480px">
+        <div class="modal-title" id="loreModalTitle">Add Lore Entry</div>
+        <input type="hidden" id="loreEditIdx">
+        <div class="form-group" style="margin-bottom:14px">
+            <label>Lore Text</label>
+            <textarea id="loreText" rows="4" placeholder="The day the streamer died 37 times on a tutorial boss and rage-quit..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('loreModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveLoreEntry()">Save Lore</button>
+        </div>
+    </div>
+</div>
+
+<!-- Trusted user modal -->
+<div class="modal-backdrop" id="trustedModal">
+    <div class="modal" style="width:380px">
+        <div class="modal-title">Add Trusted User</div>
+        <div class="form-group" style="margin-bottom:14px">
+            <label>Username (lowercase)</label>
+            <input type="text" id="trustedNick" placeholder="username" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('trustedModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="addTrustedUser()">Add User</button>
+        </div>
+    </div>
+</div>
+
+<!-- Watchlist modal -->
+<div class="modal-backdrop" id="watchlistModal">
+    <div class="modal" style="width:460px">
+        <div class="modal-title">Add to Watchlist</div>
+        <div class="form-row" style="margin-bottom:14px">
+            <div class="form-group">
+                <label>Username (lowercase)</label>
+                <input type="text" id="watchNick" placeholder="username" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')">
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+            <label>Reason</label>
+            <input type="text" id="watchReason" placeholder="Spamming links repeatedly">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('watchlistModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="addWatchlistEntry()">Add to Watchlist</button>
+        </div>
+    </div>
+</div>
 
 <!-- Command modal -->
 <div class="modal-backdrop" id="cmdModal">
@@ -1204,7 +1673,7 @@ let _pollInterval;
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 async function init() {
-    await Promise.all([loadStatus(), loadConfig(), loadCommands(), loadTimers(), loadAutomod(), loadGlobalSettings(), loadCustomVars(), loadQuotes(), loadGiveaway(), loadPoll(), loadPoints(), loadQueue(), loadSongs(), loadMinigames(), loadModTools(), loadAnalytics(), loadIntegrations()]);
+    await Promise.all([loadStatus(), loadConfig(), loadCommands(), loadTimers(), loadAutomod(), loadGlobalSettings(), loadCustomVars(), loadQuotes(), loadGiveaway(), loadPoll(), loadPoints(), loadQueue(), loadSongs(), loadMinigames(), loadModTools(), loadAnalytics(), loadIntegrations(), loadOverlayScenes(), loadCounters(), loadShop(), loadLore(), loadTrusted(), loadWatchlist()]);
     pollLogs();
     _pollInterval = setInterval(() => {
         loadStatus(); pollLogs();
@@ -1216,6 +1685,11 @@ async function init() {
         if (activeTab === 'tab-songs')       loadSongs();
         if (activeTab === 'tab-analytics')   loadAnalytics();
         if (activeTab === 'tab-modtools')    loadModTools();
+        if (activeTab === 'tab-counters')    loadCounters();
+        if (activeTab === 'tab-shop')        loadShop();
+        if (activeTab === 'tab-lore')        loadLore();
+        if (activeTab === 'tab-trusted')     loadTrusted();
+        if (activeTab === 'tab-watchlist')   loadWatchlist();
     }, 4000);
 }
 
@@ -1678,16 +2152,23 @@ async function loadAutomod() {
     document.getElementById('am_blacklist_enabled').checked = bl.length > 0;
     document.getElementById('am_blacklist').value           = bl.join('\n');
     document.getElementById('blacklistOptions').style.display = bl.length ? '' : 'none';
+
+    const sym = am.symbols || {};
+    document.getElementById('am_symbols').checked     = !!sym.enabled;
+    document.getElementById('am_symbols_pct').value   = sym.max_percent || 60;
+    document.getElementById('symbolsSubOptions').style.display = sym.enabled ? '' : 'none';
 }
 
 async function saveAutomod() {
-    const linksOn = document.getElementById('am_links').checked;
-    const capsOn  = document.getElementById('am_caps').checked;
-    const blOn    = document.getElementById('am_blacklist_enabled').checked;
+    const linksOn  = document.getElementById('am_links').checked;
+    const capsOn   = document.getElementById('am_caps').checked;
+    const blOn     = document.getElementById('am_blacklist_enabled').checked;
+    const symbolOn = document.getElementById('am_symbols').checked;
 
-    document.getElementById('linksSubOptions').style.display = linksOn ? '' : 'none';
-    document.getElementById('capsSubOptions').style.display  = capsOn  ? '' : 'none';
-    document.getElementById('blacklistOptions').style.display = blOn   ? '' : 'none';
+    document.getElementById('linksSubOptions').style.display   = linksOn  ? '' : 'none';
+    document.getElementById('capsSubOptions').style.display    = capsOn   ? '' : 'none';
+    document.getElementById('blacklistOptions').style.display  = blOn     ? '' : 'none';
+    document.getElementById('symbolsSubOptions').style.display = symbolOn ? '' : 'none';
 
     const body = {
         links: {
@@ -1703,6 +2184,10 @@ async function saveAutomod() {
         blacklist: blOn
             ? document.getElementById('am_blacklist').value.split('\n').map(s=>s.trim()).filter(Boolean)
             : [],
+        symbols: {
+            enabled:     symbolOn,
+            max_percent: parseInt(document.getElementById('am_symbols_pct').value) || 60,
+        },
     };
     await fetch('/cubassist/api/automod', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -2269,6 +2754,7 @@ async function loadModTools() {
         if (re) re.checked = !!rr.enabled;
         if (rm && !rm._dirty) rm.value = rr.message || '';
     } catch {}
+    await loadWelcomeNewChatters();
 }
 
 function renderWarnings() {
@@ -2409,6 +2895,7 @@ function renderStatList(items, nameKey, valKey, unit='', prefix='', fmt=null) {
 
 // ── Integrations ───────────────────────────────────────────────────────────────
 async function loadIntegrations() {
+    // Discord webhook status
     try {
         const r = await fetch('/cubassist/api/discord-webhook');
         const d = await r.json();
@@ -2417,6 +2904,288 @@ async function loadIntegrations() {
             ? `<span style="color:var(--success)">✓ Webhook configured: <code>${escHtml(d.masked)}</code></span>`
             : '<span style="color:var(--text-sec)">No webhook configured.</span>';
     } catch {}
+
+    // Stream Overlays + CubDeck integration status
+    try {
+        const r2 = await fetch('/cubassist/api/integration-status');
+        if (!r2.ok) return;
+        const d2 = await r2.json();
+
+        const ovEl = document.getElementById('overlaysIntegStatus');
+        if (ovEl) {
+            const ov = d2.stream_overlays;
+            if (!ov.available) {
+                ovEl.innerHTML = '<span style="color:var(--text-sec)">⚠ Stream Overlays is not running on this server.</span>';
+            } else if (!ov.linked) {
+                ovEl.innerHTML = '<span style="color:#f0a500">⚠ Stream Overlays is available but your Twitch account is not linked. Visit <a href="/overlays" target="_blank" style="color:var(--accent)">Stream Overlays</a> and connect your Twitch account to enable automatic alerts.</span>';
+            } else {
+                ovEl.innerHTML = `<span style="color:var(--success)">✓ Linked — sub, raid, cheer, and follow events will automatically fire your overlay alerts.</span>`;
+                ovEl.style.background = 'rgba(87,242,135,.06)';
+                ovEl.style.borderColor = 'rgba(87,242,135,.2)';
+            }
+        }
+
+        const cdEl = document.getElementById('cubdeckIntegStatus');
+        if (cdEl) {
+            const cd = d2.cubdeck;
+            if (!cd.available) {
+                cdEl.innerHTML = '<span style="color:var(--text-sec)">⚠ CubDeck is not running on this server.</span>';
+            } else if (!cd.linked) {
+                cdEl.innerHTML = '<span style="color:#f0a500">⚠ CubDeck is available. <a href="/cubdeck" target="_blank" style="color:var(--accent)">Log in to CubDeck</a> with the same account to enable the CubAssist Bot plugin.</span>';
+            } else {
+                cdEl.innerHTML = '<span style="color:var(--success)">✓ Linked — open CubDeck and add buttons from the <strong>CubAssist Bot</strong> plugin.</span>';
+                cdEl.style.background = 'rgba(87,242,135,.06)';
+                cdEl.style.borderColor = 'rgba(87,242,135,.2)';
+            }
+        }
+    } catch {}
+}
+
+async function loadOverlayScenes() {
+    try {
+        const r = await fetch('/cubassist/api/overlay-scenes');
+        if (!r.ok) return;
+        const d = await r.json();
+        const inp = document.getElementById('overlaySceneId');
+        if (inp) inp.value = d.default || '';
+        const st = document.getElementById('overlaySceneStatus');
+        if (st) st.innerHTML = d.default
+            ? `<span style="color:var(--success)">✓ Scene configured: <code>${escHtml(d.default)}</code></span>`
+            : '<span style="color:var(--text-sec)">No scene configured — chat overlay commands will be disabled.</span>';
+        // Show/hide live controls card
+        const card = document.getElementById('overlayControlCard');
+        if (card) card.style.display = d.default ? '' : 'none';
+        if (d.default) loadOverlayState();
+    } catch {}
+}
+
+async function saveOverlayScene() {
+    const sceneId = (document.getElementById('overlaySceneId')?.value || '').trim();
+    const r = await fetch('/cubassist/api/overlay-scenes', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({default: sceneId})
+    });
+    if (r.ok) {
+        await loadOverlayScenes();
+        showToast(sceneId ? '🎬 Overlay scene saved.' : 'Scene cleared.', 'success');
+    } else {
+        showToast('Failed to save', 'error');
+    }
+}
+
+// ── Live overlay state + controls ──────────────────────────────────────────────
+
+const _OV_WIDGETS = [
+    {key: 'clock_widget',      label: 'Clock',      icon: '🕐'},
+    {key: 'show_countdown',    label: 'Timer',      icon: '⏱'},
+    {key: 'goal_bar',          label: 'Goal',       icon: '🎯'},
+    {key: 'counter_widget',    label: 'Counter',    icon: '🔢'},
+    {key: 'ticker_widget',     label: 'Ticker',     icon: '📰'},
+    {key: 'nowplaying_widget', label: 'Now Playing',icon: '🎵'},
+    {key: 'uptime_widget',     label: 'Uptime',     icon: '⏳'},
+    {key: 'qr_widget',         label: 'QR Code',    icon: '📱'},
+];
+const _OV_EFFECTS = [
+    {val: '',          label: 'None'},
+    {val: 'starfield', label: '⭐ Stars'},
+    {val: 'matrix',    label: '💚 Matrix'},
+    {val: 'rain',      label: '🌧 Rain'},
+    {val: 'snow',      label: '❄ Snow'},
+    {val: 'confetti',  label: '🎊 Confetti'},
+    {val: 'fire',      label: '🔥 Fire'},
+    {val: 'bubbles',   label: '🫧 Bubbles'},
+    {val: 'hearts',    label: '💜 Hearts'},
+];
+
+let _ovState = {};
+
+function _buildOverlayControls() {
+    // Widget toggles
+    const wt = document.getElementById('ovWidgetToggles');
+    if (wt && !wt.children.length) {
+        wt.innerHTML = _OV_WIDGETS.map(w =>
+            `<div class="ov-widget-btn" id="ovwbtn_${w.key}" onclick="ovToggleWidget('${w.key}')">
+                <span style="font-size:18px">${w.icon}</span>
+                <span>${w.label}</span>
+                <span id="ovwstat_${w.key}" style="font-size:10px;opacity:.6">—</span>
+            </div>`
+        ).join('');
+    }
+    // Effect buttons
+    const eb = document.getElementById('ovEffectBtns');
+    if (eb && !eb.children.length) {
+        eb.innerHTML = _OV_EFFECTS.map(e =>
+            `<button class="ov-effect-btn" id="ovefx_${e.val||'none'}" onclick="ovSetEffect('${e.val}')">${e.label}</button>`
+        ).join('');
+    }
+}
+
+async function loadOverlayState() {
+    _buildOverlayControls();
+    try {
+        const r = await fetch('/cubassist/api/overlay-scenes/state');
+        const d = await r.json();
+        const errEl = document.getElementById('overlayStateError');
+        if (d.error) {
+            if (errEl) { errEl.textContent = '⚠ ' + d.error; errEl.style.display = ''; }
+            return;
+        }
+        if (errEl) errEl.style.display = 'none';
+        _ovState = d.config || {};
+        _renderOverlayState();
+    } catch (e) {
+        const errEl = document.getElementById('overlayStateError');
+        if (errEl) { errEl.textContent = '⚠ Could not load overlay state.'; errEl.style.display = ''; }
+    }
+}
+
+function _renderOverlayState() {
+    const c = _ovState;
+
+    // Timer
+    const timerEl = document.getElementById('ovTimerState');
+    if (timerEl) {
+        if (c.show_countdown && c.countdown_to) {
+            const secsLeft = Math.max(0, Math.round((c.countdown_to - Date.now()) / 1000));
+            const h = Math.floor(secsLeft / 3600), m = Math.floor((secsLeft % 3600) / 60), s = secsLeft % 60;
+            timerEl.textContent = `Active — ${h > 0 ? h + 'h ' : ''}${m}m ${s}s remaining`;
+            timerEl.style.color = 'var(--success)';
+        } else {
+            timerEl.textContent = c.show_countdown === false ? 'Hidden' : 'Not set';
+            timerEl.style.color = '';
+        }
+    }
+
+    // Goal
+    const goalEl = document.getElementById('ovGoalState');
+    if (goalEl) {
+        if (c.goal_bar) {
+            goalEl.innerHTML = `Active — <strong>${c.goal_bar_current ?? 0}</strong> / <strong>${c.goal_bar_max ?? 100}</strong>${c.goal_bar_title ? ' · ' + escHtml(c.goal_bar_title) : ''}`;
+            goalEl.style.color = 'var(--success)';
+            const ci = document.getElementById('ovGoalCurrent'); if (ci) ci.value = c.goal_bar_current ?? '';
+            const mi = document.getElementById('ovGoalMax');     if (mi) mi.value = c.goal_bar_max ?? '';
+            const li = document.getElementById('ovGoalLabel');   if (li) li.value = c.goal_bar_title ?? '';
+        } else {
+            goalEl.textContent = 'Hidden';
+            goalEl.style.color = '';
+        }
+    }
+
+    // Counter
+    const cntEl = document.getElementById('ovCounterState');
+    if (cntEl) {
+        if (c.counter_widget) {
+            cntEl.innerHTML = `Active — value: <strong>${c.counter_value ?? 0}</strong>${c.counter_label ? ' · ' + escHtml(c.counter_label) : ''}`;
+            cntEl.style.color = 'var(--success)';
+            const vi = document.getElementById('ovCounterValue'); if (vi) vi.value = c.counter_value ?? 0;
+            const li = document.getElementById('ovCounterLabel'); if (li) li.value = c.counter_label ?? '';
+        } else {
+            cntEl.textContent = 'Hidden';
+            cntEl.style.color = '';
+        }
+    }
+
+    // Text fields
+    const titEl = document.getElementById('ovTitle');      if (titEl && !titEl.matches(':focus')) titEl.value = c.title ?? '';
+    const subEl = document.getElementById('ovSubtitle');   if (subEl && !subEl.matches(':focus')) subEl.value = c.subtitle ?? '';
+    const tikEl = document.getElementById('ovTicker');     if (tikEl && !tikEl.matches(':focus')) tikEl.value = c.ticker_label ?? '';
+
+    // Widget toggle buttons
+    _OV_WIDGETS.forEach(w => {
+        const btn  = document.getElementById(`ovwbtn_${w.key}`);
+        const stat = document.getElementById(`ovwstat_${w.key}`);
+        if (!btn) return;
+        const on = !!c[w.key];
+        btn.classList.toggle('active', on);
+        if (stat) stat.textContent = on ? 'ON' : 'OFF';
+    });
+
+    // Effect buttons
+    const curFx = c.background_effect || '';
+    _OV_EFFECTS.forEach(e => {
+        const btn = document.getElementById(`ovefx_${e.val || 'none'}`);
+        if (btn) btn.classList.toggle('active', curFx === e.val);
+    });
+}
+
+async function ovPatch(config, silent = false) {
+    try {
+        const r = await fetch('/cubassist/api/overlay-scenes/patch', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({config})
+        });
+        const d = await r.json();
+        if (!r.ok) { showToast(d.error || 'Failed', 'error'); return false; }
+        Object.assign(_ovState, config);
+        _renderOverlayState();
+        if (!silent) showToast('✓ Overlay updated', 'success');
+        return true;
+    } catch (e) {
+        showToast('Error: ' + e.message, 'error'); return false;
+    }
+}
+
+function ovSetTimer() {
+    const raw = (document.getElementById('ovTimerInput')?.value || '').trim().toLowerCase();
+    if (!raw) { showToast('Enter a duration', 'error'); return; }
+    const ms = _parseDurationMs(raw);
+    if (ms === null) { showToast('Invalid duration — try 5m, 1h30m, 90s', 'error'); return; }
+    ovPatch({show_countdown: true, countdown_to: Date.now() + ms});
+}
+
+function _parseDurationMs(s) {
+    s = s.trim().toLowerCase();
+    if (s.includes(':')) {
+        const p = s.split(':').map(Number);
+        if (p.some(isNaN)) return null;
+        if (p.length === 2) return (p[0] * 60 + p[1]) * 1000;
+        if (p.length === 3) return (p[0] * 3600 + p[1] * 60 + p[2]) * 1000;
+    }
+    const matches = [...s.matchAll(/(\d+)\s*([hms])/g)];
+    if (matches.length) {
+        let t = 0;
+        for (const [,v,u] of matches) {
+            if (u === 'h') t += +v * 3600000;
+            else if (u === 'm') t += +v * 60000;
+            else if (u === 's') t += +v * 1000;
+        }
+        return t;
+    }
+    const n = parseInt(s);
+    return isNaN(n) ? null : n * 1000;
+}
+
+function ovSetGoal() {
+    const cur = parseInt(document.getElementById('ovGoalCurrent')?.value);
+    const max = parseInt(document.getElementById('ovGoalMax')?.value);
+    const lbl = (document.getElementById('ovGoalLabel')?.value || '').trim();
+    if (isNaN(cur) || isNaN(max)) { showToast('Enter current and max values', 'error'); return; }
+    const upd = {goal_bar: true, goal_bar_current: cur, goal_bar_max: max};
+    if (lbl) upd.goal_bar_title = lbl;
+    ovPatch(upd);
+}
+
+function ovSetCounter() {
+    const val = parseInt(document.getElementById('ovCounterValue')?.value);
+    const lbl = (document.getElementById('ovCounterLabel')?.value || '').trim();
+    if (isNaN(val)) { showToast('Enter a value', 'error'); return; }
+    const upd = {counter_widget: true, counter_value: val};
+    if (lbl) upd.counter_label = lbl;
+    ovPatch(upd);
+}
+
+async function ovCounterDelta(delta) {
+    const cur = parseInt(_ovState.counter_value ?? 0);
+    ovPatch({counter_widget: true, counter_value: cur + delta});
+}
+
+function ovToggleWidget(key) {
+    const cur = !!_ovState[key];
+    ovPatch({[key]: !cur});
+}
+
+function ovSetEffect(val) {
+    ovPatch({background_effect: val});
 }
 
 async function saveWebhook() {
@@ -2483,6 +3252,414 @@ function showToast(msg, type = '') {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function escHtml(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Counters ────────────────────────────────────────────────────────────────────
+let _counters = {};
+
+async function loadCounters() {
+    try {
+        const r = await fetch('/cubassist/api/counters');
+        _counters = await r.json();
+        renderCounters();
+    } catch {}
+}
+
+function renderCounters() {
+    const d = document.getElementById('cnt_deaths');
+    const w = document.getElementById('cnt_wins');
+    const l = document.getElementById('cnt_losses');
+    const s = document.getElementById('cnt_score');
+    if (d) d.value = _counters.deaths ?? 0;
+    if (w) w.value = _counters.wins ?? 0;
+    if (l) l.value = _counters.losses ?? 0;
+    if (s) s.value = _counters.score ?? '';
+    // W/L display
+    const wld = document.getElementById('wlDisplay');
+    if (wld) {
+        const wins = _counters.wins || 0, losses = _counters.losses || 0;
+        const total = wins + losses;
+        const pct = total ? Math.round(wins / total * 100) : 0;
+        wld.textContent = total ? `W/L: ${wins}/${losses} (${pct}% WR)` : '';
+    }
+    // Custom counters
+    const el = document.getElementById('customCountersList');
+    if (!el) return;
+    const custom = _counters.custom || {};
+    const entries = Object.entries(custom);
+    if (!entries.length) { el.innerHTML = '<p class="hint">No custom counters. Click <strong>+ Add Counter</strong> to create one.</p>'; return; }
+    el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>Counter</th><th>Value</th><th>Chat Usage</th><th>Actions</th></tr></thead>
+        <tbody>${entries.map(([name, val]) => `<tr>
+            <td><strong>!${escHtml(name)}</strong></td>
+            <td style="font-family:'Fira Code',monospace;font-size:14px;color:var(--success)">${val}</td>
+            <td style="font-size:12px;color:var(--text-sec)"><code>!${escHtml(name)}</code> show · <code>!${escHtml(name)}+</code> inc · <code>!${escHtml(name)}-</code> dec</td>
+            <td><div class="action-btns">
+                <button class="btn btn-ghost btn-sm" onclick="editCustomCounter('${escHtml(name)}')">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCustomCounter('${escHtml(name)}')">Del</button>
+            </div></td>
+        </tr>`).join('')}</tbody>
+    </table></div>`;
+}
+
+async function counterIncrement(key, n) {
+    _counters[key] = (_counters[key] || 0) + n;
+    document.getElementById('cnt_' + key).value = _counters[key];
+    await saveCounters();
+    renderCounters();
+}
+
+async function counterReset(key) {
+    _counters[key] = 0;
+    document.getElementById('cnt_' + key).value = 0;
+    await saveCounters();
+    renderCounters();
+}
+
+async function saveCounters() {
+    const body = {
+        deaths: parseInt(document.getElementById('cnt_deaths').value) || 0,
+        wins:   parseInt(document.getElementById('cnt_wins').value) || 0,
+        losses: parseInt(document.getElementById('cnt_losses').value) || 0,
+        score:  document.getElementById('cnt_score').value.trim(),
+    };
+    const r = await fetch('/cubassist/api/counters', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    if (r.ok) { _counters = {..._counters, ...body}; renderCounters(); showToast('Counters saved', 'success'); }
+}
+
+async function saveScore() {
+    const score = document.getElementById('cnt_score').value.trim();
+    const r = await fetch('/cubassist/api/counters', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({score})
+    });
+    if (r.ok) { _counters.score = score; showToast('Score saved', 'success'); }
+}
+
+function openCustomCounterModal(name) {
+    document.getElementById('counterEditName').value = name || '';
+    document.getElementById('counterName').value = name || '';
+    document.getElementById('counterName').disabled = !!name;
+    document.getElementById('counterStartVal').value = name ? (_counters.custom?.[name] ?? 0) : 0;
+    document.getElementById('customCounterModalTitle').textContent = name ? 'Edit Counter' : 'Add Custom Counter';
+    document.getElementById('customCounterModal').classList.add('open');
+}
+
+function editCustomCounter(name) { openCustomCounterModal(name); }
+
+async function saveCustomCounter() {
+    const editName = document.getElementById('counterEditName').value;
+    const name = editName || document.getElementById('counterName').value.trim().toLowerCase();
+    const value = parseInt(document.getElementById('counterStartVal').value) || 0;
+    if (!name) { showToast('Counter name required', 'error'); return; }
+    const r = await fetch('/cubassist/api/counters/custom', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({name, value})
+    });
+    if (r.ok) {
+        closeModal('customCounterModal');
+        await loadCounters();
+        showToast('Counter saved', 'success');
+    } else {
+        const d = await r.json();
+        showToast(d.error || 'Error', 'error');
+    }
+}
+
+async function deleteCustomCounter(name) {
+    if (!confirm(`Delete counter "${name}"?`)) return;
+    await fetch(`/cubassist/api/counters/custom/${name}`, { method: 'DELETE' });
+    await loadCounters();
+    showToast('Counter deleted');
+}
+
+// ── Shop ────────────────────────────────────────────────────────────────────────
+let _shop = [];
+
+async function loadShop() {
+    try {
+        const r = await fetch('/cubassist/api/shop');
+        _shop = await r.json();
+        renderShop();
+    } catch {}
+}
+
+function renderShop() {
+    const el = document.getElementById('shopList');
+    if (!el) return;
+    if (!_shop.length) {
+        el.innerHTML = '<div class="empty"><div class="icon">🛒</div><p>No shop items yet. Click <strong>+ Add Item</strong> to create one.</p></div>';
+        return;
+    }
+    el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>Item</th><th>Cost</th><th>Stock</th><th>Response</th><th>Actions</th></tr></thead>
+        <tbody>${_shop.map((item, i) => `<tr>
+            <td style="color:var(--text-sec);font-size:12px">${i+1}</td>
+            <td style="font-weight:600">${escHtml(item.name)}</td>
+            <td style="font-family:'Fira Code',monospace;color:var(--success)">${(item.cost||0).toLocaleString()}</td>
+            <td style="font-size:12px;color:var(--text-sec)">${item.stock === -1 ? '∞' : item.stock}</td>
+            <td style="font-size:12px;color:var(--text-sec);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(item.response || '—')}</td>
+            <td><div class="action-btns">
+                <button class="btn btn-ghost btn-sm" onclick="editShopItem('${escHtml(item.id)}')">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteShopItem('${escHtml(item.id)}')">Del</button>
+            </div></td>
+        </tr>`).join('')}
+        </tbody></table></div>`;
+}
+
+function openShopModal(id) {
+    const item = id ? _shop.find(s => s.id === id) : null;
+    document.getElementById('shopEditId').value = item?.id || '';
+    document.getElementById('shopModalTitle').textContent = item ? 'Edit Shop Item' : 'Add Shop Item';
+    document.getElementById('shopName').value = item?.name || '';
+    document.getElementById('shopCost').value = item?.cost ?? 500;
+    document.getElementById('shopResponse').value = item?.response || '';
+    document.getElementById('shopStock').value = item?.stock ?? -1;
+    document.getElementById('shopModal').classList.add('open');
+}
+
+function editShopItem(id) { openShopModal(id); }
+
+async function saveShopItem() {
+    const id = document.getElementById('shopEditId').value;
+    const name = document.getElementById('shopName').value.trim();
+    const cost = parseInt(document.getElementById('shopCost').value) || 0;
+    const response = document.getElementById('shopResponse').value.trim();
+    const stock = parseInt(document.getElementById('shopStock').value) ?? -1;
+    if (!name) { showToast('Item name required', 'error'); return; }
+    const body = {name, cost, response, stock};
+    if (id) body.id = id;
+    const r = await fetch('/cubassist/api/shop', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    if (r.ok) { closeModal('shopModal'); await loadShop(); showToast('Item saved', 'success'); }
+}
+
+async function deleteShopItem(id) {
+    if (!confirm('Delete this shop item?')) return;
+    await fetch('/cubassist/api/shop/' + id, { method: 'DELETE' });
+    await loadShop();
+    showToast('Item deleted');
+}
+
+// ── Lore ────────────────────────────────────────────────────────────────────────
+let _lore = [];
+
+async function loadLore() {
+    try {
+        const r = await fetch('/cubassist/api/lore');
+        _lore = await r.json();
+        renderLore();
+    } catch {}
+}
+
+function renderLore() {
+    const el = document.getElementById('loreList');
+    if (!el) return;
+    if (!_lore.length) {
+        el.innerHTML = '<div class="empty"><div class="icon">📜</div><p>No lore entries yet. Click <strong>+ Add Lore</strong> or use <code>!lore add text</code> in chat.</p></div>';
+        return;
+    }
+    el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>Lore</th><th>Added By</th><th>Actions</th></tr></thead>
+        <tbody>${_lore.map((entry, i) => `<tr>
+            <td style="color:var(--text-sec);font-size:12px">#${i+1}</td>
+            <td style="font-size:13px">${escHtml(entry.text)}</td>
+            <td style="font-size:11px;color:var(--text-sec)">${escHtml(entry.added_by || '')}</td>
+            <td><div class="action-btns">
+                <button class="btn btn-ghost btn-sm" onclick="editLoreEntry(${i})">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteLoreEntry(${i})">Del</button>
+            </div></td>
+        </tr>`).join('')}</tbody>
+    </table></div>`;
+}
+
+function openLoreModal(idx) {
+    document.getElementById('loreModal').classList.add('open');
+    if (idx !== undefined) {
+        document.getElementById('loreModalTitle').textContent = 'Edit Lore Entry';
+        document.getElementById('loreEditIdx').value = idx;
+        document.getElementById('loreText').value = _lore[idx]?.text || '';
+    } else {
+        document.getElementById('loreModalTitle').textContent = 'Add Lore Entry';
+        document.getElementById('loreEditIdx').value = '';
+        document.getElementById('loreText').value = '';
+    }
+}
+
+function editLoreEntry(idx) { openLoreModal(idx); }
+
+async function saveLoreEntry() {
+    const text = document.getElementById('loreText').value.trim();
+    if (!text) { showToast('Lore text required', 'error'); return; }
+    const idxStr = document.getElementById('loreEditIdx').value;
+    let r;
+    if (idxStr !== '') {
+        r = await fetch(`/cubassist/api/lore/${idxStr}`, {
+            method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({text})
+        });
+    } else {
+        r = await fetch('/cubassist/api/lore', {
+            method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({text})
+        });
+    }
+    if (r.ok) { closeModal('loreModal'); await loadLore(); showToast('Lore saved', 'success'); }
+}
+
+async function deleteLoreEntry(idx) {
+    if (!confirm(`Delete lore #${idx+1}?`)) return;
+    await fetch(`/cubassist/api/lore/${idx}`, { method: 'DELETE' });
+    await loadLore();
+    showToast('Lore deleted');
+}
+
+// ── Trusted users ───────────────────────────────────────────────────────────────
+let _trusted = [];
+
+async function loadTrusted() {
+    try {
+        const r = await fetch('/cubassist/api/trusted');
+        _trusted = await r.json();
+        renderTrusted();
+    } catch {}
+}
+
+function renderTrusted() {
+    const el = document.getElementById('trustedList');
+    if (!el) return;
+    if (!_trusted.length) {
+        el.innerHTML = '<div class="empty"><div class="icon">✅</div><p>No trusted users yet. Click <strong>+ Add Trusted User</strong> or use <code>!trust @user</code> in chat.</p></div>';
+        return;
+    }
+    el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>Username</th><th>Actions</th></tr></thead>
+        <tbody>${_trusted.map(nick => `<tr>
+            <td style="font-weight:600">${escHtml(nick)}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="removeTrustedUser('${escHtml(nick)}')">Remove</button></td>
+        </tr>`).join('')}</tbody>
+    </table></div>`;
+}
+
+function openTrustedModal() {
+    document.getElementById('trustedNick').value = '';
+    document.getElementById('trustedModal').classList.add('open');
+}
+
+async function addTrustedUser() {
+    const nick = document.getElementById('trustedNick').value.trim().toLowerCase();
+    if (!nick) { showToast('Username required', 'error'); return; }
+    const r = await fetch('/cubassist/api/trusted', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({nick})
+    });
+    if (r.ok) { closeModal('trustedModal'); await loadTrusted(); showToast(nick + ' added to trusted', 'success'); }
+}
+
+async function removeTrustedUser(nick) {
+    if (!confirm(`Remove ${nick} from trusted users?`)) return;
+    await fetch('/cubassist/api/trusted/' + nick, { method: 'DELETE' });
+    await loadTrusted();
+    showToast(nick + ' removed from trusted');
+}
+
+// ── Watchlist ───────────────────────────────────────────────────────────────────
+let _watchlist = [];
+
+async function loadWatchlist() {
+    try {
+        const r = await fetch('/cubassist/api/watchlist');
+        _watchlist = await r.json();
+        renderWatchlist();
+    } catch {}
+}
+
+function renderWatchlist() {
+    const el = document.getElementById('watchlistEntries');
+    if (!el) return;
+    if (!_watchlist.length) {
+        el.innerHTML = '<div class="empty"><div class="icon">👁</div><p>Watchlist is empty. Click <strong>+ Add to Watchlist</strong> or use <code>!addwatch @user reason</code> in chat.</p></div>';
+        return;
+    }
+    el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>User</th><th>Reason</th><th>Added By</th><th>Actions</th></tr></thead>
+        <tbody>${_watchlist.map(e => `<tr>
+            <td style="font-weight:600">${escHtml(e.nick)}</td>
+            <td style="font-size:13px;color:var(--text-sec)">${escHtml(e.reason || '')}</td>
+            <td style="font-size:11px;color:var(--text-sec)">${escHtml(e.by || '')}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="removeWatchlistEntry('${escHtml(e.nick)}')">Remove</button></td>
+        </tr>`).join('')}
+        </tbody></table></div>`;
+}
+
+function openWatchlistModal() {
+    document.getElementById('watchNick').value = '';
+    document.getElementById('watchReason').value = '';
+    document.getElementById('watchlistModal').classList.add('open');
+}
+
+async function addWatchlistEntry() {
+    const nick = document.getElementById('watchNick').value.trim().toLowerCase();
+    const reason = document.getElementById('watchReason').value.trim();
+    if (!nick) { showToast('Username required', 'error'); return; }
+    const r = await fetch('/cubassist/api/watchlist', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({nick, reason})
+    });
+    if (r.ok) { closeModal('watchlistModal'); await loadWatchlist(); showToast(nick + ' added to watchlist', 'success'); }
+}
+
+async function removeWatchlistEntry(nick) {
+    if (!confirm(`Remove ${nick} from watchlist?`)) return;
+    await fetch('/cubassist/api/watchlist/' + nick, { method: 'DELETE' });
+    await loadWatchlist();
+    showToast(nick + ' removed from watchlist');
+}
+
+// ── Stream Clip & Marker ────────────────────────────────────────────────────────
+
+async function createClip() {
+    const r = await fetch('/cubassist/api/stream/clip', { method: 'POST' });
+    const d = await r.json();
+    if (r.ok) {
+        const el = document.getElementById('clipResult');
+        if (el) el.innerHTML = `✅ Clip created! <a href="${escHtml(d.edit_url)}" target="_blank" rel="noopener" style="color:var(--accent)">Edit clip</a>`;
+        showToast('Clip created!', 'success');
+    } else {
+        showToast(d.error || 'Failed to create clip', 'error');
+    }
+}
+
+async function createMarker() {
+    const description = document.getElementById('markerDesc').value.trim() || 'CubAssist marker';
+    const r = await fetch('/cubassist/api/stream/marker', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({description})
+    });
+    const d = await r.json();
+    if (r.ok) {
+        document.getElementById('markerDesc').value = '';
+        showToast('Stream marker created!', 'success');
+    } else {
+        showToast(d.error || 'Failed (stream must be live)', 'error');
+    }
+}
+
+// ── Welcome new chatters ────────────────────────────────────────────────────────
+
+async function loadWelcomeNewChatters() {
+    try {
+        const r = await fetch('/cubassist/api/config');
+        const d = await r.json();
+        const el = document.getElementById('welcome_new_chatters');
+        if (el) el.checked = !!d.welcome_new_chatters;
+    } catch {}
+}
+
+async function saveWelcomeNewChatters() {
+    const enabled = document.getElementById('welcome_new_chatters').checked;
+    const r = await fetch('/cubassist/api/config', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({welcome_new_chatters: enabled})
+    });
+    if (r.ok) showToast('Setting saved', 'success');
 }
 
 // ── URL param check ────────────────────────────────────────────────────────────

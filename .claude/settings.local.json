@@ -6,7 +6,9 @@
       "WebFetch(domain:dev.twitch.tv)",
       "WebSearch",
       "WebFetch(domain:discuss.dev.twitch.com)",
-      "WebFetch(domain:cubsoftware.site)"
+      "WebFetch(domain:cubsoftware.site)",
+      "Bash(wait becd7wux7:*)",
+      "Bash(find:*)"
     ]
   }
 }

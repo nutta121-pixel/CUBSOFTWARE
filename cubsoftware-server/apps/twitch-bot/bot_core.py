@@ -60,6 +60,33 @@ _8BALL = [
 
 _SLOTS_SYMBOLS = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '7️⃣']
 
+# ── Duration parsing helper ──────────────────────────────────────────────────────
+
+def _parse_duration_ms(s: str):
+    """Parse '5m', '1h30m', '90s', '5:00', '1:30:00' into milliseconds. Returns None on failure."""
+    s = s.strip().lower()
+    if ':' in s:
+        parts = s.split(':')
+        try:
+            if len(parts) == 2:
+                return (int(parts[0]) * 60 + int(parts[1])) * 1000
+            elif len(parts) == 3:
+                return (int(parts[0]) * 3600 + int(parts[1]) * 60 + int(parts[2])) * 1000
+        except ValueError:
+            return None
+    matches = re.findall(r'(\d+)\s*([hms])', s)
+    if matches:
+        total = 0
+        for val, unit in matches:
+            if unit == 'h':   total += int(val) * 3600000
+            elif unit == 'm': total += int(val) * 60000
+            elif unit == 's': total += int(val) * 1000
+        return total
+    try:
+        return int(s) * 1000
+    except ValueError:
+        return None
+
 # ── Data directory ──────────────────────────────────────────────────────────────
 
 def _data_dir() -> Path:
@@ -143,7 +170,7 @@ def _default_channel_config(channel: str) -> dict:
             'symbols':   {'enabled': False, 'max_percent': 60},
             'blacklist': [],
         },
-        'points_config': {'enabled': False, 'name': 'points', 'per_message': 1, 'per_minute': 5, 'trivia_reward': 100},
+        'points_config': {'enabled': False, 'name': 'points', 'per_message': 1, 'per_minute': 5, 'trivia_reward': 100, 'daily_reward': 100},
         'song_requests': {'enabled': False, 'max_per_user': 3},
         'raid_response': {'enabled': False, 'message': '🚨 Welcome raiders! Thanks for the raid @$(raider) and your $(viewers) viewers!'},
         'ranks': [
@@ -154,6 +181,8 @@ def _default_channel_config(channel: str) -> dict:
             {'name': 'Legend',   'min_points': 50000},
         ],
         'discord_webhook': '',
+        'welcome_new_chatters': False,
+        'overlay_scenes': {'default': ''},
     }
 
 def load_channel_config(channel: str) -> dict:
@@ -198,6 +227,42 @@ def _load_user_notes(channel: str) -> dict:
     except: return {}
 def _save_user_notes(channel: str, data: dict):
     (_channel_dir(channel) / 'user_notes.json').write_text(json.dumps(data))
+
+def _load_counters(channel: str) -> dict:
+    try: return json.loads((_channel_dir(channel) / 'counters.json').read_text())
+    except: return {}
+def _save_counters(channel: str, data: dict):
+    (_channel_dir(channel) / 'counters.json').write_text(json.dumps(data))
+
+def _load_shop(channel: str) -> list:
+    try: return json.loads((_channel_dir(channel) / 'shop.json').read_text())
+    except: return []
+def _save_shop(channel: str, data: list):
+    (_channel_dir(channel) / 'shop.json').write_text(json.dumps(data, indent=2))
+
+def _load_lore(channel: str) -> list:
+    try: return json.loads((_channel_dir(channel) / 'lore.json').read_text())
+    except: return []
+def _save_lore(channel: str, data: list):
+    (_channel_dir(channel) / 'lore.json').write_text(json.dumps(data))
+
+def _load_trusted(channel: str) -> list:
+    try: return json.loads((_channel_dir(channel) / 'trusted.json').read_text())
+    except: return []
+def _save_trusted(channel: str, data: list):
+    (_channel_dir(channel) / 'trusted.json').write_text(json.dumps(data))
+
+def _load_daily_claims(channel: str) -> dict:
+    try: return json.loads((_channel_dir(channel) / 'daily_claims.json').read_text())
+    except: return {}
+def _save_daily_claims(channel: str, data: dict):
+    (_channel_dir(channel) / 'daily_claims.json').write_text(json.dumps(data))
+
+def _load_watchlist(channel: str) -> list:
+    try: return json.loads((_channel_dir(channel) / 'watchlist.json').read_text())
+    except: return []
+def _save_watchlist(channel: str, data: list):
+    (_channel_dir(channel) / 'watchlist.json').write_text(json.dumps(data))
 
 # ── Backward-compat shims (used by _maybe_autostart) ───────────────────────────
 
@@ -463,6 +528,9 @@ class ChannelState:
         self.trivia      = None   # {question, answer, reward, expiry, answered}
         self.song_queue  = []     # [{user, user_id, content, ts}]
         self.songs_open  = True
+        self.hangman = None  # {word, display, guesses, lives_left, active}
+        self.anagram = None  # {word, scrambled, active, expiry}
+        self.raid_shield = False
 
 # ── CubAssist multi-channel IRC bot ────────────────────────────────────────────
 
@@ -480,6 +548,11 @@ PROTECTED = {
     'warn', 'warnings', 'clearwarnings', 'note', 'notes',
     'watchlist', 'addwatch', 'delwatch',
     'weather', 'clip',
+    'deaths', 'adddeaths', 'setdeaths', 'resetdeaths', 'wins', 'addwins', 'losses', 'addlosses',
+    'wl', 'score', 'setscore', 'counter', 'fish', 'hangman', 'guess', 'anagram',
+    'daily', 'rob', 'gift', 'shop', 'redeem', 'lore',
+    'trust', 'untrust', 'trusted',
+    'chatmode', 'marker', 'overlay',
 }
 
 class CubBot:
@@ -860,6 +933,43 @@ class CubBot:
                 if state and raid_cfg.get('enabled') and raid_cfg.get('message'):
                     msg = raid_cfg['message'].replace('$(raider)', raider).replace('$(viewers)', viewers)
                     self.send(msg, channel)
+                self._notify_event(channel, 'raid', {'raider': raider, 'viewers': viewers}, cfg)
+
+            elif msg_id in ('sub', 'resub'):
+                channel = params[0].lstrip('#').lower() if params else ''
+                display = tags.get('display-name', tags.get('login', 'someone'))
+                months  = tags.get('msg-param-cumulative-months', '1')
+                if msg_id == 'resub':
+                    self.send(f'🎉 Thanks @{display} for resubbing! ({months} months) PogChamp', channel)
+                else:
+                    self.send(f'🎉 Welcome to the sub club @{display}! Thanks for subscribing! PogChamp', channel)
+                cfg = load_channel_config(channel) if channel else {}
+                self._notify_event(channel, 'sub', {'user': display, 'months': months}, cfg)
+
+            elif msg_id == 'subgift':
+                channel  = params[0].lstrip('#').lower() if params else ''
+                gifter   = tags.get('display-name', 'Someone')
+                recipient = tags.get('msg-param-recipient-display-name', 'someone')
+                self.send(f'🎁 @{gifter} just gifted a sub to @{recipient}! PogChamp', channel)
+                cfg = load_channel_config(channel) if channel else {}
+                self._notify_event(channel, 'subgift', {'gifter': gifter, 'recipient': recipient}, cfg)
+
+            elif msg_id == 'submysterygift':
+                channel = params[0].lstrip('#').lower() if params else ''
+                gifter  = tags.get('display-name', 'Someone')
+                count   = tags.get('msg-param-mass-gift-count', '1')
+                self.send(f'🎁 @{gifter} gifted {count} subs to the community! Massive W!', channel)
+                cfg = load_channel_config(channel) if channel else {}
+                self._notify_event(channel, 'massgift', {'gifter': gifter, 'count': count}, cfg)
+
+            elif msg_id == 'ritual':
+                channel = params[0].lstrip('#').lower() if params else ''
+                display = tags.get('display-name', '')
+                if tags.get('msg-param-ritual-name') == 'new_chatter':
+                    cfg = load_channel_config(channel) if channel else {}
+                    if cfg.get('welcome_new_chatters', False):
+                        self.send(f'👋 Welcome to the chat @{display}! Make sure to say hi!', channel)
+
             return
 
         if command != 'PRIVMSG':
@@ -909,6 +1019,21 @@ class CubBot:
             pts[nick] = pts.get(nick, 0) + int(pts_cfg['per_message'])
             _save_points(channel, pts)
 
+        # Bits/cheer detection — push to overlays
+        bits_str = tags.get('bits', '')
+        if bits_str:
+            try:
+                bits_amount = int(bits_str)
+                self._notify_event(channel, 'cheer', {'user': display_name, 'bits': bits_amount}, cfg)
+                pts_cfg2 = cfg.get('points_config', {})
+                if pts_cfg2.get('enabled') and bits_amount > 0:
+                    bonus = max(1, bits_amount // 10)
+                    pts2 = _load_points(channel)
+                    pts2[nick] = pts2.get(nick, 0) + bonus
+                    _save_points(channel, pts2)
+            except Exception:
+                pass
+
         if not _level_gte(user_level, 'moderator'):
             if self._automod(nick, display_name, text, msg_id, channel, state, cfg):
                 return
@@ -947,6 +1072,16 @@ class CubBot:
                     self.delete_msg(msg_id, channel)
                     self.send(f'{display_name}, please avoid excessive caps.', channel)
                     return True
+
+        sym_cfg = am.get('symbols', {})
+        if sym_cfg.get('enabled') and len(text) >= 10:
+            total = len(text)
+            sym_count = sum(1 for c in text if not c.isalnum() and c not in ' \t.,!?\'"-:;')
+            pct = sym_count / total * 100
+            if pct >= int(sym_cfg.get('max_percent', 60)):
+                self.delete_msg(msg_id, channel)
+                self.send(f'{display_name}, please avoid symbol spam.', channel)
+                return True
 
         text_low = text.lower()
         for word in am.get('blacklist', []):
@@ -996,9 +1131,33 @@ class CubBot:
             save_channel_config(channel, cfg)
             return
 
-        self._builtin(cmd_name, query, display_name, user_level, user_id, channel, state, cfg)
+        # Custom counter detection
+        if cmd_name not in PROTECTED:
+            counters = _load_counters(channel)
+            ccounters = counters.get('custom', {})
+            if cmd_name in ccounters:
+                self.send(f'🔢 [{cmd_name}]: {ccounters[cmd_name]}', channel)
+                return
+            if cmd_name.endswith('+') and cmd_name[:-1] in ccounters and _level_gte(user_level, 'moderator'):
+                base = cmd_name[:-1]
+                try: n = int(query.strip())
+                except: n = 1
+                ccounters[base] += n
+                _save_counters(channel, counters)
+                self.send(f'🔢 [{base}]: {ccounters[base]}', channel)
+                return
+            if cmd_name.endswith('-') and cmd_name[:-1] in ccounters and _level_gte(user_level, 'moderator'):
+                base = cmd_name[:-1]
+                try: n = int(query.strip())
+                except: n = 1
+                ccounters[base] = max(0, ccounters[base] - n)
+                _save_counters(channel, counters)
+                self.send(f'🔢 [{base}]: {ccounters[base]}', channel)
+                return
 
-    def _builtin(self, cmd_name, query, display_name, user_level, user_id, channel, state, cfg):
+        self._builtin(cmd_name, query, nick, display_name, user_level, user_id, channel, state, cfg)
+
+    def _builtin(self, cmd_name, query, nick, display_name, user_level, user_id, channel, state, cfg):
         if cmd_name == 'commands':
             names = [f'!{n}' for n, c in cfg.get('commands', {}).items() if c.get('enabled', True)]
             self.send('Commands: ' + ', '.join(names) if names else 'No commands configured.', channel)
@@ -1708,6 +1867,728 @@ class CubBot:
             except Exception:
                 self.send(f'Could not get weather for {city}.', channel)
 
+        # ── Stream Counters ───────────────────────────────────────────────
+        elif cmd_name == 'deaths':
+            c = _load_counters(channel)
+            self.send(f'💀 Deaths this session: {c.get("deaths", 0)}', channel)
+
+        elif cmd_name == 'adddeaths' and _level_gte(user_level, 'moderator'):
+            c = _load_counters(channel)
+            try: n = int(query.strip())
+            except: n = 1
+            c['deaths'] = c.get('deaths', 0) + n
+            _save_counters(channel, c)
+            self.send(f'💀 Deaths: {c["deaths"]}', channel)
+
+        elif cmd_name == 'setdeaths' and _level_gte(user_level, 'moderator'):
+            c = _load_counters(channel)
+            try:
+                c['deaths'] = int(query.strip())
+                _save_counters(channel, c)
+                self.send(f'💀 Deaths set to {c["deaths"]}', channel)
+            except: self.send('Usage: !setdeaths <number>', channel)
+
+        elif cmd_name == 'resetdeaths' and _level_gte(user_level, 'moderator'):
+            c = _load_counters(channel)
+            c['deaths'] = 0
+            _save_counters(channel, c)
+            self.send('💀 Deaths reset to 0', channel)
+
+        elif cmd_name == 'wins':
+            c = _load_counters(channel)
+            self.send(f'🏆 Wins: {c.get("wins", 0)} | Losses: {c.get("losses", 0)}', channel)
+
+        elif cmd_name == 'addwins' and _level_gte(user_level, 'moderator'):
+            c = _load_counters(channel)
+            try: n = int(query.strip())
+            except: n = 1
+            c['wins'] = c.get('wins', 0) + n
+            _save_counters(channel, c)
+            self.send(f'🏆 Wins: {c["wins"]}', channel)
+
+        elif cmd_name == 'losses':
+            c = _load_counters(channel)
+            self.send(f'😢 Losses: {c.get("losses", 0)}', channel)
+
+        elif cmd_name == 'addlosses' and _level_gte(user_level, 'moderator'):
+            c = _load_counters(channel)
+            try: n = int(query.strip())
+            except: n = 1
+            c['losses'] = c.get('losses', 0) + n
+            _save_counters(channel, c)
+            self.send(f'😢 Losses: {c["losses"]}', channel)
+
+        elif cmd_name == 'wl':
+            c = _load_counters(channel)
+            total = c.get('wins', 0) + c.get('losses', 0)
+            pct = round(c.get('wins', 0) / total * 100) if total else 0
+            self.send(f'📊 W/L: {c.get("wins", 0)}/{c.get("losses", 0)} ({pct}% WR)', channel)
+
+        elif cmd_name == 'score':
+            c = _load_counters(channel)
+            self.send(f'🎯 Score: {c.get("score", "0")}', channel)
+
+        elif cmd_name == 'setscore' and _level_gte(user_level, 'moderator'):
+            c = _load_counters(channel)
+            score_str = query.strip()
+            c['score'] = score_str
+            _save_counters(channel, c)
+            self.send(f'🎯 Score: {score_str}', channel)
+
+        # ── Custom counters ───────────────────────────────────────────────
+        elif cmd_name == 'counter' and _level_gte(user_level, 'moderator'):
+            parts  = query.split(None, 2)
+            sub    = parts[0].lower() if parts else ''
+            c = _load_counters(channel)
+            ccounters = c.setdefault('custom', {})
+
+            if sub == 'add' and len(parts) >= 2:
+                name = parts[1].lower().strip('!#')
+                if not re.match(r'^[a-z0-9_]+$', name):
+                    self.send('Counter name may only contain letters, numbers, and underscores.', channel); return
+                if name in ccounters:
+                    self.send(f'Counter [{name}] already exists.', channel); return
+                start = 0
+                if len(parts) >= 3:
+                    try: start = int(parts[2])
+                    except: pass
+                ccounters[name] = start
+                _save_counters(channel, c)
+                self.send(f'✅ Counter [{name}] created (start: {start}). Use !{name} to show, !{name}+ to increment.', channel)
+
+            elif sub == 'remove' and len(parts) >= 2:
+                name = parts[1].lower().strip('!#')
+                if name in ccounters:
+                    del ccounters[name]
+                    _save_counters(channel, c)
+                    self.send(f'Counter [{name}] removed.', channel)
+                else:
+                    self.send(f'Counter [{name}] not found.', channel)
+
+            elif sub == 'set' and len(parts) >= 3:
+                name = parts[1].lower().strip('!#')
+                if name not in ccounters:
+                    self.send(f'Counter [{name}] not found.', channel); return
+                try:
+                    ccounters[name] = int(parts[2])
+                    _save_counters(channel, c)
+                    self.send(f'🔢 [{name}]: {ccounters[name]}', channel)
+                except: self.send('Usage: !counter set <name> <value>', channel)
+
+            elif sub == 'reset' and len(parts) >= 2:
+                name = parts[1].lower().strip('!#')
+                if name in ccounters:
+                    ccounters[name] = 0
+                    _save_counters(channel, c)
+                    self.send(f'🔢 [{name}] reset to 0', channel)
+                else:
+                    self.send(f'Counter [{name}] not found.', channel)
+
+            elif sub == 'list':
+                if not ccounters:
+                    self.send('No custom counters. Use !counter add <name>', channel); return
+                parts_list = ' | '.join(f'{n}: {v}' for n, v in ccounters.items())
+                self.send(f'🔢 Counters: {parts_list}', channel)
+
+            else:
+                self.send('Usage: !counter add <name> [start] | !counter remove <name> | !counter set <name> <value> | !counter reset <name> | !counter list', channel)
+
+        # ── Fishing ───────────────────────────────────────────────────────────
+        elif cmd_name == 'fish':
+            pts_cfg  = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points system is not enabled.', channel); return
+            now = time.time()
+            fish_key = f'__fish_{user_id}__'
+            cd_secs = 60  # 1 min cooldown
+            last_fish = state.cd.get(fish_key, 0)
+            if now - last_fish < cd_secs:
+                remaining = int(cd_secs - (now - last_fish))
+                self.send(f'🎣 {display_name}, your line is cooling down! ({remaining}s)', channel); return
+            state.cd[fish_key] = now
+            roll = random.random()
+            _fish_table = [
+                (0.03, '🦈 LEGENDARY CATCH! A shark! You got', 500, 1000),
+                (0.08, '🐟 Rare catch! A golden fish! You got', 200, 400),
+                (0.25, '🐠 Nice catch! A tropical fish! You got', 50, 150),
+                (0.55, '🐟 Caught a fish! You got', 10, 50),
+            ]
+            cumulative = 0
+            pts = _load_points(channel)
+            for (threshold, msg, min_pts, max_pts) in _fish_table:
+                cumulative += threshold
+                if roll <= cumulative:
+                    won = random.randint(min_pts, max_pts)
+                    pts[nick] = pts.get(nick, 0) + won
+                    _save_points(channel, pts)
+                    self.send(f'🎣 {msg} {won} {pts_name}! (Balance: {pts[nick]:,})', channel)
+                    return
+            # No catch
+            pts[nick] = max(0, pts.get(nick, 0) - 5)
+            _save_points(channel, pts)
+            self.send(f'🎣 {display_name} cast their line and... nothing! (-5 {pts_name}) Try again in {cd_secs}s!', channel)
+
+        # ── Daily bonus ───────────────────────────────────────────────────────
+        elif cmd_name == 'daily':
+            pts_cfg  = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points system is not enabled.', channel); return
+            claims = _load_daily_claims(channel)
+            last   = claims.get(user_id, 0)
+            now    = time.time()
+            cooldown = 86400  # 24 hours
+            if now - last < cooldown:
+                remaining = int(cooldown - (now - last))
+                h, m = divmod(remaining // 60, 60)
+                self.send(f'⏰ {display_name}, you already claimed your daily! Come back in {h}h {m}m.', channel); return
+            # Streak bonus
+            streaks = claims.get(f'{user_id}_streak', 0)
+            # If claimed within 48h, streak continues
+            if now - last < 172800:
+                streaks += 1
+            else:
+                streaks = 1
+            claims[f'{user_id}_streak'] = streaks
+            claims[user_id] = now
+            _save_daily_claims(channel, claims)
+            base_reward = int(cfg.get('points_config', {}).get('daily_reward', 100))
+            streak_bonus = min(streaks - 1, 30) * int(base_reward * 0.1)
+            total_reward = base_reward + streak_bonus
+            pts = _load_points(channel)
+            pts[nick] = pts.get(nick, 0) + total_reward
+            _save_points(channel, pts)
+            streak_str = f' (🔥 {streaks}-day streak! +{streak_bonus} bonus!)' if streaks > 1 else ''
+            self.send(f'🎁 {display_name} claimed their daily {pts_name}! +{total_reward}{streak_str} (Balance: {pts[nick]:,})', channel)
+
+        # ── Rob ───────────────────────────────────────────────────────────────
+        elif cmd_name == 'rob':
+            pts_cfg  = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points system is not enabled.', channel); return
+            target_raw = query.strip().lstrip('@')
+            if not target_raw:
+                self.send('Usage: !rob @user', channel); return
+            target = target_raw.lower()
+            if target == nick:
+                self.send(f'{display_name}, you can\'t rob yourself!', channel); return
+            rob_key = f'__rob_{user_id}__'
+            now = time.time()
+            cd_secs = 300  # 5 min cooldown
+            if now - state.cd.get(rob_key, 0) < cd_secs:
+                remaining = int(cd_secs - (now - state.cd.get(rob_key, 0)))
+                self.send(f'🦹 {display_name}, you\'re still hiding from the last robbery! ({remaining}s)', channel); return
+            state.cd[rob_key] = now
+            pts = _load_points(channel)
+            rob_from = pts.get(target, 0)
+            robber_pts = pts.get(nick, 0)
+            if rob_from < 50:
+                self.send(f'🦹 {display_name} tried to rob {target_raw} but they\'re broke!', channel); return
+            rob_amount = min(int(rob_from * 0.3), random.randint(10, 200))
+            roll = random.random()
+            if roll < 0.45:  # 45% success
+                pts[nick] = robber_pts + rob_amount
+                pts[target] = rob_from - rob_amount
+                _save_points(channel, pts)
+                self.send(f'🦹 {display_name} successfully robbed {target_raw} for {rob_amount:,} {pts_name}!', channel)
+            elif roll < 0.75:  # 30% caught, fine
+                fine = min(robber_pts, rob_amount)
+                pts[nick] = max(0, robber_pts - fine)
+                pts[target] = rob_from + fine
+                _save_points(channel, pts)
+                self.send(f'👮 {display_name} was caught robbing {target_raw} and paid a fine of {fine:,} {pts_name}!', channel)
+            else:  # 25% caught, timeout
+                pts[nick] = max(0, robber_pts - rob_amount)
+                _save_points(channel, pts)
+                self.send(f'👮 {display_name} was arrested while robbing {target_raw}! -{rob_amount:,} {pts_name} and a 60s timeout!', channel)
+                self.timeout(nick, channel, 60, 'Caught robbing')
+
+        # ── Gift points ───────────────────────────────────────────────────────
+        elif cmd_name == 'gift':
+            pts_cfg  = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points system is not enabled.', channel); return
+            parts = query.split()
+            if len(parts) < 2:
+                self.send(f'Usage: !gift @user <amount>', channel); return
+            target = parts[0].lstrip('@').lower()
+            try: amount = int(parts[1])
+            except: self.send('Amount must be a number.', channel); return
+            if amount <= 0:
+                self.send('Amount must be positive.', channel); return
+            pts = _load_points(channel)
+            if pts.get(nick, 0) < amount:
+                self.send(f'{display_name}, you only have {pts.get(nick, 0):,} {pts_name}.', channel); return
+            pts[nick] = pts.get(nick, 0) - amount
+            pts[target] = pts.get(target, 0) + amount
+            _save_points(channel, pts)
+            self.send(f'🎁 {display_name} gifted {amount:,} {pts_name} to {parts[0]}!', channel)
+
+        # ── Loyalty shop ──────────────────────────────────────────────────────
+        elif cmd_name == 'shop':
+            shop = _load_shop(channel)
+            if not shop:
+                self.send('No shop items available yet. Ask a mod to add some via the dashboard!', channel); return
+            items = ' | '.join(f'{i+1}) {item["name"]} ({item["cost"]:,} pts)' for i, item in enumerate(shop[:8]))
+            self.send(f'🛒 Shop: {items} — Use !redeem <number>', channel)
+
+        elif cmd_name == 'redeem':
+            pts_cfg  = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points system is not enabled.', channel); return
+            shop = _load_shop(channel)
+            if not shop:
+                self.send('No shop items available.', channel); return
+            item_input = query.strip()
+            item = None
+            try:
+                idx = int(item_input) - 1
+                if 0 <= idx < len(shop):
+                    item = shop[idx]
+            except ValueError:
+                item = next((s for s in shop if s['name'].lower() == item_input.lower()), None)
+            if not item:
+                self.send(f'Item not found. Use !shop to see available items.', channel); return
+            pts = _load_points(channel)
+            cost = int(item.get('cost', 0))
+            if pts.get(nick, 0) < cost:
+                self.send(f'{display_name}, you need {cost:,} {pts_name} to redeem "{item["name"]}".', channel); return
+            pts[nick] = pts.get(nick, 0) - cost
+            _save_points(channel, pts)
+            if item.get('response'):
+                resp = item['response'].replace('$(user)', display_name).replace('$(item)', item['name'])
+                self.send(resp, channel)
+            else:
+                self.send(f'✅ {display_name} redeemed "{item["name"]}"! (-{cost:,} {pts_name}) Notify a mod to deliver your reward.', channel)
+
+        # ── Lore ──────────────────────────────────────────────────────────────
+        elif cmd_name == 'lore':
+            lore = _load_lore(channel)
+            parts = query.split(None, 1)
+            sub = parts[0].lower() if parts else ''
+
+            if sub == 'add' and _level_gte(user_level, 'moderator'):
+                text_l = parts[1].strip() if len(parts) > 1 else ''
+                if not text_l:
+                    self.send('Usage: !lore add <lore text>', channel); return
+                lore.append({'text': text_l, 'added_by': nick, 'ts': int(time.time())})
+                _save_lore(channel, lore)
+                self.send(f'📜 Lore #{len(lore)} added!', channel)
+
+            elif sub == 'remove' and _level_gte(user_level, 'moderator'):
+                try:
+                    idx = int(parts[1].strip()) - 1
+                    if 0 <= idx < len(lore):
+                        del lore[idx]
+                        _save_lore(channel, lore)
+                        self.send(f'Lore #{idx+1} removed.', channel)
+                    else:
+                        self.send('Lore entry not found.', channel)
+                except: self.send('Usage: !lore remove <number>', channel)
+
+            else:
+                if not lore:
+                    self.send('No lore saved yet. Ask a mod to use !lore add <text>', channel); return
+                if sub.isdigit():
+                    idx = int(sub) - 1
+                    entry = lore[idx] if 0 <= idx < len(lore) else random.choice(lore)
+                else:
+                    entry = random.choice(lore)
+                self.send(f'📜 {entry["text"]}', channel)
+
+        # ── Hangman ───────────────────────────────────────────────────────────
+        elif cmd_name == 'hangman':
+            parts = query.split(None, 1)
+            sub = parts[0].lower() if parts else ''
+
+            if sub == 'start' and _level_gte(user_level, 'moderator'):
+                word = parts[1].strip().lower() if len(parts) > 1 else None
+                if not word:
+                    word_bank = ['python', 'twitch', 'gaming', 'streamer', 'keyboard',
+                                 'champion', 'discord', 'pyjamas', 'unicorn', 'rainbow',
+                                 'spaghetti', 'astronaut', 'dinosaur', 'chocolate', 'penguin']
+                    word = random.choice(word_bank)
+                state.hangman = {
+                    'word': word, 'display': '_ ' * len(word),
+                    'guesses': [], 'lives_left': 6, 'active': True,
+                }
+                blanks = '_ ' * len(word)
+                self.send(f'🎮 Hangman started! Word ({len(word)} letters): {blanks.strip()} | Lives: 6 | Use !guess <letter or word>', channel)
+
+            elif sub in ('stop', 'end') and _level_gte(user_level, 'moderator'):
+                if state.hangman and state.hangman.get('active'):
+                    word = state.hangman['word']
+                    state.hangman = None
+                    self.send(f'Hangman cancelled. The word was: {word}', channel)
+
+            else:
+                if state.hangman and state.hangman.get('active'):
+                    w = state.hangman
+                    self.send(f'🎮 Hangman: {w["display"].strip()} | Guessed: {", ".join(w["guesses"]) or "none"} | Lives: {w["lives_left"]}', channel)
+                else:
+                    self.send('No active hangman. A mod can use !hangman start [word] to begin.', channel)
+
+        elif cmd_name == 'guess':
+            if not state.hangman or not state.hangman.get('active'):
+                return
+            g = query.strip().lower()
+            if not g:
+                return
+            w = state.hangman
+            if g == w['word']:
+                state.hangman = None
+                self.send(f'🎉 {display_name} guessed it! The word was "{g}"!', channel)
+                pts_cfg = cfg.get('points_config', {})
+                if pts_cfg.get('enabled'):
+                    reward = 50 * w.get('lives_left', 1)
+                    pts = _load_points(channel)
+                    pts[nick] = pts.get(nick, 0) + reward
+                    _save_points(channel, pts)
+                    self.send(f'+{reward} {pts_cfg.get("name", "points")} to {display_name}!', channel)
+                return
+            if len(g) != 1:
+                self.send(f'{display_name}, guess one letter at a time or the full word!', channel); return
+            if g in w['guesses']:
+                self.send(f'{display_name}, "{g}" was already guessed!', channel); return
+            w['guesses'].append(g)
+            if g in w['word']:
+                # Update display
+                disp = ''
+                for ch in w['word']:
+                    disp += (ch + ' ') if ch in w['guesses'] else '_ '
+                w['display'] = disp
+                if '_' not in disp:
+                    state.hangman = None
+                    self.send(f'🎉 {display_name} completed the word: {w["word"]}!', channel)
+                else:
+                    self.send(f'✅ {display_name} — "{g}" is in the word! {disp.strip()} | Lives: {w["lives_left"]}', channel)
+            else:
+                w['lives_left'] -= 1
+                stages = ['😵', '😣', '😟', '😰', '😱', '😨']
+                stage = stages[6 - w['lives_left']] if w['lives_left'] >= 0 and w['lives_left'] < 6 else ''
+                if w['lives_left'] <= 0:
+                    state.hangman = None
+                    self.send(f'💀 Hangman failed! The word was "{w["word"]}". Better luck next time!', channel)
+                else:
+                    self.send(f'{stage} {display_name} — "{g}" is NOT in the word! {w["display"].strip()} | Guessed: {", ".join(w["guesses"])} | Lives: {w["lives_left"]}', channel)
+
+        # ── Anagram ───────────────────────────────────────────────────────────
+        elif cmd_name == 'anagram':
+            if _level_gte(user_level, 'moderator') and query.strip():
+                word = query.strip().lower()
+                scrambled_list = list(word)
+                while ''.join(scrambled_list) == word:
+                    random.shuffle(scrambled_list)
+                scrambled = ''.join(scrambled_list)
+                state.anagram = {'word': word, 'scrambled': scrambled, 'active': True, 'expiry': time.time() + 60}
+                self.send(f'🔤 Anagram! Unscramble this word: {scrambled.upper()} ({len(word)} letters) — 60s!', channel)
+            elif state.anagram and state.anagram.get('active'):
+                g = query.strip().lower()
+                if not g:
+                    self.send(f'🔤 Current anagram: {state.anagram["scrambled"].upper()} ({len(state.anagram["word"])} letters)', channel)
+                elif g == state.anagram['word']:
+                    word = state.anagram['word']
+                    state.anagram = None
+                    pts_cfg = cfg.get('points_config', {})
+                    if pts_cfg.get('enabled'):
+                        reward = 75
+                        pts = _load_points(channel)
+                        pts[nick] = pts.get(nick, 0) + reward
+                        _save_points(channel, pts)
+                        self.send(f'🎉 {display_name} solved the anagram "{word}"! +{reward} {pts_cfg.get("name", "points")}!', channel)
+                    else:
+                        self.send(f'🎉 {display_name} solved the anagram! The word was "{word}"!', channel)
+            elif _level_gte(user_level, 'moderator'):
+                word_bank = ['python', 'gaming', 'stream', 'twitch', 'channel', 'follow',
+                             'discord', 'dragon', 'castle', 'pirate', 'zombie', 'coffee']
+                word = random.choice(word_bank)
+                scrambled_list = list(word)
+                while ''.join(scrambled_list) == word:
+                    random.shuffle(scrambled_list)
+                scrambled = ''.join(scrambled_list)
+                state.anagram = {'word': word, 'scrambled': scrambled, 'active': True, 'expiry': time.time() + 60}
+                self.send(f'🔤 Anagram! Unscramble: {scrambled.upper()} ({len(word)} letters) — 60s to guess!', channel)
+            else:
+                self.send('No active anagram. Ask a mod to start one!', channel)
+
+        # ── Trust system ──────────────────────────────────────────────────────
+        elif cmd_name == 'trust' and _level_gte(user_level, 'moderator'):
+            target = query.strip().lstrip('@').lower()
+            if not target:
+                self.send('Usage: !trust @user', channel); return
+            trusted = _load_trusted(channel)
+            if target not in trusted:
+                trusted.append(target)
+                _save_trusted(channel, trusted)
+            self.send(f'✅ {target} is now a trusted user.', channel)
+
+        elif cmd_name == 'untrust' and _level_gte(user_level, 'moderator'):
+            target = query.strip().lstrip('@').lower()
+            if not target:
+                self.send('Usage: !untrust @user', channel); return
+            trusted = _load_trusted(channel)
+            if target in trusted:
+                trusted.remove(target)
+                _save_trusted(channel, trusted)
+                self.send(f'{target} removed from trusted users.', channel)
+            else:
+                self.send(f'{target} is not in the trusted list.', channel)
+
+        elif cmd_name == 'trusted' and _level_gte(user_level, 'moderator'):
+            trusted = _load_trusted(channel)
+            if not trusted:
+                self.send('No trusted users set.', channel)
+            else:
+                self.send(f'✅ Trusted users: {", ".join(trusted[:20])}', channel)
+
+        # ── Watchlist ─────────────────────────────────────────────────────────
+        elif cmd_name == 'watchlist' and _level_gte(user_level, 'moderator'):
+            wl = _load_watchlist(channel)
+            if not wl:
+                self.send('Watchlist is empty.', channel)
+            else:
+                items = ' | '.join(f'{e["nick"]} ({e.get("reason","no reason")})' for e in wl[:10])
+                self.send(f'👁 Watchlist ({len(wl)}): {items}', channel)
+
+        elif cmd_name == 'addwatch' and _level_gte(user_level, 'moderator'):
+            parts = query.split(None, 1)
+            if not parts:
+                self.send('Usage: !addwatch @user [reason]', channel); return
+            target = parts[0].lstrip('@').lower()
+            reason = parts[1].strip() if len(parts) > 1 else 'No reason given'
+            wl = _load_watchlist(channel)
+            if any(e['nick'] == target for e in wl):
+                self.send(f'{target} is already on the watchlist.', channel); return
+            wl.append({'nick': target, 'reason': reason, 'by': nick, 'ts': int(time.time())})
+            _save_watchlist(channel, wl)
+            self.send(f'👁 {target} added to watchlist: {reason}', channel)
+
+        elif cmd_name == 'delwatch' and _level_gte(user_level, 'moderator'):
+            target = query.strip().lstrip('@').lower()
+            wl = _load_watchlist(channel)
+            new_wl = [e for e in wl if e['nick'] != target]
+            if len(new_wl) < len(wl):
+                _save_watchlist(channel, new_wl)
+                self.send(f'{target} removed from watchlist.', channel)
+            else:
+                self.send(f'{target} is not on the watchlist.', channel)
+
+        # ── Chat mode ─────────────────────────────────────────────────────────
+        elif cmd_name == 'chatmode' and _level_gte(user_level, 'moderator'):
+            mode = query.split()[0].lower() if query.strip() else ''
+            args = query.split()[1:] if len(query.split()) > 1 else []
+            if mode in ('slow', 'slowmode'):
+                secs = int(args[0]) if args and args[0].isdigit() else 30
+                self._raw(f'PRIVMSG #{channel} :/slow {secs}')
+                self.send(f'💬 Slow mode enabled ({secs}s).', channel)
+            elif mode in ('slowoff', 'noslow'):
+                self._raw(f'PRIVMSG #{channel} :/slowoff')
+                self.send('💬 Slow mode disabled.', channel)
+            elif mode in ('sub', 'subonly', 'subscribers'):
+                self._raw(f'PRIVMSG #{channel} :/subscribers')
+                self.send('💬 Sub-only mode enabled.', channel)
+            elif mode in ('suboff', 'nosubonly'):
+                self._raw(f'PRIVMSG #{channel} :/subscribersoff')
+                self.send('💬 Sub-only mode disabled.', channel)
+            elif mode in ('emote', 'emoteonly'):
+                self._raw(f'PRIVMSG #{channel} :/emoteonly')
+                self.send('💬 Emote-only mode enabled.', channel)
+            elif mode in ('emoteoff', 'noemote'):
+                self._raw(f'PRIVMSG #{channel} :/emoteonlyoff')
+                self.send('💬 Emote-only mode disabled.', channel)
+            elif mode in ('followers', 'followersonly'):
+                mins = int(args[0]) if args and args[0].isdigit() else 0
+                self._raw(f'PRIVMSG #{channel} :/followers {mins}')
+                self.send(f'💬 Followers-only mode enabled ({mins}m follow time).', channel)
+            elif mode in ('followersoff', 'nofollowers'):
+                self._raw(f'PRIVMSG #{channel} :/followersoff')
+                self.send('💬 Followers-only mode disabled.', channel)
+            elif mode == 'clear':
+                self._raw(f'PRIVMSG #{channel} :/clear')
+            elif mode == 'off':
+                for cmd in ('slowoff', 'subscribersoff', 'emoteonlyoff', 'followersoff'):
+                    self._raw(f'PRIVMSG #{channel} :/{cmd}')
+                self.send('💬 All chat modes disabled.', channel)
+            else:
+                self.send('Usage: !chatmode [slow <secs>|slowoff|sub|suboff|emote|emoteoff|followers [mins]|followersoff|clear|off]', channel)
+
+        # ── Stream marker ─────────────────────────────────────────────────────
+        elif cmd_name == 'marker' and _level_gte(user_level, 'moderator'):
+            description = query.strip() or 'CubAssist marker'
+            self.send(f'📌 Stream marker requested: {description} (use the dashboard to create markers via Helix API)', channel)
+
+        # ── Overlay control ───────────────────────────────────────────────────
+        elif cmd_name == 'overlay' and _level_gte(user_level, 'moderator'):
+            parts    = query.split(None, 1)
+            subcmd   = parts[0].lower() if parts else ''
+            subargs  = parts[1].strip() if len(parts) > 1 else ''
+
+            if not subcmd:
+                self.send('Usage: !overlay [timer|goal|counter|title|ticker|widget|effect|scene]', channel)
+                return
+
+            # !overlay scene [scene_id] — configure which scene to control
+            if subcmd == 'scene':
+                if subargs:
+                    cfg.setdefault('overlay_scenes', {})['default'] = subargs.strip()
+                    save_channel_config(channel, cfg)
+                    self.send(f'✅ Overlay scene set to: {subargs.strip()}', channel)
+                else:
+                    sid = cfg.get('overlay_scenes', {}).get('default', '')
+                    self.send(f'Current scene ID: {sid or "(none)"}. Use !overlay scene <id> to set it.', channel)
+                return
+
+            scene_id = cfg.get('overlay_scenes', {}).get('default', '').strip()
+            if not scene_id:
+                self.send('No overlay scene configured. Use !overlay scene <scene_id> first, or set it in the dashboard.', channel)
+                return
+
+            # !overlay timer <duration|off>
+            if subcmd == 'timer':
+                raw = subargs.lower().strip()
+                if raw in ('off', 'hide', 'stop', '0'):
+                    ok = self._patch_overlay_scene(channel, {'show_countdown': False})
+                else:
+                    ms = _parse_duration_ms(raw)
+                    if ms is None:
+                        self.send('Usage: !overlay timer <duration> — e.g. 5m, 1h30m, 90s, 5:00', channel)
+                        return
+                    ok = self._patch_overlay_scene(channel, {
+                        'show_countdown': True,
+                        'countdown_to': int((time.time() + ms / 1000) * 1000),
+                    })
+                self.send('⏱ Timer updated.' if ok else '⚠️ Could not update overlay — check scene ID in dashboard.', channel)
+
+            # !overlay goal <current> <max> [label] | +N | off
+            elif subcmd == 'goal':
+                raw = subargs.strip()
+                if not raw or raw.lower() in ('off', 'hide'):
+                    ok = self._patch_overlay_scene(channel, {'goal_bar': False})
+                    self.send('🎯 Goal bar hidden.' if ok else '⚠️ Could not update overlay.', channel)
+                elif raw[0] in ('+', '-'):
+                    try:
+                        delta = int(raw)
+                        import sys as _sys
+                        om = _sys.modules.get('overlays_blueprint')
+                        if om:
+                            sd = om.load_overlays_data().get('scenes', {}).get(scene_id, {})
+                            cur = int(sd.get('config', {}).get('goal_bar_current', 0))
+                            new_val = max(0, cur + delta)
+                            ok = self._patch_overlay_scene(channel, {'goal_bar': True, 'goal_bar_current': new_val})
+                            self.send(f'🎯 Goal: {new_val}' if ok else '⚠️ Could not update overlay.', channel)
+                        else:
+                            self.send('⚠️ Overlay module not available.', channel)
+                    except ValueError:
+                        self.send('Usage: !overlay goal +10', channel)
+                else:
+                    gp = raw.split(None, 2)
+                    try:
+                        curr_v = int(gp[0])
+                        max_v  = int(gp[1]) if len(gp) > 1 else curr_v
+                        upd    = {'goal_bar': True, 'goal_bar_current': curr_v, 'goal_bar_max': max_v}
+                        if len(gp) > 2: upd['goal_bar_title'] = gp[2]
+                        ok = self._patch_overlay_scene(channel, upd)
+                        self.send('🎯 Goal updated.' if ok else '⚠️ Could not update overlay.', channel)
+                    except (ValueError, IndexError):
+                        self.send('Usage: !overlay goal <current> <max> [label]', channel)
+
+            # !overlay counter +1 | -1 | reset | <value> [label]
+            elif subcmd == 'counter':
+                raw = subargs.strip()
+                if not raw or raw.lower() in ('off', 'hide'):
+                    ok = self._patch_overlay_scene(channel, {'counter_widget': False})
+                    self.send('🔢 Counter hidden.' if ok else '⚠️ Could not update overlay.', channel)
+                elif raw.lower() in ('reset', 'clear'):
+                    ok = self._patch_overlay_scene(channel, {'counter_widget': True, 'counter_value': 0})
+                    self.send('🔢 Counter reset.' if ok else '⚠️ Could not update overlay.', channel)
+                elif raw[0] in ('+', '-'):
+                    try:
+                        delta = int(raw)
+                        import sys as _sys
+                        om = _sys.modules.get('overlays_blueprint')
+                        if om:
+                            sd  = om.load_overlays_data().get('scenes', {}).get(scene_id, {})
+                            cur = int(sd.get('config', {}).get('counter_value', 0))
+                            ok  = self._patch_overlay_scene(channel, {'counter_widget': True, 'counter_value': cur + delta})
+                            self.send(f'🔢 Counter: {cur + delta}' if ok else '⚠️ Could not update overlay.', channel)
+                        else:
+                            self.send('⚠️ Overlay module not available.', channel)
+                    except ValueError:
+                        self.send('Usage: !overlay counter +1', channel)
+                else:
+                    cp = raw.split(None, 1)
+                    try:
+                        val = int(cp[0])
+                        upd = {'counter_widget': True, 'counter_value': val}
+                        if len(cp) > 1: upd['counter_label'] = cp[1]
+                        ok = self._patch_overlay_scene(channel, upd)
+                        self.send('🔢 Counter updated.' if ok else '⚠️ Could not update overlay.', channel)
+                    except ValueError:
+                        self.send('Usage: !overlay counter <value> [label]', channel)
+
+            # !overlay title <text>
+            elif subcmd == 'title':
+                if not subargs:
+                    self.send('Usage: !overlay title <text>', channel); return
+                ok = self._patch_overlay_scene(channel, {'title': subargs})
+                self.send('📺 Title updated.' if ok else '⚠️ Could not update overlay.', channel)
+
+            # !overlay subtitle <text>
+            elif subcmd == 'subtitle':
+                if not subargs:
+                    self.send('Usage: !overlay subtitle <text>', channel); return
+                ok = self._patch_overlay_scene(channel, {'subtitle': subargs})
+                self.send('📺 Subtitle updated.' if ok else '⚠️ Could not update overlay.', channel)
+
+            # !overlay ticker <text|off>
+            elif subcmd == 'ticker':
+                raw = subargs.strip()
+                if not raw or raw.lower() in ('off', 'hide'):
+                    ok = self._patch_overlay_scene(channel, {'ticker_widget': False})
+                else:
+                    ok = self._patch_overlay_scene(channel, {'ticker_widget': True, 'ticker_label': raw})
+                self.send('📰 Ticker updated.' if ok else '⚠️ Could not update overlay.', channel)
+
+            # !overlay widget <name> on|off
+            elif subcmd == 'widget':
+                wp = subargs.split()
+                if len(wp) < 2:
+                    self.send('Usage: !overlay widget <name> on/off — names: clock, goal, counter, ticker, qr, uptime, nowplaying, timer', channel)
+                    return
+                _widget_keys = {
+                    'clock': 'clock_widget', 'goal': 'goal_bar', 'counter': 'counter_widget',
+                    'ticker': 'ticker_widget', 'qr': 'qr_widget', 'uptime': 'uptime_widget',
+                    'nowplaying': 'nowplaying_widget', 'timer': 'show_countdown',
+                }
+                wkey = _widget_keys.get(wp[0].lower())
+                if not wkey:
+                    self.send(f'Unknown widget "{wp[0]}". Try: clock, goal, counter, ticker, qr, uptime, nowplaying, timer', channel)
+                    return
+                wstate = wp[1].lower() in ('on', 'true', '1', 'show', 'yes')
+                ok = self._patch_overlay_scene(channel, {wkey: wstate})
+                onoff = 'on' if wstate else 'off'
+                self.send(f'Widget {wp[0]} turned {onoff}.' if ok else '⚠️ Could not update overlay.', channel)
+
+            # !overlay effect <name|none>
+            elif subcmd == 'effect':
+                raw = subargs.strip().lower()
+                _effects = {'starfield', 'matrix', 'rain', 'snow', 'confetti', 'fire', 'bubbles', 'hearts'}
+                if raw in ('none', 'off', 'clear', ''):
+                    ok = self._patch_overlay_scene(channel, {'background_effect': ''})
+                elif raw in _effects:
+                    ok = self._patch_overlay_scene(channel, {'background_effect': raw})
+                else:
+                    self.send(f'Unknown effect. Try: {", ".join(sorted(_effects))}, or none', channel)
+                    return
+                self.send(f'✨ Effect set to {raw or "none"}.' if ok else '⚠️ Could not update overlay.', channel)
+
+            else:
+                self.send('Usage: !overlay [timer|goal|counter|title|subtitle|ticker|widget|effect|scene]', channel)
+
     # ── Timers ────────────────────────────────────────────────────────────
 
     def _timer_loop(self):
@@ -1791,7 +2672,141 @@ class CubBot:
                     state.trivia['active'] = False
                     self.send(f'⏰ Time\'s up! The answer was: {answer}', channel)
 
+                # Anagram expiry
+                if state.anagram and state.anagram.get('active') and time.time() > state.anagram.get('expiry', 0):
+                    word = state.anagram['word']
+                    state.anagram = None
+                    self.send(f'⏰ Time\'s up! The anagram answer was: {word.upper()}', channel)
+
     # ── Helpers ───────────────────────────────────────────────────────────
+
+    def _patch_overlay_scene(self, channel: str, config_updates: dict) -> bool:
+        """Directly update an overlay scene's widget config via the overlays module."""
+        import sys
+        cfg = load_channel_config(channel)
+        scene_id = cfg.get('overlay_scenes', {}).get('default', '').strip()
+        if not scene_id:
+            return False
+        try:
+            overlays_mod = sys.modules.get('overlays_blueprint')
+            if not overlays_mod:
+                return False
+            data = overlays_mod.load_overlays_data()
+            scene = data.get('scenes', {}).get(scene_id)
+            if not scene:
+                logger.debug(f'_patch_overlay_scene: scene {scene_id} not found')
+                return False
+            scene.setdefault('config', {}).update(config_updates)
+            scene['updated'] = int(time.time())
+            overlays_mod.save_overlays_data(data)
+            overlays_mod.notify_scene_update(
+                scene_id,
+                {'template': scene.get('template', 'minimal'), **scene['config']},
+            )
+            logger.debug(f'Overlay scene {scene_id} patched for {channel}: {list(config_updates.keys())}')
+            return True
+        except Exception as e:
+            logger.debug(f'_patch_overlay_scene error: {e}')
+            return False
+
+    def _get_overlay_discord_id(self, channel: str) -> str:
+        """Look up the Stream Overlays discord_id for a Twitch channel login (cached)."""
+        import sys
+        channel = channel.lower().strip('#')
+        cache_key = f'__overlay_discord_{channel}__'
+        cached = getattr(self, '_overlay_discord_cache', {})
+        if not hasattr(self, '_overlay_discord_cache'):
+            self._overlay_discord_cache = {}
+            cached = self._overlay_discord_cache
+        # Refresh cache every 5 minutes
+        cached_val = cached.get(cache_key)
+        if cached_val and time.time() - cached_val[1] < 300:
+            return cached_val[0]
+        try:
+            overlays_mod = sys.modules.get('overlays_blueprint')
+            if overlays_mod and hasattr(overlays_mod, 'load_twitch_tokens'):
+                all_tokens = overlays_mod.load_twitch_tokens()
+                for discord_id, token_data in all_tokens.items():
+                    if token_data.get('twitch_login', '').lower() == channel:
+                        cached[cache_key] = (discord_id, time.time())
+                        return discord_id
+        except Exception as e:
+            logger.debug(f'overlay discord_id lookup failed: {e}')
+        cached[cache_key] = ('', time.time())
+        return ''
+
+    def _notify_event(self, channel: str, event_type: str, data: dict, cfg: dict = None):
+        """Push event to Discord webhook, Stream Overlays, and CubDeck."""
+        import sys
+        if cfg is None:
+            cfg = load_channel_config(channel)
+
+        # ── 1. Discord webhook ─────────────────────────────────────────
+        try:
+            webhook_url = cfg.get('discord_webhook', '')
+            if webhook_url:
+                _msgs = {
+                    'sub':      lambda d: f'🎉 **{d.get("user","?")}** just subscribed! (Month {d.get("months","1")})',
+                    'subgift':  lambda d: f'🎁 **{d.get("gifter","?")}** gifted a sub to **{d.get("recipient","?")}**!',
+                    'massgift': lambda d: f'🎁 **{d.get("gifter","?")}** gifted **{d.get("count","?")}** subs to the community!',
+                    'cheer':    lambda d: f'✨ **{d.get("user","?")}** cheered **{d.get("bits","?")}** bits!',
+                    'raid':     lambda d: f'🚨 **{d.get("raider","?")}** raided with **{d.get("viewers","?")}** viewers!',
+                    'follow':   lambda d: f'💜 **{d.get("user","?")}** just followed!',
+                }
+                if event_type in _msgs:
+                    content = _msgs[event_type](data)
+                    payload = json.dumps({'content': content, 'username': 'CubAssist'}).encode()
+                    req = urllib.request.Request(
+                        webhook_url, data=payload, method='POST',
+                        headers={'Content-Type': 'application/json'},
+                    )
+                    urllib.request.urlopen(req, timeout=5)
+        except Exception as e:
+            logger.debug(f'Discord webhook error: {e}')
+
+        # ── 2. Stream Overlays — push alert event ──────────────────────
+        try:
+            overlays_mod = sys.modules.get('overlays_blueprint')
+            if overlays_mod and hasattr(overlays_mod, 'notify_alert_event'):
+                discord_id = self._get_overlay_discord_id(channel)
+                if discord_id:
+                    # Map bot event types to overlay alert format
+                    _overlay_map = {
+                        'follow':   ('follow',   {'type': 'follow',    'name': data.get('user', '')}),
+                        'sub':      ('sub',      {'type': 'sub',       'name': data.get('user', ''), 'tier': '1000', 'is_gift': False}),
+                        'subgift':  ('gift_sub', {'type': 'gift_sub',  'gifter': data.get('gifter', ''), 'count': 1, 'tier': '1000'}),
+                        'massgift': ('gift_sub', {'type': 'gift_sub',  'gifter': data.get('gifter', ''), 'count': int(data.get('count', 1)), 'tier': '1000'}),
+                        'cheer':    ('bits',     {'type': 'bits',      'name': data.get('user', ''), 'amount': int(data.get('bits', 0)), 'message': ''}),
+                        'raid':     ('raid',     {'type': 'raid',      'name': data.get('raider', ''), 'count': int(data.get('viewers', 0))}),
+                    }
+                    if event_type in _overlay_map:
+                        alert_type, alert_data = _overlay_map[event_type]
+                        overlays_mod.notify_alert_event(discord_id, alert_type, alert_data)
+                        logger.debug(f'Overlay alert pushed: {alert_type} for {channel} (discord:{discord_id})')
+        except Exception as e:
+            logger.debug(f'Stream Overlays notification error: {e}')
+
+        # ── 3. CubDeck — push to overlay event queue ───────────────────
+        try:
+            cubdeck_mod = sys.modules.get('cubdeck_blueprint')
+            if cubdeck_mod and hasattr(cubdeck_mod, '_overlay_events'):
+                discord_id = self._get_overlay_discord_id(channel)
+                if discord_id:
+                    events_queue = cubdeck_mod._overlay_events
+                    key = f'{discord_id}/main'
+                    if key not in events_queue:
+                        events_queue[key] = []
+                    events_queue[key].append({
+                        'type':    f'cubassist_{event_type}',
+                        'channel': channel,
+                        'data':    data,
+                        'ts':      time.time(),
+                    })
+                    if len(events_queue[key]) > 50:
+                        events_queue[key] = events_queue[key][-50:]
+                    logger.debug(f'CubDeck event pushed: cubassist_{event_type} for {channel}')
+        except Exception as e:
+            logger.debug(f'CubDeck notification error: {e}')
 
     def _poll_results_str(self, poll: dict) -> str:
         total = sum(poll['votes'].values())

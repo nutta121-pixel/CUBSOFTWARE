@@ -134,12 +134,15 @@
                 const icon = g.icon
                     ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128`
                     : '/static/images/default-avatar.png';
+                const customBotBadge = g.has_custom_bot
+                    ? `<span class="server-custom-bot-badge" title="Running a custom bot">Custom Bot</span>`
+                    : '';
                 return `
                     <div class="server-picker-card" onclick="window.cpSelectServer('${g.id}')">
                         <img src="${icon}" alt="" class="server-picker-icon">
                         <div class="server-picker-info">
                             <div class="server-picker-name">${escapeHtml(g.name)}</div>
-                            <div class="server-picker-meta">${g.member_count || '?'} members</div>
+                            <div class="server-picker-meta">${g.member_count || '?'} members${customBotBadge}</div>
                         </div>
                         <span class="server-role ${g.role_class}">${g.role_label}</span>
                     </div>`;

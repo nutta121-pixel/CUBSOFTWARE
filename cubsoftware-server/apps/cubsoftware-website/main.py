@@ -10082,16 +10082,25 @@ def cub_protector_auth_required(f):
 def get_user_bot_guilds(user_guilds):
     """
     Compare user's guilds with the bot's guilds.
-    Returns a list of guilds where both the user and bot are present,
+    Returns a list of guilds where both the user and bot are present
+    (either the main bot OR an enabled custom bot counts as bot presence),
     with role labels (Owner, Bot Master, Member).
     """
-    # Get bot's guilds (with_counts=true gives approximate_member_count)
-    bot_guilds = cub_protector_bot_request('/users/@me/guilds?with_counts=true')
-    if not bot_guilds:
-        return []
+    # Get main bot's guilds (with_counts=true gives approximate_member_count)
+    bot_guilds = cub_protector_bot_request('/users/@me/guilds?with_counts=true') or []
 
     bot_guild_ids = {g['id'] for g in bot_guilds}
     bot_guild_counts = {g['id']: g.get('approximate_member_count') for g in bot_guilds}
+
+    # Also include guilds that have an enabled custom bot — these act as the main bot
+    custom_bots_data = _load_custom_bots()
+    custom_bot_guild_ids = {
+        gid for gid, entry in custom_bots_data.get('guilds', {}).items()
+        if entry.get('enabled') and entry.get('token')
+    }
+
+    # A guild qualifies if either the main bot OR a custom bot is present
+    all_covered_guild_ids = bot_guild_ids | custom_bot_guild_ids
 
     # Load bot masters to check for dashboard-granted access
     bot_masters_data = load_bot_masters()
@@ -10099,7 +10108,7 @@ def get_user_bot_guilds(user_guilds):
 
     shared_guilds = []
     for guild in user_guilds:
-        if guild['id'] in bot_guild_ids:
+        if guild['id'] in all_covered_guild_ids:
             permissions = int(guild.get('permissions', 0))
             is_owner = guild.get('owner', False)
             is_admin = (permissions & 0x8) == 0x8 or (permissions & 0x20) == 0x20
@@ -10124,6 +10133,7 @@ def get_user_bot_guilds(user_guilds):
                 'role_label': role_label,
                 'role_class': role_class,
                 'member_count': bot_guild_counts.get(guild['id']),
+                'has_custom_bot': guild['id'] in custom_bot_guild_ids,
             })
 
     return shared_guilds
@@ -10230,12 +10240,19 @@ def cub_protector_callback():
                 break
             after = page[-1]['id']
         bot_guild_ids = {g['id'] for g in bot_guilds}
+        # Also include guilds running an enabled custom bot — they act as the main bot
+        custom_bots_data = _load_custom_bots()
+        custom_bot_guild_ids = {
+            gid for gid, entry in custom_bots_data.get('guilds', {}).items()
+            if entry.get('enabled') and entry.get('token')
+        }
+        all_covered_guild_ids = bot_guild_ids | custom_bot_guild_ids
         bot_masters_data = load_bot_masters()
         user_id = user_data['id']
         session['cub_protector_user_guilds'] = [
             {'id': g['id'], 'name': g['name'], 'icon': g.get('icon'), 'owner': g.get('owner', False), 'permissions': g.get('permissions', '0')}
             for g in user_guilds
-            if g['id'] in bot_guild_ids and (
+            if g['id'] in all_covered_guild_ids and (
                 g.get('owner', False) or
                 (int(g.get('permissions', 0)) & 0x8) == 0x8 or
                 (int(g.get('permissions', 0)) & 0x20) == 0x20 or

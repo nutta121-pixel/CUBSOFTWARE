@@ -27,19 +27,24 @@ const canvas = document.getElementById('emote-canvas');
 const ctx = canvas.getContext('2d');
 const STATUS = document.getElementById('status');
 
-// ── Image cache ──────────────────────────────────────────────────────────────
+// ── Image cache (tries animated GIF/WebP first, falls back to static PNG) ────
 const emoteCache = {};
-function loadEmoteImg(url) {
-    if (emoteCache[url]) return emoteCache[url];
+function loadEmoteImg(animUrl, staticUrl) {
+    if (emoteCache[animUrl]) return emoteCache[animUrl];
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = url;
-    emoteCache[url] = img;
+    img.onerror = () => {
+        // Animated version not available for this emote — load static PNG
+        img.onerror = null;
+        img.src = staticUrl;
+    };
+    img.src = animUrl;
+    emoteCache[animUrl] = img;
     return img;
 }
 
 // ── Spawn a single emote particle ────────────────────────────────────────────
-function spawnEmote(url) {
+function spawnEmote(animUrl, staticUrl) {
     const maxOnScreen = Math.max(10, parseInt(config.emote_max_on_screen) || 200);
     if (emotes.length >= maxOnScreen) return;
 
@@ -57,7 +62,7 @@ function spawnEmote(url) {
     let dir = config.emote_direction || 'up';
     if (dir === 'random') dir = ['up','down','left','right'][Math.floor(Math.random() * 4)];
 
-    const img = loadEmoteImg(url);
+    const img = loadEmoteImg(animUrl, staticUrl);
     let x, y, vx, vy;
 
     if (dir === 'burst') {
@@ -174,16 +179,30 @@ function drawLoop() {
 }
 drawLoop();
 
-// ── Parse Twitch IRC emote tags → CDN URLs ────────────────────────────────────
+// ── Parse Twitch IRC emote tags → CDN URL pairs ───────────────────────────────
+// Returns [{animated, static}] with one entry per emote *occurrence* in the message.
+// Twitch tag format: emotes=ID1:start-end,start-end/ID2:start-end
+// Each comma-separated position = one time that emote appeared in the message.
 function parseTwitchEmotes(tagStr) {
     const urls = [];
     if (!tagStr) return urls;
     const emoteTag = (tagStr.match(/emotes=([^;]*)/) || [])[1];
-    if (!emoteTag) return urls;
+    if (!emoteTag || emoteTag === '0') return urls;
     emoteTag.split('/').forEach(part => {
         if (!part) return;
-        const [id] = part.split(':');
-        if (id) urls.push(`https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/3.0`);
+        const colonIdx = part.indexOf(':');
+        if (colonIdx === -1) return;
+        const id        = part.slice(0, colonIdx);
+        const positions = part.slice(colonIdx + 1);
+        if (!id || !positions) return;
+        // One entry per occurrence (count commas + 1 = number of positions)
+        const count = positions.split(',').length;
+        for (let i = 0; i < count; i++) {
+            urls.push({
+                animated: `https://static-cdn.jtvnw.net/emoticons/v2/${id}/animated/dark/3.0`,
+                static:   `https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/3.0`,
+            });
+        }
     });
     return urls;
 }
@@ -219,8 +238,8 @@ function connectTwitchChat(channel) {
             if (!emoteUrls.length) return;
             const density = Math.max(1, Math.min(20, parseInt(config.emote_density) || 5));
             const delay = Math.max(0, parseInt(config.emote_spawn_delay) || 80);
-            emoteUrls.slice(0, density).forEach((url, i) => {
-                setTimeout(() => spawnEmote(url), i * delay);
+            emoteUrls.slice(0, density).forEach((u, i) => {
+                setTimeout(() => spawnEmote(u.animated, u.static), i * delay);
             });
         });
     };
@@ -237,14 +256,17 @@ window.addEventListener('message', e => {
     if (e.data.type === 'preview-update') { applyConfig(e.data.config); return; }
     if (e.data.type === 'emote-test-spawn') {
         const testEmotes = [
-            'https://static-cdn.jtvnw.net/emoticons/v2/425618/default/dark/3.0', // PogChamp
-            'https://static-cdn.jtvnw.net/emoticons/v2/1/default/dark/3.0',       // :)
-            'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',      // Kappa
-            'https://static-cdn.jtvnw.net/emoticons/v2/65/default/dark/3.0',      // twitchRaid
-            'https://static-cdn.jtvnw.net/emoticons/v2/88/default/dark/3.0',      // PJSalt
+            { id: '425618' }, // PogChamp
+            { id: '1'      }, // :)
+            { id: '25'     }, // Kappa
+            { id: '65'     }, // twitchRaid
+            { id: '88'     }, // PJSalt
         ];
         const delay = Math.max(0, parseInt(config.emote_spawn_delay) || 80);
-        testEmotes.forEach((url, i) => setTimeout(() => spawnEmote(url), i * delay));
+        testEmotes.forEach((e, i) => setTimeout(() => spawnEmote(
+            `https://static-cdn.jtvnw.net/emoticons/v2/${e.id}/animated/dark/3.0`,
+            `https://static-cdn.jtvnw.net/emoticons/v2/${e.id}/default/dark/3.0`
+        ), i * delay));
     }
 });
 

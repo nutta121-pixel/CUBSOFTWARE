@@ -1637,7 +1637,7 @@ class CubBot:
             try:
                 encoded = urllib.parse.quote(city)
                 req = urllib.request.Request(
-                    f'https://wttr.in/{encoded}?format=3',
+                    f'https://wttr.in/{encoded}?format=3&m',
                     headers={'User-Agent': 'CubAssist/1.0'}
                 )
                 with urllib.request.urlopen(req, timeout=6) as r:

@@ -192,6 +192,16 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
 .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; font-family: 'Poppins', sans-serif; }
 .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
 
+/* ── Site footer (matches cubsoftware.site) ─────────────────────────── */
+.page-footer { flex-shrink:0; border-top:1px solid rgba(255,255,255,0.06); padding:1rem 2rem; text-align:center; background:transparent; font-family:'Poppins',sans-serif; }
+.page-footer-inner { max-width:900px; margin:0 auto; }
+.page-footer-text { color:rgba(255,255,255,0.35); font-size:0.82rem; margin-bottom:0.6rem; }
+.page-footer-cub { color:#5865f2; font-weight:600; text-decoration:none; }
+.page-footer-cub:hover { color:#7c8af2; }
+.page-footer-links { display:flex; justify-content:center; gap:1.25rem; flex-wrap:wrap; }
+.page-footer-links a { color:rgba(255,255,255,0.35); text-decoration:none; font-size:0.78rem; transition:color .2s; }
+.page-footer-links a:hover { color:rgba(255,255,255,0.6); }
+
 /* ── Empty state ────────────────────────────────────────────────────── */
 .empty { text-align: center; padding: 48px 20px; color: var(--text-sec); }
 .empty .icon { font-size: 40px; margin-bottom: 12px; }
@@ -927,14 +937,22 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
         </div><!-- /app-main -->
     </div><!-- /app-layout -->
 
-    <footer style="flex-shrink:0;padding:7px 24px;background:rgba(0,0,0,0.35);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--text-sec);font-family:'Poppins',sans-serif;gap:16px;">
-        <span style="display:flex;align-items:center;gap:6px;">
-            <img src="/static/images/company-logo.png" style="height:14px;opacity:.6;vertical-align:middle" alt="">
-            <a href="https://cubsoftware.site" target="_blank" style="color:var(--twitch);text-decoration:none;font-weight:600;">CUB SOFTWARE</a>
-            <span style="opacity:.4">·</span>
-            <span>CubAssist Twitch Bot</span>
-        </span>
-        <span style="opacity:.5">&copy; 2025 CUB SOFTWARE · All rights reserved</span>
+    <footer class="page-footer">
+        <div class="page-footer-inner">
+            <div class="page-footer-text">
+                &copy; 2026 CUB SOFTWARE. Made with love by
+                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="page-footer-cub">CUB</a>
+            </div>
+            <div class="page-footer-links">
+                <a href="https://cubsoftware.site" target="_blank">Home</a>
+                <a href="https://cubsoftware.site/status" target="_blank">Status</a>
+                <a href="https://cubsoftware.site/terms" target="_blank">Terms</a>
+                <a href="https://cubsoftware.site/privacy" target="_blank">Privacy</a>
+                <a href="https://cubsoftware.site/copyright" target="_blank">Copyright</a>
+                <a href="https://cubsoftware.site/report" target="_blank">Report Issue</a>
+                <a href="https://cubsoftware.site/contact" target="_blank">Contact</a>
+            </div>
+        </div>
     </footer>
 
 </div><!-- /main-container -->

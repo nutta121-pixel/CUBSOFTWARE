@@ -11,6 +11,8 @@ import time
 import re
 import json
 import random
+import ast
+import operator
 import urllib.request
 import urllib.parse
 import datetime
@@ -187,16 +189,64 @@ def _level_gte(user_level, required):
 
 # ── Variables ───────────────────────────────────────────────────────────────────
 
+_MATH_OPS = {
+    ast.Add: operator.add, ast.Sub: operator.sub,
+    ast.Mult: operator.mul, ast.Div: operator.truediv,
+    ast.Pow: operator.pow, ast.Mod: operator.mod,
+    ast.FloorDiv: operator.floordiv, ast.USub: operator.neg,
+}
+
+def _safe_eval(expr):
+    try:
+        def _eval(n):
+            if isinstance(n, ast.Constant) and isinstance(n.value, (int, float)):
+                return n.value
+            if isinstance(n, ast.BinOp):
+                op = _MATH_OPS.get(type(n.op))
+                if not op: raise ValueError
+                return op(_eval(n.left), _eval(n.right))
+            if isinstance(n, ast.UnaryOp):
+                op = _MATH_OPS.get(type(n.op))
+                if not op: raise ValueError
+                return op(_eval(n.operand))
+            raise ValueError
+        result = _eval(ast.parse(expr.strip(), mode='eval').body)
+        return str(int(result)) if isinstance(result, float) and result.is_integer() else str(round(result, 4))
+    except Exception:
+        return '?'
+
 def resolve_vars(text, ctx):
-    user   = ctx.get('user', '')
-    query  = ctx.get('query', '')
-    touser = query.split()[0].lstrip('@') if query.strip() else user
+    user       = ctx.get('user', '')
+    query      = ctx.get('query', '')
+    touser     = query.split()[0].lstrip('@') if query.strip() else user
+    args       = query.split()
+    now        = datetime.datetime.now()
+    user_level = ctx.get('user_level', 'everyone')
 
-    text = text.replace('$(user)',    user)
-    text = text.replace('$(touser)', touser)
-    text = text.replace('$(query)',  query)
-    text = text.replace('$(channel)', ctx.get('channel', ''))
+    # Basic
+    text = text.replace('$(user)',      user)
+    text = text.replace('$(touser)',    touser)
+    text = text.replace('$(query)',     query)
+    text = text.replace('$(channel)',   ctx.get('channel', ''))
+    text = text.replace('$(userid)',    ctx.get('user_id', ''))
+    text = text.replace('$(bot)',       ctx.get('bot_nick', ''))
+    text = text.replace('$(nick)',      ctx.get('nick', user))
+    text = text.replace('$(color)',     ctx.get('user_color', ''))
 
+    # User level checks
+    text = text.replace('$(ismod)',  '1' if _level_gte(user_level, 'moderator')  else '0')
+    text = text.replace('$(isvip)',  '1' if _level_gte(user_level, 'vip')        else '0')
+    text = text.replace('$(issub)',  '1' if _level_gte(user_level, 'subscriber') else '0')
+
+    # $(args N) — specific argument word
+    def _args(m):
+        try:
+            idx = int(m.group(1)) - 1
+            return args[idx] if 0 <= idx < len(args) else ''
+        except Exception: return ''
+    text = re.sub(r'\$\(args (\d+)\)', _args, text)
+
+    # $(count) — global per-command counter
     if '$(count)' in text:
         cmd_name = ctx.get('command_name', '')
         cfg      = ctx.get('config', {})
@@ -205,22 +255,105 @@ def resolve_vars(text, ctx):
         cmd['count'] = count
         text = text.replace('$(count)', str(count))
 
+    # $(usercount) — per-user per-command counter
+    if '$(usercount)' in text:
+        cmd_name = ctx.get('command_name', '')
+        user_id  = ctx.get('user_id', '')
+        cfg      = ctx.get('config', {})
+        counters = cfg.setdefault('user_counters', {}).setdefault(cmd_name, {})
+        ucount   = counters.get(user_id, 0) + 1
+        counters[user_id] = ucount
+        text = text.replace('$(usercount)', str(ucount))
+
+    # $(random N N)
     def _random(m):
         try: return str(random.randint(int(m.group(1)), int(m.group(2))))
         except Exception: return m.group(0)
     text = re.sub(r'\$\(random (\d+) (\d+)\)', _random, text)
 
-    info = ctx.get('_stream_info') or {}
-    text = text.replace('$(uptime)', info.get('uptime', 'offline'))
-    text = text.replace('$(game)',   info.get('game',   'Unknown'))
-    text = text.replace('$(title)',  info.get('title',  ''))
+    # $(choose opt1|opt2|opt3)
+    def _choose(m):
+        opts = [o.strip() for o in m.group(1).split('|') if o.strip()]
+        return random.choice(opts) if opts else ''
+    text = re.sub(r'\$\(choose ([^)]+)\)', _choose, text)
 
+    # $(math expr)
+    text = re.sub(r'\$\(math ([^)]+)\)', lambda m: _safe_eval(m.group(1)), text)
+
+    # String manipulation
+    text = re.sub(r'\$\(upper ([^)]+)\)', lambda m: m.group(1).upper(), text)
+    text = re.sub(r'\$\(lower ([^)]+)\)', lambda m: m.group(1).lower(), text)
+    text = re.sub(r'\$\(length ([^)]+)\)', lambda m: str(len(m.group(1))), text)
+
+    def _repeat(m):
+        parts = m.group(1).rsplit('|', 1)
+        if len(parts) == 2:
+            try:
+                n = max(0, min(int(parts[1].strip()), 20))
+                return parts[0].strip() * n
+            except Exception:
+                pass
+        return m.group(1)
+    text = re.sub(r'\$\(repeat ([^)]+)\)', _repeat, text)
+
+    # $(if condition|true_val|false_val)
+    def _if(m):
+        parts = m.group(1).split('|', 2)
+        if len(parts) >= 3:
+            cond = parts[0].strip()
+            return parts[1].strip() if (cond and cond != '0' and cond.lower() not in ('false', 'no')) else parts[2].strip()
+        return m.group(1)
+    text = re.sub(r'\$\(if ([^)]+)\)', _if, text)
+
+    # Stream info
+    info = ctx.get('_stream_info') or {}
+    text = text.replace('$(uptime)',    info.get('uptime',    'offline'))
+    text = text.replace('$(game)',      info.get('game',      'Unknown'))
+    text = text.replace('$(title)',     info.get('title',     ''))
+    text = text.replace('$(viewers)',   str(info.get('viewers',   '0')))
+    text = text.replace('$(followers)', str(info.get('followers', '?')))
+
+    # Date / time
+    text = text.replace('$(date)',      now.strftime('%B %d, %Y'))
+    text = text.replace('$(time)',      now.strftime('%H:%M'))
+    text = text.replace('$(hours)',     now.strftime('%H'))
+    text = text.replace('$(minutes)',   now.strftime('%M'))
+    text = text.replace('$(dayofweek)', now.strftime('%A'))
+    text = text.replace('$(year)',      now.strftime('%Y'))
+    text = text.replace('$(monthname)', now.strftime('%B'))
+    text = text.replace('$(monthnum)',  now.strftime('%m'))
+    text = text.replace('$(day)',       now.strftime('%d'))
+
+    # $(customvar name) — persistent per-channel variable
+    cvars = (ctx.get('config') or {}).get('custom_vars', {})
+    text = re.sub(r'\$\(customvar ([a-zA-Z0-9_]+)\)', lambda m: cvars.get(m.group(1), ''), text)
+
+    # $(quote) / $(quote N) — random or specific quote
+    def _quote(m):
+        idx_str = (m.group(1) or '').strip()
+        quotes  = (ctx.get('config') or {}).get('quotes', [])
+        if not quotes:
+            return '[no quotes]'
+        if idx_str:
+            try:
+                idx = int(idx_str) - 1
+                if 0 <= idx < len(quotes):
+                    return f'#{idx+1}: {quotes[idx].get("text", "")}'
+                return '[quote not found]'
+            except Exception:
+                pass
+        idx = random.randrange(len(quotes))
+        return f'#{idx+1}: {quotes[idx].get("text", "")}'
+    text = re.sub(r'\$\(quote(?: (\d+))?\)', _quote, text)
+
+    # $(urlfetch url) — do last, may be slow
     def _fetch(m):
         try:
-            with urllib.request.urlopen(m.group(1), timeout=3) as r:
-                return r.read(256).decode('utf-8', errors='ignore').strip()
-        except Exception: return 'Error'
-    text = re.sub(r'\$\(urlfetch ([^\)]+)\)', _fetch, text)
+            req = urllib.request.Request(m.group(1).strip(), headers={'User-Agent': 'CubAssist/1.0'})
+            with urllib.request.urlopen(req, timeout=5) as r:
+                return r.read(500).decode('utf-8', errors='replace').strip()
+        except Exception: return '[fetch failed]'
+    text = re.sub(r'\$\(urlfetch ([^)]+)\)', _fetch, text)
 
     return text
 
@@ -244,6 +377,7 @@ class ChannelState:
 PROTECTED = {
     'commands', 'uptime', 'game', 'title', 'shoutout', 'permit',
     'addcom', 'editcom', 'delcom', 'so',
+    'setvar', 'delvar', 'addquote', 'delquote', 'quote',
 }
 
 class CubBot:
@@ -474,7 +608,8 @@ class CubBot:
             query    = parts[1] if len(parts) > 1 else ''
             if cmd_name:
                 self._dispatch(cmd_name, query, nick, display_name,
-                               user_id, user_level, channel, msg_id, state, cfg)
+                               user_id, user_level, channel, msg_id, state, cfg,
+                               user_color=tags.get('color', ''))
 
     # ── AutoMod ───────────────────────────────────────────────────────────
 
@@ -512,7 +647,7 @@ class CubBot:
     # ── Command dispatch ──────────────────────────────────────────────────
 
     def _dispatch(self, cmd_name, query, nick, display_name,
-                  user_id, user_level, channel, msg_id, state, cfg):
+                  user_id, user_level, channel, msg_id, state, cfg, user_color=''):
         custom = cfg.get('commands', {}).get(cmd_name)
 
         if custom and custom.get('enabled', True):
@@ -537,6 +672,11 @@ class CubBot:
                 'user': display_name, 'query': query,
                 'channel': channel, 'command_name': cmd_name,
                 'config': cfg, '_stream_info': info,
+                'bot_nick':   get_bot_credentials().get('bot_nick', ''),
+                'user_id':    user_id,
+                'nick':       nick,
+                'user_color': user_color,
+                'user_level': user_level,
             }
             response = resolve_vars(custom.get('response', ''), ctx)
             if response:
@@ -600,6 +740,26 @@ class CubBot:
             save_channel_config(channel, cfg)
             self.send(f'Command !{name} updated.', channel)
 
+        elif cmd_name == 'setvar' and _level_gte(user_level, 'moderator'):
+            parts = query.split(None, 1)
+            if len(parts) < 2:
+                self.send('Usage: !setvar name value', channel); return
+            var_name = parts[0].lower()
+            if not re.match(r'^[a-zA-Z0-9_]+$', var_name):
+                self.send('Variable name can only contain letters, numbers, and underscores.', channel); return
+            cfg.setdefault('custom_vars', {})[var_name] = parts[1]
+            save_channel_config(channel, cfg)
+            self.send(f'Variable {var_name} set.', channel)
+
+        elif cmd_name == 'delvar' and _level_gte(user_level, 'moderator'):
+            var_name = query.strip().lower()
+            if var_name in cfg.get('custom_vars', {}):
+                del cfg['custom_vars'][var_name]
+                save_channel_config(channel, cfg)
+                self.send(f'Variable {var_name} deleted.', channel)
+            else:
+                self.send(f'Variable {var_name} not found.', channel)
+
         elif cmd_name == 'delcom' and _level_gte(user_level, 'moderator'):
             name = query.strip().lstrip('!').lower()
             if name in cfg.get('commands', {}):
@@ -608,6 +768,46 @@ class CubBot:
                 self.send(f'Command !{name} deleted.', channel)
             else:
                 self.send(f'!{name} not found.', channel)
+
+        elif cmd_name == 'addquote' and _level_gte(user_level, 'moderator'):
+            text_q = query.strip()
+            if not text_q:
+                self.send('Usage: !addquote quote text here', channel); return
+            quotes = cfg.setdefault('quotes', [])
+            quotes.append({'text': text_q, 'added_by': display_name, 'ts': int(time.time())})
+            save_channel_config(channel, cfg)
+            self.send(f'Quote #{len(quotes)} added.', channel)
+
+        elif cmd_name == 'delquote' and _level_gte(user_level, 'moderator'):
+            try:
+                idx = int(query.strip()) - 1
+                quotes = cfg.get('quotes', [])
+                if 0 <= idx < len(quotes):
+                    del quotes[idx]
+                    save_channel_config(channel, cfg)
+                    self.send(f'Quote #{idx+1} deleted.', channel)
+                else:
+                    self.send('Quote not found.', channel)
+            except ValueError:
+                self.send('Usage: !delquote number', channel)
+
+        elif cmd_name == 'quote':
+            quotes = cfg.get('quotes', [])
+            if not quotes:
+                self.send('No quotes saved yet.', channel); return
+            q_query = query.strip()
+            if q_query:
+                try:
+                    idx = int(q_query) - 1
+                    if 0 <= idx < len(quotes):
+                        self.send(f'Quote #{idx+1}: {quotes[idx]["text"]}', channel)
+                    else:
+                        self.send('Quote not found.', channel)
+                    return
+                except ValueError:
+                    pass
+            idx = random.randrange(len(quotes))
+            self.send(f'Quote #{idx+1}: {quotes[idx]["text"]}', channel)
 
     # ── Timers ────────────────────────────────────────────────────────────
 
@@ -663,6 +863,21 @@ class CubBot:
                 'uptime':  f'{h}h {m}m' if h else f'{m}m {sec}s',
                 'viewers': s.get('viewer_count', 0),
             }
+            try:
+                broadcaster_id = s.get('user_id', '')
+                if broadcaster_id:
+                    freq = urllib.request.Request(
+                        f'https://api.twitch.tv/helix/channels/followers?broadcaster_id={broadcaster_id}',
+                        headers={
+                            'Client-Id':     client_id,
+                            'Authorization': f'Bearer {token}',
+                        }
+                    )
+                    with urllib.request.urlopen(freq, timeout=5) as fr:
+                        fdata = json.loads(fr.read())
+                    state.stream_info['followers'] = fdata.get('total', '?')
+            except Exception:
+                state.stream_info['followers'] = '?'
             state.stream_info_ts = time.time()
             return state.stream_info
         except Exception as e:

@@ -276,6 +276,9 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
             <div class="nav-item" onclick="openTab('commands')" data-tab="commands">
                 <span class="ni">⚡</span> Commands
             </div>
+            <div class="nav-item" onclick="openTab('quotes')" data-tab="quotes">
+                <span class="ni">💬</span> Quotes
+            </div>
             <div class="nav-item" onclick="openTab('timers')" data-tab="timers">
                 <span class="ni">⏱</span> Timers
             </div>
@@ -290,6 +293,12 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
 
         <!-- Main -->
         <div class="app-main">
+
+            <!-- Mod warning banner -->
+            <div id="modWarningBanner" style="display:none;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);border-radius:8px;padding:10px 16px;margin-bottom:12px;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                <span style="font-size:18px;">⚠️</span>
+                <span style="flex:1;font-size:13px;color:#fca5a5;"><strong id="modWarningBotName">CubAssist</strong> is not a moderator in your channel. Type <code style="background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:3px;">/mod <span class="mod-bot-name">cubassist</span></code> in your Twitch chat to enable full bot functionality.</span>
+            </div>
 
             <!-- Overview tab -->
             <div class="tab active" id="tab-overview">
@@ -321,7 +330,7 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                         <div class="card-title">⚡ Quick Actions</div>
                         <div style="display:flex;flex-direction:column;gap:10px">
                             <div class="form-group">
-                                <label>Send Message as Bot</label>
+                                <label>Send Message as {{ user.display_name or 'You' }}</label>
                                 <div class="chat-input-row">
                                     <input type="text" id="quickMsg" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendQuickMsg()">
                                     <button class="btn btn-primary" onclick="sendQuickMsg()">Send</button>
@@ -339,6 +348,9 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                                     <span class="var-chip" onclick="copyCmd('!addcom')">!addcom</span>
                                     <span class="var-chip" onclick="copyCmd('!editcom')">!editcom</span>
                                     <span class="var-chip" onclick="copyCmd('!delcom')">!delcom</span>
+                                    <span class="var-chip" onclick="copyCmd('!quote')">!quote</span>
+                                    <span class="var-chip" onclick="copyCmd('!addquote')">!addquote</span>
+                                    <span class="var-chip" onclick="copyCmd('!setvar')">!setvar</span>
                                 </div>
                             </div>
                         </div>
@@ -355,14 +367,14 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                     </div>
                     <div class="chat-log" id="mainChat" style="flex:1;height:auto;min-height:400px"></div>
                     <div class="chat-input-row" style="margin-top:12px">
-                        <input type="text" id="chatMsgInput" placeholder="Send as CubAssist..." onkeydown="if(event.key==='Enter')sendChat()">
+                        <input type="text" id="chatMsgInput" placeholder="Send as {{ user.display_name or 'you' }}..." onkeydown="if(event.key==='Enter')sendChat()">
                         <button class="btn btn-primary" onclick="sendChat()">Send</button>
                     </div>
                 </div>
             </div>
 
             <!-- Commands tab -->
-            <div class="tab" id="tab-commands">
+            <div class="tab" id="tab-commands" style="display:flex;flex-direction:column;gap:16px">
                 <div class="card">
                     <div class="card-title" style="justify-content:space-between">
                         <span>⚡ Custom Commands</span>
@@ -372,16 +384,46 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                     <div class="hint" style="margin-bottom:16px">
                         Available variables:
                         <div class="var-chips" style="margin-top:6px">
-                            <span class="var-chip" onclick="insertVar('$(user)')">$(user)</span>
-                            <span class="var-chip" onclick="insertVar('$(touser)')">$(touser)</span>
-                            <span class="var-chip" onclick="insertVar('$(query)')">$(query)</span>
-                            <span class="var-chip" onclick="insertVar('$(count)')">$(count)</span>
-                            <span class="var-chip" onclick="insertVar('$(random 1 100)')">$(random 1 100)</span>
-                            <span class="var-chip" onclick="insertVar('$(uptime)')">$(uptime)</span>
-                            <span class="var-chip" onclick="insertVar('$(game)')">$(game)</span>
-                            <span class="var-chip" onclick="insertVar('$(title)')">$(title)</span>
-                            <span class="var-chip" onclick="insertVar('$(channel)')">$(channel)</span>
-                            <span class="var-chip" onclick="insertVar('$(urlfetch https://)')">$(urlfetch)</span>
+                            <span class="var-chip" title="Display name of user who ran the command" onclick="insertVar('$(user)')">$(user)</span>
+                            <span class="var-chip" title="First word of args, or user if none" onclick="insertVar('$(touser)')">$(touser)</span>
+                            <span class="var-chip" title="IRC lowercase username" onclick="insertVar('$(nick)')">$(nick)</span>
+                            <span class="var-chip" title="Twitch user ID" onclick="insertVar('$(userid)')">$(userid)</span>
+                            <span class="var-chip" title="User's chat color (hex)" onclick="insertVar('$(color)')">$(color)</span>
+                            <span class="var-chip" title="Full argument text" onclick="insertVar('$(query)')">$(query)</span>
+                            <span class="var-chip" title="First argument word" onclick="insertVar('$(args 1)')">$(args 1)</span>
+                            <span class="var-chip" title="Second argument word" onclick="insertVar('$(args 2)')">$(args 2)</span>
+                            <span class="var-chip" title="Bot account name" onclick="insertVar('$(bot)')">$(bot)</span>
+                            <span class="var-chip" title="Channel name" onclick="insertVar('$(channel)')">$(channel)</span>
+                            <span class="var-chip" title="1 if user is mod+" onclick="insertVar('$(ismod)')">$(ismod)</span>
+                            <span class="var-chip" title="1 if user is VIP+" onclick="insertVar('$(isvip)')">$(isvip)</span>
+                            <span class="var-chip" title="1 if user is subscriber+" onclick="insertVar('$(issub)')">$(issub)</span>
+                            <span class="var-chip" title="How many times this command has been used" onclick="insertVar('$(count)')">$(count)</span>
+                            <span class="var-chip" title="How many times this user has used this command" onclick="insertVar('$(usercount)')">$(usercount)</span>
+                            <span class="var-chip" title="Random number between two values" onclick="insertVar('$(random 1 100)')">$(random 1 100)</span>
+                            <span class="var-chip" title="Pick a random option" onclick="insertVar('$(choose opt1|opt2|opt3)')">$(choose)</span>
+                            <span class="var-chip" title="Math expression" onclick="insertVar('$(math 1+2)')">$(math)</span>
+                            <span class="var-chip" title="Uppercase text" onclick="insertVar('$(upper text)')">$(upper)</span>
+                            <span class="var-chip" title="Lowercase text" onclick="insertVar('$(lower text)')">$(lower)</span>
+                            <span class="var-chip" title="Length of text" onclick="insertVar('$(length text)')">$(length)</span>
+                            <span class="var-chip" title="Repeat text N times" onclick="insertVar('$(repeat text|3)')">$(repeat)</span>
+                            <span class="var-chip" title="Conditional: if condition is truthy" onclick="insertVar('$(if $(ismod)|yes|no)')">$(if)</span>
+                            <span class="var-chip" title="Stream uptime" onclick="insertVar('$(uptime)')">$(uptime)</span>
+                            <span class="var-chip" title="Current game" onclick="insertVar('$(game)')">$(game)</span>
+                            <span class="var-chip" title="Stream title" onclick="insertVar('$(title)')">$(title)</span>
+                            <span class="var-chip" title="Live viewer count" onclick="insertVar('$(viewers)')">$(viewers)</span>
+                            <span class="var-chip" title="Follower count" onclick="insertVar('$(followers)')">$(followers)</span>
+                            <span class="var-chip" title="Today's date" onclick="insertVar('$(date)')">$(date)</span>
+                            <span class="var-chip" title="Current time HH:MM" onclick="insertVar('$(time)')">$(time)</span>
+                            <span class="var-chip" title="Current hour" onclick="insertVar('$(hours)')">$(hours)</span>
+                            <span class="var-chip" title="Current minute" onclick="insertVar('$(minutes)')">$(minutes)</span>
+                            <span class="var-chip" title="Day of week name" onclick="insertVar('$(dayofweek)')">$(dayofweek)</span>
+                            <span class="var-chip" title="Current year" onclick="insertVar('$(year)')">$(year)</span>
+                            <span class="var-chip" title="Month name" onclick="insertVar('$(monthname)')">$(monthname)</span>
+                            <span class="var-chip" title="Day of month" onclick="insertVar('$(day)')">$(day)</span>
+                            <span class="var-chip" title="Random saved quote" onclick="insertVar('$(quote)')">$(quote)</span>
+                            <span class="var-chip" title="Specific quote by number" onclick="insertVar('$(quote 1)')">$(quote N)</span>
+                            <span class="var-chip" title="Persistent channel variable" onclick="insertVar('$(customvar name)')">$(customvar)</span>
+                            <span class="var-chip" title="Fetch text from a URL" onclick="insertVar('$(urlfetch https://)')">$(urlfetch)</span>
                         </div>
                     </div>
 
@@ -394,6 +436,28 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                             <tbody id="commandsTbody"></tbody>
                         </table>
                     </div>
+                </div>
+
+                <!-- Custom Variables -->
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>📦 Custom Variables</span>
+                        <button class="btn btn-primary btn-sm" onclick="openVarModal()">+ Add Variable</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:12px">Use <code>$(customvar name)</code> in command responses. Set in chat with <code>!setvar name value</code> (mods only).</p>
+                    <div id="customVarsList"><p class="hint">No custom variables yet.</p></div>
+                </div>
+            </div>
+
+            <!-- Quotes tab -->
+            <div class="tab" id="tab-quotes">
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>💬 Quotes</span>
+                        <button class="btn btn-primary btn-sm" onclick="openQuoteModal()">+ Add Quote</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:16px">Use <code>!quote</code> for a random quote, <code>!quote 5</code> for a specific one, or <code>$(quote)</code> / <code>$(quote N)</code> in command responses. Mods can use <code>!addquote</code> and <code>!delquote N</code> in chat.</p>
+                    <div id="quotesList"></div>
                 </div>
             </div>
 
@@ -493,6 +557,13 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                             <input type="text" id="cfg_prefix" placeholder="!" maxlength="3" style="width:80px" oninput="markDirty()">
                         </div>
                     </div>
+                    <div class="toggle-row" style="margin-top:16px">
+                        <div class="toggle-info">
+                            <strong>🚀 Bot Auto-Start</strong>
+                            <small>Start bot automatically on server restart. Enabled = bot starts as soon as the server loads (if token and channel are set).</small>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="cfg_auto_start" checked onchange="saveGlobalSetting('bot_auto_start', this.checked)"><span class="toggle-slider"></span></label>
+                    </div>
                     <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
                         <button class="btn btn-primary" id="saveSettingsBtn" onclick="saveSettings()" disabled>Save Settings</button>
                         <span id="saveSettingsHint" class="hint"></span>
@@ -502,6 +573,16 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
 
         </div><!-- /app-main -->
     </div><!-- /app-layout -->
+
+    <footer style="flex-shrink:0;padding:7px 24px;background:rgba(0,0,0,0.35);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--text-sec);font-family:'Poppins',sans-serif;gap:16px;">
+        <span style="display:flex;align-items:center;gap:6px;">
+            <img src="/static/images/company-logo.png" style="height:14px;opacity:.6;vertical-align:middle" alt="">
+            <a href="https://cubsoftware.site" target="_blank" style="color:var(--twitch);text-decoration:none;font-weight:600;">CUB SOFTWARE</a>
+            <span style="opacity:.4">·</span>
+            <span>CubAssist Twitch Bot</span>
+        </span>
+        <span style="opacity:.5">&copy; 2025 CUB SOFTWARE · All rights reserved</span>
+    </footer>
 
 </div><!-- /main-container -->
 
@@ -530,13 +611,46 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
             <label>Response</label>
             <textarea id="cmdResponse" rows="3" placeholder="Hello $(user)! This command has been used $(count) times."></textarea>
             <div class="var-chips">
-                <span class="var-chip" onclick="insertModalVar('$(user)')">$(user)</span>
-                <span class="var-chip" onclick="insertModalVar('$(touser)')">$(touser)</span>
-                <span class="var-chip" onclick="insertModalVar('$(query)')">$(query)</span>
-                <span class="var-chip" onclick="insertModalVar('$(count)')">$(count)</span>
-                <span class="var-chip" onclick="insertModalVar('$(random 1 100)')">$(random 1 100)</span>
-                <span class="var-chip" onclick="insertModalVar('$(uptime)')">$(uptime)</span>
-                <span class="var-chip" onclick="insertModalVar('$(game)')">$(game)</span>
+                <span class="var-chip" title="Display name" onclick="insertModalVar('$(user)')">$(user)</span>
+                <span class="var-chip" title="First arg or user" onclick="insertModalVar('$(touser)')">$(touser)</span>
+                <span class="var-chip" title="IRC lowercase nick" onclick="insertModalVar('$(nick)')">$(nick)</span>
+                <span class="var-chip" title="Twitch user ID" onclick="insertModalVar('$(userid)')">$(userid)</span>
+                <span class="var-chip" title="User's chat color" onclick="insertModalVar('$(color)')">$(color)</span>
+                <span class="var-chip" title="Full argument text" onclick="insertModalVar('$(query)')">$(query)</span>
+                <span class="var-chip" title="First argument word" onclick="insertModalVar('$(args 1)')">$(args 1)</span>
+                <span class="var-chip" title="Second argument word" onclick="insertModalVar('$(args 2)')">$(args 2)</span>
+                <span class="var-chip" title="Bot account name" onclick="insertModalVar('$(bot)')">$(bot)</span>
+                <span class="var-chip" title="Channel name" onclick="insertModalVar('$(channel)')">$(channel)</span>
+                <span class="var-chip" title="1 if mod+" onclick="insertModalVar('$(ismod)')">$(ismod)</span>
+                <span class="var-chip" title="1 if VIP+" onclick="insertModalVar('$(isvip)')">$(isvip)</span>
+                <span class="var-chip" title="1 if sub+" onclick="insertModalVar('$(issub)')">$(issub)</span>
+                <span class="var-chip" title="Command use count" onclick="insertModalVar('$(count)')">$(count)</span>
+                <span class="var-chip" title="Per-user use count" onclick="insertModalVar('$(usercount)')">$(usercount)</span>
+                <span class="var-chip" title="Random number" onclick="insertModalVar('$(random 1 100)')">$(random 1 100)</span>
+                <span class="var-chip" title="Random option" onclick="insertModalVar('$(choose opt1|opt2|opt3)')">$(choose)</span>
+                <span class="var-chip" title="Math expression" onclick="insertModalVar('$(math 1+2)')">$(math)</span>
+                <span class="var-chip" title="Uppercase" onclick="insertModalVar('$(upper text)')">$(upper)</span>
+                <span class="var-chip" title="Lowercase" onclick="insertModalVar('$(lower text)')">$(lower)</span>
+                <span class="var-chip" title="String length" onclick="insertModalVar('$(length text)')">$(length)</span>
+                <span class="var-chip" title="Repeat text" onclick="insertModalVar('$(repeat text|3)')">$(repeat)</span>
+                <span class="var-chip" title="Conditional" onclick="insertModalVar('$(if $(ismod)|yes|no)')">$(if)</span>
+                <span class="var-chip" title="Stream uptime" onclick="insertModalVar('$(uptime)')">$(uptime)</span>
+                <span class="var-chip" title="Current game" onclick="insertModalVar('$(game)')">$(game)</span>
+                <span class="var-chip" title="Stream title" onclick="insertModalVar('$(title)')">$(title)</span>
+                <span class="var-chip" title="Live viewers" onclick="insertModalVar('$(viewers)')">$(viewers)</span>
+                <span class="var-chip" title="Follower count" onclick="insertModalVar('$(followers)')">$(followers)</span>
+                <span class="var-chip" title="Today's date" onclick="insertModalVar('$(date)')">$(date)</span>
+                <span class="var-chip" title="Current time" onclick="insertModalVar('$(time)')">$(time)</span>
+                <span class="var-chip" title="Current hour" onclick="insertModalVar('$(hours)')">$(hours)</span>
+                <span class="var-chip" title="Current minute" onclick="insertModalVar('$(minutes)')">$(minutes)</span>
+                <span class="var-chip" title="Day of week" onclick="insertModalVar('$(dayofweek)')">$(dayofweek)</span>
+                <span class="var-chip" title="Year" onclick="insertModalVar('$(year)')">$(year)</span>
+                <span class="var-chip" title="Month name" onclick="insertModalVar('$(monthname)')">$(monthname)</span>
+                <span class="var-chip" title="Day of month" onclick="insertModalVar('$(day)')">$(day)</span>
+                <span class="var-chip" title="Random quote" onclick="insertModalVar('$(quote)')">$(quote)</span>
+                <span class="var-chip" title="Specific quote" onclick="insertModalVar('$(quote 1)')">$(quote N)</span>
+                <span class="var-chip" title="Custom variable" onclick="insertModalVar('$(customvar name)')">$(customvar)</span>
+                <span class="var-chip" title="Fetch from URL" onclick="insertModalVar('$(urlfetch https://)')">$(urlfetch)</span>
             </div>
         </div>
         <div class="form-row">
@@ -552,6 +666,44 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
         <div class="modal-footer">
             <button class="btn btn-ghost" onclick="closeModal('cmdModal')">Cancel</button>
             <button class="btn btn-primary" onclick="saveCommand()">Save Command</button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Variable modal -->
+<div class="modal-backdrop" id="varModal">
+    <div class="modal">
+        <div class="modal-title">Custom Variable</div>
+        <input type="hidden" id="varEditName">
+        <div class="form-row" style="margin-bottom:14px">
+            <div class="form-group">
+                <label>Variable Name</label>
+                <input type="text" id="varName" placeholder="myvar" oninput="this.value=this.value.replace(/[^a-zA-Z0-9_]/g,'').toLowerCase()">
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+            <label>Value</label>
+            <input type="text" id="varValue" placeholder="The value returned by $(customvar myvar)">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('varModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveCustomVar()">Save Variable</button>
+        </div>
+    </div>
+</div>
+
+<!-- Quote modal -->
+<div class="modal-backdrop" id="quoteModal">
+    <div class="modal">
+        <div class="modal-title" id="quoteModalTitle">Add Quote</div>
+        <input type="hidden" id="quoteEditIdx" value="">
+        <div class="form-group" style="margin-bottom:14px">
+            <label>Quote Text</label>
+            <textarea id="quoteText" rows="3" placeholder="Something memorable that happened in chat..."></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('quoteModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveQuote()">Save Quote</button>
         </div>
     </div>
 </div>
@@ -601,7 +753,7 @@ let _pollInterval;
 
 // ── Init ───────────────────────────────────────────────────────────────────────
 async function init() {
-    await Promise.all([loadStatus(), loadConfig(), loadCommands(), loadTimers(), loadAutomod()]);
+    await Promise.all([loadStatus(), loadConfig(), loadCommands(), loadTimers(), loadAutomod(), loadGlobalSettings(), loadCustomVars(), loadQuotes()]);
     pollLogs();
     _pollInterval = setInterval(() => { loadStatus(); pollLogs(); }, 4000);
 }
@@ -745,7 +897,7 @@ function renderCommands() {
             <td>
                 <div class="action-btns">
                     <button class="btn btn-ghost btn-sm" onclick="editCommand('${escHtml(cmd.name)}')">Edit</button>
-                    <button class="btn btn-ghost btn-sm" onclick="toggleCommand('${escHtml(cmd.name)}')">${cmd.enabled ? 'Disable' : 'Enable'}</button>
+                    <label class="toggle" style="flex-shrink:0" title="${cmd.enabled ? 'Enabled' : 'Disabled'}"><input type="checkbox" ${cmd.enabled ? 'checked' : ''} onchange="toggleCommand('${escHtml(cmd.name)}')"><span class="toggle-slider"></span></label>
                     <button class="btn btn-danger btn-sm" onclick="deleteCommand('${escHtml(cmd.name)}')">Del</button>
                 </div>
             </td>
@@ -811,12 +963,147 @@ async function toggleCommand(name) {
 }
 
 function insertVar(v) { navigator.clipboard?.writeText(v); showToast('Copied: ' + v); }
+
+// ── Custom Variables ───────────────────────────────────────────────────────────
+let _cvars = {};
+
+async function loadCustomVars() {
+    const res = await fetch('/cubassist/api/customvars');
+    if (!res.ok) return;
+    _cvars = await res.json();
+    renderCustomVars();
+}
+
+function renderCustomVars() {
+    const el = document.getElementById('customVarsList');
+    if (!el) return;
+    const entries = Object.entries(_cvars);
+    if (!entries.length) { el.innerHTML = '<p class="hint">No custom variables yet.</p>'; return; }
+    el.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Value</th><th>Use in command</th><th>Actions</th></tr></thead><tbody>
+        ${entries.map(([k, v]) => `<tr>
+            <td><strong>${escHtml(k)}</strong></td>
+            <td>${escHtml(v)}</td>
+            <td><code style="font-size:11px;color:#a78bfa">$(customvar ${escHtml(k)})</code></td>
+            <td><div class="action-btns">
+                <button class="btn btn-ghost btn-sm" onclick="editCustomVar('${escHtml(k)}')">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteCustomVar('${escHtml(k)}')">Del</button>
+            </div></td>
+        </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+function openVarModal(name) {
+    document.getElementById('varEditName').value = name || '';
+    document.getElementById('varName').value     = name || '';
+    document.getElementById('varName').disabled  = !!name;
+    document.getElementById('varValue').value    = name ? (_cvars[name] || '') : '';
+    document.getElementById('varModal').classList.add('open');
+}
+
+function editCustomVar(name) { openVarModal(name); }
+
+async function saveCustomVar() {
+    const name  = (document.getElementById('varEditName').value || document.getElementById('varName').value).trim().toLowerCase();
+    const value = document.getElementById('varValue').value;
+    if (!name) { showToast('Variable name required', 'error'); return; }
+    const res = await fetch('/cubassist/api/customvars', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, value })
+    });
+    if (res.ok) {
+        const data = await res.json();
+        _cvars = data.vars;
+        renderCustomVars();
+        closeModal('varModal');
+        showToast('Variable saved', 'success');
+    }
+}
+
+async function deleteCustomVar(name) {
+    if (!confirm(`Delete variable "${name}"?`)) return;
+    await fetch(`/cubassist/api/customvars/${name}`, { method: 'DELETE' });
+    delete _cvars[name];
+    renderCustomVars();
+    showToast('Variable deleted');
+}
 function insertModalVar(v) {
     const ta = document.getElementById('cmdResponse');
     const pos = ta.selectionStart;
     ta.value = ta.value.slice(0, pos) + v + ta.value.slice(ta.selectionEnd);
     ta.selectionStart = ta.selectionEnd = pos + v.length;
     ta.focus();
+}
+
+// ── Quotes ─────────────────────────────────────────────────────────────────────
+let _quotes = [];
+
+async function loadQuotes() {
+    const res = await fetch('/cubassist/api/quotes');
+    if (!res.ok) return;
+    _quotes = await res.json();
+    renderQuotes();
+}
+
+function renderQuotes() {
+    const el = document.getElementById('quotesList');
+    if (!el) return;
+    if (!_quotes.length) {
+        el.innerHTML = '<div class="empty"><div class="icon">💬</div><p>No quotes yet. Click <strong>+ Add Quote</strong> or use <code>!addquote</code> in chat.</p></div>';
+        return;
+    }
+    el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>#</th><th>Quote</th><th>Added By</th><th>Actions</th></tr></thead>
+        <tbody>${_quotes.map((q, i) => `<tr>
+            <td style="color:var(--text-sec);font-size:12px">#${i+1}</td>
+            <td style="font-family:'Fira Code',monospace;font-size:12px">${escHtml(q.text)}</td>
+            <td style="font-size:12px;color:var(--text-sec)">${escHtml(q.added_by || '')}</td>
+            <td><div class="action-btns">
+                <button class="btn btn-ghost btn-sm" onclick="editQuote(${i})">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteQuote(${i})">Del</button>
+            </div></td>
+        </tr>`).join('')}</tbody>
+    </table></div>`;
+}
+
+function openQuoteModal(idx) {
+    document.getElementById('quoteModal').classList.add('open');
+    if (idx !== undefined && idx !== null) {
+        document.getElementById('quoteModalTitle').textContent = 'Edit Quote';
+        document.getElementById('quoteEditIdx').value = idx;
+        document.getElementById('quoteText').value = _quotes[idx]?.text || '';
+    } else {
+        document.getElementById('quoteModalTitle').textContent = 'Add Quote';
+        document.getElementById('quoteEditIdx').value = '';
+        document.getElementById('quoteText').value = '';
+    }
+}
+
+function editQuote(idx) { openQuoteModal(idx); }
+
+async function saveQuote() {
+    const text = document.getElementById('quoteText').value.trim();
+    if (!text) { showToast('Quote text required', 'error'); return; }
+    const idxStr = document.getElementById('quoteEditIdx').value;
+    let res;
+    if (idxStr !== '') {
+        res = await fetch(`/cubassist/api/quotes/${idxStr}`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+    } else {
+        res = await fetch('/cubassist/api/quotes', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+    }
+    if (res.ok) { closeModal('quoteModal'); await loadQuotes(); showToast('Quote saved', 'success'); }
+}
+
+async function deleteQuote(idx) {
+    if (!confirm(`Delete quote #${idx+1}?`)) return;
+    await fetch(`/cubassist/api/quotes/${idx}`, { method: 'DELETE' });
+    await loadQuotes();
+    showToast('Quote deleted');
 }
 
 // ── Timers ─────────────────────────────────────────────────────────────────────
@@ -1005,16 +1292,27 @@ function clearChatView() {
     document.getElementById('overviewChat').innerHTML = '';
 }
 
-// ── Send chat ──────────────────────────────────────────────────────────────────
+// ── Send chat (as logged-in user via Twitch API) ───────────────────────────────
+async function _sendMessage(msg) {
+    const res  = await fetch('/cubassist/api/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+        if (res.status === 401) showToast('Session expired — please log out and log back in', 'error');
+        else showToast(data.error || 'Failed to send message', 'error');
+        return false;
+    }
+    return true;
+}
+
 async function sendChat() {
     const input = document.getElementById('chatMsgInput');
     const msg   = input.value.trim();
     if (!msg) return;
     input.value = '';
-    await fetch('/cubassist/api/chat', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg })
-    });
+    await _sendMessage(msg);
 }
 
 async function sendQuickMsg() {
@@ -1022,14 +1320,46 @@ async function sendQuickMsg() {
     const msg   = input.value.trim();
     if (!msg) return;
     input.value = '';
-    await fetch('/cubassist/api/chat', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg })
-    });
-    showToast('Message sent', 'success');
+    if (await _sendMessage(msg)) showToast('Message sent', 'success');
 }
 
+// ── Mod check ─────────────────────────────────────────────────────────────────
+async function checkBotMod() {
+    try {
+        const res  = await fetch('/cubassist/api/is-bot-mod');
+        const data = await res.json();
+        const banner = document.getElementById('modWarningBanner');
+        if (!banner) return;
+        if (data.is_mod === false) {
+            banner.style.display = 'flex';
+            document.querySelectorAll('.mod-bot-name').forEach(el => el.textContent = data.bot_nick || 'cubassist');
+            document.getElementById('modWarningBotName').textContent = data.bot_nick || 'CubAssist';
+        } else {
+            banner.style.display = 'none';
+        }
+    } catch (e) {}
+}
+checkBotMod();
+
 function copyCmd(cmd) { navigator.clipboard?.writeText(cmd); showToast('Copied: ' + cmd); }
+
+// ── Global settings ────────────────────────────────────────────────────────────
+async function loadGlobalSettings() {
+    try {
+        const res  = await fetch('/cubassist/api/global-settings');
+        const data = await res.json();
+        const el   = document.getElementById('cfg_auto_start');
+        if (el) el.checked = data.bot_auto_start !== false;
+    } catch (e) {}
+}
+
+async function saveGlobalSetting(key, value) {
+    const res = await fetch('/cubassist/api/global-settings', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value })
+    });
+    if (res.ok) showToast('Setting saved', 'success');
+}
 
 // ── Modals ─────────────────────────────────────────────────────────────────────
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }

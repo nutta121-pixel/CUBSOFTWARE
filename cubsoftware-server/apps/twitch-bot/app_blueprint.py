@@ -5,6 +5,7 @@ Multi-channel dashboard, REST API, and Twitch OAuth.
 
 import os
 import sys
+import re
 import json
 import time
 import secrets
@@ -42,6 +43,19 @@ ADMIN_REDIRECT_URI = os.environ.get(
 )
 # Set CUBASSIST_ADMIN_KEY env var to a secret string to protect the admin token page
 ADMIN_KEY = os.environ.get('CUBASSIST_ADMIN_KEY', '')
+
+_json = json
+
+def _load_global_settings() -> dict:
+    path = _data_dir() / 'global_settings.json'
+    try:
+        return _json.loads(path.read_text())
+    except Exception:
+        return {}
+
+def _save_global_settings(data: dict):
+    path = _data_dir() / 'global_settings.json'
+    path.write_text(_json.dumps(data, indent=2))
 
 _login_states: dict[str, float] = {}
 
@@ -83,7 +97,7 @@ def login():
         'client_id':     TWITCH_CLIENT_ID,
         'redirect_uri':  LOGIN_REDIRECT_URI,
         'response_type': 'code',
-        'scope':         '',
+        'scope':         'user:write:chat moderation:read',
         'state':         state,
         'force_verify':  'true',
     })
@@ -138,6 +152,7 @@ def login_callback():
         'display_name':  user_info.get('display_name', ''),
         'profile_image': user_info.get('profile_image_url', ''),
         'id':            user_info.get('id', ''),
+        'access_token':  access_token,
     }
 
     # Register the user's channel and make the bot join it
@@ -255,13 +270,66 @@ def api_restart():
 def api_chat():
     err = _require_auth()
     if err: return err
-    body    = request.get_json(silent=True) or {}
-    msg     = body.get('message', '').strip()
-    channel = _user_channel()
+    body  = request.get_json(silent=True) or {}
+    msg   = body.get('message', '').strip()
     if not msg:
         return jsonify({'error': 'No message'}), 400
-    get_bot().send(msg, channel)
+    user    = _authed()
+    token   = user.get('access_token', '')
+    user_id = user.get('id', '')
+    if not token or not user_id:
+        return jsonify({'error': 'Session expired — please log out and log back in'}), 401
+    data = json.dumps({'broadcaster_id': user_id, 'sender_id': user_id, 'message': msg}).encode()
+    req  = urllib.request.Request(
+        'https://api.twitch.tv/helix/chat/messages',
+        data=data, method='POST',
+        headers={
+            'Authorization': f'Bearer {token}',
+            'Client-Id':     TWITCH_CLIENT_ID,
+            'Content-Type':  'application/json',
+        }
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as r:
+            json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        return jsonify({'error': f'Twitch API error: {e.read().decode()}'}), 502
+    except Exception as e:
+        return jsonify({'error': str(e)}), 502
     return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/is-bot-mod')
+def api_is_bot_mod():
+    err = _require_auth()
+    if err: return err
+    user    = _authed()
+    token   = user.get('access_token', '')
+    user_id = user.get('id', '')
+    if not token or not user_id:
+        return jsonify({'is_mod': None, 'error': 'Session expired — please log out and log back in'})
+    creds    = get_bot_credentials()
+    bot_nick = creds.get('bot_nick', '')
+    if not bot_nick:
+        return jsonify({'is_mod': None, 'error': 'No bot configured'})
+    try:
+        req = urllib.request.Request(
+            f'https://api.twitch.tv/helix/users?login={urllib.parse.quote(bot_nick)}',
+            headers={'Authorization': f'Bearer {token}', 'Client-Id': TWITCH_CLIENT_ID}
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            bot_data = json.loads(r.read()).get('data', [])
+        if not bot_data:
+            return jsonify({'is_mod': False, 'bot_nick': bot_nick})
+        bot_id = bot_data[0]['id']
+        req2 = urllib.request.Request(
+            f'https://api.twitch.tv/helix/moderation/moderators?broadcaster_id={user_id}&user_id={bot_id}',
+            headers={'Authorization': f'Bearer {token}', 'Client-Id': TWITCH_CLIENT_ID}
+        )
+        with urllib.request.urlopen(req2, timeout=10) as r:
+            mod_data = json.loads(r.read()).get('data', [])
+        return jsonify({'is_mod': len(mod_data) > 0, 'bot_nick': bot_nick})
+    except Exception as e:
+        return jsonify({'is_mod': None, 'error': str(e)})
 
 @cubassist_bp.route('/api/logs')
 def api_logs():
@@ -324,6 +392,92 @@ def api_toggle_command(name):
     cmd     = cfg.get('commands', {}).get(name)
     if cmd:
         cmd['enabled'] = not cmd.get('enabled', True)
+        save_channel_config(channel, cfg)
+    return jsonify({'ok': True})
+
+# ── Custom variables ────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/customvars', methods=['GET'])
+def api_get_customvars():
+    err = _require_auth()
+    if err: return err
+    cfg = load_channel_config(_user_channel())
+    return jsonify(cfg.get('custom_vars', {}))
+
+@cubassist_bp.route('/api/customvars', methods=['POST'])
+def api_set_customvar():
+    err = _require_auth()
+    if err: return err
+    body = request.get_json(silent=True) or {}
+    name  = body.get('name', '').strip().lower()
+    value = body.get('value', '')
+    if not name or not re.match(r'^[a-zA-Z0-9_]+$', name):
+        return jsonify({'error': 'Invalid variable name'}), 400
+    channel = _user_channel()
+    cfg = load_channel_config(channel)
+    cfg.setdefault('custom_vars', {})[name] = value
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True, 'vars': cfg['custom_vars']})
+
+@cubassist_bp.route('/api/customvars/<name>', methods=['DELETE'])
+def api_delete_customvar(name):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    cfg = load_channel_config(channel)
+    cfg.get('custom_vars', {}).pop(name, None)
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True})
+
+# ── Quotes ──────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/quotes', methods=['GET'])
+def api_get_quotes():
+    err = _require_auth()
+    if err: return err
+    cfg = load_channel_config(_user_channel())
+    return jsonify(cfg.get('quotes', []))
+
+@cubassist_bp.route('/api/quotes', methods=['POST'])
+def api_add_quote():
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    text    = body.get('text', '').strip()
+    if not text:
+        return jsonify({'error': 'Quote text required'}), 400
+    channel = _user_channel()
+    cfg     = load_channel_config(channel)
+    quotes  = cfg.setdefault('quotes', [])
+    quotes.append({'text': text, 'added_by': 'dashboard', 'ts': int(time.time())})
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True, 'id': len(quotes) - 1, 'total': len(quotes)})
+
+@cubassist_bp.route('/api/quotes/<int:idx>', methods=['PUT'])
+def api_edit_quote(idx):
+    err = _require_auth()
+    if err: return err
+    body    = request.get_json(silent=True) or {}
+    text    = body.get('text', '').strip()
+    if not text:
+        return jsonify({'error': 'Quote text required'}), 400
+    channel = _user_channel()
+    cfg     = load_channel_config(channel)
+    quotes  = cfg.get('quotes', [])
+    if 0 <= idx < len(quotes):
+        quotes[idx]['text'] = text
+        save_channel_config(channel, cfg)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/quotes/<int:idx>', methods=['DELETE'])
+def api_delete_quote(idx):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    cfg     = load_channel_config(channel)
+    quotes  = cfg.get('quotes', [])
+    if 0 <= idx < len(quotes):
+        del quotes[idx]
         save_channel_config(channel, cfg)
     return jsonify({'ok': True})
 
@@ -482,9 +636,31 @@ def admin_callback():
 
     return f'<h2 style="font-family:sans-serif;color:#57f287">✓ CubAssist bot account connected as <strong>{nick}</strong>. Token saved.</h2>'
 
+# ── Global settings ─────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/global-settings', methods=['GET'])
+def api_get_global_settings():
+    err = _require_auth()
+    if err: return err
+    gs = _load_global_settings()
+    return jsonify({'bot_auto_start': gs.get('bot_auto_start', True)})
+
+@cubassist_bp.route('/api/global-settings', methods=['POST'])
+def api_save_global_settings():
+    err = _require_auth()
+    if err: return err
+    body = request.get_json(silent=True) or {}
+    gs = _load_global_settings()
+    if 'bot_auto_start' in body:
+        gs['bot_auto_start'] = bool(body['bot_auto_start'])
+    _save_global_settings(gs)
+    return jsonify({'ok': True, **gs})
+
 # ── Auto-start ──────────────────────────────────────────────────────────────────
 
 def _maybe_autostart():
+    if not _load_global_settings().get('bot_auto_start', True):
+        return
     creds    = get_bot_credentials()
     channels = get_channels()
     if creds.get('oauth_token') and creds.get('bot_nick') and channels:

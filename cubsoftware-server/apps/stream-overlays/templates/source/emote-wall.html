@@ -7,7 +7,8 @@
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;}
 #overlay{width:1920px;height:1080px;position:relative;overflow:hidden;background:transparent;transition:background .5s;}
-#emote-canvas{position:absolute;inset:0;width:1920px;height:1080px;}
+#emote-container{position:absolute;inset:0;overflow:hidden;}
+#emote-container img{position:absolute;pointer-events:none;transform-origin:center center;}
 #status{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-family:'Orbitron',sans-serif;font-size:12px;color:rgba(255,255,255,.3);letter-spacing:2px;pointer-events:none;transition:opacity .5s;}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
@@ -15,7 +16,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;}
 </head>
 <body>
 <div id="overlay">
-    <canvas id="emote-canvas" width="1920" height="1080"></canvas>
+    <div id="emote-container"></div>
     <div id="status"></div>
 </div>
 <script src="/overlays/static/js/overlays-effects.js?v={{ v }}"></script>
@@ -23,48 +24,29 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;}
 const SCENE_ID = '{{ scene_id }}';
 let config = {};
 let emotes = [];
-const canvas = document.getElementById('emote-canvas');
-const ctx = canvas.getContext('2d');
-const STATUS = document.getElementById('status');
+const CONTAINER = document.getElementById('emote-container');
+const STATUS    = document.getElementById('status');
 
-// ── Image cache (tries animated GIF/WebP first, falls back to static PNG) ────
-const emoteCache = {};
-function loadEmoteImg(animUrl, staticUrl) {
-    if (emoteCache[animUrl]) return emoteCache[animUrl];
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onerror = () => {
-        // Animated version not available for this emote — load static PNG
-        img.onerror = null;
-        img.src = staticUrl;
-    };
-    img.src = animUrl;
-    emoteCache[animUrl] = img;
-    return img;
-}
-
-// ── Spawn a single emote particle ────────────────────────────────────────────
+// ── Spawn a single emote particle (DOM <img> — animates GIFs/WebP natively) ───
 function spawnEmote(animUrl, staticUrl) {
     const maxOnScreen = Math.max(10, parseInt(config.emote_max_on_screen) || 200);
     if (emotes.length >= maxOnScreen) return;
 
     const sizeMin = Math.max(20, parseInt(config.emote_size_min) || parseInt(config.emote_size) || 60);
     const sizeMax = Math.max(sizeMin, parseInt(config.emote_size_max) || sizeMin + 60);
-    const size = sizeMin + Math.random() * (sizeMax - sizeMin);
+    const size    = sizeMin + Math.random() * (sizeMax - sizeMin);
 
     const speedMin = Math.max(10, parseInt(config.emote_speed_min) || parseInt(config.emote_speed) || 50);
     const speedMax = Math.max(speedMin, parseInt(config.emote_speed_max) || speedMin + 70);
-    const speed = speedMin + Math.random() * (speedMax - speedMin);
+    const speed    = speedMin + Math.random() * (speedMax - speedMin);
 
     const spreadFactor = Math.max(0, parseFloat(config.emote_spread) || 30) / 100;
-    const gravity = parseFloat(config.emote_gravity) || 0;
+    const gravity      = parseFloat(config.emote_gravity) || 0;
 
     let dir = config.emote_direction || 'up';
     if (dir === 'random') dir = ['up','down','left','right'][Math.floor(Math.random() * 4)];
 
-    const img = loadEmoteImg(animUrl, staticUrl);
     let x, y, vx, vy;
-
     if (dir === 'burst') {
         x = 960 - size / 2 + (Math.random() - 0.5) * 300;
         y = 540 - size / 2 + (Math.random() - 0.5) * 300;
@@ -72,83 +54,91 @@ function spawnEmote(animUrl, staticUrl) {
         vx = Math.cos(angle) * speed;
         vy = Math.sin(angle) * speed;
     } else if (dir === 'up') {
-        x = Math.random() * (1920 - size);
-        y = 1080 + size;
+        x  = Math.random() * (1920 - size);
+        y  = 1080 + size;
         vx = (Math.random() - 0.5) * 2 * speed * spreadFactor;
         vy = -(speed * (0.8 + Math.random() * 0.4));
     } else if (dir === 'down') {
-        x = Math.random() * (1920 - size);
-        y = -size;
+        x  = Math.random() * (1920 - size);
+        y  = -size;
         vx = (Math.random() - 0.5) * 2 * speed * spreadFactor;
         vy = speed * (0.8 + Math.random() * 0.4);
     } else if (dir === 'left') {
-        x = 1920 + size;
-        y = Math.random() * (1080 - size);
+        x  = 1920 + size;
+        y  = Math.random() * (1080 - size);
         vx = -(speed * (0.8 + Math.random() * 0.4));
         vy = (Math.random() - 0.5) * 2 * speed * spreadFactor;
     } else { // right
-        x = -size;
-        y = Math.random() * (1080 - size);
+        x  = -size;
+        y  = Math.random() * (1080 - size);
         vx = speed * (0.8 + Math.random() * 0.4);
         vy = (Math.random() - 0.5) * 2 * speed * spreadFactor;
     }
 
     const spinSpeedDeg = parseFloat(config.emote_spin_speed) || 5;
-    const spinRad = spinSpeedDeg * Math.PI / 180 / 60; // radians per frame
+    const spinRad      = spinSpeedDeg * Math.PI / 180 / 60;
+
+    // Each emote gets its own <img> — browser animates GIF/WebP automatically
+    const img = document.createElement('img');
+    img.crossOrigin = 'anonymous';
+    img.style.cssText = `width:${size}px;height:${size}px;opacity:0;left:${x}px;top:${y}px;`;
+    img.onerror = () => { img.onerror = null; img.src = staticUrl; };
+    img.src = animUrl;
+    CONTAINER.appendChild(img);
 
     emotes.push({
         img, x, y, vx, vy, size, gravity,
-        alpha: 1,
+        alpha:      1,
         maxOpacity: Math.max(0.05, Math.min(1, parseFloat(config.emote_opacity) || 1)),
-        fade: config.emote_fade !== false,
-        fadeStart: parseFloat(config.emote_fade_start) || 3,
-        spin: config.emote_spin || false,
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: config.emote_spin ? (Math.random() < 0.5 ? 1 : -1) * (0.3 + Math.random() * 0.7) * spinRad : 0,
-        bounce: config.emote_bounce || false,
-        scaleIn: config.emote_scale_in !== false,
-        scale: 0,
-        glow: config.emote_glow || false,
-        glowSize: parseInt(config.emote_glow_size) || 15,
-        glowColor: config.emote_glow_color || '#ffffff',
-        born: Date.now(),
+        fade:       config.emote_fade !== false,
+        fadeStart:  parseFloat(config.emote_fade_start) || 3,
+        spin:       config.emote_spin || false,
+        rotation:   Math.random() * Math.PI * 2,
+        rotSpeed:   config.emote_spin ? (Math.random() < 0.5 ? 1 : -1) * (0.3 + Math.random() * 0.7) * spinRad : 0,
+        bounce:     config.emote_bounce || false,
+        scaleIn:    config.emote_scale_in !== false,
+        scale:      0,
+        glow:       config.emote_glow || false,
+        glowSize:   parseInt(config.emote_glow_size) || 15,
+        glowColor:  config.emote_glow_color || '#ffffff',
+        born:       Date.now(),
     });
 }
 
-// ── Main draw loop ────────────────────────────────────────────────────────────
+// ── Main loop — physics + DOM style updates (no canvas) ───────────────────────
 function drawLoop() {
-    ctx.clearRect(0, 0, 1920, 1080);
     const now = Date.now();
 
-    emotes = emotes.filter(e => e.alpha > 0.005 && e.scale >= 0);
+    emotes = emotes.filter(e => {
+        if (e.alpha <= 0.005 && e.scale <= 0) {
+            e.img.remove();
+            return false;
+        }
+        return true;
+    });
 
     emotes.forEach(e => {
         // Physics
         e.vy += e.gravity / 60;
-        e.x += e.vx / 60;
-        e.y += e.vy / 60;
+        e.x  += e.vx / 60;
+        e.y  += e.vy / 60;
 
-        // Rotation
         if (e.spin) e.rotation += e.rotSpeed;
 
         // Scale-in
-        if (e.scaleIn && e.scale < 1) {
-            e.scale = Math.min(1, e.scale + 0.07);
-        } else if (!e.scaleIn) {
-            e.scale = 1;
-        }
+        if (e.scaleIn && e.scale < 1) e.scale = Math.min(1, e.scale + 0.07);
+        else if (!e.scaleIn)          e.scale = 1;
 
-        // Bounce off walls
+        // Bounce / off-screen removal
         if (e.bounce) {
-            if (e.x < 0) { e.x = 0; e.vx = Math.abs(e.vx) * 0.85; }
+            if (e.x < 0)              { e.x = 0;              e.vx =  Math.abs(e.vx) * 0.85; }
             else if (e.x > 1920 - e.size) { e.x = 1920 - e.size; e.vx = -Math.abs(e.vx) * 0.85; }
-            if (e.y < 0) { e.y = 0; e.vy = Math.abs(e.vy) * 0.85; }
+            if (e.y < 0)              { e.y = 0;              e.vy =  Math.abs(e.vy) * 0.85; }
             else if (e.y > 1080 - e.size) { e.y = 1080 - e.size; e.vy = -Math.abs(e.vy) * 0.85; }
         } else {
-            // Remove when off-screen
             if (e.x < -e.size * 2 || e.x > 1920 + e.size * 2 ||
                 e.y < -e.size * 2 || e.y > 1080 + e.size * 2) {
-                e.alpha = 0; return;
+                e.alpha = 0; e.img.remove(); return;
             }
         }
 
@@ -158,21 +148,20 @@ function drawLoop() {
             if (age > e.fadeStart) e.alpha = Math.max(0, e.alpha - 0.012);
         }
 
-        if (!e.img.complete || !e.img.naturalWidth) return;
-
+        // Apply to DOM element
         const drawSize = e.size * e.scale;
-        if (drawSize < 1) return;
+        const opacity  = Math.max(0, Math.min(e.maxOpacity, e.alpha));
+        const offset   = (e.size - drawSize) / 2;
+        let   tf       = `translate(${offset}px, ${offset}px) scale(${e.scale})`;
+        if (e.spin)    tf += ` rotate(${e.rotation}rad)`;
 
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, Math.min(e.maxOpacity, e.alpha));
-        if (e.glow) {
-            ctx.shadowBlur = e.glowSize;
-            ctx.shadowColor = e.glowColor;
-        }
-        ctx.translate(e.x + e.size / 2, e.y + e.size / 2);
-        if (e.spin) ctx.rotate(e.rotation);
-        ctx.drawImage(e.img, -drawSize / 2, -drawSize / 2, drawSize, drawSize);
-        ctx.restore();
+        e.img.style.width   = e.size + 'px';
+        e.img.style.height  = e.size + 'px';
+        e.img.style.left    = e.x + 'px';
+        e.img.style.top     = e.y + 'px';
+        e.img.style.opacity = opacity;
+        e.img.style.transform      = e.spin || e.scaleIn ? tf : '';
+        e.img.style.filter         = e.glow ? `drop-shadow(0 0 ${e.glowSize}px ${e.glowColor})` : '';
     });
 
     requestAnimationFrame(drawLoop);
@@ -180,9 +169,8 @@ function drawLoop() {
 drawLoop();
 
 // ── Parse Twitch IRC emote tags → CDN URL pairs ───────────────────────────────
-// Returns [{animated, static}] with one entry per emote *occurrence* in the message.
 // Twitch tag format: emotes=ID1:start-end,start-end/ID2:start-end
-// Each comma-separated position = one time that emote appeared in the message.
+// Each comma-separated position = one occurrence in the message.
 function parseTwitchEmotes(tagStr) {
     const urls = [];
     if (!tagStr) return urls;
@@ -195,8 +183,7 @@ function parseTwitchEmotes(tagStr) {
         const id        = part.slice(0, colonIdx);
         const positions = part.slice(colonIdx + 1);
         if (!id || !positions) return;
-        // One entry per occurrence (count commas + 1 = number of positions)
-        const count = positions.split(',').length;
+        const count = positions.split(',').length; // one per occurrence
         for (let i = 0; i < count; i++) {
             urls.push({
                 animated: `https://static-cdn.jtvnw.net/emoticons/v2/${id}/animated/dark/3.0`,
@@ -236,8 +223,9 @@ function connectTwitchChat(channel) {
             if (!privmsg) return;
             const emoteUrls = parseTwitchEmotes(privmsg[1]);
             if (!emoteUrls.length) return;
-            const density = Math.max(1, Math.min(20, parseInt(config.emote_density) || 5));
-            const delay = Math.max(0, parseInt(config.emote_spawn_delay) || 80);
+            const density = Math.max(1, Math.min(50, parseInt(config.emote_density) || 5));
+            const delay   = Math.max(0, parseInt(config.emote_spawn_delay) || 80);
+            // Spawn all occurrences up to density cap
             emoteUrls.slice(0, density).forEach((u, i) => {
                 setTimeout(() => spawnEmote(u.animated, u.static), i * delay);
             });
@@ -263,9 +251,9 @@ window.addEventListener('message', e => {
             { id: '88'     }, // PJSalt
         ];
         const delay = Math.max(0, parseInt(config.emote_spawn_delay) || 80);
-        testEmotes.forEach((e, i) => setTimeout(() => spawnEmote(
-            `https://static-cdn.jtvnw.net/emoticons/v2/${e.id}/animated/dark/3.0`,
-            `https://static-cdn.jtvnw.net/emoticons/v2/${e.id}/default/dark/3.0`
+        testEmotes.forEach((em, i) => setTimeout(() => spawnEmote(
+            `https://static-cdn.jtvnw.net/emoticons/v2/${em.id}/animated/dark/3.0`,
+            `https://static-cdn.jtvnw.net/emoticons/v2/${em.id}/default/dark/3.0`
         ), i * delay));
     }
 });

@@ -2805,6 +2805,66 @@ client.on('messageDeleteBulk', async (messages) => {
 // Member Join/Leave
 client.on('guildMemberAdd', async (member) => {
     if (CUSTOM_GUILD_ID && member.guild.id !== CUSTOM_GUILD_ID) return;
+
+    // ---- Auto-roles run first on whichever bot receives the event ----
+    // Runs before the guildHasCustomBot check so that if the custom bot is
+    // configured but not running, the main bot still assigns roles.
+    // If both bots are active, the custom bot handles it (main bot is skipped below).
+    if (!CUSTOM_GUILD_ID || member.guild.id === CUSTOM_GUILD_ID) {
+        try {
+            const _arWelcome = loadWelcomeData();
+            const _arGuildW = getWelcomeGuild(_arWelcome, member.guild.id);
+            if (_arGuildW.welcome.autorole_enabled && _arGuildW.welcome.auto_roles?.length > 0) {
+                const _delay = Math.max(0, parseInt(_arGuildW.welcome.autorole_delay) || 0) * 1000;
+                const _assignWelcomeRoles = async () => {
+                    const _m = _delay > 0 ? await member.guild.members.fetch(member.id).catch(() => null) : member;
+                    if (!_m) return;
+                    for (const _rid of _arGuildW.welcome.auto_roles) {
+                        await _m.roles.add(_rid).catch(e => console.warn(`[AutoRole] welcome role ${_rid} → ${_m.id}: ${e.message}`));
+                    }
+                };
+                if (_delay > 0) setTimeout(_assignWelcomeRoles, _delay);
+                else await _assignWelcomeRoles();
+            }
+            const _arData = loadAutoRolesData();
+            const _arGuild = _arData.guilds?.[member.guild.id];
+            if (_arGuild?.enabled) {
+                const _acctAge = Math.floor((Date.now() - member.user.createdTimestamp) / 86400000);
+                const _isBot = member.user.bot;
+                if (!_isBot && _arGuild.join_roles?.length > 0) {
+                    for (const _rid of _arGuild.join_roles)
+                        await member.roles.add(_rid).catch(e => console.warn(`[AutoRole] join role ${_rid} → ${member.id}: ${e.message}`));
+                }
+                if (_isBot && _arGuild.bot_roles?.length > 0) {
+                    for (const _rid of _arGuild.bot_roles)
+                        await member.roles.add(_rid).catch(e => console.warn(`[AutoRole] bot role ${_rid} → ${member.id}: ${e.message}`));
+                }
+                if (!_isBot && _arGuild.age_roles?.length > 0) {
+                    for (const _rule of _arGuild.age_roles) {
+                        if (_rule.role_id && _acctAge >= (_rule.min_days || 0))
+                            await member.roles.add(_rule.role_id).catch(e => console.warn(`[AutoRole] age role ${_rule.role_id} → ${member.id}: ${e.message}`));
+                    }
+                }
+                if (!_isBot && _arGuild.delay_roles?.length > 0) {
+                    for (const _rule of _arGuild.delay_roles) {
+                        if (_rule.role_id && _rule.delay_seconds > 0) {
+                            const _mId = member.id, _gId = member.guild.id;
+                            setTimeout(async () => {
+                                const _g = await client.guilds.fetch(_gId).catch(() => null);
+                                const _dm = _g ? await _g.members.fetch(_mId).catch(() => null) : null;
+                                if (_dm) await _dm.roles.add(_rule.role_id).catch(e => console.warn(`[AutoRole] delay role ${_rule.role_id} → ${_mId}: ${e.message}`));
+                            }, _rule.delay_seconds * 1000);
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('[AutoRole] guildMemberAdd error:', e.message);
+        }
+    }
+
+    // Everything below (stats, logging, welcome messages) is skipped when
+    // a custom bot is active — the custom bot handles those instead.
     if (guildHasCustomBot(member.guild.id)) return;
 
     // Developer auto-role: automatically restore roles for known accounts on rejoin
@@ -2899,82 +2959,8 @@ client.on('guildMemberAdd', async (member) => {
 
     }
 
-    // Auto-roles from welcome system (runs independently of welcome message)
-    if (guildWelcome.welcome.autorole_enabled && guildWelcome.welcome.auto_roles?.length > 0) {
-        const delay = Math.max(0, parseInt(guildWelcome.welcome.autorole_delay) || 0) * 1000;
-        const assignRoles = async () => {
-            const m = delay > 0 ? await member.guild.members.fetch(member.id).catch(() => null) : member;
-            if (!m) return;
-            for (const roleId of guildWelcome.welcome.auto_roles) {
-                await m.roles.add(roleId).catch(e => {
-                    console.warn(`[AutoRole] Failed to add role ${roleId} to ${m.id}: ${e.message}`);
-                });
-            }
-        };
-        if (delay > 0) setTimeout(assignRoles, delay);
-        else await assignRoles();
-    }
-
-    // ---- Advanced Auto-Roles System ----
-    const arData = loadAutoRolesData();
-    const arGuild = arData.guilds?.[member.guild.id];
-    if (arGuild?.enabled) {
-        const accountAge = Math.floor((Date.now() - member.user.createdTimestamp) / 86400000);
-        const isBot = member.user.bot;
-
-        // Join roles (always assigned to humans)
-        if (!isBot && arGuild.join_roles?.length > 0) {
-            for (const roleId of arGuild.join_roles) {
-                await member.roles.add(roleId).catch(e => {
-                    console.warn(`[AutoRole] Failed to add join role ${roleId} to ${member.id}: ${e.message}`);
-                });
-            }
-        }
-
-        // Bot roles (assigned to bots)
-        if (isBot && arGuild.bot_roles?.length > 0) {
-            for (const roleId of arGuild.bot_roles) {
-                await member.roles.add(roleId).catch(e => {
-                    console.warn(`[AutoRole] Failed to add bot role ${roleId} to ${member.id}: ${e.message}`);
-                });
-            }
-        }
-
-        // Age-based roles (only for humans)
-        if (!isBot && arGuild.age_roles?.length > 0) {
-            for (const rule of arGuild.age_roles) {
-                if (rule.role_id && rule.min_days != null) {
-                    if (accountAge >= rule.min_days) {
-                        await member.roles.add(rule.role_id).catch(e => {
-                            console.warn(`[AutoRole] Failed to add age role ${rule.role_id} to ${member.id}: ${e.message}`);
-                        });
-                    }
-                }
-            }
-        }
-
-        // Delay roles (assigned after X seconds)
-        if (!isBot && arGuild.delay_roles?.length > 0) {
-            for (const rule of arGuild.delay_roles) {
-                if (rule.role_id && rule.delay_seconds > 0) {
-                    const mId = member.id;
-                    const guildId = member.guild.id;
-                    setTimeout(async () => {
-                        try {
-                            const g = await client.guilds.fetch(guildId);
-                            const m = await g.members.fetch(mId).catch(() => null);
-                            if (m) await m.roles.add(rule.role_id).catch(e => {
-                                console.warn(`[AutoRole] Failed to add delay role ${rule.role_id} to ${mId}: ${e.message}`);
-                            });
-                        } catch (e) {
-                            console.warn(`[AutoRole] Delay role error for ${mId}: ${e.message}`);
-                        }
-                    }, rule.delay_seconds * 1000);
-                }
-            }
-        }
-    }
 });
+// Note: autoroles are now handled at the top of guildMemberAdd before the guildHasCustomBot check.
 
 client.on('guildMemberRemove', async (member) => {
     if (CUSTOM_GUILD_ID && member.guild.id !== CUSTOM_GUILD_ID) return;

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Link Shortener - Create Short URLs Instantly | Free Online</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Shorten any URL in seconds. Create clean, shareable short links. Track click stats. No signup required, completely free.">
+    <meta name="keywords" content="link shortener, url shortener, short url, shorten link free, tiny url alternative, free link shortener">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/link-shortener">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Link Shortener - Short URLs Made Easy | Free">
+    <meta property="og:description" content="Turn long ugly URLs into clean short links. Free, fast, no account needed. Perfect for social media, emails, and more.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/link-shortener">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/link-shortener.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="shortener-container">
+            <div class="shortener-header">
+                <h1>Link Shortener</h1>
+                <p>Create short, shareable URLs in seconds</p>
+            </div>
+
+            <!-- Main Shortener -->
+            <div class="shortener-card">
+                <div class="input-section">
+                    <div class="url-input-wrapper">
+                        <svg class="link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
+                        <input type="url" id="longUrl" placeholder="Paste your long URL here...">
+                    </div>
+                    <div class="vanity-section">
+                        <div class="vanity-toggle" id="vanityToggle">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                            </svg>
+                            Custom URL (optional)
+                        </div>
+                        <div class="vanity-input-wrapper" id="vanityWrapper" style="display: none;">
+                            <span class="vanity-prefix">cubsw.link/</span>
+                            <input type="text" id="vanityCode" placeholder="your-custom-url" maxlength="20" pattern="[a-zA-Z0-9\-_]+">
+                            <span class="vanity-status" id="vanityStatus"></span>
+                        </div>
+                    </div>
+                    <button class="shorten-btn" id="shortenBtn">
+                        <span id="btnText">Shorten</span>
+                        <span id="btnLoader" class="loader" style="display: none;"></span>
+                    </button>
+                </div>
+
+                <!-- Result Section -->
+                <div class="result-section" id="resultSection" style="display: none;">
+                    <div class="result-label">Your shortened URL:</div>
+                    <div class="result-url-wrapper">
+                        <input type="text" id="shortUrl" readonly>
+                        <button class="copy-btn" id="copyBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                    <div class="result-actions">
+                        <button class="action-btn" id="newLinkBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Shorten Another
+                        </button>
+                        <a class="action-btn" id="visitLink" href="#" target="_blank">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                <polyline points="15 3 21 3 21 9"></polyline>
+                                <line x1="10" y1="14" x2="21" y2="3"></line>
+                            </svg>
+                            Visit Link
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div class="error-message" id="errorMessage" style="display: none;"></div>
+            </div>
+
+            <!-- Recent Links -->
+            <div class="recent-section">
+                <div class="recent-header">
+                    <h3>Your Recent Links</h3>
+                    <button class="clear-btn" id="clearHistoryBtn">Clear All</button>
+                </div>
+                <div class="recent-list" id="recentList">
+                    <div class="empty-state">No links shortened yet</div>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="info-section">
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <h4>Instant</h4>
+                        <p>Links are created instantly and work immediately</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                        </div>
+                        <h4>No Signup</h4>
+                        <p>Create short links without creating an account</p>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </div>
+                        <h4>Free Forever</h4>
+                        <p>No limits, no fees, completely free to use</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <script src="/static/js/link-shortener.js?v={{ v }}"></script>
+</body>
+</html>

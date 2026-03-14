@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Markdown Editor - Write & Preview | Free</title>
+
+    <meta name="description" content="Write and preview Markdown in real-time. Export to HTML or copy rendered output. Free online Markdown editor.">
+    <meta name="keywords" content="markdown editor, markdown preview, markdown to html, online editor">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/markdown-editor.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="editor-container">
+            <div class="editor-header">
+                <h1>Markdown Editor</h1>
+                <p>Write and preview Markdown in real-time</p>
+            </div>
+
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" data-action="bold" title="Bold (Ctrl+B)">
+                        <strong>B</strong>
+                    </button>
+                    <button class="toolbar-btn" data-action="italic" title="Italic (Ctrl+I)">
+                        <em>I</em>
+                    </button>
+                    <button class="toolbar-btn" data-action="strikethrough" title="Strikethrough">
+                        <s>S</s>
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" data-action="h1" title="Heading 1">H1</button>
+                    <button class="toolbar-btn" data-action="h2" title="Heading 2">H2</button>
+                    <button class="toolbar-btn" data-action="h3" title="Heading 3">H3</button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" data-action="ul" title="Unordered List">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <circle cx="4" cy="6" r="1" fill="currentColor"></circle>
+                            <circle cx="4" cy="12" r="1" fill="currentColor"></circle>
+                            <circle cx="4" cy="18" r="1" fill="currentColor"></circle>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="ol" title="Ordered List">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="10" y1="6" x2="21" y2="6"></line>
+                            <line x1="10" y1="12" x2="21" y2="12"></line>
+                            <line x1="10" y1="18" x2="21" y2="18"></line>
+                            <text x="2" y="8" font-size="8" fill="currentColor">1</text>
+                            <text x="2" y="14" font-size="8" fill="currentColor">2</text>
+                            <text x="2" y="20" font-size="8" fill="currentColor">3</text>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="checkbox" title="Checkbox">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                            <path d="M9 12l2 2 4-4"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" data-action="link" title="Link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="image" title="Image">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <path d="M21 15l-5-5L5 21"></path>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="code" title="Inline Code">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="codeblock" title="Code Block">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                            <path d="M8 10l4 4-4 4"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" data-action="quote" title="Blockquote">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21"></path>
+                            <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3"></path>
+                        </svg>
+                    </button>
+                    <button class="toolbar-btn" data-action="hr" title="Horizontal Rule">—</button>
+                    <button class="toolbar-btn" data-action="table" title="Table">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="3" y1="15" x2="21" y2="15"></line>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                            <line x1="15" y1="3" x2="15" y2="21"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="editor-main">
+                <div class="editor-pane">
+                    <div class="pane-header">
+                        <span>Markdown</span>
+                        <div class="pane-actions">
+                            <button class="pane-btn" id="clearBtn">Clear</button>
+                        </div>
+                    </div>
+                    <textarea id="markdownInput" placeholder="Write your Markdown here..."></textarea>
+                </div>
+                <div class="preview-pane">
+                    <div class="pane-header">
+                        <span>Preview</span>
+                        <div class="pane-actions">
+                            <button class="pane-btn" id="copyHtmlBtn">Copy HTML</button>
+                            <button class="pane-btn" id="downloadBtn">Download</button>
+                        </div>
+                    </div>
+                    <div class="preview-content" id="previewContent">
+                        <p class="placeholder-text">Your rendered Markdown will appear here...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cheatsheet">
+                <h2>Markdown Cheatsheet</h2>
+                <div class="cheatsheet-grid">
+                    <div class="cheat-item">
+                        <code># Heading 1</code>
+                    </div>
+                    <div class="cheat-item">
+                        <code>**bold**</code>
+                    </div>
+                    <div class="cheat-item">
+                        <code>*italic*</code>
+                    </div>
+                    <div class="cheat-item">
+                        <code>[link](url)</code>
+                    </div>
+                    <div class="cheat-item">
+                        <code>![alt](image.jpg)</code>
+                    </div>
+                    <div class="cheat-item">
+                        <code>`inline code`</code>
+                    </div>
+                    <div class="cheat-item">
+                        <code>- list item</code>
+                    </div>
+                    <div class="cheat-item">
+                        <code>> blockquote</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/js/markdown-editor.js?v={{ v }}"></script>
+</body>
+</html>

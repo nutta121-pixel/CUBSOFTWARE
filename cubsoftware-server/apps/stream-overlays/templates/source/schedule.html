@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1920">
+<title>Schedule</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:1920px;height:1080px;overflow:hidden;}
+#overlay{width:1920px;height:1080px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+--bg:#0a0a1a;--bg2:#001a1a;--accent:#00ccff;--text1:#fff;--text2:#88ccff;--font:'Orbitron';font-family:var(--font),sans-serif;background:var(--bg);}
+
+#particles{position:absolute;inset:0;z-index:1;pointer-events:none;}
+.scene-card{position:relative;z-index:2;max-width:1100px;width:80%;text-align:center;}
+.logo-img{max-width:140px;max-height:80px;object-fit:contain;display:none;margin:0 auto 16px;}
+.logo-img.visible{display:block;}
+.scene-title{font-size:56px;font-weight:900;color:var(--text1);letter-spacing:4px;margin-bottom:8px;}
+.scene-subtitle{font-size:20px;color:var(--text2);margin-bottom:24px;font-family:Poppins,sans-serif;opacity:.7;}
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent);margin:16px 0;opacity:.4;}
+.schedule-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-top:8px;}
+.schedule-day{border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:16px 10px;text-align:center;transition:all .3s;}
+.schedule-day.enabled{border-color:color-mix(in srgb,var(--accent) 40%,transparent);background:color-mix(in srgb,var(--accent) 8%,transparent);}
+.schedule-day.disabled{opacity:.3;}
+.day-name{font-size:16px;font-weight:700;color:var(--text1);letter-spacing:2px;margin-bottom:8px;}
+.day-time{font-size:18px;color:var(--accent);font-family:Poppins,sans-serif;font-weight:600;}
+.day-game{font-size:13px;color:var(--text2);margin-top:6px;font-family:Poppins,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.day-off{font-size:14px;color:var(--text2);opacity:.5;font-family:Poppins,sans-serif;margin-top:8px;}
+
+/* Neon */
+#overlay.neon .schedule-day.enabled{box-shadow:0 0 12px color-mix(in srgb,var(--accent) 20%,transparent);}
+#overlay.neon::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:60px 60px;}
+#overlay.neon .scene-card{border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:40px 60px;}
+
+/* Retro */
+#overlay.retro::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.15) 2px,rgba(0,0,0,.15) 4px);pointer-events:none;}
+#overlay.retro .scene-title,.schedule-day .day-name{font-family:'Share Tech Mono',monospace;}
+#overlay.retro .schedule-day{border-radius:0;border-style:solid;}
+#overlay.retro .day-time{font-family:'Share Tech Mono',monospace;}
+
+/* Cozy */
+#overlay.cozy .scene-card{background:rgba(255,255,255,.04);border-radius:24px;padding:40px 60px;border:1px solid rgba(255,255,255,.08);}
+#overlay.cozy .scene-title{font-family:Pacifico,cursive;font-size:48px;}
+#overlay.cozy .schedule-day{border-radius:16px;}
+
+/* Gradient */
+#overlay.gradient .scene-title{background:linear-gradient(135deg,var(--text1),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+#overlay.gradient .schedule-day.enabled{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 5%,transparent),color-mix(in srgb,var(--accent) 15%,transparent));}
+
+/* Gaming */
+#overlay.gaming::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,color-mix(in srgb,var(--accent) 10%,transparent) 0%,transparent 60%);}
+#overlay.gaming .schedule-day{clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);}
+
+.scene-card{animation:fadeIn 1.5s ease forwards;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Bangers&family=Bebas+Neue&family=Black+Ops+One&family=Boogaloo&family=Bungee&family=Chakra+Petch:wght@400;600;700&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;600;700&family=Courier+Prime:wght@400;700&family=Creepster&family=DM+Sans:wght@400;500;700&family=Exo+2:wght@400;600;700&family=Fira+Code:wght@400;500&family=Fredoka+One&family=Goldman:wght@400;700&family=Inter:wght@400;500;600;700&family=Lobster&family=Lora:wght@400;600;700&family=Manrope:wght@400;500;700&family=Montserrat:wght@400;600;700;800&family=Nunito:wght@400;600;700&family=Orbitron:wght@700;900&family=Outfit:wght@400;600;700&family=Pacifico&family=Playfair+Display:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Press+Start+2P&family=Quantico:wght@400;700&family=Rajdhani:wght@400;500;600;700&family=Righteous&family=Roboto:wght@400;500;700&family=Russo+One&family=Share+Tech+Mono&family=Source+Code+Pro:wght@400;600&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&family=Teko:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/overlays/static/css/overlays-effects.css?v={{ v }}">
+</head>
+<body>
+<div id="overlay" class="minimal">
+    <canvas id="particles"></canvas>
+    <canvas id="bg-effects" width="1920" height="1080"></canvas>
+    <div class="scene-card">
+        <img id="logoImg" class="logo-img" src="" alt="">
+        <div id="sceneTitle" class="scene-title">Stream Schedule</div>
+        <div id="sceneSubtitle" class="scene-subtitle">All times are in your local timezone</div>
+        <div class="divider"></div>
+        <div class="schedule-grid" id="scheduleGrid"></div>
+    </div>
+</div>
+<script src="/overlays/static/js/overlays-effects.js?v={{ v }}"></script>
+<script>
+const SCENE_ID='{{ scene_id }}';
+const DISCORD_USER_ID='{{ discord_user_id }}';
+async function loadConfig(){try{const r=await fetch('/overlays/api/scenes/'+SCENE_ID+'/config');if(r.ok){const c=await r.json();applyConfig(c);}}catch(e){}}
+function applyConfig(cfg){
+    const el=document.getElementById('overlay');
+    el.className=cfg.template||'minimal';
+    const bt=cfg.background_type||'gradient';
+    if(bt==='solid')el.style.background=cfg.bg_color||'#0a0a1a';
+    else el.style.background=`linear-gradient(${cfg.bg_gradient_angle||135}deg,${cfg.bg_gradient_from||'#0a0a1a'},${cfg.bg_gradient_to||'#001a1a'})`;
+    el.style.setProperty('--accent',cfg.accent_color||'#00ccff');
+    el.style.setProperty('--text1',cfg.text_primary||'#fff');
+    el.style.setProperty('--text2',cfg.text_secondary||'#88ccff');
+    applyFontConfig(cfg, el);
+    applyAnimationClass(cfg, el);
+    document.getElementById('sceneTitle').textContent=cfg.title||'Stream Schedule';
+    document.getElementById('sceneSubtitle').textContent=cfg.subtitle||'All times are in your local timezone';
+    const li=document.getElementById('logoImg');if(cfg.logo_url){li.src=cfg.logo_url;li.classList.add('visible');}else li.classList.remove('visible');
+    applyTextEffect(cfg, el); applyLogoEffect(cfg, el); applyBackgroundEffect(cfg); applyBranding(cfg);
+    // Render schedule
+    const grid=document.getElementById('scheduleGrid');grid.innerHTML='';
+    const sched=cfg.schedule||[];
+    sched.forEach(day=>{
+        const d=document.createElement('div');
+        d.className='schedule-day '+(day.enabled?'enabled':'disabled');
+        d.innerHTML=`<div class="day-name">${day.day.slice(0,3).toUpperCase()}</div>`+
+            (day.enabled&&day.time?`<div class="day-time">${day.time}</div>`:`<div class="day-off">OFF</div>`)+
+            (day.enabled&&day.game?`<div class="day-game">${day.game}</div>`:'');
+        grid.appendChild(d);
+    });
+    let s=document.getElementById('custom-style');if(!s){s=document.createElement('style');s.id='custom-style';document.head.appendChild(s);}s.textContent=cfg.custom_css||'';
+    applyVisualFX(cfg, el);
+    applyClock(cfg);
+    applyGoalBar(cfg);
+    applyViewerQueue(cfg);
+    if(cfg.show_alerts)initSceneAlerts(DISCORD_USER_ID,cfg.scene_alert_position);
+}
+function connectSSE(){const es=new EventSource('/overlays/source/'+SCENE_ID+'/events');es.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='update')applyConfig(m.config);};es.onerror=()=>{es.close();setTimeout(connectSSE,3000);};}
+loadConfig().then(()=>connectSSE());
+</script>
+</body></html>

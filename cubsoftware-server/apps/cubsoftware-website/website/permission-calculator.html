@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Discord Permission Calculator | CUB SOFTWARE</title>
+    <meta name="description" content="Calculate Discord permission integers visually. Toggle permissions, use presets, and generate bot invite links instantly.">
+    <meta name="keywords" content="discord permission calculator, discord permissions, permission integer, discord bot invite, discord permissions calculator">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/permission-calculator">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Discord Permission Calculator | CUB SOFTWARE">
+    <meta property="og:description" content="Calculate Discord permission integers visually. Toggle permissions, use presets, and generate bot invite links instantly.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/permission-calculator">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/permission-calculator.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="pc-container">
+            <div class="pc-header">
+                <h1>Discord Permission Calculator</h1>
+                <p>Toggle permissions to calculate the integer value, or paste a value to decode it. Generate bot invite links with the exact permissions you need.</p>
+            </div>
+
+            <!-- Value Box -->
+            <div class="pc-value-box">
+                <div class="pc-value-label">Permission Value</div>
+                <div class="pc-value-row">
+                    <input type="text" id="permValue" class="pc-value-input" value="0" placeholder="0" oninput="applyValue(this.value)">
+                    <button class="action-btn" onclick="copyValue()">Copy</button>
+                    <button class="action-btn secondary" onclick="clearAll()">Clear All</button>
+                    <button class="action-btn secondary" id="inviteBtn" onclick="generateInvite()">Generate Invite Link</button>
+                </div>
+                <div class="pc-value-counts">
+                    <span id="permCount">0 permissions selected</span>
+                    <span class="pc-hex-display" id="hexDisplay">0x0</span>
+                </div>
+            </div>
+
+            <!-- Presets -->
+            <div class="pc-presets">
+                <span class="pc-presets-label">Presets:</span>
+                <button class="preset-btn" onclick="applyPreset('bot')">Bot (Recommended)</button>
+                <button class="preset-btn" onclick="applyPreset('mod')">Moderator</button>
+                <button class="preset-btn" onclick="applyPreset('readOnly')">View Only</button>
+                <button class="preset-btn danger" onclick="applyPreset('admin')">⚠ Administrator</button>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="pc-category-tabs">
+                <button class="cat-tab active" data-cat="all" onclick="filterCat('all', this)">All</button>
+                <button class="cat-tab" data-cat="general" onclick="filterCat('general', this)">General</button>
+                <button class="cat-tab" data-cat="text" onclick="filterCat('text', this)">Text Channel</button>
+                <button class="cat-tab" data-cat="voice" onclick="filterCat('voice', this)">Voice Channel</button>
+            </div>
+
+            <!-- Grid -->
+            <div class="pc-grid" id="permGrid"></div>
+
+            <!-- Invite Modal -->
+            <div class="pc-invite-modal" id="inviteModal" style="display:none">
+                <div class="pc-invite-content">
+                    <h3>Bot Invite Link</h3>
+                    <p class="pc-invite-note">Enter your bot's Client ID to generate the invite link with the selected permissions.</p>
+                    <div class="pc-invite-row">
+                        <input type="text" id="clientIdInput" placeholder="Bot Client ID (e.g. 1044032842352574554)">
+                        <button class="action-btn" onclick="openInvite()">Open Link</button>
+                    </div>
+                    <div class="pc-invite-link-row">
+                        <input type="text" id="inviteLinkOutput" readonly placeholder="Link will appear here...">
+                        <button class="action-btn secondary" onclick="copyInviteLink()">Copy</button>
+                    </div>
+                    <button class="action-btn secondary" style="margin-top:8px;width:100%" onclick="closeInvite()">Close</button>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <script src="/static/js/permission-calculator.js?v={{ v }}"></script>
+</body>
+</html>

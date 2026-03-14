@@ -1,0 +1,20 @@
+[Unit]
+Description=CUB SOFTWARE Web Application
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/cubsoftware
+Environment="PATH=/var/www/cubsoftware/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/var/www/cubsoftware/venv/bin/gunicorn --config gunicorn_config.py main:app
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

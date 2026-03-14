@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>World Clock - Multiple Time Zones | Free</title>
+
+    <meta name="description" content="View current time across multiple time zones. Add cities, compare times, and plan meetings across the globe.">
+    <meta name="keywords" content="world clock, time zones, international time, city time, timezone converter">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/world-clock.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="clock-container">
+            <div class="clock-header">
+                <h1>World Clock</h1>
+                <p>Current time across multiple time zones</p>
+            </div>
+
+            <div class="local-time-card">
+                <div class="local-label">Your Local Time</div>
+                <div class="local-time" id="localTime">00:00:00</div>
+                <div class="local-date" id="localDate">Loading...</div>
+                <div class="local-timezone" id="localTimezone">--</div>
+            </div>
+
+            <div class="add-clock-section">
+                <select id="timezoneSelect">
+                    <option value="">Add a city...</option>
+                    <optgroup label="North America">
+                        <option value="America/New_York">New York (EST/EDT)</option>
+                        <option value="America/Chicago">Chicago (CST/CDT)</option>
+                        <option value="America/Denver">Denver (MST/MDT)</option>
+                        <option value="America/Los_Angeles">Los Angeles (PST/PDT)</option>
+                        <option value="America/Toronto">Toronto (EST/EDT)</option>
+                        <option value="America/Vancouver">Vancouver (PST/PDT)</option>
+                        <option value="America/Mexico_City">Mexico City (CST)</option>
+                    </optgroup>
+                    <optgroup label="Europe">
+                        <option value="Europe/London">London (GMT/BST)</option>
+                        <option value="Europe/Paris">Paris (CET/CEST)</option>
+                        <option value="Europe/Berlin">Berlin (CET/CEST)</option>
+                        <option value="Europe/Rome">Rome (CET/CEST)</option>
+                        <option value="Europe/Madrid">Madrid (CET/CEST)</option>
+                        <option value="Europe/Amsterdam">Amsterdam (CET/CEST)</option>
+                        <option value="Europe/Moscow">Moscow (MSK)</option>
+                    </optgroup>
+                    <optgroup label="Asia">
+                        <option value="Asia/Tokyo">Tokyo (JST)</option>
+                        <option value="Asia/Shanghai">Shanghai (CST)</option>
+                        <option value="Asia/Hong_Kong">Hong Kong (HKT)</option>
+                        <option value="Asia/Singapore">Singapore (SGT)</option>
+                        <option value="Asia/Seoul">Seoul (KST)</option>
+                        <option value="Asia/Dubai">Dubai (GST)</option>
+                        <option value="Asia/Kolkata">Mumbai (IST)</option>
+                        <option value="Asia/Bangkok">Bangkok (ICT)</option>
+                    </optgroup>
+                    <optgroup label="Oceania">
+                        <option value="Australia/Sydney">Sydney (AEST/AEDT)</option>
+                        <option value="Australia/Melbourne">Melbourne (AEST/AEDT)</option>
+                        <option value="Australia/Perth">Perth (AWST)</option>
+                        <option value="Pacific/Auckland">Auckland (NZST/NZDT)</option>
+                        <option value="Pacific/Fiji">Fiji (FJT)</option>
+                    </optgroup>
+                    <optgroup label="South America">
+                        <option value="America/Sao_Paulo">Sao Paulo (BRT)</option>
+                        <option value="America/Buenos_Aires">Buenos Aires (ART)</option>
+                        <option value="America/Lima">Lima (PET)</option>
+                        <option value="America/Bogota">Bogota (COT)</option>
+                    </optgroup>
+                    <optgroup label="Africa">
+                        <option value="Africa/Cairo">Cairo (EET)</option>
+                        <option value="Africa/Johannesburg">Johannesburg (SAST)</option>
+                        <option value="Africa/Lagos">Lagos (WAT)</option>
+                        <option value="Africa/Nairobi">Nairobi (EAT)</option>
+                    </optgroup>
+                </select>
+                <button class="add-btn" id="addClockBtn">Add Clock</button>
+            </div>
+
+            <div class="clocks-grid" id="clocksGrid"></div>
+
+            <div class="meeting-planner">
+                <h2>Meeting Planner</h2>
+                <p class="planner-desc">Select a time to see it across all your saved time zones</p>
+                <div class="planner-inputs">
+                    <input type="date" id="plannerDate">
+                    <input type="time" id="plannerTime" value="09:00">
+                    <select id="plannerTimezone"></select>
+                </div>
+                <div class="planner-results" id="plannerResults"></div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <script src="/static/js/world-clock.js?v={{ v }}"></script>
+</body>
+</html>

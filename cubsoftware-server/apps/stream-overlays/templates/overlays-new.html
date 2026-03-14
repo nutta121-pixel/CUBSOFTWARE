@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Scene | Stream Overlays | CUB SOFTWARE</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/overlays/static/css/overlays-new.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="ov-new-page">
+            <div class="ov-new-header">
+                <a href="/overlays" class="ov-back-link">← Back to Dashboard</a>
+                <h1>Choose a Scene Type</h1>
+                <p>Pick the type of overlay you want to create. You can customise everything — colours, fonts, animations — in the editor.</p>
+            </div>
+
+            <!-- Type filter tabs -->
+            <div class="ov-type-tabs">
+                <button class="ov-tab active" data-filter="all">All</button>
+                <button class="ov-tab" data-filter="stream">Stream Screens</button>
+                <button class="ov-tab" data-filter="alerts">Alerts & Events</button>
+                <button class="ov-tab" data-filter="info">Info Screens</button>
+                <button class="ov-tab" data-filter="tools">Streamer Tools</button>
+            </div>
+
+            <!-- Scene type cards -->
+            <div class="ov-types-grid">
+
+                <div class="ov-type-card" data-category="stream" data-type="starting-soon">
+                    <div class="ov-type-preview" style="background: linear-gradient(135deg, #0a0a1a, #1a0a2e)">
+                        <div class="ov-type-preview-content" style="color:#fff;font-family:Orbitron,sans-serif">
+                            <div style="font-size:11px;opacity:.6;margin-bottom:4px">STARTING SOON</div>
+                            <div style="font-size:16px;font-weight:700">Stream begins shortly</div>
+                            <div style="font-size:22px;color:#7c3aed;margin-top:6px">00:05:00</div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Starting Soon</div>
+                        <div class="ov-type-desc">Animated countdown screen shown before your stream starts. Includes live countdown timer, social links, and particles.</div>
+                        <div class="ov-type-tags">
+                            <span>Countdown</span><span>Particles</span><span>Social Links</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="stream" data-type="brb">
+                    <div class="ov-type-preview" style="background: linear-gradient(135deg, #0d0d1a, #1a0d2e)">
+                        <div class="ov-type-preview-content" style="color:#fff;font-family:Orbitron,sans-serif">
+                            <div style="font-size:16px;font-weight:700">Be Right Back</div>
+                            <div style="font-size:10px;opacity:.6;margin-top:4px">Taking a short break...</div>
+                            <div style="width:60%;height:2px;background:#5865f2;margin:8px auto;border-radius:1px"></div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Be Right Back</div>
+                        <div class="ov-type-desc">Shown when you step away. Animated background keeps things moving while you're on a break.</div>
+                        <div class="ov-type-tags">
+                            <span>Animated</span><span>Looping</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="stream" data-type="ending">
+                    <div class="ov-type-preview" style="background: linear-gradient(45deg, #0a1a0a, #0a0a2e)">
+                        <div class="ov-type-preview-content" style="color:#fff;font-family:Orbitron,sans-serif">
+                            <div style="font-size:14px;font-weight:700">Thanks for Watching!</div>
+                            <div style="font-size:10px;color:#00cc66;margin-top:4px">Follow for more</div>
+                            <div style="display:flex;gap:4px;justify-content:center;margin-top:6px">
+                                <span style="width:20px;height:20px;background:#00cc6633;border-radius:50%;border:1px solid #00cc66"></span>
+                                <span style="width:20px;height:20px;background:#00cc6633;border-radius:50%;border:1px solid #00cc66"></span>
+                                <span style="width:20px;height:20px;background:#00cc6633;border-radius:50%;border:1px solid #00cc66"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Ending Screen</div>
+                        <div class="ov-type-desc">Stream closing screen with a thank you message, social links, and a follow/subscribe call to action.</div>
+                        <div class="ov-type-tags">
+                            <span>Social Links</span><span>CTA</span><span>Confetti</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="stream" data-type="live">
+                    <div class="ov-type-preview" style="background:#000">
+                        <div class="ov-type-preview-content" style="color:#fff;font-family:Orbitron,sans-serif">
+                            <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                                <span style="width:8px;height:8px;background:#e91916;border-radius:50%"></span>
+                                <span style="font-size:11px;letter-spacing:3px">LIVE</span>
+                            </div>
+                            <div style="font-size:11px;opacity:.4;margin-top:4px">Just Chatting</div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Just Chatting / Live</div>
+                        <div class="ov-type-desc">Ambient background overlay visible while you're actively streaming. Subtle animation to keep it interesting.</div>
+                        <div class="ov-type-tags">
+                            <span>Ambient</span><span>Background</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="stream" data-type="offline">
+                    <div class="ov-type-preview" style="background: linear-gradient(180deg, #0a0a0a, #1a1a2e)">
+                        <div class="ov-type-preview-content" style="color:#fff;font-family:Orbitron,sans-serif">
+                            <div style="font-size:14px;font-weight:700;opacity:.6">OFFLINE</div>
+                            <div style="font-size:10px;color:#5865f2;margin-top:4px">Next stream: Saturday</div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Offline Screen</div>
+                        <div class="ov-type-desc">Shown when your channel is offline. Display your next stream date and social links for new visitors.</div>
+                        <div class="ov-type-tags">
+                            <span>Schedule</span><span>Social</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="stream" data-type="intermission">
+                    <div class="ov-type-preview" style="background: linear-gradient(90deg, #0a0a1a, #1a0a0a)">
+                        <div class="ov-type-preview-content" style="color:#fff;font-family:Orbitron,sans-serif">
+                            <div style="font-size:12px;font-weight:700">INTERMISSION</div>
+                            <div style="font-size:9px;color:#ff9900;margin-top:3px">Taking a break between games</div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Intermission</div>
+                        <div class="ov-type-desc">Shown between games or sections of your stream. Optional break timer and game title display.</div>
+                        <div class="ov-type-tags">
+                            <span>Timer</span><span>Game Title</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="stream" data-type="tech-difficulties">
+                    <div class="ov-type-preview" style="background:#0a0000">
+                        <div class="ov-type-preview-content" style="color:#ff6666;font-family:'Share Tech Mono',monospace">
+                            <div style="font-size:11px;font-weight:700">TECHNICAL DIFFICULTIES</div>
+                            <div style="font-size:8px;opacity:.6;margin-top:3px">ERR_STREAM_OFFLINE</div>
+                            <div style="width:80%;height:1px;background:#ff333366;margin:6px auto"></div>
+                            <div style="font-size:8px;opacity:.5">Please stand by...</div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Tech Difficulties</div>
+                        <div class="ov-type-desc">Error-screen aesthetic for when things go wrong. Optional glitch animation and custom error message.</div>
+                        <div class="ov-type-tags">
+                            <span>Glitch FX</span><span>Error Screen</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="stream" data-type="raid">
+                    <div class="ov-type-preview" style="background: linear-gradient(45deg, #2a0a00, #0a001a)">
+                        <div class="ov-type-preview-content" style="color:#fff;font-family:Orbitron,sans-serif">
+                            <div style="font-size:18px;font-weight:900;color:#ff6600">RAID!</div>
+                            <div style="font-size:9px;opacity:.7;margin-top:2px">Thanks for the raid!</div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Raid Screen</div>
+                        <div class="ov-type-desc">Full-screen raid celebration with bold text and particle effects. Trigger manually or via Twitch Alerts.</div>
+                        <div class="ov-type-tags">
+                            <span>Animated</span><span>Particles</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="info" data-type="subathon">
+                    <div class="ov-type-preview" style="background: linear-gradient(135deg, #0a0a1a, #1a0030)">
+                        <div class="ov-type-preview-content" style="color:#fff;font-family:Orbitron,sans-serif">
+                            <div style="font-size:11px;font-weight:700">SUBATHON</div>
+                            <div style="width:80%;height:8px;background:rgba(153,69,255,.2);border-radius:4px;margin:6px auto;overflow:hidden">
+                                <div style="width:60%;height:100%;background:#9945ff;border-radius:4px"></div>
+                            </div>
+                            <div style="font-size:9px;color:#cc99ff">60 / 100 Subs</div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Subathon / Goal Tracker</div>
+                        <div class="ov-type-desc">Animated progress bar towards a subscription or donation goal. Update the numbers in the editor any time.</div>
+                        <div class="ov-type-tags">
+                            <span>Progress Bar</span><span>Goal</span><span>Animated</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="info" data-type="schedule">
+                    <div class="ov-type-preview" style="background: linear-gradient(135deg, #0a0a1a, #001a1a)">
+                        <div class="ov-type-preview-content" style="color:#fff;font-family:Orbitron,sans-serif">
+                            <div style="font-size:10px;font-weight:700;color:#00ccff;margin-bottom:4px">SCHEDULE</div>
+                            <div style="font-size:8px;opacity:.7;text-align:left;width:80%;margin:0 auto">
+                                <div style="padding:2px 0;border-bottom:1px solid rgba(0,204,255,.2)">SAT • 7PM • Just Chatting</div>
+                                <div style="padding:2px 0;border-bottom:1px solid rgba(0,204,255,.2)">SUN • 8PM • Gaming</div>
+                                <div style="padding:2px 0;opacity:.4">MON • OFF</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Stream Schedule</div>
+                        <div class="ov-type-desc">Weekly schedule display for your channel. Customise each day with a time, game, or status.</div>
+                        <div class="ov-type-tags">
+                            <span>Weekly</span><span>Days</span><span>Times</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="alerts" data-type="alerts">
+                    <div class="ov-type-preview" style="background:transparent;border:1px dashed #7c3aed44">
+                        <div class="ov-type-preview-content">
+                            <div class="ov-alert-demo-card" style="background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.4);border-radius:8px;padding:8px 12px;text-align:left;width:90%;margin:0 auto">
+                                <div style="font-size:9px;color:#7c3aed;font-weight:700;font-family:Orbitron,sans-serif">NEW SUBSCRIBER</div>
+                                <div style="font-size:11px;color:#fff;margin-top:2px;font-family:Poppins,sans-serif">StreamFan42 just subscribed!</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Twitch Alerts Overlay</div>
+                        <div class="ov-type-desc">Pop-up alerts for follows, subs, bits, raids, and channel point redemptions. Requires Twitch connection.</div>
+                        <div class="ov-type-tags">
+                            <span>Twitch</span><span>Pop-up Alerts</span><span>Live Events</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="tools" data-type="chat-box">
+                    <div class="ov-type-preview" style="background:rgba(10,10,26,0.95);border:1px dashed #9146ff44">
+                        <div class="ov-type-preview-content" style="text-align:left;padding:4px">
+                            <div style="font-size:9px;color:#9146ff;font-weight:700;font-family:Poppins,sans-serif;margin-bottom:3px">StreamerName</div>
+                            <div style="font-size:8px;color:#ccc;font-family:Poppins,sans-serif;margin-bottom:3px">Hello chat! PogChamp</div>
+                            <div style="font-size:9px;color:#00cc66;font-weight:700;font-family:Poppins,sans-serif;margin-bottom:3px">ViewerFan42</div>
+                            <div style="font-size:8px;color:#ccc;font-family:Poppins,sans-serif">Let's go!! 🎉</div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Chat Box</div>
+                        <div class="ov-type-desc">Styled Twitch chat displayed on stream. Shows live messages with username colours, badges, and animations.</div>
+                        <div class="ov-type-tags">
+                            <span>Twitch</span><span>Live Chat</span><span>Real-time</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="tools" data-type="event-list">
+                    <div class="ov-type-preview" style="background:rgba(10,10,26,0.95)">
+                        <div class="ov-type-preview-content" style="text-align:left;padding:4px">
+                            <div style="font-size:8px;color:#7c3aed;letter-spacing:2px;font-family:Orbitron,sans-serif;margin-bottom:4px">RECENT EVENTS</div>
+                            <div style="font-size:8px;color:#fff;border-left:2px solid #00cc66;padding-left:4px;margin-bottom:3px">♥ NewFollower123</div>
+                            <div style="font-size:8px;color:#fff;border-left:2px solid #9945ff;padding-left:4px;margin-bottom:3px">★ SubGuy99</div>
+                            <div style="font-size:8px;color:#fff;border-left:2px solid #ff6600;padding-left:4px">⚔ RaidLeader · 42</div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Event List</div>
+                        <div class="ov-type-desc">Scrolling feed of follows, subs, raids and bits. Updates live as events come in from Twitch.</div>
+                        <div class="ov-type-tags">
+                            <span>Twitch</span><span>Live Events</span><span>Feed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="tools" data-type="leaderboard">
+                    <div class="ov-type-preview" style="background:rgba(10,10,26,0.95)">
+                        <div class="ov-type-preview-content" style="text-align:left;padding:4px">
+                            <div style="font-size:8px;color:#ffcc00;letter-spacing:2px;font-family:Orbitron,sans-serif;margin-bottom:4px">TOP CHEERERS</div>
+                            <div style="font-size:8px;color:#fff;margin-bottom:2px">🥇 <span style="color:#ffd700">TopCheerGuy</span> <span style="color:#ffcc00;float:right">5000 bits</span></div>
+                            <div style="font-size:8px;color:#fff;margin-bottom:2px">🥈 <span style="color:#c0c0c0">BitsMaster</span> <span style="color:#ffcc00;float:right">3200 bits</span></div>
+                            <div style="font-size:8px;color:#fff">🥉 <span style="color:#cd7f32">CheerFan</span> <span style="color:#ffcc00;float:right">1500 bits</span></div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Leaderboard</div>
+                        <div class="ov-type-desc">Top cheerers and gifters on your channel. Pulls live data from Twitch API with customisable period.</div>
+                        <div class="ov-type-tags">
+                            <span>Twitch</span><span>Leaderboard</span><span>Bits</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="tools" data-type="hype-train">
+                    <div class="ov-type-preview" style="background:rgba(10,10,26,0.95)">
+                        <div class="ov-type-preview-content" style="font-family:Orbitron,sans-serif">
+                            <div style="font-size:11px;font-weight:900;color:#fff;margin-bottom:4px">🚂 HYPE TRAIN!</div>
+                            <div style="font-size:8px;color:#ff6600;margin-bottom:6px">LVL 2</div>
+                            <div style="width:80%;height:6px;background:rgba(255,102,0,.2);border-radius:3px;margin:0 auto;overflow:hidden">
+                                <div style="width:65%;height:100%;background:linear-gradient(90deg,#ff6600,#ffcc00);border-radius:3px"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Hype Train</div>
+                        <div class="ov-type-desc">Animated progress bar for Twitch hype trains. Appears automatically when a hype train starts.</div>
+                        <div class="ov-type-tags">
+                            <span>Twitch</span><span>Hype Train</span><span>Auto-show</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="tools" data-type="poll-display">
+                    <div class="ov-type-preview" style="background:rgba(10,10,26,0.95)">
+                        <div class="ov-type-preview-content" style="text-align:left;padding:4px">
+                            <div style="font-size:8px;color:#7c3aed;letter-spacing:2px;font-family:Orbitron,sans-serif;margin-bottom:4px">📊 POLL</div>
+                            <div style="font-size:8px;color:#fff;margin-bottom:4px;font-family:Orbitron,sans-serif">Best game genre?</div>
+                            <div style="margin-bottom:3px">
+                                <div style="font-size:7px;color:#ccc;margin-bottom:1px">RPG <span style="float:right;color:#7c3aed">45%</span></div>
+                                <div style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden"><div style="width:45%;height:100%;background:#7c3aed"></div></div>
+                            </div>
+                            <div style="margin-bottom:3px">
+                                <div style="font-size:7px;color:#ccc;margin-bottom:1px">FPS <span style="float:right;color:#00cc66">35%</span></div>
+                                <div style="height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden"><div style="width:35%;height:100%;background:#00cc66"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Poll Display</div>
+                        <div class="ov-type-desc">Show active Twitch polls live on stream with real-time vote percentages and bar charts.</div>
+                        <div class="ov-type-tags">
+                            <span>Twitch</span><span>Polls</span><span>Auto-show</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="stream" data-type="emote-wall">
+                    <div class="ov-type-preview" style="background:#000;overflow:hidden;">
+                        <div class="ov-type-preview-content" style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-items:center">
+                            <span style="font-size:22px">😂</span><span style="font-size:18px">🔥</span><span style="font-size:24px">👾</span>
+                            <span style="font-size:16px">⭐</span><span style="font-size:20px">🎉</span><span style="font-size:22px">💜</span>
+                            <span style="font-size:18px">🚀</span><span style="font-size:20px">😎</span>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Emote Wall</div>
+                        <div class="ov-type-desc">Twitch emotes from chat float and fly across the screen in real time. Perfect for hype moments and sub trains.</div>
+                        <div class="ov-type-tags">
+                            <span>Twitch</span><span>Live Chat</span><span>Animated</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="stream" data-type="credits-roll">
+                    <div class="ov-type-preview" style="background: linear-gradient(135deg, #0a0a1a, #1a0a2e); overflow: hidden;">
+                        <div class="ov-type-preview-content" style="color:#fff;font-family:Orbitron,sans-serif;display:flex;flex-direction:column;gap:4px;transform:translateY(-6px)">
+                            <div style="font-size:14px;font-weight:900;color:#7c3aed;letter-spacing:3px">THANK YOU!</div>
+                            <div style="font-size:7px;color:#a0a0c0;letter-spacing:2px;text-transform:uppercase">Moderators</div>
+                            <div style="font-size:9px;color:#fff">CoolMod · AmazingMod</div>
+                            <div style="font-size:7px;color:#a0a0c0;letter-spacing:2px;text-transform:uppercase;margin-top:2px">Subscribers</div>
+                            <div style="font-size:9px;color:#fff">Fan123 · StreamLover</div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Credits Roll</div>
+                        <div class="ov-type-desc">Movie-style end credits scrolling upward. Thank your mods, subs, followers, raiders, and active chat at the end of every stream.</div>
+                        <div class="ov-type-tags">
+                            <span>Scrolling</span><span>End Screen</span><span>Thank You</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="stream" data-type="cam-frame">
+                    <div class="ov-type-preview" style="background:#000;position:relative;overflow:hidden;">
+                        <div class="ov-type-preview-content" style="padding:0;position:relative;width:100%;height:100%">
+                            <!-- corners -->
+                            <div style="position:absolute;top:6px;left:6px;width:16px;height:16px;border-top:2px solid #fff;border-left:2px solid #fff"></div>
+                            <div style="position:absolute;top:6px;right:6px;width:16px;height:16px;border-top:2px solid #fff;border-right:2px solid #fff"></div>
+                            <div style="position:absolute;bottom:6px;left:6px;width:16px;height:16px;border-bottom:2px solid #fff;border-left:2px solid #fff"></div>
+                            <div style="position:absolute;bottom:6px;right:6px;width:16px;height:16px;border-bottom:2px solid #fff;border-right:2px solid #fff"></div>
+                            <!-- REC -->
+                            <div style="position:absolute;top:10px;left:24px;font-family:monospace;font-size:8px;color:#fff;display:flex;align-items:center;gap:4px;letter-spacing:2px">REC <span style="width:6px;height:6px;border-radius:50%;background:#ff2020;display:inline-block"></span></div>
+                            <!-- Timecode -->
+                            <div style="position:absolute;top:10px;right:24px;font-family:monospace;font-size:7px;color:#fff;letter-spacing:1px;opacity:.85">00:04:32</div>
+                            <!-- Label -->
+                            <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-family:monospace;font-size:7px;color:#fff;letter-spacing:3px;white-space:nowrap">HEXECHOTV'S CAMERA</div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Camera Frame</div>
+                        <div class="ov-type-desc">A transparent camcorder overlay with REC indicator, timecode, battery, crosshair, effects and more. Sits on top of your webcam in OBS.</div>
+                        <div class="ov-type-tags">
+                            <span>Transparent</span><span>Overlay</span><span>Camera</span><span>Animated</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="stream" data-type="news-ticker">
+                    <div class="ov-type-preview" style="background:#0a0a14;position:relative;overflow:hidden;">
+                        <div class="ov-type-preview-content" style="padding:0;position:relative;width:100%;height:100%">
+                            <!-- Top bar -->
+                            <div style="position:absolute;top:0;left:0;right:0;height:18px;background:#cc0000;display:flex;align-items:center;justify-content:space-between;padding:0 6px">
+                                <span style="font-family:Orbitron,sans-serif;font-size:7px;color:#fff;letter-spacing:2px;font-weight:700">STREAM NEWS</span>
+                                <span style="font-family:monospace;font-size:7px;color:#fff;opacity:.9">12:34:56</span>
+                            </div>
+                            <!-- Breaking banner -->
+                            <div style="position:absolute;top:20px;left:0;right:0;height:16px;background:#1a1a2e;display:flex;align-items:center;gap:4px;padding:0 6px">
+                                <span style="background:#cc0000;color:#fff;font-family:Orbitron,sans-serif;font-size:6px;font-weight:700;padding:1px 4px;letter-spacing:1px">BREAKING</span>
+                                <span style="color:#fff;font-family:Poppins,sans-serif;font-size:7px;opacity:.9">Streamer hits record viewers tonight</span>
+                            </div>
+                            <!-- Chyron -->
+                            <div style="position:absolute;bottom:18px;left:0;right:0;height:18px;background:rgba(26,26,46,.9);display:flex;align-items:center;gap:4px;padding:0 6px">
+                                <span style="background:#cc0000;color:#fff;font-family:Orbitron,sans-serif;font-size:6px;font-weight:700;padding:1px 4px">LIVE</span>
+                                <span style="color:#fff;font-family:Poppins,sans-serif;font-size:7px">Stream is live now</span>
+                            </div>
+                            <!-- Ticker -->
+                            <div style="position:absolute;bottom:0;left:0;right:0;height:16px;background:#cc0000;display:flex;align-items:center;overflow:hidden">
+                                <span style="color:#fff;font-family:Poppins,sans-serif;font-size:7px;padding-left:6px;white-space:nowrap">◆ New world record set ◆ Chat voting on next game ◆ Special giveaway announced</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">News Ticker</div>
+                        <div class="ov-type-desc">Professional news broadcast overlay with scrolling ticker, breaking news banner, chyron lower-third, and transparent centre for your cam or game feed.</div>
+                        <div class="ov-type-tags">
+                            <span>Transparent</span><span>Ticker</span><span>Broadcast</span><span>Lower Third</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ov-type-card" data-category="tools" data-type="prediction">
+                    <div class="ov-type-preview" style="background:rgba(10,10,26,0.95)">
+                        <div class="ov-type-preview-content" style="text-align:left;padding:4px">
+                            <div style="font-size:8px;color:#9146ff;letter-spacing:2px;font-family:Orbitron,sans-serif;margin-bottom:4px">🔮 PREDICTION</div>
+                            <div style="font-size:7px;color:#fff;margin-bottom:4px;font-family:Orbitron,sans-serif">Will we beat the boss?</div>
+                            <div style="margin-bottom:3px;background:rgba(0,204,102,.1);border-left:3px solid #00cc66;padding:3px 5px;border-radius:4px">
+                                <div style="font-size:7px;color:#fff">YES <span style="float:right;color:#00cc66">62%</span></div>
+                            </div>
+                            <div style="background:rgba(255,51,102,.1);border-left:3px solid #ff3366;padding:3px 5px;border-radius:4px">
+                                <div style="font-size:7px;color:#fff">NO <span style="float:right;color:#ff3366">38%</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ov-type-card-body">
+                        <div class="ov-type-title">Prediction</div>
+                        <div class="ov-type-desc">Live Twitch prediction outcomes and percentages. Shows automatically when predictions are active.</div>
+                        <div class="ov-type-tags">
+                            <span>Twitch</span><span>Predictions</span><span>Auto-show</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Template style picker (shown after type is selected) -->
+            <div class="ov-template-picker" id="templatePicker" style="display:none">
+                <h2>Choose a Visual Style</h2>
+                <p>All styles are fully customisable in the editor.</p>
+                <div class="ov-templates-grid">
+
+                    <div class="ov-tmpl-card" data-template="minimal">
+                        <div class="ov-tmpl-preview minimal-preview">
+                            <span>Minimal</span>
+                        </div>
+                        <div class="ov-tmpl-label">Minimal</div>
+                        <div class="ov-tmpl-desc">Clean, dark, text-focused. Timeless.</div>
+                    </div>
+
+                    <div class="ov-tmpl-card" data-template="neon">
+                        <div class="ov-tmpl-preview neon-preview">
+                            <span>NEON</span>
+                        </div>
+                        <div class="ov-tmpl-label">Neon / Cyberpunk</div>
+                        <div class="ov-tmpl-desc">Glowing borders, grid lines, electric accents.</div>
+                    </div>
+
+                    <div class="ov-tmpl-card" data-template="retro">
+                        <div class="ov-tmpl-preview retro-preview">
+                            <span>RETRO</span>
+                        </div>
+                        <div class="ov-tmpl-label">Retro</div>
+                        <div class="ov-tmpl-desc">CRT scanlines, pixelated fonts, nostalgia.</div>
+                    </div>
+
+                    <div class="ov-tmpl-card" data-template="cozy">
+                        <div class="ov-tmpl-preview cozy-preview">
+                            <span>Cozy</span>
+                        </div>
+                        <div class="ov-tmpl-label">Cozy</div>
+                        <div class="ov-tmpl-desc">Warm tones, soft glow, rounded edges.</div>
+                    </div>
+
+                    <div class="ov-tmpl-card" data-template="gradient">
+                        <div class="ov-tmpl-preview gradient-preview">
+                            <span>Gradient</span>
+                        </div>
+                        <div class="ov-tmpl-label">Gradient</div>
+                        <div class="ov-tmpl-desc">Flowing animated gradient backgrounds.</div>
+                    </div>
+
+                    <div class="ov-tmpl-card" data-template="gaming">
+                        <div class="ov-tmpl-preview gaming-preview">
+                            <span>GAMING</span>
+                        </div>
+                        <div class="ov-tmpl-label">Gaming</div>
+                        <div class="ov-tmpl-desc">Dark, intense, high-contrast. Built for gamers.</div>
+                    </div>
+
+                    <div class="ov-tmpl-card" data-template="lofi">
+                        <div class="ov-tmpl-preview lofi-preview">
+                            <span>lo-fi</span>
+                        </div>
+                        <div class="ov-tmpl-label">Lo-Fi</div>
+                        <div class="ov-tmpl-desc">Warm, chill aesthetic. Perfect for study streams and relaxed vibes.</div>
+                    </div>
+
+                    <div class="ov-tmpl-card" data-template="esports">
+                        <div class="ov-tmpl-preview esports-preview">
+                            <span>ESPORTS</span>
+                        </div>
+                        <div class="ov-tmpl-label">Esports / HUD</div>
+                        <div class="ov-tmpl-desc">Cyan accents, sharp lines, competitive HUD aesthetic.</div>
+                    </div>
+
+                    <div class="ov-tmpl-card" data-template="vaporwave">
+                        <div class="ov-tmpl-preview vaporwave-preview">
+                            <span>VAPORWAVE</span>
+                        </div>
+                        <div class="ov-tmpl-label">Vaporwave</div>
+                        <div class="ov-tmpl-desc">Purple-pink gradients, retro grid, nostalgic 80s vibes.</div>
+                    </div>
+
+                    <div class="ov-tmpl-card" data-template="glass">
+                        <div class="ov-tmpl-preview glass-preview">
+                            <span>Glass</span>
+                        </div>
+                        <div class="ov-tmpl-label">Glass</div>
+                        <div class="ov-tmpl-desc">Frosted glass panels, soft blur, elegant and modern.</div>
+                    </div>
+
+                    <div class="ov-tmpl-card" data-template="cinematic">
+                        <div class="ov-tmpl-preview cinematic-preview">
+                            <span>CINEMATIC</span>
+                        </div>
+                        <div class="ov-tmpl-label">Cinematic</div>
+                        <div class="ov-tmpl-desc">Gold letterbox bars, dramatic black, film-style presentation.</div>
+                    </div>
+
+                    <div class="ov-tmpl-card" data-template="broadcast">
+                        <div class="ov-tmpl-preview broadcast-preview">
+                            <span>BROADCAST</span>
+                        </div>
+                        <div class="ov-tmpl-label">Broadcast</div>
+                        <div class="ov-tmpl-desc">Professional news-style layout with a strong purple accent bar.</div>
+                    </div>
+
+                </div>
+                <div class="ov-create-row">
+                    <input type="text" id="sceneName" class="ov-scene-name-input" placeholder="Scene name (e.g. Starting Soon — Neon)" maxlength="100">
+                    <button class="ov-btn-create" id="createBtn" disabled>Create Scene →</button>
+                </div>
+            </div>
+
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <script src="/overlays/static/js/overlays-new.js?v={{ v }}"></script>
+</body>
+</html>

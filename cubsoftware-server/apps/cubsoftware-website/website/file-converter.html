@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Image Converter - PNG, JPG, WebP, GIF Batch Convert | Free Online</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Convert 100 images at once. PNG to JPG, WebP to PNG, any format to any format. Resize while converting. Batch download as ZIP. Fast, free, no limits.">
+    <meta name="keywords" content="image converter online, png to jpg free, webp converter, batch image convert, bulk photo converter, convert images free">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/file-converter">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Image Converter - Batch Convert Any Format | Free & Unlimited">
+    <meta property="og:description" content="Drag, drop, done. Convert PNG, JPG, WebP, GIF, BMP - any direction. Batch convert hundreds of images, download as ZIP. No signup, no limits.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/file-converter">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/file-converter.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="converter-container">
+            <div class="converter-header">
+                <h1>File Converter</h1>
+                <p>Convert images between different formats - PNG, JPG, WebP, GIF, BMP</p>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="fileInput" accept="image/*" multiple hidden>
+                    <div class="upload-content">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <h3>Drop images here or click to upload</h3>
+                        <p>Supports PNG, JPG, WebP, GIF, BMP</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversion Options -->
+            <div class="options-section" id="optionsSection">
+                <h3>Conversion Settings</h3>
+                <div class="options-grid">
+                    <div class="option-group">
+                        <label for="outputFormat">Output Format</label>
+                        <select id="outputFormat">
+                            <option value="png">PNG - Lossless, transparent</option>
+                            <option value="jpeg">JPG - Smaller size, no transparency</option>
+                            <option value="webp">WebP - Modern, best compression</option>
+                            <option value="gif">GIF - Animated support</option>
+                            <option value="bmp">BMP - Uncompressed</option>
+                        </select>
+                    </div>
+                    <div class="option-group">
+                        <label for="quality">Quality: <span id="qualityValue">90</span>%</label>
+                        <input type="range" id="quality" min="10" max="100" value="90">
+                    </div>
+                    <div class="option-group">
+                        <label for="resize">Resize</label>
+                        <select id="resize">
+                            <option value="original">Original Size</option>
+                            <option value="50">50% Size</option>
+                            <option value="75">75% Size</option>
+                            <option value="150">150% Size</option>
+                            <option value="200">200% Size</option>
+                            <option value="custom">Custom Size</option>
+                        </select>
+                    </div>
+                    <div class="option-group custom-size" id="customSizeGroup" style="display: none;">
+                        <label>Custom Dimensions</label>
+                        <div class="size-inputs">
+                            <input type="number" id="customWidth" placeholder="Width">
+                            <span>x</span>
+                            <input type="number" id="customHeight" placeholder="Height">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="maintainAspect" checked>
+                                <span class="checkbox-custom">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </span>
+                                Lock Ratio
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files List -->
+            <div class="files-section" id="filesSection">
+                <div class="files-header">
+                    <h3>Files (<span id="fileCount">0</span>)</h3>
+                    <div class="files-actions">
+                        <button class="action-btn" id="clearAllBtn" title="Clear all files">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Clear All
+                        </button>
+                        <button class="convert-btn" id="convertAllBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="16 3 21 3 21 8"></polyline>
+                                <line x1="4" y1="20" x2="21" y2="3"></line>
+                                <polyline points="21 16 21 21 16 21"></polyline>
+                                <line x1="15" y1="15" x2="21" y2="21"></line>
+                                <line x1="4" y1="4" x2="9" y2="9"></line>
+                            </svg>
+                            Convert All
+                        </button>
+                    </div>
+                </div>
+                <div class="files-list" id="filesList"></div>
+            </div>
+
+            <!-- Download Section -->
+            <div class="download-section" id="downloadSection">
+                <h3>Converted Files</h3>
+                <div class="download-list" id="downloadList"></div>
+                <button class="download-all-btn" id="downloadAllBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download All as ZIP
+                </button>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Converted!</div>
+
+    <!-- JSZip for ZIP downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="/static/js/file-converter.js?v={{ v }}"></script>
+</body>
+</html>

@@ -1,0 +1,1777 @@
+[
+  {
+    "options": [
+      {
+        "channel_types": [
+          4
+        ],
+        "name": "category",
+        "description": "Category to create the hub and temp channels in",
+        "required": true,
+        "type": 7
+      },
+      {
+        "type": 3,
+        "name": "name",
+        "description": "Hub channel name (default: \"Join to Create\")",
+        "required": false
+      },
+      {
+        "type": 3,
+        "name": "template",
+        "description": "Temp channel name template. Use {username} and {index} (default: \"🔊・{username}\")",
+        "required": false
+      },
+      {
+        "max_value": 99,
+        "min_value": 0,
+        "type": 4,
+        "name": "user_limit",
+        "description": "Default user limit (0 = unlimited)",
+        "required": false
+      },
+      {
+        "max_value": 384,
+        "min_value": 8,
+        "type": 4,
+        "name": "bitrate",
+        "description": "Default bitrate in kbps",
+        "required": false
+      },
+      {
+        "max_value": 60,
+        "min_value": -1,
+        "type": 4,
+        "name": "keep_alive",
+        "description": "Minutes to keep empty channel (0 = immediate delete, -1 = never delete)",
+        "required": false
+      },
+      {
+        "max_value": 60,
+        "min_value": -1,
+        "type": 4,
+        "name": "ownership_lock",
+        "description": "Minutes before ownership can be claimed (0 = immediate, -1 = never)",
+        "required": false
+      }
+    ],
+    "name": "voice-setup",
+    "description": "Create a temporary voice channel hub",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "channel_types": [
+          2
+        ],
+        "name": "hub",
+        "description": "The hub channel to delete",
+        "required": true,
+        "type": 7
+      }
+    ],
+    "name": "voice-hub-delete",
+    "description": "Delete a temporary voice channel hub",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "channel_types": [
+          2
+        ],
+        "name": "hub",
+        "description": "The hub channel",
+        "required": true,
+        "type": 7
+      },
+      {
+        "type": 3,
+        "name": "template",
+        "description": "Channel name template ({username}, {index})",
+        "required": false
+      },
+      {
+        "max_value": 99,
+        "min_value": 0,
+        "type": 4,
+        "name": "user_limit",
+        "description": "Default user limit (0 = unlimited)",
+        "required": false
+      },
+      {
+        "max_value": 384,
+        "min_value": 8,
+        "type": 4,
+        "name": "bitrate",
+        "description": "Default bitrate in kbps",
+        "required": false
+      },
+      {
+        "max_value": 60,
+        "min_value": -1,
+        "type": 4,
+        "name": "keep_alive",
+        "description": "Minutes to keep empty channel (-1 = never)",
+        "required": false
+      },
+      {
+        "max_value": 60,
+        "min_value": -1,
+        "type": 4,
+        "name": "ownership_lock",
+        "description": "Minutes before ownership claimable (-1 = never)",
+        "required": false
+      }
+    ],
+    "name": "voice-hub-settings",
+    "description": "View or modify hub settings",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "channel_types": [
+          2
+        ],
+        "name": "hub",
+        "description": "The hub channel",
+        "required": true,
+        "type": 7
+      },
+      {
+        "name": "role",
+        "description": "The moderator role",
+        "required": true,
+        "type": 8
+      },
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Add",
+            "value": "add"
+          },
+          {
+            "name": "Remove",
+            "value": "remove"
+          }
+        ],
+        "name": "action",
+        "description": "Add or remove",
+        "required": true
+      }
+    ],
+    "name": "voice-hub-moderator",
+    "description": "Add or remove a moderator role for a hub",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "channel_types": [
+          2
+        ],
+        "name": "hub",
+        "description": "The hub channel",
+        "required": true,
+        "type": 7
+      },
+      {
+        "name": "role",
+        "description": "The ignored role",
+        "required": true,
+        "type": 8
+      },
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Add",
+            "value": "add"
+          },
+          {
+            "name": "Remove",
+            "value": "remove"
+          }
+        ],
+        "name": "action",
+        "description": "Add or remove",
+        "required": true
+      }
+    ],
+    "name": "voice-hub-ignored",
+    "description": "Add or remove an ignored role for a hub",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "role",
+        "description": "The moderator role",
+        "required": true,
+        "type": 8
+      },
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Add",
+            "value": "add"
+          },
+          {
+            "name": "Remove",
+            "value": "remove"
+          }
+        ],
+        "name": "action",
+        "description": "Add or remove",
+        "required": true
+      }
+    ],
+    "name": "voice-mod-role",
+    "description": "Add or remove a global voice moderator role",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "The user to add/remove as voice moderator",
+        "required": true,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Add",
+            "value": "add"
+          },
+          {
+            "name": "Remove",
+            "value": "remove"
+          }
+        ],
+        "name": "action",
+        "description": "Add or remove",
+        "required": true
+      }
+    ],
+    "name": "voice-mod-user",
+    "description": "Add or remove an individual voice moderator",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "voice-mods",
+    "description": "View all global voice moderator roles and users",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "The user to ban",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "voice-ban",
+    "description": "Ban a user from your temporary voice channel",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "The user to unban",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "voice-unban",
+    "description": "Unban a user from your temporary voice channel",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "The user to kick",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "voice-kick",
+    "description": "Kick a user from your temporary voice channel",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "voice-lock",
+    "description": "Lock your temporary voice channel (no new users can join)",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "voice-unlock",
+    "description": "Unlock your temporary voice channel",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "voice-hide",
+    "description": "Hide your temporary voice channel from everyone",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "voice-reveal",
+    "description": "Reveal your temporary voice channel to everyone",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "max_value": 99,
+        "min_value": 0,
+        "type": 4,
+        "name": "limit",
+        "description": "New user limit (0 = unlimited)",
+        "required": true
+      }
+    ],
+    "name": "voice-limit",
+    "description": "Change the user limit of your temporary voice channel",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "name": "name",
+        "description": "New channel name",
+        "required": true,
+        "max_length": 100
+      }
+    ],
+    "name": "voice-rename",
+    "description": "Rename your temporary voice channel",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "voice-claim",
+    "description": "Claim ownership of an abandoned temporary voice channel",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "The user to transfer to",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "voice-transfer",
+    "description": "Transfer ownership of your temporary voice channel",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "voice-owner",
+    "description": "Check who owns the current temporary voice channel",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "voice-clean",
+    "description": "Delete all inactive temporary voice channels (moderator only)",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "The user to permit",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "voice-permit",
+    "description": "Allow a specific user to see and join your hidden voice channel",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "The user to reject",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "voice-reject",
+    "description": "Remove a user's permission to see/join your voice channel",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to ban",
+        "required": true,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "name": "reason",
+        "description": "Reason for ban",
+        "required": false
+      },
+      {
+        "type": 3,
+        "name": "duration",
+        "description": "Temp ban duration (e.g. 1h, 1d, 7d)",
+        "required": false
+      },
+      {
+        "max_value": 7,
+        "min_value": 0,
+        "type": 4,
+        "name": "delete_days",
+        "description": "Days of messages to delete (0-7)",
+        "required": false
+      }
+    ],
+    "name": "ban",
+    "description": "Ban a user from the server",
+    "default_member_permissions": "4",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "name": "user_id",
+        "description": "User ID to unban",
+        "required": true
+      }
+    ],
+    "name": "unban",
+    "description": "Unban a user from the server",
+    "default_member_permissions": "4",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to kick",
+        "required": true,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "name": "reason",
+        "description": "Reason for kick",
+        "required": false
+      }
+    ],
+    "name": "kick",
+    "description": "Kick a user from the server",
+    "default_member_permissions": "2",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to mute",
+        "required": true,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "name": "duration",
+        "description": "Duration (e.g. 5m, 1h, 1d)",
+        "required": true
+      },
+      {
+        "type": 3,
+        "name": "reason",
+        "description": "Reason for mute",
+        "required": false
+      }
+    ],
+    "name": "mute",
+    "description": "Timeout a user",
+    "default_member_permissions": "1099511627776",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to unmute",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "unmute",
+    "description": "Remove timeout from a user",
+    "default_member_permissions": "1099511627776",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to warn",
+        "required": true,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "name": "reason",
+        "description": "Reason for warning",
+        "required": true
+      }
+    ],
+    "name": "warn",
+    "description": "Warn a user",
+    "default_member_permissions": "1099511627776",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to check",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "warnings",
+    "description": "View warnings for a user",
+    "default_member_permissions": "1099511627776",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 4,
+        "name": "id",
+        "description": "Warning ID to delete",
+        "required": true
+      }
+    ],
+    "name": "delwarn",
+    "description": "Delete a specific warning",
+    "default_member_permissions": "1099511627776",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to clear warnings for",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "clearwarnings",
+    "description": "Clear all warnings for a user",
+    "default_member_permissions": "1099511627776",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to add note for",
+        "required": true,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "name": "text",
+        "description": "Note content",
+        "required": true
+      }
+    ],
+    "name": "note",
+    "description": "Add a private note about a user",
+    "default_member_permissions": "1099511627776",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to check",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "notes",
+    "description": "View notes for a user",
+    "default_member_permissions": "1099511627776",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 4,
+        "name": "id",
+        "description": "Note ID to delete",
+        "required": true
+      }
+    ],
+    "name": "delnote",
+    "description": "Delete a specific note",
+    "default_member_permissions": "1099511627776",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to softban",
+        "required": true,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "name": "reason",
+        "description": "Reason for softban",
+        "required": false
+      }
+    ],
+    "name": "softban",
+    "description": "Ban and immediately unban a user (clears their messages)",
+    "default_member_permissions": "4",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "max_value": 100,
+        "min_value": 1,
+        "type": 4,
+        "name": "amount",
+        "description": "Number of messages (1-100)",
+        "required": true
+      },
+      {
+        "name": "user",
+        "description": "Only delete messages from this user",
+        "required": false,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Bots",
+            "value": "bots"
+          },
+          {
+            "name": "Links",
+            "value": "links"
+          },
+          {
+            "name": "Images",
+            "value": "images"
+          },
+          {
+            "name": "Text Only",
+            "value": "text"
+          }
+        ],
+        "name": "filter",
+        "description": "Filter type",
+        "required": false
+      }
+    ],
+    "name": "purge",
+    "description": "Delete messages from a channel",
+    "default_member_permissions": "8192",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "max_value": 21600,
+        "min_value": 0,
+        "type": 4,
+        "name": "seconds",
+        "description": "Slowmode in seconds (0 = off)",
+        "required": true
+      },
+      {
+        "name": "channel",
+        "description": "Channel (defaults to current)",
+        "required": false,
+        "type": 7
+      }
+    ],
+    "name": "slowmode",
+    "description": "Set channel slowmode",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "channel",
+        "description": "Channel to lock (defaults to current)",
+        "required": false,
+        "type": 7
+      },
+      {
+        "type": 3,
+        "name": "reason",
+        "description": "Reason for locking",
+        "required": false
+      }
+    ],
+    "name": "lock",
+    "description": "Lock a channel (prevent members from sending messages)",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "channel",
+        "description": "Channel to unlock (defaults to current)",
+        "required": false,
+        "type": 7
+      }
+    ],
+    "name": "unlock",
+    "description": "Unlock a channel",
+    "default_member_permissions": "16",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to check",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "modlogs",
+    "description": "View moderation history for a user",
+    "default_member_permissions": "1099511627776",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "setup",
+        "description": "Create a ticket panel",
+        "options": [
+          {
+            "name": "channel",
+            "description": "Channel for ticket panel",
+            "required": true,
+            "type": 7
+          },
+          {
+            "type": 3,
+            "name": "title",
+            "description": "Panel title",
+            "required": false
+          },
+          {
+            "type": 3,
+            "name": "description",
+            "description": "Panel description",
+            "required": false
+          },
+          {
+            "name": "support_role",
+            "description": "Support team role",
+            "required": false,
+            "type": 8
+          },
+          {
+            "type": 3,
+            "name": "button_label",
+            "description": "Button label (default: Create Ticket)",
+            "required": false
+          },
+          {
+            "type": 3,
+            "name": "button_emoji",
+            "description": "Button emoji (default: 🎫)",
+            "required": false
+          },
+          {
+            "type": 3,
+            "name": "ticket_type",
+            "description": "Ticket type/category name (default: support)",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "close",
+        "description": "Close this ticket",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "add",
+        "description": "Add a user to this ticket",
+        "options": [
+          {
+            "name": "user",
+            "description": "User to add",
+            "required": true,
+            "type": 6
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "remove",
+        "description": "Remove a user from this ticket",
+        "options": [
+          {
+            "name": "user",
+            "description": "User to remove",
+            "required": true,
+            "type": 6
+          }
+        ]
+      }
+    ],
+    "name": "ticket",
+    "description": "Ticket system",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "start",
+        "description": "Start a giveaway",
+        "options": [
+          {
+            "type": 3,
+            "name": "prize",
+            "description": "Prize",
+            "required": true
+          },
+          {
+            "type": 3,
+            "name": "duration",
+            "description": "Duration (e.g. 1h, 1d, 7d)",
+            "required": true
+          },
+          {
+            "max_value": 20,
+            "min_value": 1,
+            "type": 4,
+            "name": "winners",
+            "description": "Number of winners",
+            "required": false
+          },
+          {
+            "name": "required_role",
+            "description": "Required role to enter",
+            "required": false,
+            "type": 8
+          },
+          {
+            "name": "channel",
+            "description": "Channel (defaults to current)",
+            "required": false,
+            "type": 7
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "end",
+        "description": "End a giveaway early",
+        "options": [
+          {
+            "type": 3,
+            "name": "message_id",
+            "description": "Giveaway message ID",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "reroll",
+        "description": "Reroll giveaway winners",
+        "options": [
+          {
+            "type": 3,
+            "name": "message_id",
+            "description": "Giveaway message ID",
+            "required": true
+          }
+        ]
+      }
+    ],
+    "name": "giveaway",
+    "description": "Manage giveaways",
+    "default_member_permissions": "32",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "name": "message",
+        "description": "AFK message",
+        "required": false
+      }
+    ],
+    "name": "afk",
+    "description": "Set your AFK status",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "name": "time",
+        "description": "When (e.g. 30m, 2h, 1d)",
+        "required": true
+      },
+      {
+        "type": 3,
+        "name": "message",
+        "description": "Reminder message",
+        "required": true
+      }
+    ],
+    "name": "remind",
+    "description": "Set a reminder",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "reminders",
+    "description": "View your active reminders",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "name": "idea",
+        "description": "Your suggestion",
+        "required": true
+      }
+    ],
+    "name": "suggest",
+    "description": "Submit a suggestion",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "setup",
+        "description": "Set suggestion channel",
+        "options": [
+          {
+            "name": "channel",
+            "description": "Suggestion channel",
+            "required": true,
+            "type": 7
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "approve",
+        "description": "Approve a suggestion",
+        "options": [
+          {
+            "type": 3,
+            "name": "id",
+            "description": "Suggestion ID",
+            "required": true
+          },
+          {
+            "type": 3,
+            "name": "response",
+            "description": "Response message",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "deny",
+        "description": "Deny a suggestion",
+        "options": [
+          {
+            "type": 3,
+            "name": "id",
+            "description": "Suggestion ID",
+            "required": true
+          },
+          {
+            "type": 3,
+            "name": "response",
+            "description": "Response message",
+            "required": false
+          }
+        ]
+      }
+    ],
+    "name": "suggestion",
+    "description": "Manage suggestions",
+    "default_member_permissions": "32",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "name": "question",
+        "description": "Poll question",
+        "required": true
+      },
+      {
+        "type": 3,
+        "name": "option1",
+        "description": "Option 1",
+        "required": true
+      },
+      {
+        "type": 3,
+        "name": "option2",
+        "description": "Option 2",
+        "required": true
+      },
+      {
+        "type": 3,
+        "name": "option3",
+        "description": "Option 3",
+        "required": false
+      },
+      {
+        "type": 3,
+        "name": "option4",
+        "description": "Option 4",
+        "required": false
+      },
+      {
+        "type": 3,
+        "name": "option5",
+        "description": "Option 5",
+        "required": false
+      },
+      {
+        "type": 3,
+        "name": "duration",
+        "description": "Duration (e.g. 1h, 1d)",
+        "required": false
+      }
+    ],
+    "name": "poll",
+    "description": "Create a poll",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to check",
+        "required": false,
+        "type": 6
+      }
+    ],
+    "name": "userinfo",
+    "description": "View user information",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "serverinfo",
+    "description": "View server information",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User",
+        "required": false,
+        "type": 6
+      }
+    ],
+    "name": "avatar",
+    "description": "Get a user's avatar",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "ping",
+    "description": "Check bot latency",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "name": "command",
+        "description": "Specific command to get help for",
+        "required": false
+      }
+    ],
+    "name": "help",
+    "description": "Show help information",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "play",
+        "description": "Play the latest episode of a podcast in your voice channel",
+        "options": [
+          {
+            "type": 3,
+            "name": "podcast",
+            "description": "Podcast name to search for",
+            "required": true
+          },
+          {
+            "min_value": 1,
+            "type": 4,
+            "name": "episode",
+            "description": "Episode number to play (default: latest)",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "search",
+        "description": "Search for podcasts and pick from results",
+        "options": [
+          {
+            "type": 3,
+            "name": "query",
+            "description": "Search query",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "browse",
+        "description": "Browse top podcasts by category",
+        "options": [
+          {
+            "type": 3,
+            "choices": [
+              {
+                "name": "🔪 True Crime",
+                "value": "true-crime"
+              },
+              {
+                "name": "😂 Comedy",
+                "value": "comedy"
+              },
+              {
+                "name": "📰 News",
+                "value": "news"
+              },
+              {
+                "name": "🔬 Science",
+                "value": "science"
+              },
+              {
+                "name": "📖 History",
+                "value": "history"
+              },
+              {
+                "name": "💼 Business",
+                "value": "business"
+              },
+              {
+                "name": "🖥️ Technology",
+                "value": "technology"
+              },
+              {
+                "name": "🏆 Sports",
+                "value": "sports"
+              },
+              {
+                "name": "🎓 Education",
+                "value": "education"
+              },
+              {
+                "name": "🎭 Fiction & Horror",
+                "value": "fiction"
+              },
+              {
+                "name": "👥 Society & Culture",
+                "value": "society"
+              },
+              {
+                "name": "🎵 Music",
+                "value": "music"
+              },
+              {
+                "name": "💪 Health & Fitness",
+                "value": "health"
+              },
+              {
+                "name": "🎨 Arts",
+                "value": "arts"
+              },
+              {
+                "name": "👨‍👩‍👧 Kids & Family",
+                "value": "kids"
+              }
+            ],
+            "name": "category",
+            "description": "Category to browse",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "episodes",
+        "description": "List recent episodes of a podcast",
+        "options": [
+          {
+            "type": 3,
+            "name": "podcast",
+            "description": "Podcast name",
+            "required": true
+          },
+          {
+            "min_value": 1,
+            "type": 4,
+            "name": "page",
+            "description": "Page number",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "nowplaying",
+        "description": "Show what's currently playing with controls",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "pause",
+        "description": "Pause playback",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "resume",
+        "description": "Resume playback",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "stop",
+        "description": "Stop playback and leave voice channel",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "skip",
+        "description": "Skip to next episode (queue or next in feed)",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "queue",
+        "description": "Show the episode queue",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "speed",
+        "description": "Change playback speed",
+        "options": [
+          {
+            "type": 3,
+            "choices": [
+              {
+                "name": "0.5x — half speed",
+                "value": "0.5"
+              },
+              {
+                "name": "0.75x",
+                "value": "0.75"
+              },
+              {
+                "name": "1x — normal",
+                "value": "1.0"
+              },
+              {
+                "name": "1.25x",
+                "value": "1.25"
+              },
+              {
+                "name": "1.5x",
+                "value": "1.5"
+              },
+              {
+                "name": "2x — double speed",
+                "value": "2.0"
+              }
+            ],
+            "name": "rate",
+            "description": "Playback speed",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "volume",
+        "description": "Set playback volume (default 100%)",
+        "options": [
+          {
+            "max_value": 200,
+            "min_value": 1,
+            "type": 4,
+            "name": "level",
+            "description": "Volume level (1–200)",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "seek",
+        "description": "Jump to a specific time in the current episode",
+        "options": [
+          {
+            "type": 3,
+            "name": "time",
+            "description": "Time to seek to — e.g. 1:30, 1:30:00, or 90 (seconds)",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "bookmark",
+        "description": "Save your current position — resume later with /podcast continue",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "continue",
+        "description": "Resume playback from your saved bookmark",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "trending",
+        "description": "Show trending podcasts across popular categories",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "subscribe",
+        "description": "Save a podcast to this server's favourites list",
+        "options": [
+          {
+            "type": 3,
+            "name": "podcast",
+            "description": "Podcast name",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "unsubscribe",
+        "description": "Remove a podcast from this server's favourites",
+        "options": [
+          {
+            "type": 3,
+            "name": "podcast",
+            "description": "Podcast name",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "favorites",
+        "description": "Show this server's saved podcasts",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "history",
+        "description": "Show recently played episodes in this server",
+        "options": []
+      }
+    ],
+    "name": "podcast",
+    "description": "🎙️ CUB Podcast Player — listen to any podcast in voice",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "invite",
+    "description": "Get bot invite link",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "dashboard",
+    "description": "Get a link to your CUB SOFTWARE dashboard",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "website",
+    "description": "Get a link to the CUB SOFTWARE website",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "support",
+    "description": "Get a link to the CUB SOFTWARE support server",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "stats",
+    "description": "View bot statistics",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "bet",
+        "description": "Amount to bet (default: 10)",
+        "required": false
+      }
+    ],
+    "name": "slots",
+    "description": "🎰 Spin the slot machine!",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "bet",
+        "description": "Amount to bet (default: 10)",
+        "required": false
+      }
+    ],
+    "name": "blackjack",
+    "description": "🃏 Play a round of blackjack against the dealer",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "name": "choice",
+        "description": "red, black, green, or a number 0-36",
+        "required": true
+      },
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "bet",
+        "description": "Amount to bet (default: 10)",
+        "required": false
+      }
+    ],
+    "name": "roulette",
+    "description": "🎡 Bet on the roulette wheel",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "bet",
+        "description": "Amount to bet (default: 10)",
+        "required": false
+      }
+    ],
+    "name": "crash",
+    "description": "📈 Watch the multiplier climb — cash out before it crashes!",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "bet",
+        "description": "Amount to bet (default: 10)",
+        "required": false
+      }
+    ],
+    "name": "scratch",
+    "description": "🎟️ Scratch a card and win prizes!",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Heads",
+            "value": "heads"
+          },
+          {
+            "name": "Tails",
+            "value": "tails"
+          }
+        ],
+        "name": "choice",
+        "description": "heads or tails",
+        "required": true
+      },
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "bet",
+        "description": "Amount to bet (default: 10)",
+        "required": false
+      }
+    ],
+    "name": "coinbet",
+    "description": "🪙 Bet on heads or tails",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "bet",
+        "description": "Amount to bet (default: 10)",
+        "required": false
+      }
+    ],
+    "name": "highlow",
+    "description": "🃏 Guess if the next card is higher or lower",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "opponent",
+        "description": "User to challenge",
+        "required": true,
+        "type": 6
+      },
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "bet",
+        "description": "Coins to wager (optional)",
+        "required": false
+      }
+    ],
+    "name": "tictactoe",
+    "description": "❌⭕ Challenge someone to Tic-Tac-Toe",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "opponent",
+        "description": "User to challenge",
+        "required": true,
+        "type": 6
+      },
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "bet",
+        "description": "Coins to wager (optional)",
+        "required": false
+      }
+    ],
+    "name": "connect4",
+    "description": "🟡🔴 Challenge someone to Connect 4",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "opponent",
+        "description": "Challenge a user (leave empty to play vs bot)",
+        "required": false,
+        "type": 6
+      },
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "bet",
+        "description": "Coins to wager (optional)",
+        "required": false
+      }
+    ],
+    "name": "rps",
+    "description": "✊ Rock Paper Scissors vs the bot or a friend",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "name": "category",
+        "description": "Category (coming soon — currently random)",
+        "required": false
+      }
+    ],
+    "name": "trivia",
+    "description": "🧠 Answer a random trivia question",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "hangman",
+    "description": "🔤 Play Hangman — guess the word letter by letter",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "wordle",
+    "description": "🟩 Play the daily Wordle — guess the 5-letter word",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "riddle",
+    "description": "🤔 Get a riddle and try to answer it",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "reward",
+        "description": "Coin reward for the winner (default: 50)",
+        "required": false
+      }
+    ],
+    "name": "scramble",
+    "description": "🔀 Unscramble the word — first to type it in chat wins!",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "reward",
+        "description": "Coin reward for the winner (default: 75)",
+        "required": false
+      }
+    ],
+    "name": "typerace",
+    "description": "⌨️ Type the sentence fastest to win!",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "min_value": 1,
+        "type": 4,
+        "name": "reward",
+        "description": "Coin reward for the winner (default: 50)",
+        "required": false
+      }
+    ],
+    "name": "mathrace",
+    "description": "🧮 Solve the math problem first to win!",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Small (5×5, 5 mines)",
+            "value": "small"
+          },
+          {
+            "name": "Medium (8×8, 10 mines)",
+            "value": "medium"
+          },
+          {
+            "name": "Large (10×10, 20 mines)",
+            "value": "large"
+          }
+        ],
+        "name": "size",
+        "description": "Board size",
+        "required": false
+      }
+    ],
+    "name": "minesweeper",
+    "description": "💣 Generate a minesweeper board",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "memory",
+    "description": "🃏 Flip cards to find matching emoji pairs",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "numguess",
+    "description": "🔢 Guess the secret number between 1 and 100",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "games",
+    "description": "🎮 View all available games and your game stats",
+    "type": 1
+  }
+]

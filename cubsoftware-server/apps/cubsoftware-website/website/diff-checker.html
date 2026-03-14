@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Diff Checker - Compare Text Side by Side | Free</title>
+
+    <meta name="description" content="Compare two texts side by side. Highlight additions, deletions, and changes. Free diff tool for developers.">
+    <meta name="keywords" content="diff checker, text compare, code diff, file diff, compare text, developer tools">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/diff-checker.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="diff-container">
+            <div class="diff-header">
+                <h1>Diff Checker</h1>
+                <p>Compare two texts and see the differences</p>
+            </div>
+
+            <div class="input-panels">
+                <div class="input-panel">
+                    <div class="panel-header">
+                        <label>Original Text</label>
+                        <button class="clear-btn" id="clearLeft">Clear</button>
+                    </div>
+                    <textarea id="leftText" placeholder="Paste original text here..."></textarea>
+                </div>
+                <div class="input-panel">
+                    <div class="panel-header">
+                        <label>Modified Text</label>
+                        <button class="clear-btn" id="clearRight">Clear</button>
+                    </div>
+                    <textarea id="rightText" placeholder="Paste modified text here..."></textarea>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="compare-btn" id="compareBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    Compare
+                </button>
+                <button class="swap-btn" id="swapBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M7 16V4M7 4L3 8M7 4L11 8M17 8V20M17 20L21 16M17 20L13 16"/>
+                    </svg>
+                    Swap
+                </button>
+                <div class="options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="ignoreWhitespace">
+                        <span>Ignore whitespace</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="ignoreCase">
+                        <span>Ignore case</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="stats" id="stats" style="display: none;">
+                <div class="stat">
+                    <span class="stat-value added" id="addedCount">0</span>
+                    <span class="stat-label">Added</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value removed" id="removedCount">0</span>
+                    <span class="stat-label">Removed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value unchanged" id="unchangedCount">0</span>
+                    <span class="stat-label">Unchanged</span>
+                </div>
+            </div>
+
+            <div class="result-panel" id="resultPanel" style="display: none;">
+                <div class="result-header">
+                    <h2>Differences</h2>
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="unified">Unified</button>
+                        <button class="view-btn" data-view="split">Split</button>
+                    </div>
+                </div>
+                <div class="diff-output" id="diffOutput"></div>
+            </div>
+
+            <div class="no-diff" id="noDiff" style="display: none;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <p>The texts are identical!</p>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <script src="/static/js/diff-checker.js?v={{ v }}"></script>
+</body>
+</html>

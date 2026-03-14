@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Terms of Service - QuestCord</title>
+    <meta name="description" content="Terms of Service for QuestCord Discord Bot">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=<%= v %>">
+    <style>
+        .legal-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 60px 20px;
+        }
+
+        .legal-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .legal-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .legal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 42px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .legal-updated {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .legal-content {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+        }
+
+        .legal-content h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            font-size: 24px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .legal-content h3 {
+            color: #fff;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .legal-content p {
+            margin-bottom: 15px;
+        }
+
+        .legal-content ul, .legal-content ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .legal-content li {
+            margin-bottom: 8px;
+        }
+
+        .legal-content a {
+            color: #5865f2;
+            text-decoration: none;
+        }
+
+        .legal-content a:hover {
+            text-decoration: underline;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: rgba(88, 101, 242, 0.1);
+            color: #5865f2;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(88, 101, 242, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .legal-page {
+                padding: 40px 16px;
+            }
+
+            .legal-container {
+                padding: 24px;
+            }
+
+            .legal-title {
+                font-size: 28px;
+            }
+
+            .legal-content h2 {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .legal-page {
+                padding: 30px 12px;
+            }
+
+            .legal-container {
+                padding: 20px 16px;
+                border-radius: 14px;
+            }
+
+            .legal-title {
+                font-size: 22px;
+            }
+
+            .legal-content h2 {
+                font-size: 18px;
+            }
+
+            .legal-content h3 {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="container">
+            <div class="hero-title-container">
+                <h1 class="hero-title">QuestCord</h1>
+            </div>
+            <p class="hero-subtitle">Quest across the Discord universe</p>
+            <p class="hero-description">Complete quests, defeat bosses, and climb the global leaderboard in this immersive Discord RPG experience</p>
+            <div class="hero-buttons">
+                <a href="https://discord.com/oauth2/authorize?client_id=<%= process.env.DISCORD_CLIENT_ID %>&permissions=2048&scope=bot%20applications.commands" class="btn btn-primary" target="_blank">Add to Discord</a>
+                <a href="/" class="btn btn-secondary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="legal-page">
+        <div class="legal-container">
+            <div class="legal-header">
+                <h1 class="legal-title">Terms of Service</h1>
+                <p class="legal-updated">Last Updated: December 1, 2025</p>
+            </div>
+
+            <div class="legal-content">
+                <h2>1. Acceptance of Terms</h2>
+                <p>By using QuestCord ("the Bot"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Bot.</p>
+
+                <h2>2. Description of Service</h2>
+                <p>QuestCord is a Discord bot that provides an RPG-style gaming experience including quests, boss battles, leaderboards, and an economy system. The Bot is provided "as is" and we reserve the right to modify, suspend, or discontinue any aspect of the service at any time.</p>
+
+                <h2>3. User Conduct</h2>
+                <p>You agree not to:</p>
+                <ul>
+                    <li>Use the Bot for any illegal or unauthorized purpose</li>
+                    <li>Attempt to exploit, hack, or manipulate the Bot's systems</li>
+                    <li>Use automated scripts, bots, or other means to unfairly gain advantages</li>
+                    <li>Harass, abuse, or harm other users through the Bot</li>
+                    <li>Attempt to disrupt or interfere with the Bot's operation</li>
+                    <li>Engage in any activity that violates Discord's Terms of Service</li>
+                </ul>
+
+                <h2>4. Account and Data</h2>
+                <p>When you use QuestCord, we store certain information associated with your Discord account, including:</p>
+                <ul>
+                    <li>Your Discord User ID and username</li>
+                    <li>Game progress, currency, items, and statistics</li>
+                    <li>Quest completion history and leaderboard rankings</li>
+                    <li>Server membership for quest assignment purposes</li>
+                </ul>
+
+                <h2>5. Virtual Currency and Items</h2>
+                <p>QuestCord features virtual currency (Dakari and Gems) and virtual items:</p>
+                <ul>
+                    <li>Virtual currency and items have no real-world monetary value</li>
+                    <li>We reserve the right to adjust, remove, or reset virtual items and currency at any time</li>
+                    <li>Virtual items cannot be exchanged for real money</li>
+                    <li>You do not own virtual items; they are licensed to you for use within the Bot</li>
+                </ul>
+
+                <h2>6. Termination and Suspension</h2>
+                <p>We reserve the right to:</p>
+                <ul>
+                    <li>Suspend or terminate your access to the Bot at any time for violation of these terms</li>
+                    <li>Reset your progress, currency, or items if cheating or exploitation is detected</li>
+                    <li>Remove the Bot from servers that violate Discord's Terms of Service</li>
+                </ul>
+
+                <h2>7. Limitation of Liability</h2>
+                <p>QuestCord is provided "as is" without warranties of any kind. We are not liable for:</p>
+                <ul>
+                    <li>Any loss of data, progress, or virtual items</li>
+                    <li>Interruptions or errors in service</li>
+                    <li>Any damages resulting from use of the Bot</li>
+                    <li>Actions or conduct of other users</li>
+                </ul>
+
+                <h2>8. Intellectual Property</h2>
+                <p>All content, features, and functionality of QuestCord are owned by the Bot developers and are protected by copyright and other intellectual property laws.</p>
+
+                <h2>9. Changes to Terms</h2>
+                <p>We reserve the right to modify these Terms of Service at any time. Continued use of the Bot after changes constitutes acceptance of the modified terms.</p>
+
+                <h2>10. Discord Terms</h2>
+                <p>Use of QuestCord is also subject to Discord's Terms of Service and Community Guidelines. You must comply with all Discord policies while using the Bot.</p>
+
+                <h2>11. Contact</h2>
+                <p>If you have questions about these Terms of Service, please contact us through our <a href="https://discord.gg/ACGKvKkZ5Z" target="_blank">support server</a>.</p>
+
+                <h2>12. Governing Law</h2>
+                <p>These Terms of Service are governed by and construed in accordance with applicable laws. Any disputes arising from these terms will be resolved in accordance with such laws.</p>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

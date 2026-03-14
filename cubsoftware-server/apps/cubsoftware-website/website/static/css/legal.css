@@ -1,0 +1,114 @@
+/* Legal Pages Specific Styles (Terms, Privacy, Copyright) */
+
+.legal-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+.legal-content {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 35px;
+    color: #ffffff;
+    line-height: 1.8;
+}
+
+.legal-content h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+}
+
+.legal-content .last-updated {
+    color: #72767d;
+    font-size: 0.9rem;
+    margin-bottom: 25px;
+}
+
+.legal-content h2 {
+    font-size: 1.4rem;
+    color: #5865f2;
+    margin-top: 25px;
+    margin-bottom: 12px;
+}
+
+.legal-content p {
+    margin-bottom: 12px;
+    color: #b9bbbe;
+}
+
+.legal-content ul {
+    margin-left: 20px;
+    margin-bottom: 12px;
+}
+
+.legal-content li {
+    margin-bottom: 8px;
+    color: #b9bbbe;
+}
+
+.legal-content a {
+    color: #5865f2;
+}
+
+.legal-content a:hover {
+    text-decoration: underline;
+}
+
+/* Contact Box (used in Copyright page) */
+.contact-box {
+    background: rgba(88, 101, 242, 0.1);
+    border: 1px solid rgba(88, 101, 242, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 15px;
+}
+
+.contact-box h2 {
+    margin-top: 0;
+}
+
+.contact-box a {
+    color: #5865f2;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.contact-box a:hover {
+    text-decoration: underline;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .legal-content {
+        padding: 25px;
+    }
+
+    .legal-content h1 {
+        font-size: 2rem;
+    }
+
+    .legal-content h2 {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .legal-container {
+        padding: 20px 15px;
+    }
+
+    .legal-content {
+        padding: 20px;
+    }
+
+    .legal-content h1 {
+        font-size: 1.75rem;
+    }
+}

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Player - StreamerBot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            background-color: transparent;
+            width: 1920px;
+            height: 1080px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #player-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+        }
+
+        #player {
+            width: 1920px;
+            height: 1080px;
+        }
+
+        #status {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        /* Progress bar container */
+        #progress-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            display: none;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #cc0000);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        #progress-time {
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            text-align: center;
+            width: 100%;
+        }
+
+        /* Video title at top */
+        #video-title {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 72px;
+            font-weight: bold;
+            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.9);
+            padding: 20px 40px 10px 40px;
+            display: none;
+            z-index: 10;
+            box-sizing: border-box;
+            word-wrap: break-word;
+        }
+
+        #video-requester {
+            position: absolute;
+            top: 130px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.85);
+            font-family: Arial, sans-serif;
+            font-size: 36px;
+            font-weight: normal;
+            font-style: italic;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.9);
+            padding: 5px 40px 20px 40px;
+            display: none;
+            z-index: 10;
+        }
+
+        /* Lyrics container */
+        #lyrics-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            max-width: 1800px;
+            height: 400px;
+            text-align: center;
+            display: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+
+        #lyrics-scroll {
+            transition: transform 0.5s ease-out;
+            will-change: transform;
+        }
+
+        .lyric-line {
+            color: rgba(255, 255, 255, 0.6);
+            font-family: Arial, sans-serif;
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9);
+            padding: 15px 40px;
+            margin: 0;
+            transition: all 0.3s ease;
+            opacity: 0.6;
+            text-align: center;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            white-space: normal;
+            line-height: 1.5;
+            width: 100%;
+            max-width: 1700px;
+            margin-left: auto;
+            margin-right: auto;
+            box-sizing: border-box;
+            display: block;
+        }
+
+        .lyric-line.active {
+            color: white;
+            font-size: 48px;
+            opacity: 1;
+            transform: scale(1.05);
+            padding: 20px 40px;
+        }
+
+        .lyric-line.past {
+            opacity: 0.3;
+        }
+
+        .lyric-line.future {
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div id="player-container">
+        <div id="player"></div>
+        <div id="video-title"></div>
+        <div id="video-requester"></div>
+        <div id="progress-container">
+            <div id="progress-bar-bg">
+                <div id="progress-bar-fill"></div>
+            </div>
+            <div id="progress-time">0:00 / 0:00</div>
+        </div>
+        <div id="lyrics-container">
+            <div id="lyrics-scroll"></div>
+        </div>
+    </div>
+    <div id="status">Loading video...</div>
+
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+
+    <script>
+        let player;
+        let currentVideoId = null;
+        let checkInterval;
+        let progressInterval;
+        let lyricsLines = []; // Array of {time: seconds, text: "line"}
+        let lyricsInterval = null;
+        let lyricsAreSynced = false; // True if lyrics have timestamps
+        let lyricsOffset = 0; // Base timing offset in seconds (from config)
+        let adaptiveOffset = 0; // Dynamically calculated offset for this song
+        let lastSyncCheckTime = 0; // Last time we checked sync accuracy
+
+        // Get video ID from URL parameter
+        function getVideoIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('v') || urlParams.get('videoId');
+        }
+
+        // Initialize YouTube player
+        function onYouTubeIframeAPIReady() {
+            console.log('YouTube IFrame API Ready');
+
+            // Don't load any video initially - wait for JSON file
+            player = new YT.Player('player', {
+                height: '1080',
+                width: '1920',
+                playerVars: {
+                    'autoplay': 1,
+                    'controls': 0,
+                    'modestbranding': 1,
+                    'rel': 0,
+                    'showinfo': 0,
+                    'fs': 0,
+                    'playsinline': 1,
+                    'cc_load_policy': 0, // Force captions OFF for all videos
+                    'cc_lang_pref': 'en'
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onError': onPlayerError
+                }
+            });
+
+            // Start checking for video ID updates from JSON file
+            startVideoIdCheck();
+        }
+
+        function onPlayerReady(event) {
+            console.log('Player ready');
+
+            // Make sure player container is visible when ready
+            document.getElementById('player-container').style.opacity = '1';
+            document.getElementById('player-container').style.visibility = 'visible';
+            document.getElementById('status').style.display = 'none';
+
+            // Auto-play if we have a video
+            if (currentVideoId) {
+                event.target.playVideo();
+            }
+        }
+
+        function onPlayerStateChange(event) {
+            console.log('Player state changed:', event.data);
+
+            // YT.PlayerState values:
+            // -1 (unstarted), 0 (ended), 1 (playing), 2 (paused), 3 (buffering), 5 (cued)
+
+            if (event.data === YT.PlayerState.ENDED) {
+                console.log('Video ended - hiding player');
+                // Video finished - hide the entire player so OBS source shows nothing
+                document.getElementById('player-container').style.opacity = '0';
+                document.getElementById('player-container').style.visibility = 'hidden';
+                // Stop progress bar and hide everything
+                stopProgressBar();
+                hideVideoInfo();
+            } else if (event.data === YT.PlayerState.PLAYING) {
+                console.log('Video playing');
+                // Make sure player is visible when playing
+                document.getElementById('player-container').style.opacity = '1';
+                document.getElementById('player-container').style.visibility = 'visible';
+                document.getElementById('status').style.display = 'none';
+
+                // Enable captions if requested for this video
+                if (window.enableCaptionsForThisVideo) {
+                    try {
+                        console.log('Attempting to enable captions...');
+                        // Load captions module if not loaded
+                        player.loadModule('captions');
+                        player.loadModule('cc');
+
+                        // Try to enable captions
+                        setTimeout(() => {
+                            try {
+                                player.setOption('captions', 'track', {'languageCode': 'en'});
+                                console.log('Captions enabled');
+                            } catch (e) {
+                                console.log('Could not set caption track:', e);
+                            }
+                        }, 1000);
+                    } catch (e) {
+                        console.log('Could not load caption modules:', e);
+                    }
+                }
+
+                // Show title/requester if they have content
+                const titleEl = document.getElementById('video-title');
+                const requesterEl = document.getElementById('video-requester');
+                if (titleEl.textContent) {
+                    titleEl.style.display = 'block';
+                }
+                if (requesterEl.textContent) {
+                    requesterEl.style.display = 'block';
+                }
+
+                // Start progress bar updates (title/requester stay visible)
+                startProgressBar();
+
+                // Start lyrics scrolling if lyrics are displayed
+                if (lyricsLines.length > 0) {
+                    startLyricsScroll();
+                }
+            } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.BUFFERING) {
+                // Keep everything visible, just pause updates
+                if (progressInterval) {
+                    clearInterval(progressInterval);
+                    progressInterval = null;
+                }
+            }
+        }
+
+        // Format seconds to MM:SS or H:MM:SS
+        function formatTime(seconds) {
+            if (!seconds || seconds < 0) return '0:00';
+
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+
+            if (hours > 0) {
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // Update progress bar
+        function updateProgressBar() {
+            if (!player || !player.getCurrentTime || !player.getDuration) return;
+
+            try {
+                const currentTime = player.getCurrentTime();
+                const duration = player.getDuration();
+
+                if (duration > 0) {
+                    // Update progress bar fill
+                    const percentage = (currentTime / duration) * 100;
+                    document.getElementById('progress-bar-fill').style.width = percentage + '%';
+
+                    // Update time display
+                    const timeText = formatTime(currentTime) + ' / ' + formatTime(duration);
+                    document.getElementById('progress-time').textContent = timeText;
+                }
+            } catch (e) {
+                console.log('Error updating progress:', e);
+            }
+        }
+
+        // Start progress bar updates
+        function startProgressBar() {
+            // Show progress bar
+            document.getElementById('progress-container').style.display = 'block';
+
+            // Clear any existing interval
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+
+            // Update immediately
+            updateProgressBar();
+
+            // Update every second
+            progressInterval = setInterval(updateProgressBar, 1000);
+        }
+
+        // Stop progress bar updates
+        function stopProgressBar() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            // Only hide progress bar (title/requester stay visible)
+            document.getElementById('progress-container').style.display = 'none';
+        }
+
+        // Hide title and requester info (called when video ends)
+        function hideVideoInfo() {
+            document.getElementById('video-title').style.display = 'none';
+            document.getElementById('video-requester').style.display = 'none';
+            hideLyrics();
+        }
+
+        // ═══════════════════════════════════════════════════════════
+        // LYRICS DISPLAY FUNCTIONS
+        // ═══════════════════════════════════════════════════════════
+
+        function displayLyrics(lyricsText) {
+            const lyricsContainer = document.getElementById('lyrics-container');
+            const lyricsScroll = document.getElementById('lyrics-scroll');
+
+            if (!lyricsText || lyricsText === "") {
+                lyricsContainer.style.display = 'none';
+                return;
+            }
+
+            // Parse lyrics - check if they're in LRC format (timestamped) or plain text
+            const lines = lyricsText.split('\n').filter(line => line.trim() !== '');
+
+            if (lines.length === 0) {
+                lyricsContainer.style.display = 'none';
+                return;
+            }
+
+            // Check if first line has LRC timestamp format [mm:ss.xx]
+            const lrcRegex = /^\[(\d{2}):(\d{2})\.(\d{2})\]/;
+            lyricsAreSynced = lrcRegex.test(lines[0]);
+
+            console.log('Lyrics format:', lyricsAreSynced ? 'LRC (synced)' : 'Plain text');
+
+            if (lyricsAreSynced) {
+                // Parse LRC format: [mm:ss.xx]Line text
+                lyricsLines = [];
+                for (let line of lines) {
+                    const match = line.match(/^\[(\d{2}):(\d{2})\.(\d{2})\](.*)$/);
+                    if (match) {
+                        const minutes = parseInt(match[1]);
+                        const seconds = parseInt(match[2]);
+                        const centiseconds = parseInt(match[3]);
+                        const time = minutes * 60 + seconds + centiseconds / 100;
+                        const text = match[4].trim();
+
+                        if (text) { // Only add lines with text (skip empty instrumental sections)
+                            lyricsLines.push({ time: time, text: text });
+                        }
+                    }
+                }
+                console.log(`Parsed ${lyricsLines.length} synced lyric lines`);
+            } else {
+                // Plain text format - convert to simple array
+                lyricsLines = lines.map(line => ({ time: 0, text: line }));
+                console.log(`Parsed ${lyricsLines.length} plain text lyric lines`);
+            }
+
+            if (lyricsLines.length === 0) {
+                lyricsContainer.style.display = 'none';
+                return;
+            }
+
+            // Create ALL lyric line elements (we'll scroll through them)
+            lyricsScroll.innerHTML = '';
+
+            for (let i = 0; i < lyricsLines.length; i++) {
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'lyric-line';
+                lineDiv.textContent = lyricsLines[i].text;
+                lineDiv.setAttribute('data-index', i);
+                lyricsScroll.appendChild(lineDiv);
+            }
+
+            // Reset adaptive offset for new song
+            adaptiveOffset = 0;
+            lastSyncCheckTime = 0;
+
+            // Show lyrics container
+            lyricsContainer.style.display = 'block';
+
+            // Initialize display at first line after elements are rendered
+            // Small delay ensures offsetHeight is calculated correctly
+            setTimeout(() => {
+                updateLyricsDisplay(0);
+                console.log('[LYRICS] Initialized at line 0');
+            }, 100);
+        }
+
+        function startLyricsScroll() {
+            // Clear any existing interval
+            if (lyricsInterval) {
+                clearInterval(lyricsInterval);
+            }
+
+            let currentLineIndex = -1; // Start at -1 so first update always triggers
+            let isFirstUpdate = true; // Track first update
+
+            const updateLyrics = () => {
+                if (!player || !player.getCurrentTime || !player.getDuration) return;
+
+                try {
+                    const currentTime = player.getCurrentTime();
+                    const duration = player.getDuration();
+
+                    if (duration > 0 && lyricsLines.length > 0) {
+                        let lineIndex = 0;
+
+                        if (lyricsAreSynced) {
+                            // SYNCED LYRICS: Find the line that should be active based on timestamps
+                            // For the first few seconds, force to line 0 to prevent jumping
+                            if (currentTime < 2) {
+                                lineIndex = 0;
+                                if (isFirstUpdate) {
+                                    console.log('[LYRICS] Starting at line 0 (video time < 2s)');
+                                    isFirstUpdate = false;
+                                }
+                            } else {
+                                // Apply timing offset (positive = lyrics appear later, negative = earlier)
+                                const adjustedTime = currentTime + lyricsOffset;
+
+                                // Find the last line whose timestamp has passed
+                                for (let i = 0; i < lyricsLines.length; i++) {
+                                    if (lyricsLines[i].time <= adjustedTime) {
+                                        lineIndex = i;
+                                    } else {
+                                        break; // Found the next line, so stop
+                                    }
+                                }
+
+                                // If no lines have passed yet, show first line
+                                if (lineIndex < 0) {
+                                    lineIndex = 0;
+                                }
+                            }
+                        } else {
+                            // PLAIN TEXT LYRICS: Approximate timing with intro/outro offset
+                            const introTime = 10;
+                            const outroTime = 10;
+                            const lyricsStartTime = introTime;
+                            const lyricsEndTime = duration - outroTime;
+                            const lyricsDuration = lyricsEndTime - lyricsStartTime;
+
+                            if (currentTime < lyricsStartTime) {
+                                lineIndex = 0;
+                            } else if (currentTime > lyricsEndTime) {
+                                lineIndex = lyricsLines.length - 1;
+                            } else {
+                                const timeInLyrics = currentTime - lyricsStartTime;
+                                lineIndex = Math.floor((timeInLyrics / lyricsDuration) * lyricsLines.length);
+                            }
+                        }
+
+                        // Only update display if line changed
+                        if (lineIndex !== currentLineIndex && lineIndex < lyricsLines.length) {
+                            currentLineIndex = lineIndex;
+                            updateLyricsDisplay(currentLineIndex);
+                        }
+                    }
+                } catch (e) {
+                    console.log('Error updating lyrics:', e);
+                }
+            };
+
+            // Update lyrics very frequently for precise syncing (1ms for perfect synchronization)
+            lyricsInterval = setInterval(updateLyrics, 1);
+        }
+
+        function updateLyricsDisplay(activeIndex) {
+            const lyricsScroll = document.getElementById('lyrics-scroll');
+            const lines = lyricsScroll.querySelectorAll('.lyric-line');
+
+            // Update classes for all lines
+            lines.forEach((line, i) => {
+                line.classList.remove('past', 'active', 'future');
+
+                if (i < activeIndex) {
+                    line.classList.add('past');
+                } else if (i === activeIndex) {
+                    line.classList.add('active');
+                } else {
+                    line.classList.add('future');
+                }
+            });
+
+            // Smooth scroll to keep active line centered
+            // Calculate actual position of active line by measuring all previous lines
+            let scrollPosition = 0;
+            for (let i = 0; i < activeIndex && i < lines.length; i++) {
+                scrollPosition += lines[i].offsetHeight;
+            }
+
+            const containerHeight = 400; // Height of #lyrics-container
+            const activeLineHeight = lines[activeIndex] ? lines[activeIndex].offsetHeight : 70;
+            const centerOffset = containerHeight / 2 - activeLineHeight / 2;
+
+            // Apply smooth transform to center the active line
+            lyricsScroll.style.transform = `translateY(-${Math.max(0, scrollPosition - centerOffset)}px)`;
+        }
+
+        function hideLyrics() {
+            const lyricsContainer = document.getElementById('lyrics-container');
+            const lyricsScroll = document.getElementById('lyrics-scroll');
+
+            lyricsContainer.style.display = 'none';
+            lyricsScroll.innerHTML = '';
+            lyricsScroll.style.transform = 'translateY(0)';
+            lyricsLines = [];
+            lyricsAreSynced = false;
+
+            if (lyricsInterval) {
+                clearInterval(lyricsInterval);
+                lyricsInterval = null;
+            }
+        }
+
+        function onPlayerError(event) {
+            console.error('Player error:', event.data);
+            document.getElementById('status').textContent = 'Error loading video';
+            document.getElementById('status').style.display = 'block';
+        }
+
+        // Check for video ID updates from JSON file using XMLHttpRequest (works better with file://)
+        let lastTimestamp = 0;
+        function startVideoIdCheck() {
+            checkInterval = setInterval(() => {
+                // Use XMLHttpRequest instead of fetch for better file:// protocol support
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', 'current-video.json?t=' + Date.now(), true);
+                xhr.onload = function() {
+                    if (xhr.status === 200 || xhr.status === 0) { // 0 for file:// protocol
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            console.log('JSON data:', data);
+
+                            if (data.timestamp && data.timestamp > lastTimestamp && data.videoId) {
+                                console.log('New video ID from JSON:', data.videoId);
+                                lastTimestamp = data.timestamp;
+                                currentVideoId = data.videoId;
+
+                                // Update progress bar color if provided
+                                if (data.progressColor) {
+                                    console.log('Setting progress bar color to:', data.progressColor);
+                                    document.getElementById('progress-bar-fill').style.background = data.progressColor;
+                                }
+
+                                // Update video title if provided
+                                if (data.title) {
+                                    console.log('Setting video title to:', data.title);
+                                    const titleEl = document.getElementById('video-title');
+                                    titleEl.textContent = data.title;
+
+                                    // Dynamically adjust font size based on title length
+                                    const titleLength = data.title.length;
+                                    if (titleLength > 80) {
+                                        titleEl.style.fontSize = '36px';
+                                    } else if (titleLength > 60) {
+                                        titleEl.style.fontSize = '44px';
+                                    } else if (titleLength > 40) {
+                                        titleEl.style.fontSize = '56px';
+                                    } else {
+                                        titleEl.style.fontSize = '72px';
+                                    }
+
+                                    titleEl.style.display = 'block';
+                                }
+
+                                // Update requester if provided
+                                if (data.requestedBy) {
+                                    console.log('Setting requester to:', data.requestedBy);
+                                    document.getElementById('video-requester').textContent = 'Requested by ' + data.requestedBy;
+                                    document.getElementById('video-requester').style.display = 'block';
+                                }
+
+                                // Get lyrics timing offset from JSON (defaults to 0)
+                                if (data.lyricsOffset !== undefined && !isNaN(data.lyricsOffset)) {
+                                    lyricsOffset = parseFloat(data.lyricsOffset);
+                                    console.log('Lyrics timing offset:', lyricsOffset, 'seconds');
+                                } else {
+                                    lyricsOffset = 0;
+                                    console.log('Lyrics timing offset: 0 seconds (default)');
+                                }
+
+                                // Handle lyrics display
+                                if (data.lyrics && data.lyrics !== "" && data.lyrics !== "ENABLE_CAPTIONS") {
+                                    console.log('Displaying lyrics for music video');
+                                    displayLyrics(data.lyrics);
+                                    window.enableCaptionsForThisVideo = false;
+                                } else if (data.lyrics === "ENABLE_CAPTIONS") {
+                                    console.log('Enabling captions for music video');
+                                    window.enableCaptionsForThisVideo = true;
+                                    hideLyrics();
+                                } else {
+                                    window.enableCaptionsForThisVideo = false;
+                                    hideLyrics();
+                                }
+
+                                // Make sure player is visible for new video
+                                document.getElementById('player-container').style.opacity = '1';
+                                document.getElementById('player-container').style.visibility = 'visible';
+
+                                if (player && player.loadVideoById) {
+                                    document.getElementById('status').textContent = 'Loading new video...';
+                                    document.getElementById('status').style.display = 'block';
+
+                                    // Stop current video first to reset player state (important for queue)
+                                    if (player.stopVideo) {
+                                        player.stopVideo();
+                                    }
+
+                                    // Small delay to ensure player state is reset
+                                    setTimeout(() => {
+                                        // Load the video - it will auto-play when ready due to autoplay: 1
+                                        player.loadVideoById({
+                                            videoId: data.videoId,
+                                            startSeconds: 0
+                                        });
+                                    }, 100);
+                                }
+                            }
+                        } catch (e) {
+                            console.log('Error parsing JSON:', e);
+                        }
+                    }
+                };
+                xhr.onerror = function() {
+                    // Silently ignore errors (file might not exist yet)
+                    console.log('XHR error - file might not exist yet');
+                };
+                xhr.send();
+            }, 1000); // Check every second
+        }
+
+        // Manual load function (can be called from external sources)
+        function loadVideo(videoId) {
+            console.log('Loading video:', videoId);
+            currentVideoId = videoId;
+
+            // Make sure player is visible
+            document.getElementById('player-container').style.opacity = '1';
+            document.getElementById('player-container').style.visibility = 'visible';
+
+            if (player && player.loadVideoById) {
+                player.loadVideoById({
+                    videoId: videoId,
+                    startSeconds: 0
+                });
+                player.playVideo();
+            }
+        }
+
+        // Get current video duration (in seconds)
+        function getVideoDuration() {
+            if (player && player.getDuration) {
+                return player.getDuration();
+            }
+            return 0;
+        }
+
+        // Stop and clear video
+        function stopVideo() {
+            if (player && player.stopVideo) {
+                player.stopVideo();
+                currentVideoId = null;
+            }
+        }
+
+        // Make functions available globally
+        window.loadVideo = loadVideo;
+        window.getVideoDuration = getVideoDuration;
+        window.stopVideo = stopVideo;
+    </script>
+</body>
+</html>

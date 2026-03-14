@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>JSON Formatter - Beautify, Minify & Validate JSON | Free Online</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Format, beautify, minify, and validate JSON instantly. Syntax highlighting, error detection, tree view. Essential developer tool - completely free.">
+    <meta name="keywords" content="json formatter, json beautifier, json validator, json minify, json viewer, json parser, format json online">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/json-formatter">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="JSON Formatter - Format & Validate JSON | Free">
+    <meta property="og:description" content="The JSON tool developers actually use. Beautify, minify, validate - with syntax highlighting and instant error detection.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/json-formatter">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/json-formatter.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="formatter-container">
+            <div class="formatter-header">
+                <h1>JSON Formatter</h1>
+                <p>Beautify, minify, and validate JSON with syntax highlighting</p>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="action-bar">
+                <div class="action-group">
+                    <button class="action-btn primary" id="formatBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="21" y1="10" x2="3" y2="10"></line>
+                            <line x1="21" y1="6" x2="3" y2="6"></line>
+                            <line x1="21" y1="14" x2="3" y2="14"></line>
+                            <line x1="21" y1="18" x2="3" y2="18"></line>
+                        </svg>
+                        Beautify
+                    </button>
+                    <button class="action-btn" id="minifyBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="4 14 10 14 10 20"></polyline>
+                            <polyline points="20 10 14 10 14 4"></polyline>
+                            <line x1="14" y1="10" x2="21" y2="3"></line>
+                            <line x1="3" y1="21" x2="10" y2="14"></line>
+                        </svg>
+                        Minify
+                    </button>
+                    <button class="action-btn" id="validateBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Validate
+                    </button>
+                </div>
+                <div class="action-group">
+                    <button class="action-btn" id="copyBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy
+                    </button>
+                    <button class="action-btn" id="clearBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        Clear
+                    </button>
+                    <button class="action-btn" id="sampleBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        Sample
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="status-bar" id="statusBar">
+                <span class="status-icon" id="statusIcon">○</span>
+                <span class="status-text" id="statusText">Enter JSON to validate</span>
+            </div>
+
+            <!-- Main Editor -->
+            <div class="editor-main">
+                <!-- Input Panel -->
+                <div class="editor-panel">
+                    <div class="panel-header">
+                        <span>Input</span>
+                        <div class="panel-info">
+                            <span id="inputLines">0 lines</span>
+                            <span id="inputSize">0 bytes</span>
+                        </div>
+                    </div>
+                    <div class="editor-wrapper">
+                        <div class="line-numbers" id="inputLineNumbers"></div>
+                        <textarea id="jsonInput" placeholder="Paste your JSON here..." spellcheck="false"></textarea>
+                    </div>
+                </div>
+
+                <!-- Output Panel -->
+                <div class="editor-panel">
+                    <div class="panel-header">
+                        <span>Output</span>
+                        <div class="panel-tabs">
+                            <button class="panel-tab active" data-view="formatted">Formatted</button>
+                            <button class="panel-tab" data-view="tree">Tree View</button>
+                        </div>
+                    </div>
+                    <div class="output-wrapper">
+                        <div class="output-formatted" id="outputFormatted">
+                            <div class="line-numbers" id="outputLineNumbers"></div>
+                            <pre id="jsonOutput"></pre>
+                        </div>
+                        <div class="output-tree" id="outputTree" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="settings-section">
+                <h3>Settings</h3>
+                <div class="settings-grid">
+                    <div class="setting-item">
+                        <label for="indentSize">Indent Size</label>
+                        <select id="indentSize">
+                            <option value="2">2 spaces</option>
+                            <option value="4" selected>4 spaces</option>
+                            <option value="tab">Tab</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <label for="sortKeys">Sort Keys</label>
+                        <label class="toggle">
+                            <input type="checkbox" id="sortKeys">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label for="quoteKeys">Quote Keys</label>
+                        <label class="toggle">
+                            <input type="checkbox" id="quoteKeys" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <script src="/static/js/json-formatter.js?v={{ v }}"></script>
+</body>
+</html>

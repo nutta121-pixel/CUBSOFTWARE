@@ -1,0 +1,22 @@
+{
+  "name": "cub-protector",
+  "version": "1.0.0",
+  "description": "CUB PROTECTOR - Discord Moderation Bot by CUB SOFTWARE",
+  "main": "index.js",
+  "scripts": {
+    "start": "node start.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "@discordjs/voice": "^0.19.0",
+    "@napi-rs/canvas": "^0.1.93",
+    "@snazzah/davey": "*",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "prism-media": "^1.3.5",
+    "rss-parser": "^3.13.0"
+  },
+  "author": "CUB SOFTWARE",
+  "license": "MIT"
+}

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>{{ server.name or 'Server Template' }} - CleanMe</title>
+    <meta name="description" content="{{ server.description or 'View and copy this Discord server template with CleanMe bot.' }}">
+
+    <link rel="icon" type="image/png" href="/static/images/cleanme-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/cleanme.css?v={{ v }}">
+</head>
+<body data-page="server" data-server-id="{{ server_id }}">
+    <!-- Header -->
+    <header class="site-header cleanme-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <span class="logo-text">
+                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                </span>
+            </a>
+            <nav class="nav-links" id="siteNav">
+                <a href="/cleanme" class="nav-link">Home</a>
+                <a href="/cleanme/browse" class="nav-link">Browse</a>
+                <a href="/cleanme/submit" class="nav-link">Submit</a>
+                <a href="/" class="nav-link">Back to Tools</a>
+            </nav>
+            <div class="header-actions">
+                <button class="login-btn">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                        <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z"/>
+                    </svg>
+                    Login with Discord
+                </button>
+                <div class="user-menu" style="display: none;">
+                    <button class="user-menu-btn">
+                        <img src="/static/images/default-avatar.png" alt="Avatar" class="user-avatar">
+                        <span class="user-name">User</span>
+                    </button>
+                    <div class="user-dropdown">
+                        <a href="/cleanme/dashboard">My Servers</a>
+                        <a href="/cleanme/submit">Submit Server</a>
+                        <button class="logout-btn">Logout</button>
+                    </div>
+                </div>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Server Detail -->
+    <main class="server-detail-main">
+        <div class="server-detail-container">
+            <!-- Server Header -->
+            <div class="server-detail-header">
+                <img src="/static/images/default-server.png" alt="Server Icon" class="server-detail-icon">
+                <div class="server-detail-info">
+                    <h1 class="server-detail-name">Loading...</h1>
+                    <span class="server-detail-category">Category</span>
+                    <p class="server-detail-description">Loading server details...</p>
+                </div>
+                <div class="server-detail-actions">
+                    <button class="vote-btn-large vote-btn" data-server-id="{{ server_id }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M12 19V6M5 12l7-7 7 7"/>
+                        </svg>
+                        <span>Vote</span>
+                        <span class="vote-count"></span>
+                    </button>
+                    <button class="edit-template-btn" id="edit-template-btn" style="display:none;" onclick="window.location.href='/cleanme/edit/{{ server_id }}'">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        <span>Edit Template</span>
+                    </button>
+                    <button class="copy-template-btn" data-server-id="{{ server_id }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span>Copy Command</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="server-stats-cards">
+                <div class="stat-card">
+                    <div class="stat-icon channels"></div>
+                    <div class="stat-value stat-channels">0</div>
+                    <div class="stat-label">Channels</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon roles"></div>
+                    <div class="stat-value stat-roles">0</div>
+                    <div class="stat-label">Roles</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon categories"></div>
+                    <div class="stat-value stat-categories">0</div>
+                    <div class="stat-label">Categories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon votes"></div>
+                    <div class="stat-value stat-votes">0</div>
+                    <div class="stat-label">Votes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon copies"></div>
+                    <div class="stat-value stat-copies">0</div>
+                    <div class="stat-label">Copies</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="server-tabs">
+                <button class="server-tab active" data-tab="channels">Channels</button>
+                <button class="server-tab" data-tab="roles">Roles</button>
+                <button class="server-tab" data-tab="categories">Categories</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-contents">
+                <div class="tab-content active" data-tab="channels">
+                    <div class="channels-list">
+                        <div class="loading">Loading channels...</div>
+                    </div>
+                </div>
+                <div class="tab-content" data-tab="roles">
+                    <div class="roles-list">
+                        <div class="loading">Loading roles...</div>
+                    </div>
+                </div>
+                <div class="tab-content" data-tab="categories">
+                    <div class="categories-list">
+                        <div class="loading">Loading categories...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Owner Info -->
+            <div class="server-owner-card">
+                <h3>Submitted by</h3>
+                <div class="owner-info">
+                    <img src="/static/images/default-avatar.png" alt="Owner Avatar" class="owner-avatar">
+                    <span class="owner-name">Loading...</span>
+                </div>
+            </div>
+
+            <!-- How to Use -->
+            <div class="how-to-use-card">
+                <h3>How to Use This Template</h3>
+                <ol>
+                    <li>Invite <a href="https://discord.com/oauth2/authorize?client_id={{ cleanme_client_id }}&permissions=268436528&scope=bot%20applications.commands" target="_blank">CleanMe Bot</a> to your server</li>
+                    <li>Make sure the bot has <strong>Manage Channels</strong>, <strong>Manage Roles</strong>, and <strong>Manage Server</strong> permissions, and its role is at the top of the role list</li>
+                    <li>Use the command: <code>/copy template:{{ server_id }}</code></li>
+                    <li>Confirm the wipe operation (this will replace your server's setup)</li>
+                    <li>Wait for the copy process to complete</li>
+                </ol>
+                <p class="warning">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Warning: Using /copy will delete all existing channels, roles, and categories in your server!
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-text">
+                &copy; 2026 CUB SOFTWARE. Made with love by
+                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/status">Status</a>
+                <a href="/terms">Terms</a>
+                <a href="/privacy">Privacy</a>
+                <a href="/copyright">Copyright</a>
+                <a href="/report">Report Issue</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/cleanme.js?v={{ v }}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const nav = document.getElementById('siteNav');
+        if (mobileBtn && nav) {
+            mobileBtn.addEventListener('click', function() {
+                nav.classList.toggle('active');
+                mobileBtn.classList.toggle('active');
+            });
+        }
+
+        // Show edit button if logged-in user owns this server
+        const serverOwnerId = '{{ server.guild_owner_id or "" }}';
+        const userCookie = document.cookie.split('; ').find(r => r.startsWith('cleanme_user='));
+        if (userCookie && serverOwnerId) {
+            try {
+                const user = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
+                if (user.id === serverOwnerId) {
+                    const editBtn = document.getElementById('edit-template-btn');
+                    if (editBtn) editBtn.style.display = 'flex';
+                }
+            } catch (e) {}
+        }
+    });
+    </script>
+</body>
+</html>

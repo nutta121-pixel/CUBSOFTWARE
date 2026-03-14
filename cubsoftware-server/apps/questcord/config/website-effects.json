@@ -1,0 +1,16 @@
+{
+  "effects": {
+    "backgroundAnimations": true,
+    "cardHoverEffects": true,
+    "cosmicParticles": true,
+    "auroraEffect": true,
+    "gradientAnimations": true
+  },
+  "interactiveFeatures": {
+    "partyMode": true,
+    "insultDisplay": true,
+    "chaosMode": true
+  },
+  "performanceMode": false,
+  "description": "Configure visual effects and interactive features for the QuestCord website. Set performanceMode to true to disable all effects at once. Interactive features: partyMode (rainbow animations on click), insultDisplay (random insults on dev card), chaosMode (bomb effect that scatters page elements)."
+}

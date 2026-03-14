@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Video Compressor - Reduce Video Size Online | Free</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Compress videos without losing quality. Reduce file size by up to 90%. Works in your browser - no upload to servers. Supports MP4, WebM, MOV. Free, unlimited.">
+    <meta name="keywords" content="video compressor, compress video online, reduce video size, video compression free, shrink video file, mp4 compressor">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/video-compressor">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Video Compressor - Shrink Videos Instantly | Free">
+    <meta property="og:description" content="Compress videos up to 90% smaller. No upload required - all processing in your browser. Private, fast, unlimited.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/video-compressor">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/video-compressor.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="compressor-container">
+            <div class="compressor-header">
+                <h1>Video Compressor</h1>
+                <p>Reduce video file size while maintaining quality - all in your browser</p>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="videoInput" accept="video/*" hidden>
+                    <div class="upload-content">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                        </svg>
+                        <h3>Drop your video here or click to upload</h3>
+                        <p>Supports MP4, WebM, MOV, AVI (max 500MB)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compression Settings -->
+            <div class="settings-section" id="settingsSection" style="display: none;">
+                <div class="video-preview">
+                    <video id="videoPreview" controls></video>
+                    <div class="video-info">
+                        <div class="info-item">
+                            <span class="info-label">File Name:</span>
+                            <span class="info-value" id="fileName">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Original Size:</span>
+                            <span class="info-value" id="originalSize">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Duration:</span>
+                            <span class="info-value" id="duration">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Resolution:</span>
+                            <span class="info-value" id="resolution">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-panel">
+                    <h3>Compression Settings</h3>
+
+                    <div class="quality-selector">
+                        <label>Quality Preset</label>
+                        <div class="quality-options">
+                            <button class="quality-btn" data-quality="low">
+                                <span class="quality-name">Low</span>
+                                <span class="quality-desc">Smallest file, lower quality</span>
+                            </button>
+                            <button class="quality-btn active" data-quality="medium">
+                                <span class="quality-name">Medium</span>
+                                <span class="quality-desc">Balanced size & quality</span>
+                            </button>
+                            <button class="quality-btn" data-quality="high">
+                                <span class="quality-name">High</span>
+                                <span class="quality-desc">Best quality, larger file</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="outputFormat">Output Format</label>
+                        <select id="outputFormat">
+                            <option value="mp4">MP4 (Most Compatible)</option>
+                            <option value="webm">WebM (Smaller Size)</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-group">
+                        <label for="resolutionScale">Resolution Scale: <span id="scaleValue">100</span>%</label>
+                        <input type="range" id="resolutionScale" min="25" max="100" value="100" step="5">
+                        <div class="scale-labels">
+                            <span>25%</span>
+                            <span>50%</span>
+                            <span>75%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+
+                    <div class="estimated-size">
+                        <span>Estimated Output Size:</span>
+                        <span class="estimate-value" id="estimatedSize">~calculating...</span>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="change-video-btn" id="changeVideoBtn">Change Video</button>
+                        <button class="compress-btn" id="compressBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="4 14 10 14 10 20"></polyline>
+                                <polyline points="20 10 14 10 14 4"></polyline>
+                                <line x1="14" y1="10" x2="21" y2="3"></line>
+                                <line x1="3" y1="21" x2="10" y2="14"></line>
+                            </svg>
+                            Compress Video
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-card">
+                    <h3>Compressing Video...</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="progressPercent">0%</span>
+                        <span id="progressStatus">Initializing...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Section -->
+            <div class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="result-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                    </div>
+                    <h3>Compression Complete!</h3>
+
+                    <div class="size-comparison">
+                        <div class="size-item">
+                            <span class="size-label">Original</span>
+                            <span class="size-value" id="resultOriginal">-</span>
+                        </div>
+                        <div class="size-arrow">→</div>
+                        <div class="size-item">
+                            <span class="size-label">Compressed</span>
+                            <span class="size-value highlight" id="resultCompressed">-</span>
+                        </div>
+                        <div class="size-item">
+                            <span class="size-label">Saved</span>
+                            <span class="size-value success" id="resultSaved">-</span>
+                        </div>
+                    </div>
+
+                    <div class="result-actions">
+                        <button class="download-btn" id="downloadBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download Compressed Video
+                        </button>
+                        <button class="new-video-btn" id="newVideoBtn">Compress Another</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Browser Support Notice -->
+            <div class="notice" id="browserNotice" style="display: none;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p>Video compression requires a modern browser with WebCodecs support. Please use Chrome 94+, Edge 94+, or Opera 80+.</p>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Done!</div>
+
+    <!-- FFmpeg.wasm for client-side video compression -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <script src="/static/js/video-compressor.js?v={{ v }}"></script>
+</body>
+</html>

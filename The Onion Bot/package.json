@@ -1,0 +1,16 @@
+{
+  "name": "the-onion-bot",
+  "version": "1.0.0",
+  "description": "Discord bot with features explained by Onion",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": ["discord", "bot", "voice", "mute"],
+  "author": "site.cubsoftware - CUBSOFTWARE",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1"
+  }
+}

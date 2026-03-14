@@ -1,0 +1,417 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #00ff88;
+    --bg-dark: #0f0f0f;
+    --bg-card: #1a1a1a;
+    --bg-card-hover: #222;
+    --border-color: #2a2a2a;
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-muted: #666;
+}
+
+body {
+    font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif);
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 0;
+    line-height: 1.6;
+    overflow-y: scroll;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Note: Header styling moved to shared.css */
+
+/* Apps Grid */
+.apps-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 0px 20px 40px;
+    animation: fadeInUp 0.8s ease-out 0.2s both;
+    max-width: 1300px;
+    margin: 0 auto;
+}
+
+.app-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 40px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    width: 300px;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.app-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), #00b8ff);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.app-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--primary-color);
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 255, 136, 0.1);
+}
+
+.app-card:hover::before {
+    opacity: 1;
+}
+
+.app-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 184, 255, 0.1));
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+}
+
+.app-icon svg {
+    width: 40px;
+    height: 40px;
+    color: var(--primary-color);
+}
+
+.app-card:hover .app-icon {
+    transform: scale(1.1) rotate(5deg);
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 184, 255, 0.2));
+}
+
+.youtube-icon {
+    background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(255, 68, 68, 0.1));
+    border-color: rgba(255, 0, 0, 0.2);
+}
+
+.youtube-icon svg {
+    color: #ff4444;
+}
+
+.app-card:hover .youtube-icon {
+    background: linear-gradient(135deg, rgba(255, 0, 0, 0.2), rgba(255, 68, 68, 0.2));
+}
+
+.app-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.app-description {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.app-features {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+    justify-content: center;
+}
+
+.feature-tag {
+    padding: 6px 14px;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+.app-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: var(--primary-color);
+    color: #000;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.app-button:hover {
+    background: #00dd77;
+    transform: translateX(5px);
+    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+}
+
+.app-button svg {
+    transition: transform 0.3s ease;
+}
+
+.app-button:hover svg {
+    transform: translateX(5px);
+}
+
+/* Coming Soon Card */
+.coming-soon {
+    opacity: 0.6;
+}
+
+.coming-soon .app-description {
+    margin-bottom: auto;
+}
+
+.coming-soon .app-icon svg {
+    color: var(--text-muted);
+}
+
+.coming-soon-badge {
+    display: block;
+    width: fit-content;
+    padding: 8px 16px;
+    background: rgba(255, 193, 7, 0.15);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #ffc107;
+    margin-top: auto;
+}
+
+/* Note: Footer styling moved to shared.css */
+
+/* Animations */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .apps-grid {
+        flex-wrap: wrap;
+    }
+
+    .app-card {
+        width: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .apps-grid {
+        flex-wrap: wrap;
+        padding: 30px 15px;
+        gap: 20px;
+    }
+
+    .app-card {
+        padding: 30px;
+        max-width: 100%;
+    }
+
+    .app-icon {
+        width: 70px;
+        height: 70px;
+    }
+
+    .app-icon svg {
+        width: 35px;
+        height: 35px;
+    }
+
+    .app-title {
+        font-size: 1.6rem;
+    }
+
+    .app-description {
+        font-size: 0.95rem;
+    }
+
+    .app-button {
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .apps-grid {
+        flex-wrap: wrap;
+        padding: 20px 10px;
+        gap: 15px;
+    }
+
+    .app-card {
+        padding: 24px 20px;
+        border-radius: 16px;
+    }
+
+    .app-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        margin-bottom: 20px;
+    }
+
+    .app-icon svg {
+        width: 30px;
+        height: 30px;
+    }
+
+    .app-title {
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+    }
+
+    .app-description {
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+    }
+
+    .app-features {
+        gap: 6px;
+        margin-bottom: 24px;
+    }
+
+    .feature-tag {
+        padding: 5px 12px;
+        font-size: 0.8rem;
+    }
+
+    .app-button {
+        padding: 12px 20px;
+        font-size: 0.9rem;
+    }
+
+    .coming-soon-badge {
+        padding: 6px 14px;
+        font-size: 0.85rem;
+    }
+}
+
+/* Stats Section */
+.stats-section {
+    display: flex;
+    justify-content: center;
+    margin: 30px auto 40px;
+    max-width: 1300px;
+}
+
+.stat-item {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 184, 255, 0.1));
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 16px;
+    padding: 24px 40px;
+    text-align: center;
+    width: 1260px;
+    max-width: calc(100vw - 40px);
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+    border-color: rgba(0, 255, 136, 0.5);
+}
+
+.stat-number {
+    display: block;
+    font-size: 3rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.stat-number-actual {
+    display: block;
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 400;
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.95rem;
+    color: #b0b0b0;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+    .stats-section {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+    }
+
+    .stat-item {
+        padding: 20px;
+    }
+}

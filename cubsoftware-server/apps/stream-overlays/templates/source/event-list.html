@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1920">
+<title>Event List</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;}
+#overlay{width:1920px;height:1080px;position:relative;}
+#eventList{position:absolute;top:20px;right:20px;width:380px;display:flex;flex-direction:column;gap:8px;}
+.el-title{font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:3px;text-transform:uppercase;
+  color:var(--accent);margin-bottom:4px;padding:0 4px;}
+.el-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;
+  background:rgba(10,10,26,0.85);backdrop-filter:blur(6px);
+  border-left:3px solid var(--accent);animation:elIn .4s cubic-bezier(.22,1,.36,1) forwards;}
+@keyframes elIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+.el-icon{font-size:18px;flex-shrink:0;width:28px;text-align:center;}
+.el-text{flex:1;overflow:hidden;}
+.el-name{font-weight:700;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.el-label{font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:0.7;}
+.el-extra{font-size:12px;color:var(--accent);font-weight:600;margin-left:auto;flex-shrink:0;}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/overlays/static/css/overlays-effects.css?v={{ v }}">
+</head>
+<body>
+<div id="overlay">
+  <div id="eventList"></div>
+</div>
+<script src="/overlays/static/js/overlays-effects.js?v={{ v }}"></script>
+<script>
+const SCENE_ID = '{{ scene_id }}';
+const DISCORD_USER_ID = '{{ discord_user_id }}';
+let cfg = {};
+let events = [];
+const ICONS = {follow:'♥',sub:'★',gift_sub:'🎁',bits:'💎',raid:'⚔',points:'✦'};
+const LABELS = {follow:'New Follower',sub:'New Sub',gift_sub:'Gift Subs',bits:'Bits',raid:'Raid',points:'Points'};
+
+function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+
+function colorFor(type) {
+    const map = {follow:'follow_color',sub:'sub_color',gift_sub:'gift_sub_color',bits:'bits_color',raid:'raid_color',points:'points_color'};
+    return cfg[map[type]] || cfg.accent_color || '#7c3aed';
+}
+
+function render() {
+    const list = document.getElementById('eventList');
+    const accent = cfg.accent_color || '#7c3aed';
+    document.documentElement.style.setProperty('--accent', accent);
+    let html = cfg.show_title ? `<div class="el-title">${esc(cfg.title||'Recent Events')}</div>` : '';
+    const shown = events.slice(0, cfg.max_events || 8);
+    shown.forEach(ev => {
+        const c = colorFor(ev.type);
+        const extra = ev.type==='bits'?`${ev.amount} bits`:ev.type==='raid'?`${ev.count} viewers`:ev.type==='gift_sub'?`×${ev.count} subs`:'';
+        html += `<div class="el-item" style="border-left-color:${c}">
+          <div class="el-icon">${ICONS[ev.type]||'•'}</div>
+          <div class="el-text">
+            <div class="el-name" style="font-family:'${cfg.font||'Orbitron'}',sans-serif;font-size:${cfg.font_size||16}px">${esc(ev.name||ev.gifter||'Someone')}</div>
+            <div class="el-label" style="color:${c}">${LABELS[ev.type]||ev.type}</div>
+          </div>
+          ${extra?`<div class="el-extra" style="color:${c}">${esc(extra)}</div>`:''}
+        </div>`;
+    });
+    list.innerHTML = html;
+}
+
+function applyConfig(c) {
+    cfg = c;
+    const list = document.getElementById('eventList');
+    list.style.background = 'transparent';
+    render();
+}
+
+function allowed(type) {
+    const map = {follow:'show_follows',sub:'show_subs',gift_sub:'show_gift_subs',bits:'show_bits',raid:'show_raids',points:'show_points'};
+    return cfg[map[type]] !== false;
+}
+
+let lastTs = Math.floor(Date.now()/1000);
+function connectAlerts() {
+    const es = new EventSource('/overlays/alerts/'+DISCORD_USER_ID+'/events?since='+lastTs);
+    es.onmessage = e => {
+        try {
+            const m = JSON.parse(e.data);
+            if (m.type==='alert') {
+                if (m.ts) lastTs = m.ts;
+                if (allowed(m.data.type)) {
+                    events.unshift(m.data);
+                    events = events.slice(0, cfg.max_events||8);
+                    render();
+                }
+            }
+        } catch(_){}
+    };
+    es.onerror = () => { es.close(); setTimeout(connectAlerts, 3000); };
+}
+
+async function loadConfig() {
+    try { const r=await fetch('/overlays/api/scenes/'+SCENE_ID+'/config'); if(r.ok) applyConfig(await r.json()); } catch(e){}
+}
+function connectSSE() {
+    const es=new EventSource('/overlays/source/'+SCENE_ID+'/events');
+    es.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='update')applyConfig(m.config);};
+    es.onerror=()=>{es.close();setTimeout(connectSSE,3000);};
+}
+loadConfig().then(()=>{connectSSE();connectAlerts();});
+</script>
+</body></html>

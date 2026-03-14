@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Privacy Policy - QuestCord</title>
+    <meta name="description" content="Privacy Policy for QuestCord Discord Bot">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=<%= v %>">
+    <style>
+        .legal-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 60px 20px;
+        }
+
+        .legal-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .legal-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .legal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 42px;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .legal-updated {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .legal-content {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+        }
+
+        .legal-content h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            font-size: 24px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .legal-content h3 {
+            color: #fff;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .legal-content p {
+            margin-bottom: 15px;
+        }
+
+        .legal-content ul, .legal-content ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .legal-content li {
+            margin-bottom: 8px;
+        }
+
+        .legal-content a {
+            color: #5865f2;
+            text-decoration: none;
+        }
+
+        .legal-content a:hover {
+            text-decoration: underline;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: rgba(88, 101, 242, 0.1);
+            color: #5865f2;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: rgba(88, 101, 242, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .legal-page {
+                padding: 40px 16px;
+            }
+
+            .legal-container {
+                padding: 24px;
+            }
+
+            .legal-title {
+                font-size: 28px;
+            }
+
+            .legal-content h2 {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .legal-page {
+                padding: 30px 12px;
+            }
+
+            .legal-container {
+                padding: 20px 16px;
+                border-radius: 14px;
+            }
+
+            .legal-title {
+                font-size: 22px;
+            }
+
+            .legal-content h2 {
+                font-size: 18px;
+            }
+
+            .legal-content h3 {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="container">
+            <div class="hero-title-container">
+                <h1 class="hero-title">QuestCord</h1>
+            </div>
+            <p class="hero-subtitle">Quest across the Discord universe</p>
+            <p class="hero-description">Complete quests, defeat bosses, and climb the global leaderboard in this immersive Discord RPG experience</p>
+            <div class="hero-buttons">
+                <a href="https://discord.com/oauth2/authorize?client_id=<%= process.env.DISCORD_CLIENT_ID %>&permissions=2048&scope=bot%20applications.commands" class="btn btn-primary" target="_blank">Add to Discord</a>
+                <a href="/" class="btn btn-secondary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="legal-page">
+        <div class="legal-container">
+            <div class="legal-header">
+                <h1 class="legal-title">Privacy Policy</h1>
+                <p class="legal-updated">Last Updated: December 1, 2025</p>
+            </div>
+
+            <div class="legal-content">
+                <h2>1. Introduction</h2>
+                <p>This Privacy Policy explains how QuestCord ("we", "us", "the Bot") collects, uses, and protects your information when you use our Discord bot.</p>
+
+                <h2>2. Information We Collect</h2>
+                <h3>2.1 Automatically Collected Information</h3>
+                <p>When you use QuestCord, we automatically collect:</p>
+                <ul>
+                    <li><strong>Discord User ID:</strong> Your unique Discord identifier</li>
+                    <li><strong>Username:</strong> Your Discord username (for display purposes)</li>
+                    <li><strong>Server Information:</strong> Discord server IDs and names where the Bot is installed</li>
+                    <li><strong>Server Membership:</strong> Which servers you're a member of (for quest assignment)</li>
+                </ul>
+
+                <h3>2.2 Game Data</h3>
+                <p>We store game-related information including:</p>
+                <ul>
+                    <li>Quest completion history and progress</li>
+                    <li>Virtual currency balances (Dakari and Gems)</li>
+                    <li>Virtual items and equipment in your inventory</li>
+                    <li>Experience points and level</li>
+                    <li>Leaderboard rankings and scores</li>
+                    <li>Boss battle participation and damage dealt</li>
+                    <li>PVP statistics and match history</li>
+                    <li>Activity logs for gameplay actions</li>
+                </ul>
+
+                <h3>2.3 Technical Information</h3>
+                <p>We may collect:</p>
+                <ul>
+                    <li>Command usage statistics</li>
+                    <li>Error logs for debugging purposes</li>
+                    <li>Timestamps of interactions</li>
+                </ul>
+
+                <h2>3. How We Use Your Information</h2>
+                <p>We use the collected information to:</p>
+                <ul>
+                    <li>Provide and operate the Bot's features</li>
+                    <li>Track your game progress and statistics</li>
+                    <li>Display leaderboards and rankings</li>
+                    <li>Assign quests based on server membership</li>
+                    <li>Maintain the economy system</li>
+                    <li>Improve and optimize the Bot's performance</li>
+                    <li>Debug errors and fix issues</li>
+                    <li>Display your username in game features</li>
+                </ul>
+
+                <h2>4. Data Sharing and Disclosure</h2>
+                <p>We do not sell, trade, or rent your personal information to third parties. We may share limited information in the following circumstances:</p>
+                <ul>
+                    <li><strong>Public Leaderboards:</strong> Your username and score may be displayed on public leaderboards</li>
+                    <li><strong>Discord Display:</strong> Your username and game statistics may be shown to other users through Bot commands</li>
+                    <li><strong>Legal Requirements:</strong> We may disclose information if required by law or to protect our rights</li>
+                </ul>
+
+                <h2>5. Data Storage and Security</h2>
+                <p>We implement reasonable security measures to protect your data:</p>
+                <ul>
+                    <li>Data is stored in a secure database</li>
+                    <li>Access to data is limited to authorized Bot functions</li>
+                    <li>We use industry-standard security practices</li>
+                </ul>
+                <p>However, no method of electronic storage is 100% secure. While we strive to protect your data, we cannot guarantee absolute security.</p>
+
+                <h2>6. Data Retention</h2>
+                <p>We retain your data as long as:</p>
+                <ul>
+                    <li>You continue to use the Bot</li>
+                    <li>The data is necessary for Bot functionality</li>
+                    <li>You do not request data deletion</li>
+                </ul>
+                <p>Inactive accounts may be archived or deleted after an extended period of inactivity.</p>
+
+                <h2>7. Your Rights and Choices</h2>
+                <p>You have the right to:</p>
+                <ul>
+                    <li><strong>Access Your Data:</strong> Request information about what data we have stored</li>
+                    <li><strong>Data Deletion:</strong> Request deletion of your data (contact us through our support server)</li>
+                    <li><strong>Stop Using the Bot:</strong> You can stop using QuestCord at any time</li>
+                    <li><strong>Server Opt-Out:</strong> Server administrators can remove the Bot from their server</li>
+                </ul>
+
+                <h2>8. Children's Privacy</h2>
+                <p>QuestCord is intended for users who meet Discord's minimum age requirement (13+ in most regions, 16+ in some). We do not knowingly collect information from users who do not meet Discord's age requirements.</p>
+
+                <h2>9. Third-Party Services</h2>
+                <p>QuestCord operates on Discord's platform and is subject to Discord's Privacy Policy. We recommend reviewing Discord's privacy practices at <a href="https://discord.com/privacy" target="_blank">https://discord.com/privacy</a>.</p>
+
+                <h2>10. Changes to This Policy</h2>
+                <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated "Last Updated" date. Continued use of the Bot after changes constitutes acceptance of the updated policy.</p>
+
+                <h2>11. California Privacy Rights</h2>
+                <p>California residents have specific rights under the California Consumer Privacy Act (CCPA). If you are a California resident, you may request information about:</p>
+                <ul>
+                    <li>Categories of personal information we collect</li>
+                    <li>Purposes for collecting personal information</li>
+                    <li>Categories of third parties we share information with</li>
+                    <li>Specific pieces of personal information we have collected</li>
+                </ul>
+
+                <h2>12. International Users</h2>
+                <p>QuestCord may be used by users worldwide. By using the Bot, you consent to the transfer and processing of your data in accordance with this Privacy Policy.</p>
+
+                <h2>13. Contact Us</h2>
+                <p>If you have questions, concerns, or requests regarding this Privacy Policy or your data, please contact us through our <a href="https://discord.gg/ACGKvKkZ5Z" target="_blank">support server</a>.</p>
+
+                <h2>14. Data Breach Notification</h2>
+                <p>In the event of a data breach that may affect your personal information, we will notify affected users as required by applicable law and take appropriate steps to mitigate any harm.</p>
+            </div>
+        </div>
+    </div>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

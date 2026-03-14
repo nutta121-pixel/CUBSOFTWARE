@@ -1,0 +1,7 @@
+cryptography>=42.0.0
+argon2-cffi>=23.1.0
+pyperclip>=1.8.2
+pyzbar>=0.1.9
+qrcode>=7.4.2
+pillow>=10.0.0
+requests>=2.31.0

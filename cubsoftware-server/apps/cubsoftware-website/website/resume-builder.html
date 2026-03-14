@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Resume Builder - Create Professional Resumes & Cover Letters | Free</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Build stunning resumes, CVs, and cover letters in minutes. Multiple templates, PDF export, save unlimited drafts. No signup, completely free.">
+    <meta name="keywords" content="resume builder, cv maker, cover letter generator, free resume template, professional resume, job application">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/resume-builder">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Resume Builder - Professional Resumes in Minutes | Free">
+    <meta property="og:description" content="Create job-winning resumes and cover letters. Beautiful templates, instant PDF download. Save drafts, edit anytime. 100% free.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/resume-builder">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/resume-builder.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="builder-container">
+            <div class="builder-header">
+                <h1>Resume Builder</h1>
+                <p>Create professional resumes, CVs, and cover letters</p>
+            </div>
+
+            <!-- Document Type Tabs -->
+            <div class="doc-type-tabs">
+                <button class="doc-tab active" data-type="resume">Resume</button>
+                <button class="doc-tab" data-type="cover-letter">Cover Letter</button>
+            </div>
+
+            <div class="builder-main">
+                <!-- Editor Panel -->
+                <div class="editor-panel">
+                    <!-- Resume/CV Form -->
+                    <div class="form-section" id="resumeForm">
+                        <!-- Personal Info -->
+                        <div class="form-group-section">
+                            <h3>Personal Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Full Name *</label>
+                                    <input type="text" id="fullName" placeholder="John Doe">
+                                </div>
+                                <div class="form-group">
+                                    <label>Job Title</label>
+                                    <input type="text" id="jobTitle" placeholder="Software Developer">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Email *</label>
+                                    <input type="email" id="email" placeholder="john@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" id="phone" placeholder="+1 234 567 8900">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Location</label>
+                                    <input type="text" id="location" placeholder="New York, NY">
+                                </div>
+                                <div class="form-group">
+                                    <label>Website/LinkedIn</label>
+                                    <input type="url" id="website" placeholder="linkedin.com/in/johndoe">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Professional Summary -->
+                        <div class="form-group-section">
+                            <h3>Professional Summary</h3>
+                            <div class="form-group">
+                                <textarea id="summary" rows="4" placeholder="Brief overview of your professional background and key achievements..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Experience -->
+                        <div class="form-group-section">
+                            <div class="section-header">
+                                <h3>Work Experience</h3>
+                                <button class="add-btn" id="addExperience">+ Add</button>
+                            </div>
+                            <div id="experienceList" class="dynamic-list"></div>
+                        </div>
+
+                        <!-- Education -->
+                        <div class="form-group-section">
+                            <div class="section-header">
+                                <h3>Education</h3>
+                                <button class="add-btn" id="addEducation">+ Add</button>
+                            </div>
+                            <div id="educationList" class="dynamic-list"></div>
+                        </div>
+
+                        <!-- Skills -->
+                        <div class="form-group-section">
+                            <h3>Skills</h3>
+                            <div class="form-group">
+                                <input type="text" id="skillsInput" placeholder="Type a skill and press Enter">
+                                <div class="tags-container" id="skillsTags"></div>
+                            </div>
+                        </div>
+
+                        <!-- Certifications -->
+                        <div class="form-group-section">
+                            <div class="section-header">
+                                <h3>Certifications</h3>
+                                <button class="add-btn" id="addCertification">+ Add</button>
+                            </div>
+                            <div id="certificationList" class="dynamic-list"></div>
+                        </div>
+
+                        <!-- Projects -->
+                        <div class="form-group-section">
+                            <div class="section-header">
+                                <h3>Projects</h3>
+                                <button class="add-btn" id="addProject">+ Add</button>
+                            </div>
+                            <div id="projectList" class="dynamic-list"></div>
+                        </div>
+
+                        <!-- Languages -->
+                        <div class="form-group-section">
+                            <div class="section-header">
+                                <h3>Languages</h3>
+                                <button class="add-btn" id="addLanguage">+ Add</button>
+                            </div>
+                            <div id="languageList" class="dynamic-list"></div>
+                        </div>
+
+                        <!-- Awards & Achievements -->
+                        <div class="form-group-section">
+                            <div class="section-header">
+                                <h3>Awards & Achievements</h3>
+                                <button class="add-btn" id="addAward">+ Add</button>
+                            </div>
+                            <div id="awardList" class="dynamic-list"></div>
+                        </div>
+                    </div>
+
+                    <!-- Cover Letter Form -->
+                    <div class="form-section" id="coverLetterForm" style="display: none;">
+                        <div class="form-group-section">
+                            <h3>Your Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Your Name *</label>
+                                    <input type="text" id="clName" placeholder="John Doe">
+                                </div>
+                                <div class="form-group">
+                                    <label>Email *</label>
+                                    <input type="email" id="clEmail" placeholder="john@example.com">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Phone</label>
+                                    <input type="tel" id="clPhone" placeholder="+1 234 567 8900">
+                                </div>
+                                <div class="form-group">
+                                    <label>Date</label>
+                                    <input type="date" id="clDate">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group-section">
+                            <h3>Recipient Information</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Hiring Manager Name</label>
+                                    <input type="text" id="clRecipient" placeholder="Jane Smith">
+                                </div>
+                                <div class="form-group">
+                                    <label>Company Name *</label>
+                                    <input type="text" id="clCompany" placeholder="Tech Corp">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Company Address</label>
+                                <input type="text" id="clAddress" placeholder="123 Business St, City, State">
+                            </div>
+                        </div>
+
+                        <div class="form-group-section">
+                            <h3>Letter Content</h3>
+                            <div class="form-group">
+                                <label>Position Applying For *</label>
+                                <input type="text" id="clPosition" placeholder="Software Developer">
+                            </div>
+                            <div class="form-group">
+                                <label>Opening Paragraph</label>
+                                <textarea id="clOpening" rows="3" placeholder="I am writing to express my interest in the [position] role..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Body (Your Qualifications)</label>
+                                <textarea id="clBody" rows="5" placeholder="Describe your relevant experience and achievements..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Closing Paragraph</label>
+                                <textarea id="clClosing" rows="3" placeholder="Thank you for considering my application..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="editor-actions-wrapper">
+                        <div class="editor-actions three-col">
+                            <button class="save-draft-btn" id="saveDraftBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                    <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                    <polyline points="7 3 7 8 15 8"></polyline>
+                                </svg>
+                                Save Draft
+                            </button>
+                            <button class="download-btn" id="downloadPdfBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download PDF
+                            </button>
+                            <button class="share-link-btn" id="shareLinkBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                                Share Link
+                            </button>
+                        </div>
+
+                        <!-- Share Link Result -->
+                        <div class="share-result" id="shareResult" style="display: none;">
+                            <div class="share-label">Share this link with employers:</div>
+                            <div class="share-url-wrapper">
+                                <input type="text" id="shareUrlInput" readonly>
+                                <button class="copy-share-btn" id="copyShareBtn">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Panel -->
+                <div class="preview-panel">
+                    <div class="preview-header">
+                        <h3>Preview</h3>
+                        <div class="preview-options">
+                            <div class="custom-dropdown" data-target="templateSelect">
+                                <button class="dropdown-toggle" type="button">
+                                    <span class="dropdown-label">Modern</span>
+                                    <svg class="dropdown-arrow" viewBox="0 0 10 10"><path d="M5 7L1 3h8z"/></svg>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <div class="dropdown-item active" data-value="modern">Modern</div>
+                                    <div class="dropdown-item" data-value="classic">Classic</div>
+                                    <div class="dropdown-item" data-value="minimal">Minimal</div>
+                                    <div class="dropdown-item" data-value="executive">Executive</div>
+                                    <div class="dropdown-item" data-value="professional">Professional</div>
+                                </div>
+                                <select id="templateSelect" hidden>
+                                    <option value="modern">Modern</option>
+                                    <option value="classic">Classic</option>
+                                    <option value="minimal">Minimal</option>
+                                    <option value="executive">Executive</option>
+                                    <option value="professional">Professional</option>
+                                </select>
+                            </div>
+                            <div class="custom-dropdown" data-target="backgroundSelect">
+                                <button class="dropdown-toggle" type="button">
+                                    <span class="dropdown-label">Clean White</span>
+                                    <svg class="dropdown-arrow" viewBox="0 0 10 10"><path d="M5 7L1 3h8z"/></svg>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <div class="dropdown-item active" data-value="clean">Clean White</div>
+                                    <div class="dropdown-item" data-value="ivory">Ivory Paper</div>
+                                    <div class="dropdown-item" data-value="elegant">Elegant Gold</div>
+                                    <div class="dropdown-item" data-value="professional">Professional</div>
+                                    <div class="dropdown-item" data-value="corporate">Corporate</div>
+                                    <div class="dropdown-item" data-value="creative">Creative</div>
+                                    <div class="dropdown-item" data-value="premium">Premium</div>
+                                </div>
+                                <select id="backgroundSelect" hidden>
+                                    <option value="clean">Clean White</option>
+                                    <option value="ivory">Ivory Paper</option>
+                                    <option value="elegant">Elegant Gold</option>
+                                    <option value="professional">Professional</option>
+                                    <option value="corporate">Corporate</option>
+                                    <option value="creative">Creative</option>
+                                    <option value="premium">Premium</option>
+                                </select>
+                            </div>
+                            <div class="custom-dropdown" data-target="fontSelect">
+                                <button class="dropdown-toggle" type="button">
+                                    <span class="dropdown-label">Georgia</span>
+                                    <svg class="dropdown-arrow" viewBox="0 0 10 10"><path d="M5 7L1 3h8z"/></svg>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <div class="dropdown-item active" data-value="georgia">Georgia (Classic)</div>
+                                    <div class="dropdown-item" data-value="arial">Arial (Clean)</div>
+                                    <div class="dropdown-item" data-value="times">Times New Roman</div>
+                                    <div class="dropdown-item" data-value="calibri">Calibri (Modern)</div>
+                                    <div class="dropdown-item" data-value="garamond">Garamond (Elegant)</div>
+                                </div>
+                                <select id="fontSelect" hidden>
+                                    <option value="georgia">Georgia (Classic)</option>
+                                    <option value="arial">Arial (Clean)</option>
+                                    <option value="times">Times New Roman</option>
+                                    <option value="calibri">Calibri (Modern)</option>
+                                    <option value="garamond">Garamond (Elegant)</option>
+                                </select>
+                            </div>
+                            <div class="custom-dropdown" data-target="colorSelect">
+                                <button class="dropdown-toggle" type="button">
+                                    <span class="dropdown-label">Blue</span>
+                                    <span class="color-indicator" style="background: #2563eb;"></span>
+                                    <svg class="dropdown-arrow" viewBox="0 0 10 10"><path d="M5 7L1 3h8z"/></svg>
+                                </button>
+                                <div class="dropdown-menu">
+                                    <div class="dropdown-item active" data-value="blue"><span class="color-dot" style="background: #2563eb;"></span>Blue</div>
+                                    <div class="dropdown-item" data-value="navy"><span class="color-dot" style="background: #1e3a5f;"></span>Navy</div>
+                                    <div class="dropdown-item" data-value="green"><span class="color-dot" style="background: #059669;"></span>Green</div>
+                                    <div class="dropdown-item" data-value="burgundy"><span class="color-dot" style="background: #7c2d36;"></span>Burgundy</div>
+                                    <div class="dropdown-item" data-value="black"><span class="color-dot" style="background: #1a1a1a;"></span>Black</div>
+                                    <div class="dropdown-item" data-value="teal"><span class="color-dot" style="background: #0d9488;"></span>Teal</div>
+                                    <div class="dropdown-item" data-value="purple"><span class="color-dot" style="background: #7c3aed;"></span>Purple</div>
+                                </div>
+                                <select id="colorSelect" hidden>
+                                    <option value="blue">Blue</option>
+                                    <option value="navy">Navy</option>
+                                    <option value="green">Green</option>
+                                    <option value="burgundy">Burgundy</option>
+                                    <option value="black">Black</option>
+                                    <option value="teal">Teal</option>
+                                    <option value="purple">Purple</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="preview-container" id="previewContainer">
+                        <div class="resume-preview" id="resumePreview">
+                            <!-- Preview content will be generated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Documents -->
+            <div class="saved-section">
+                <div class="saved-header">
+                    <h3>Saved Documents</h3>
+                    <button class="clear-all-btn" id="clearAllBtn">Clear All</button>
+                </div>
+                <div class="saved-list" id="savedList">
+                    <div class="empty-state">No saved documents yet</div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Saved!</div>
+
+    <!-- html2pdf for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="/static/js/resume-builder.js?v={{ v }}"></script>
+</body>
+</html>

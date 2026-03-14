@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Config Setup - StreamerBot Commands</title>
+    <link rel="stylesheet" href="../css/shared.css">
+    <link rel="stylesheet" href="../css/commands.css">
+    <link rel="stylesheet" href="../css/command-detail.css">
+    <link rel="icon" href="../images/company-logo.png">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="site-header">
+            <div class="header-top">
+                <a href="https://cubsoftware.site" class="logo">
+                    <span class="logo-text">
+                        <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                    </span>
+                </a>
+                <nav class="site-nav">
+                    <a href="https://cubsoftware.site">Home</a>
+                    <a href="../index.html" class="active">Commands</a>
+                    <a href="config-setup.html">Setup Guide</a>
+                    <a href="https://github.com/HexEchoTV/CUBSOFTWARE/tree/main/cubsoftware-server/apps/streamerbot-commands/files/Currency/Core/Config-Setup" target="_blank">GitHub</a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="page-content">
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb">
+                <a href="../index.html">Commands</a>
+                <span>/</span>
+                <span class="current">Config Setup</span>
+            </nav>
+
+            <!-- Command Header -->
+            <div class="command-header">
+                <div class="command-title">
+                    <h1>Config Setup</h1>
+                </div>
+                <div class="command-meta">
+                    <span class="meta-badge status-completed">Required</span>
+                    <span class="meta-badge category">Core System</span>
+                    <span class="meta-badge">Run First</span>
+                </div>
+                <p class="command-description-full">
+                    The foundation file that initializes all global variables and settings for the entire StreamerBot currency system.
+                    This single file controls all settings for earning commands, gambling games, adventure games, PVP mechanics,
+                    and system integrations like Discord logging and Twitch API.
+                </p>
+            </div>
+
+            <!-- Overview -->
+            <section class="content-section">
+                <h2>Overview</h2>
+                <p>
+                    <code>ConfigSetup.cs</code> is the central configuration hub for all StreamerBot commands.
+                    Running this file creates global variables that every other command reads from, allowing you to
+                    customize the entire system from one place.
+                </p>
+
+                <div class="info-box tip">
+                    <span class="icon">&#128161;</span>
+                    <div class="content">
+                        <strong>Important:</strong> You must run ConfigSetup.cs before using any other commands.
+                        All commands depend on the global variables it creates.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Installation -->
+            <section class="content-section">
+                <h2>Installation</h2>
+                <div class="install-steps">
+                    <div class="install-step">
+                        <div class="install-step-content">
+                            <h3>Download ConfigSetup.cs</h3>
+                            <p>Get the file from the <a href="https://github.com/HexEchoTV/CUBSOFTWARE/tree/main/cubsoftware-server/apps/streamerbot-commands/files/Currency/Core/Config-Setup" target="_blank">GitHub repository</a>.</p>
+                        </div>
+                    </div>
+                    <div class="install-step">
+                        <div class="install-step-content">
+                            <h3>Create a new Action in StreamerBot</h3>
+                            <p>Go to <strong>Actions</strong> tab, right-click and select <strong>Add</strong> to create a new action.</p>
+                        </div>
+                    </div>
+                    <div class="install-step">
+                        <div class="install-step-content">
+                            <h3>Add a C# Sub-Action</h3>
+                            <p>Right-click in the sub-actions area, select <strong>Core &gt; C# &gt; Execute C# Code</strong>.</p>
+                        </div>
+                    </div>
+                    <div class="install-step">
+                        <div class="install-step-content">
+                            <h3>Paste the ConfigSetup.cs code</h3>
+                            <p>Copy the entire contents of ConfigSetup.cs and paste it into the C# editor.</p>
+                        </div>
+                    </div>
+                    <div class="install-step">
+                        <div class="install-step-content">
+                            <h3>Configure your settings</h3>
+                            <p>Edit the configuration values (see Configuration section below) to match your preferences.</p>
+                        </div>
+                    </div>
+                    <div class="install-step">
+                        <div class="install-step-content">
+                            <h3>Compile and Run</h3>
+                            <p>Click <strong>Compile</strong>, then <strong>Test</strong> to initialize all global variables.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- What This Configures -->
+            <section class="content-section">
+                <h2>What This Configures</h2>
+
+                <h3>Core Currency Settings</h3>
+                <table class="config-table">
+                    <thead>
+                        <tr>
+                            <th>Setting</th>
+                            <th>Default</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>config_currency_name</code></td>
+                            <td>"Cub Coins"</td>
+                            <td>Display name for your currency</td>
+                        </tr>
+                        <tr>
+                            <td><code>config_currency_key</code></td>
+                            <td>"cubcoins"</td>
+                            <td>Internal variable key for storing balances</td>
+                        </tr>
+                        <tr>
+                            <td><code>config_daily_reward</code></td>
+                            <td>100</td>
+                            <td>Base daily claim amount</td>
+                        </tr>
+                        <tr>
+                            <td><code>config_streak_bonus</code></td>
+                            <td>25</td>
+                            <td>Bonus per day of streak</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Gambling Game Settings</h3>
+                <p>Each gambling game has configurable min/max bets, win multipliers, and cooldowns:</p>
+                <table class="config-table">
+                    <thead>
+                        <tr>
+                            <th>Game</th>
+                            <th>Min Bet</th>
+                            <th>Max Bet</th>
+                            <th>Win Mult</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Blackjack</td>
+                            <td>25</td>
+                            <td>500</td>
+                            <td>2x</td>
+                        </tr>
+                        <tr>
+                            <td>Slots</td>
+                            <td>10</td>
+                            <td>500</td>
+                            <td>2-10x</td>
+                        </tr>
+                        <tr>
+                            <td>Coinflip</td>
+                            <td>10</td>
+                            <td>1000</td>
+                            <td>2x</td>
+                        </tr>
+                        <tr>
+                            <td>Roulette</td>
+                            <td>25</td>
+                            <td>500</td>
+                            <td>2-14x</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Earning Command Settings</h3>
+                <p>Work, Fish, Hunt, Mine, and other earning commands have configurable rewards and cooldowns.</p>
+            </section>
+
+            <!-- API Configuration -->
+            <section class="content-section">
+                <h2>API Configuration</h2>
+
+                <h3>Twitch API (Optional)</h3>
+                <p>For clip creation, stream title/game changes, and followage commands:</p>
+
+                <div class="code-block">
+                    <code><span class="comment">// Line 344-346 in ConfigSetup.cs</span>
+<span class="keyword">string</span> twitchAccessToken = <span class="string">"YOUR_ACCESS_TOKEN_HERE"</span>;
+<span class="keyword">string</span> twitchRefreshToken = <span class="string">"YOUR_REFRESH_TOKEN_HERE"</span>;
+<span class="keyword">string</span> twitchClientId = <span class="string">"YOUR_CLIENT_ID_HERE"</span>;</code>
+                </div>
+
+                <p>Get your tokens from: <a href="https://twitchtokengenerator.com/" target="_blank">twitchtokengenerator.com</a></p>
+
+                <p><strong>Required scopes:</strong></p>
+                <ul>
+                    <li><code>channel:manage:broadcast</code> - For clips, stream title, game commands</li>
+                    <li><code>moderator:read:followers</code> - For followage command</li>
+                </ul>
+
+                <h3>Discord Webhook (Optional)</h3>
+                <p>For logging all command activity to Discord:</p>
+
+                <div class="code-block">
+                    <code><span class="comment">// Line 356-361 in ConfigSetup.cs</span>
+<span class="keyword">string</span> discordWebhookUrl = <span class="string">"YOUR_WEBHOOK_URL_HERE"</span>;
+<span class="keyword">bool</span> discordLoggingEnabled = <span class="keyword">true</span>;</code>
+                </div>
+
+                <p>Create a webhook in: <strong>Discord Server Settings → Integrations → Webhooks</strong></p>
+            </section>
+
+            <!-- How It Works -->
+            <section class="content-section">
+                <h2>How It Works</h2>
+                <ol>
+                    <li>All commands read their settings from <strong>global variables</strong></li>
+                    <li>ConfigSetup.cs creates/updates those global variables when run</li>
+                    <li>Changes take effect immediately for all commands</li>
+                    <li>No need to edit individual command files</li>
+                </ol>
+
+                <h3>Updating Settings</h3>
+                <p><strong>Option 1:</strong> Edit values in StreamerBot's Global Variables UI</p>
+                <p><strong>Option 2:</strong> Edit ConfigSetup.cs and run it again to update all values at once</p>
+            </section>
+
+            <!-- Related Commands -->
+            <section class="content-section">
+                <h2>Related Commands</h2>
+                <p>Once ConfigSetup.cs is installed, you can add any of these commands:</p>
+                <div class="related-grid">
+                    <a href="balance.html" class="related-card">
+                        <h4>!balance</h4>
+                        <p>Check currency balance</p>
+                    </a>
+                    <a href="daily.html" class="related-card">
+                        <h4>!daily</h4>
+                        <p>Claim daily rewards</p>
+                    </a>
+                    <a href="blackjack.html" class="related-card">
+                        <h4>!blackjack</h4>
+                        <p>Play blackjack</p>
+                    </a>
+                    <a href="slots.html" class="related-card">
+                        <h4>!slots</h4>
+                        <p>Slot machine game</p>
+                    </a>
+                </div>
+            </section>
+
+            <a href="../index.html" class="back-link">&#8592; Back to All Commands</a>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-text">
+                        &copy; 2025 CUB SOFTWARE. Made with love by
+                        <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+                    </div>
+                    <div class="footer-legal-links">
+                        <a href="https://questcord.fun" class="footer-legal-link" target="_blank">QuestCord</a>
+                        <span class="footer-separator">|</span>
+                        <a href="/terms" class="footer-legal-link">Terms of Use</a>
+                        <span class="footer-separator">|</span>
+                        <a href="/privacy" class="footer-legal-link">Privacy Policy</a>
+                        <span class="footer-separator">|</span>
+                        <a href="/copyright" class="footer-legal-link">Copyright</a>
+                        <span class="footer-separator">|</span>
+                        <a href="/contact" class="footer-legal-link">Contact</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#009dff">
+    <title>Affiliate Program - Earn with CUB SOFTWARE</title>
+    <meta name="description" content="Join the CUB SOFTWARE affiliate program. Share your unique link, refer visitors, and earn commissions.">
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        * { box-sizing: border-box; }
+
+        .aff-page {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 5rem;
+        }
+
+        /* ── Hero ── */
+        .aff-hero {
+            text-align: center;
+            padding: 3rem 0 2.5rem;
+        }
+
+        .aff-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #009dff;
+            background: rgba(0,157,255,0.1);
+            border: 1px solid rgba(0,157,255,0.25);
+            padding: 0.35rem 1rem;
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+        }
+
+        .aff-hero-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #009dff 0%, #8a2be2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.25rem;
+        }
+
+        .aff-hero-sub {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 540px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.7;
+        }
+
+        .hero-cta-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-discord {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.9rem 2rem;
+            background: #5865f2;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.25s;
+        }
+        .btn-discord:hover { background: #4752c4; transform: translateY(-2px); box-shadow: 0 6px 24px rgba(88,101,242,0.4); }
+
+        .btn-dashboard {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.9rem 2rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-light);
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            transition: all 0.25s;
+        }
+        .btn-dashboard:hover { border-color: #009dff; color: #009dff; transform: translateY(-2px); }
+
+        /* ── Divider ── */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+            margin: 3rem 0;
+        }
+
+        /* ── Section headings ── */
+        .section-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #009dff;
+            margin-bottom: 0.6rem;
+        }
+
+        .section-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-sub {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        /* ── How it works ── */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .step-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .step-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #009dff22, #8a2be222);
+            border: 1px solid rgba(138,43,226,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #8a2be2;
+            margin-bottom: 1rem;
+        }
+
+        .step-title {
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+        }
+
+        .step-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── Perks ── */
+        .perks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+
+        .perk-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            align-items: flex-start;
+        }
+
+        .perk-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .perk-text-title {
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .perk-text-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* ── Apply CTA ── */
+        .apply-card {
+            background: linear-gradient(135deg, rgba(0,157,255,0.06) 0%, rgba(138,43,226,0.06) 100%);
+            border: 1px solid rgba(138,43,226,0.25);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+        }
+
+        .apply-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #f59e0b;
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.25);
+            padding: 0.3rem 0.9rem;
+            border-radius: 20px;
+            margin-bottom: 1.25rem;
+        }
+
+        .apply-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 0.75rem;
+        }
+
+        .apply-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            max-width: 500px;
+            margin: 0 auto 2rem;
+            line-height: 1.7;
+        }
+
+        .apply-steps {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+
+        .apply-step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+        }
+
+        .apply-step-num {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #009dff, #8a2be2);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .coming-soon-note {
+            margin-top: 1.5rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* ── FAQ ── */
+        .faq-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .faq-item {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .faq-q {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            background: transparent;
+            border: none;
+            color: var(--text-light);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-align: left;
+            transition: color 0.2s;
+            font-family: inherit;
+        }
+        .faq-q:hover { color: #009dff; }
+
+        .faq-chevron {
+            flex-shrink: 0;
+            transition: transform 0.25s;
+            color: var(--text-muted);
+        }
+        .faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+        .faq-a {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            padding: 0 1.25rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+        .faq-item.open .faq-a {
+            max-height: 200px;
+            padding: 0 1.25rem 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .aff-hero { padding: 2rem 0; }
+            .apply-card { padding: 1.75rem 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="aff-page">
+
+            <!-- Hero -->
+            <div class="aff-hero">
+                <div class="aff-eyebrow">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Partner Program
+                </div>
+                <h1 class="aff-hero-title">Earn with<br>CUB SOFTWARE</h1>
+                <p class="aff-hero-sub">Share your unique affiliate link with your audience. Every unique visitor you send our way earns you a commission — no cap, no expiry.</p>
+                <div class="hero-cta-group">
+                    <a href="/affiliate/apply" class="btn-discord" style="background:linear-gradient(135deg,#009dff,#7c3aed);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        Apply Now
+                    </a>
+                    <a href="/affiliate/dashboard" class="btn-dashboard">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        My Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- How it works -->
+            <div>
+                <div class="section-label">The process</div>
+                <h2 class="section-title">How It Works</h2>
+                <p class="section-sub">Three simple steps between you and earning commissions.</p>
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <div class="step-number">01</div>
+                        <div class="step-title">Get Approved</div>
+                        <div class="step-desc">Fill out the application form. We review every application personally and reply within 3 business days.</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">02</div>
+                        <div class="step-title">Share Your Link</div>
+                        <div class="step-desc">Use your unique link — <span style="font-family:monospace;color:#009dff;font-size:0.82rem;">cubsoftware.site/r/hexechotv</span> — in stream panels, descriptions, videos, or posts.</div>
+                    </div>
+                    <div class="step-card">
+                        <div class="step-number">03</div>
+                        <div class="step-title">Earn Commissions</div>
+                        <div class="step-desc">Every unique visitor who arrives through your link counts. Track clicks and earnings in real time on your personal dashboard.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Perks -->
+            <div>
+                <div class="section-label">Why join</div>
+                <h2 class="section-title">Affiliate Perks</h2>
+                <p class="section-sub">Everything you get as a CUB SOFTWARE affiliate.</p>
+                <div class="perks-grid">
+                    <div class="perk-item">
+                        <div class="perk-icon" style="background:rgba(0,157,255,0.12);border:1px solid rgba(0,157,255,0.25);color:#009dff;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        </div>
+                        <div>
+                            <div class="perk-text-title">Custom Vanity URL</div>
+                            <div class="perk-text-desc">Your own branded link like <code style="font-size:0.78rem;color:#009dff;">/r/yourname</code> — clean and easy to share.</div>
+                        </div>
+                    </div>
+                    <div class="perk-item">
+                        <div class="perk-icon" style="background:rgba(87,242,135,0.1);border:1px solid rgba(87,242,135,0.25);color:#57F287;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 6v2m0 8v2"/></svg>
+                        </div>
+                        <div>
+                            <div class="perk-text-title">Commission on Unique Visitors</div>
+                            <div class="perk-text-desc">Earn a set amount for every first-time visitor you refer. Repeat refreshes don't count — just real new visitors.</div>
+                        </div>
+                    </div>
+                    <div class="perk-item">
+                        <div class="perk-icon" style="background:rgba(138,43,226,0.12);border:1px solid rgba(138,43,226,0.25);color:#8a2be2;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                        </div>
+                        <div>
+                            <div class="perk-text-title">Real-Time Dashboard</div>
+                            <div class="perk-text-desc">See your unique clicks, total traffic, and earnings at a glance on your personal affiliate dashboard.</div>
+                        </div>
+                    </div>
+                    <div class="perk-item">
+                        <div class="perk-icon" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:#f59e0b;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                        </div>
+                        <div>
+                            <div class="perk-text-title">Early Access Perks</div>
+                            <div class="perk-text-desc">Affiliates get early access to new tools and features before they're publicly released.</div>
+                        </div>
+                    </div>
+                    <div class="perk-item">
+                        <div class="perk-icon" style="background:rgba(0,157,255,0.12);border:1px solid rgba(0,157,255,0.25);color:#009dff;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
+                        <div>
+                            <div class="perk-text-title">Discord Affiliate Role</div>
+                            <div class="perk-text-desc">Get a dedicated affiliate role in our Discord server with a private channel for updates and support.</div>
+                        </div>
+                    </div>
+                    <div class="perk-item">
+                        <div class="perk-icon" style="background:rgba(87,242,135,0.1);border:1px solid rgba(87,242,135,0.25);color:#57F287;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </div>
+                        <div>
+                            <div class="perk-text-title">No Cap, No Expiry</div>
+                            <div class="perk-text-desc">There's no limit on how much you can earn and your link never expires. Share it once, earn forever.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- Apply section -->
+            <div class="apply-card">
+                <div class="apply-badge">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Early Access — Limited Spots
+                </div>
+                <h2 class="apply-title">Ready to Become an Affiliate?</h2>
+                <p class="apply-desc">Fill out our quick application form and we'll review it personally. We reply within 3 business days.</p>
+
+                <div class="apply-steps">
+                    <div class="apply-step">
+                        <div class="apply-step-num">1</div>
+                        Fill out the form
+                    </div>
+                    <div class="apply-step">
+                        <div class="apply-step-num">2</div>
+                        We review &amp; approve
+                    </div>
+                    <div class="apply-step">
+                        <div class="apply-step-num">3</div>
+                        Get your link &amp; earn
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-top:0.5rem;">
+                    <a href="/affiliate/apply" class="btn-discord" style="display:inline-flex;background:linear-gradient(135deg,#009dff,#7c3aed);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        Apply Now
+                    </a>
+                    <a href="/affiliate/dashboard" class="btn-dashboard">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        My Dashboard
+                    </a>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <!-- FAQ -->
+            <div>
+                <div class="section-label">Questions</div>
+                <h2 class="section-title">FAQ</h2>
+                <p class="section-sub" style="margin-bottom:1.5rem;">Common questions about the affiliate program.</p>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <button class="faq-q" onclick="toggleFaq(this)">
+                            How does unique visitor tracking work?
+                            <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="faq-a">When someone clicks your link we set a small anonymous cookie on their browser. If that cookie already exists, the click doesn't count as unique. This means no matter how many times the same person refreshes or revisits via your link, you only get credit for their very first visit.</div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-q" onclick="toggleFaq(this)">
+                            When and how do I get paid?
+                            <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="faq-a">Payment details are being finalised. Once the payout system launches, your earnings will be visible on your dashboard and you'll be notified about how to withdraw. Early affiliates will be paid first.</div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-q" onclick="toggleFaq(this)">
+                            What kind of commission can I earn?
+                            <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="faq-a">Commission rates are set per affiliate and may vary depending on your audience size and engagement. Your exact rate is shown on your personal dashboard once you're approved. All earnings are based on unique visitors only.</div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-q" onclick="toggleFaq(this)">
+                            Can I use my link on multiple platforms?
+                            <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="faq-a">Absolutely. Your vanity link works everywhere — Twitch panels, YouTube descriptions, Twitter, TikTok, you name it. Every unique visitor counts regardless of where they came from.</div>
+                    </div>
+                    <div class="faq-item">
+                        <button class="faq-q" onclick="toggleFaq(this)">
+                            Do I need to be a big streamer to apply?
+                            <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="faq-a">No minimum follower count is required. We're open to streamers and content creators of all sizes. What matters most is that your community would genuinely find value in CUB SOFTWARE's tools.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <script>
+        function toggleFaq(btn) {
+            const item = btn.closest('.faq-item');
+            const isOpen = item.classList.contains('open');
+            document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+            if (!isOpen) item.classList.add('open');
+        }
+    </script>
+</body>
+</html>

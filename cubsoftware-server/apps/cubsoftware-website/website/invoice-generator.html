@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Invoice Generator - Create Professional Invoices | Free</title>
+
+    <meta name="description" content="Create professional invoices in seconds. Add items, taxes, discounts, and export to PDF. Free online invoice generator.">
+    <meta name="keywords" content="invoice generator, create invoice, free invoice, pdf invoice, billing">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/invoice-generator.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="invoice-container">
+            <div class="invoice-header">
+                <h1>Invoice Generator</h1>
+                <p>Create professional invoices and export to PDF</p>
+            </div>
+
+            <div class="invoice-layout">
+                <!-- Invoice Form -->
+                <div class="invoice-form">
+                    <!-- Business Info -->
+                    <div class="form-section">
+                        <h3>Your Business</h3>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label for="businessName">Business Name</label>
+                                <input type="text" id="businessName" placeholder="Your Company Name">
+                            </div>
+                            <div class="form-group">
+                                <label for="businessEmail">Email</label>
+                                <input type="email" id="businessEmail" placeholder="email@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="businessPhone">Phone</label>
+                                <input type="tel" id="businessPhone" placeholder="+1 234 567 890">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="businessAddress">Address</label>
+                                <textarea id="businessAddress" rows="2" placeholder="123 Business St, City, Country"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Client Info -->
+                    <div class="form-section">
+                        <h3>Bill To</h3>
+                        <div class="form-grid">
+                            <div class="form-group full-width">
+                                <label for="clientName">Client Name</label>
+                                <input type="text" id="clientName" placeholder="Client / Company Name">
+                            </div>
+                            <div class="form-group">
+                                <label for="clientEmail">Email</label>
+                                <input type="email" id="clientEmail" placeholder="client@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="clientPhone">Phone</label>
+                                <input type="tel" id="clientPhone" placeholder="+1 234 567 890">
+                            </div>
+                            <div class="form-group full-width">
+                                <label for="clientAddress">Address</label>
+                                <textarea id="clientAddress" rows="2" placeholder="456 Client Ave, City, Country"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Details -->
+                    <div class="form-section">
+                        <h3>Invoice Details</h3>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="invoiceNumber">Invoice #</label>
+                                <input type="text" id="invoiceNumber" placeholder="INV-001">
+                            </div>
+                            <div class="form-group">
+                                <label for="invoiceDate">Date</label>
+                                <input type="date" id="invoiceDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="dueDate">Due Date</label>
+                                <input type="date" id="dueDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="currency">Currency</label>
+                                <select id="currency">
+                                    <option value="$">USD ($)</option>
+                                    <option value="€">EUR (€)</option>
+                                    <option value="£">GBP (£)</option>
+                                    <option value="¥">JPY (¥)</option>
+                                    <option value="A$">AUD (A$)</option>
+                                    <option value="C$">CAD (C$)</option>
+                                    <option value="NZ$">NZD (NZ$)</option>
+                                    <option value="₹">INR (₹)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Line Items -->
+                    <div class="form-section">
+                        <div class="section-header">
+                            <h3>Items</h3>
+                            <button type="button" class="btn-add-item" id="addItemBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                Add Item
+                            </button>
+                        </div>
+                        <div class="items-table">
+                            <div class="items-header">
+                                <span class="col-desc">Description</span>
+                                <span class="col-qty">Qty</span>
+                                <span class="col-rate">Rate</span>
+                                <span class="col-amount">Amount</span>
+                                <span class="col-action"></span>
+                            </div>
+                            <div id="itemsList"></div>
+                        </div>
+                    </div>
+
+                    <!-- Totals -->
+                    <div class="form-section">
+                        <h3>Totals</h3>
+                        <div class="totals-grid">
+                            <div class="form-group">
+                                <label for="taxRate">Tax Rate (%)</label>
+                                <input type="number" id="taxRate" value="0" min="0" max="100" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="discount">Discount</label>
+                                <div class="discount-input">
+                                    <input type="number" id="discountValue" value="0" min="0" step="0.01">
+                                    <select id="discountType">
+                                        <option value="percent">%</option>
+                                        <option value="fixed">Fixed</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="form-section">
+                        <h3>Notes</h3>
+                        <textarea id="invoiceNotes" rows="3" placeholder="Payment terms, thank you message, etc."></textarea>
+                    </div>
+                </div>
+
+                <!-- Invoice Preview -->
+                <div class="invoice-preview-wrapper">
+                    <div class="preview-header">
+                        <h3>Preview</h3>
+                        <div class="preview-actions">
+                            <button type="button" class="btn-secondary" id="saveTemplateBtn">Save Template</button>
+                            <button type="button" class="btn-primary" id="downloadPdfBtn">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="invoice-preview" id="invoicePreview">
+                        <div class="preview-content" id="previewContent">
+                            <!-- Preview will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="/static/js/invoice-generator.js?v={{ v }}"></script>
+</body>
+</html>

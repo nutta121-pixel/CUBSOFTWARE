@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Regex Tester - Test Regular Expressions | Free</title>
+
+    <meta name="description" content="Test regular expressions in real-time. Match highlighting and explanation included. Free regex tool for developers.">
+    <meta name="keywords" content="regex tester, regular expression, regex checker, pattern matching, developer tools">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/regex-tester.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="regex-container">
+            <div class="regex-header">
+                <h1>Regex Tester</h1>
+                <p>Test regular expressions in real-time</p>
+            </div>
+
+            <div class="pattern-section">
+                <label>Regular Expression</label>
+                <div class="pattern-input-row">
+                    <span class="pattern-delim">/</span>
+                    <input type="text" id="regexPattern" placeholder="Enter regex pattern...">
+                    <span class="pattern-delim">/</span>
+                    <input type="text" id="regexFlags" value="g" placeholder="flags" maxlength="6">
+                </div>
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+
+            <div class="flags-section">
+                <label>Flags</label>
+                <div class="flags-options">
+                    <label class="flag-option">
+                        <input type="checkbox" data-flag="g" checked>
+                        <span class="flag-name">g</span>
+                        <span class="flag-desc">Global</span>
+                    </label>
+                    <label class="flag-option">
+                        <input type="checkbox" data-flag="i">
+                        <span class="flag-name">i</span>
+                        <span class="flag-desc">Case insensitive</span>
+                    </label>
+                    <label class="flag-option">
+                        <input type="checkbox" data-flag="m">
+                        <span class="flag-name">m</span>
+                        <span class="flag-desc">Multiline</span>
+                    </label>
+                    <label class="flag-option">
+                        <input type="checkbox" data-flag="s">
+                        <span class="flag-name">s</span>
+                        <span class="flag-desc">Dotall</span>
+                    </label>
+                    <label class="flag-option">
+                        <input type="checkbox" data-flag="u">
+                        <span class="flag-name">u</span>
+                        <span class="flag-desc">Unicode</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="test-section">
+                <label>Test String</label>
+                <textarea id="testString" placeholder="Enter text to test against the regex..." rows="8"></textarea>
+                <div class="highlighted-output" id="highlightedOutput"></div>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-header">
+                    <h2>Matches</h2>
+                    <span class="match-count" id="matchCount">0 matches</span>
+                </div>
+                <div class="matches-list" id="matchesList"></div>
+            </div>
+
+            <div class="quick-reference">
+                <h2>Quick Reference</h2>
+                <div class="reference-grid">
+                    <div class="ref-category">
+                        <h3>Character Classes</h3>
+                        <div class="ref-item"><code>.</code><span>Any character</span></div>
+                        <div class="ref-item"><code>\d</code><span>Digit [0-9]</span></div>
+                        <div class="ref-item"><code>\w</code><span>Word [a-zA-Z0-9_]</span></div>
+                        <div class="ref-item"><code>\s</code><span>Whitespace</span></div>
+                        <div class="ref-item"><code>[abc]</code><span>a, b, or c</span></div>
+                        <div class="ref-item"><code>[^abc]</code><span>Not a, b, or c</span></div>
+                    </div>
+                    <div class="ref-category">
+                        <h3>Quantifiers</h3>
+                        <div class="ref-item"><code>*</code><span>0 or more</span></div>
+                        <div class="ref-item"><code>+</code><span>1 or more</span></div>
+                        <div class="ref-item"><code>?</code><span>0 or 1</span></div>
+                        <div class="ref-item"><code>{n}</code><span>Exactly n</span></div>
+                        <div class="ref-item"><code>{n,}</code><span>n or more</span></div>
+                        <div class="ref-item"><code>{n,m}</code><span>Between n and m</span></div>
+                    </div>
+                    <div class="ref-category">
+                        <h3>Anchors</h3>
+                        <div class="ref-item"><code>^</code><span>Start of string</span></div>
+                        <div class="ref-item"><code>$</code><span>End of string</span></div>
+                        <div class="ref-item"><code>\b</code><span>Word boundary</span></div>
+                    </div>
+                    <div class="ref-category">
+                        <h3>Groups</h3>
+                        <div class="ref-item"><code>(abc)</code><span>Capture group</span></div>
+                        <div class="ref-item"><code>(?:abc)</code><span>Non-capture</span></div>
+                        <div class="ref-item"><code>a|b</code><span>a or b</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <script src="/static/js/regex-tester.js?v={{ v }}"></script>
+</body>
+</html>

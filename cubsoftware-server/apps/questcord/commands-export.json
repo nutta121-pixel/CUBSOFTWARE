@@ -1,0 +1,721 @@
+[
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "View another user's achievements",
+        "required": false,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Combat",
+            "value": "combat"
+          },
+          {
+            "name": "Exploration",
+            "value": "exploration"
+          },
+          {
+            "name": "Mastery",
+            "value": "mastery"
+          },
+          {
+            "name": "Collection",
+            "value": "collection"
+          },
+          {
+            "name": "Social",
+            "value": "social"
+          },
+          {
+            "name": "Special",
+            "value": "special"
+          }
+        ],
+        "name": "category",
+        "description": "Filter by category",
+        "required": false
+      }
+    ],
+    "name": "achievements",
+    "description": "View your achievements and progress",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "attack",
+    "description": "Attack the active boss",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "balance",
+    "description": "Check your currency and gems",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "status",
+        "description": "View the active boss status",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "despawn",
+        "description": "Manually despawn the active boss (Staff only)",
+        "options": []
+      }
+    ],
+    "name": "boss",
+    "description": "View or manage the active boss",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "autocomplete": true,
+        "type": 3,
+        "name": "item-name",
+        "description": "The name of the item to purchase",
+        "required": true
+      }
+    ],
+    "name": "buy",
+    "description": "Purchase an item from the shop",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "claim",
+        "description": "Claim your daily reward",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "rewards",
+        "description": "View all daily reward tiers",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "stats",
+        "description": "View your login statistics",
+        "options": []
+      }
+    ],
+    "name": "daily",
+    "description": "Claim your daily login reward",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "weapon",
+        "description": "Equip a weapon or armor",
+        "options": [
+          {
+            "autocomplete": true,
+            "type": 3,
+            "name": "item",
+            "description": "The item to equip",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "unequip",
+        "description": "Unequip a currently equipped item",
+        "options": [
+          {
+            "type": 3,
+            "choices": [
+              {
+                "name": "Weapon",
+                "value": "weapon"
+              },
+              {
+                "name": "Armor",
+                "value": "armor"
+              }
+            ],
+            "name": "type",
+            "description": "Type of item to unequip",
+            "required": true
+          }
+        ]
+      }
+    ],
+    "name": "equip",
+    "description": "Equip or unequip items from your inventory",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "create",
+        "description": "Create a new guild (costs 100,000 Dakari)",
+        "options": [
+          {
+            "type": 3,
+            "name": "name",
+            "description": "Guild name (3-32 characters)",
+            "required": true
+          },
+          {
+            "type": 3,
+            "name": "tag",
+            "description": "Guild tag (2-5 characters)",
+            "required": true
+          },
+          {
+            "name": "public",
+            "description": "Make guild public (anyone can join) or invite-only?",
+            "required": true,
+            "type": 5
+          },
+          {
+            "type": 3,
+            "name": "description",
+            "description": "Guild description",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "info",
+        "description": "View guild information",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "invite",
+        "description": "Invite a user to your guild",
+        "options": [
+          {
+            "name": "user",
+            "description": "User to invite",
+            "required": true,
+            "type": 6
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "join",
+        "description": "Join a guild (accept pending invite)",
+        "options": [
+          {
+            "type": 4,
+            "name": "invite_id",
+            "description": "Invite ID (use /guild invites to see pending invites)",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "invites",
+        "description": "View your pending guild invites",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "leave",
+        "description": "Leave your current guild",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "contribute",
+        "description": "Contribute resources to your guild treasury",
+        "options": [
+          {
+            "min_value": 1,
+            "type": 4,
+            "name": "currency",
+            "description": "Amount of Dakari to contribute",
+            "required": false
+          },
+          {
+            "min_value": 1,
+            "type": 4,
+            "name": "gems",
+            "description": "Amount of gems to contribute",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "list",
+        "description": "List all guilds in this server",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "leaderboard",
+        "description": "View global guild leaderboard",
+        "options": [
+          {
+            "type": 3,
+            "choices": [
+              {
+                "name": "By Level",
+                "value": "level"
+              },
+              {
+                "name": "By Treasury",
+                "value": "treasury"
+              },
+              {
+                "name": "By Members",
+                "value": "members"
+              }
+            ],
+            "name": "category",
+            "description": "Leaderboard category",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": 2,
+        "name": "upgrade",
+        "description": "Upgrade your guild (Leader only)",
+        "options": [
+          {
+            "type": 1,
+            "name": "slots",
+            "description": "Upgrade member slots (+5 slots for 1,000 gems from treasury)",
+            "options": []
+          },
+          {
+            "type": 1,
+            "name": "level",
+            "description": "Upgrade guild level (cost increases per level, grants +5% bonuses per level)",
+            "options": []
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "kick",
+        "description": "Kick a member from your guild (Leader only)",
+        "options": [
+          {
+            "name": "user",
+            "description": "Member to kick",
+            "required": true,
+            "type": 6
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "promote",
+        "description": "Promote a member to officer (Leader only)",
+        "options": [
+          {
+            "name": "user",
+            "description": "Member to promote",
+            "required": true,
+            "type": 6
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "demote",
+        "description": "Demote an officer to member (Leader only)",
+        "options": [
+          {
+            "name": "user",
+            "description": "Officer to demote",
+            "required": true,
+            "type": 6
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "settings",
+        "description": "Update guild settings (Leader only)",
+        "options": [
+          {
+            "type": 3,
+            "name": "description",
+            "description": "New guild description",
+            "required": false
+          },
+          {
+            "name": "public",
+            "description": "Make guild public or private",
+            "required": false,
+            "type": 5
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "disband",
+        "description": "Disband your guild permanently (Leader only)",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "transfer",
+        "description": "Transfer guild leadership to another member (Leader only)",
+        "options": [
+          {
+            "name": "user",
+            "description": "New guild leader",
+            "required": true,
+            "type": 6
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "members",
+        "description": "View all guild members",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "activity",
+        "description": "View recent guild activity",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "announce",
+        "description": "Post a guild announcement (Leader/Officer only)",
+        "options": [
+          {
+            "type": 3,
+            "name": "message",
+            "description": "Announcement message (max 500 characters)",
+            "required": true
+          },
+          {
+            "type": 3,
+            "name": "title",
+            "description": "Announcement title (max 100 characters)",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "announcements",
+        "description": "View recent guild announcements",
+        "options": []
+      }
+    ],
+    "name": "guild",
+    "description": "Manage your guild",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "help",
+    "description": "View all available commands and helpful links",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "inventory",
+    "description": "View and manage your items",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "leaderboard",
+    "description": "View the global leaderboard",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "optin",
+    "description": "Enable quests in this server (Server Owner only)",
+    "default_member_permissions": "8",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "optout",
+    "description": "Disable quests in this server (Server Owner only)",
+    "default_member_permissions": "8",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "View another user's profile",
+        "required": false,
+        "type": 6
+      }
+    ],
+    "name": "profile",
+    "description": "View your profile and stats",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "toggle",
+        "description": "Enable or disable PVP for yourself",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "challenge",
+        "description": "Challenge another player to PVP",
+        "options": [
+          {
+            "name": "opponent",
+            "description": "The player to challenge",
+            "required": true,
+            "type": 6
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "stats",
+        "description": "View your PVP statistics",
+        "options": [
+          {
+            "name": "user",
+            "description": "View another user's stats",
+            "required": false,
+            "type": 6
+          }
+        ]
+      }
+    ],
+    "name": "pvp",
+    "description": "Player vs Player combat system",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "quests",
+    "description": "View and accept available quests in this server",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "rank",
+    "description": "Check your current leaderboard rank",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "All Items",
+            "value": "all"
+          },
+          {
+            "name": "Weapons",
+            "value": "weapon"
+          },
+          {
+            "name": "Armor",
+            "value": "armor"
+          },
+          {
+            "name": "Common",
+            "value": "common"
+          },
+          {
+            "name": "Uncommon",
+            "value": "uncommon"
+          },
+          {
+            "name": "Rare",
+            "value": "rare"
+          },
+          {
+            "name": "Epic",
+            "value": "epic"
+          },
+          {
+            "name": "Legendary",
+            "value": "legendary"
+          }
+        ],
+        "name": "category",
+        "description": "Category to browse",
+        "required": false
+      }
+    ],
+    "name": "shop",
+    "description": "Browse and purchase weapons and armor",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "autocomplete": true,
+        "type": 3,
+        "name": "destination",
+        "description": "Server to travel to (name or ID)",
+        "required": false
+      }
+    ],
+    "name": "travel",
+    "description": "Travel to another server to find more quests",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "tutorial",
+    "description": "Learn how to use QuestCord",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "The user to verify",
+        "required": true,
+        "type": 6
+      },
+      {
+        "name": "verified",
+        "description": "Set verified status (true = verified, false = unverified)",
+        "required": true,
+        "type": 5
+      }
+    ],
+    "name": "verify",
+    "description": "Verify a user (Developer only)",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "help",
+        "description": "View website settings help",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "status",
+        "description": "View current website feature status",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "feature",
+        "description": "Toggle a website feature (Staff only)",
+        "options": [
+          {
+            "type": 3,
+            "choices": [
+              {
+                "name": "Card Hover Effects",
+                "value": "card_hover_effects"
+              },
+              {
+                "name": "Background Animations",
+                "value": "background_animations"
+              },
+              {
+                "name": "Cosmic Particles",
+                "value": "cosmic_particles"
+              },
+              {
+                "name": "Aurora Effect",
+                "value": "aurora_effect"
+              },
+              {
+                "name": "Gradient Animations",
+                "value": "gradient_animations"
+              },
+              {
+                "name": "Party Mode",
+                "value": "party_mode"
+              },
+              {
+                "name": "Insult Display",
+                "value": "insult_display"
+              },
+              {
+                "name": "Chaos Mode",
+                "value": "chaos_mode"
+              },
+              {
+                "name": "Performance Mode",
+                "value": "performance_mode"
+              }
+            ],
+            "name": "name",
+            "description": "Feature name",
+            "required": true
+          },
+          {
+            "type": 3,
+            "choices": [
+              {
+                "name": "On",
+                "value": "on"
+              },
+              {
+                "name": "Off",
+                "value": "off"
+              }
+            ],
+            "name": "state",
+            "description": "Enable or disable",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "maintenance",
+        "description": "Toggle maintenance mode (Staff only)",
+        "options": [
+          {
+            "type": 3,
+            "choices": [
+              {
+                "name": "On",
+                "value": "on"
+              },
+              {
+                "name": "Off",
+                "value": "off"
+              }
+            ],
+            "name": "state",
+            "description": "Enable or disable maintenance mode",
+            "required": true
+          }
+        ]
+      }
+    ],
+    "name": "website",
+    "description": "Manage website settings",
+    "type": 1
+  }
+]

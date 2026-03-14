@@ -1,0 +1,554 @@
+/* Discord Embed Builder */
+
+.eb-container {
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 100px 20px 60px;
+}
+
+.eb-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.eb-header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.eb-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Workspace */
+.eb-workspace {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+}
+
+/* Form Panel */
+.eb-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.eb-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px 18px;
+}
+
+.eb-section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    border-left: 3px solid var(--primary-color);
+    padding-left: 8px;
+}
+
+.eb-row {
+    margin-bottom: 10px;
+}
+
+.eb-row:last-child {
+    margin-bottom: 0;
+}
+
+.eb-row.two-col {
+    display: flex;
+    gap: 10px;
+}
+
+.eb-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.eb-field label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.field-note {
+    font-weight: 400;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+.eb-field input[type="text"],
+.eb-field textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+    width: 100%;
+}
+
+.eb-field input[type="text"]:focus,
+.eb-field textarea:focus {
+    border-color: var(--primary-color);
+}
+
+/* Color Field */
+.eb-color-field {
+    max-width: 260px;
+}
+
+.eb-color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.eb-color-row input[type="color"] {
+    width: 42px;
+    height: 36px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: none;
+    cursor: pointer;
+    padding: 2px;
+    flex-shrink: 0;
+}
+
+.eb-color-row input[type="text"] {
+    width: 100px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Char counter */
+.char-counter {
+    text-align: right;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    margin-top: 3px;
+}
+
+/* Checkbox label */
+.eb-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.eb-checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+/* Fields */
+.eb-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto auto;
+    gap: 8px;
+    align-items: start;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+.eb-field-row .field-name,
+.eb-field-row .field-value {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.eb-field-row label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.eb-field-row input[type="text"],
+.eb-field-row textarea {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.82rem;
+    padding: 6px 10px;
+    outline: none;
+    resize: vertical;
+    width: 100%;
+    transition: border-color 0.2s;
+}
+
+.eb-field-row input:focus,
+.eb-field-row textarea:focus {
+    border-color: var(--primary-color);
+}
+
+.eb-field-inline {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    padding-top: 4px;
+}
+
+.eb-field-inline input[type="checkbox"] {
+    accent-color: var(--primary-color);
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+}
+
+.eb-field-delete {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 18px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.eb-field-delete:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+}
+
+.eb-add-field-btn {
+    width: 100%;
+    margin-top: 4px;
+}
+
+/* Actions */
+.eb-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.eb-actions .action-btn {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.82rem;
+}
+
+/* Preview Panel */
+.eb-preview-panel {
+    width: 420px;
+    min-width: 360px;
+    position: sticky;
+    top: 90px;
+    flex-shrink: 0;
+}
+
+.eb-preview-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.eb-preview-note {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    margin-top: 8px;
+    text-align: center;
+}
+
+/* Discord Mock */
+.discord-mock {
+    background: #313338;
+    border-radius: 12px;
+    padding: 16px;
+    min-height: 200px;
+}
+
+.discord-message {
+    display: flex;
+    gap: 12px;
+}
+
+.discord-avatar {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5865f2, #7c3aed);
+}
+
+.discord-msg-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.discord-username {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #ffffff;
+    display: block;
+    margin-bottom: 6px;
+}
+
+/* Embed Preview */
+.discord-embed {
+    background: #2b2d31;
+    border-radius: 4px;
+    border-left: 4px solid #5865f2;
+    padding: 12px 16px;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.embed-placeholder {
+    color: rgba(255,255,255,0.3);
+    font-size: 0.85rem;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.embed-inner {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+}
+
+.embed-main {
+    min-width: 0;
+}
+
+.embed-author-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 6px;
+}
+
+.embed-author-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.embed-author-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #fff;
+    text-decoration: none;
+}
+
+a.embed-author-name:hover { text-decoration: underline; }
+
+.embed-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+    line-height: 1.3;
+    text-decoration: none;
+    display: block;
+}
+
+a.embed-title { color: #00aff4; }
+a.embed-title:hover { text-decoration: underline; }
+
+.embed-desc {
+    font-size: 0.82rem;
+    color: #dcddde;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 8px;
+}
+
+.embed-fields {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.embed-field {
+    grid-column: span 3;
+}
+
+.embed-field.inline {
+    grid-column: span 1;
+}
+
+.embed-field-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+}
+
+.embed-field-value {
+    font-size: 0.78rem;
+    color: #dcddde;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.embed-image {
+    margin-top: 8px;
+}
+
+.embed-image img {
+    max-width: 100%;
+    border-radius: 4px;
+}
+
+.embed-thumbnail {
+    width: 80px;
+    min-width: 80px;
+    height: 80px;
+    border-radius: 4px;
+    overflow: hidden;
+    align-self: start;
+}
+
+.embed-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.embed-footer-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.embed-footer-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.embed-footer-text {
+    font-size: 0.72rem;
+    color: #a3a6aa;
+}
+
+.embed-footer-sep {
+    color: #a3a6aa;
+    font-size: 0.72rem;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--primary-color);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+    .eb-workspace {
+        flex-direction: column;
+    }
+
+    .eb-preview-panel {
+        width: 100%;
+        min-width: unset;
+        position: static;
+    }
+}
+
+@media (max-width: 600px) {
+    .eb-container {
+        padding: 80px 14px 40px;
+    }
+
+    .eb-row.two-col {
+        flex-direction: column;
+    }
+
+    .eb-color-field {
+        max-width: unset;
+    }
+
+    .eb-field-row {
+        grid-template-columns: 1fr 1fr auto auto;
+    }
+
+    .eb-actions .action-btn {
+        min-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .eb-field-row {
+        grid-template-columns: 1fr;
+    }
+
+    .eb-field-delete {
+        margin-top: 0;
+        width: 100%;
+        height: 32px;
+    }
+}

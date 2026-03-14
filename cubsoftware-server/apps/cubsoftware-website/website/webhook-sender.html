@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Discord Webhook Sender | CUB SOFTWARE</title>
+    <meta name="description" content="Send messages and embeds to any Discord channel using webhooks. Override username and avatar, include rich embeds, and see the response instantly.">
+    <meta name="keywords" content="discord webhook sender, discord webhook, send webhook, discord embed webhook, webhook tool">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/webhook-sender">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Discord Webhook Sender | CUB SOFTWARE">
+    <meta property="og:description" content="Send messages and embeds to Discord channels via webhook. Override username, avatar, include rich embeds.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/webhook-sender">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/webhook-sender.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="ws-container">
+            <div class="ws-header">
+                <h1>Discord Webhook Sender</h1>
+                <p>Send messages and rich embeds directly to any Discord channel via webhook. Your webhook URL is never stored on our servers.</p>
+            </div>
+
+            <!-- Security notice -->
+            <div class="ws-security-notice">
+                ⚠️ <strong>Keep your webhook URL private.</strong> Anyone with it can send messages to your channel. Never share it publicly.
+            </div>
+
+            <!-- Webhook URL -->
+            <div class="ws-url-section">
+                <div class="ws-url-row">
+                    <input type="text" id="webhookUrl" class="ws-url-input"
+                        placeholder="https://discord.com/api/webhooks/...">
+                    <button class="action-btn secondary" onclick="validateWebhook()">Validate</button>
+                </div>
+                <div class="ws-webhook-info" id="webhookInfo"></div>
+            </div>
+
+            <div class="ws-workspace">
+                <!-- Left: Form -->
+                <div class="ws-form">
+
+                    <!-- Override -->
+                    <div class="ws-section">
+                        <div class="ws-section-title">Override <span class="optional-label">(optional)</span></div>
+                        <div class="ws-field-group">
+                            <label>Username</label>
+                            <input type="text" id="wsUsername" placeholder="Custom Bot Name" maxlength="80">
+                        </div>
+                        <div class="ws-field-group">
+                            <label>Avatar URL</label>
+                            <input type="text" id="wsAvatar" placeholder="https://i.imgur.com/example.png">
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="ws-section">
+                        <div class="ws-section-title">Message Content <span class="optional-label">(optional if embed present)</span></div>
+                        <div class="ws-field-group">
+                            <textarea id="wsContent" rows="4" maxlength="2000"
+                                placeholder="Your message content..." oninput="updateContentCount()"></textarea>
+                            <div class="char-counter"><span id="contentCount">0</span>/2000</div>
+                        </div>
+                    </div>
+
+                    <!-- Embed JSON -->
+                    <div class="ws-section">
+                        <div class="ws-section-title">Embed JSON <span class="optional-label">(optional)</span></div>
+                        <div class="ws-embed-toolbar">
+                            <a href="/apps/embed-builder" target="_blank" class="action-btn secondary ws-small-btn">Open Embed Builder ↗</a>
+                            <button class="action-btn secondary ws-small-btn" onclick="clearEmbed()">Clear Embed</button>
+                        </div>
+                        <div class="ws-field-group">
+                            <textarea id="wsEmbedJson" rows="10" spellcheck="false"
+                                placeholder='Paste embed JSON here, e.g.&#10;{&#10;  "title": "Hello World",&#10;  "description": "This is an embed",&#10;  "color": 5793266&#10;}'
+                                oninput="validateEmbedJson()"></textarea>
+                            <div class="ws-json-status" id="jsonStatus"></div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced -->
+                    <details class="ws-section">
+                        <summary class="ws-section-title ws-advanced-title">Advanced ▾</summary>
+                        <div class="ws-advanced-body">
+                            <div class="ws-field-group">
+                                <label>Thread ID <span class="optional-label">(send to a thread)</span></label>
+                                <input type="text" id="wsThreadId" placeholder="Thread or forum post channel ID">
+                            </div>
+                            <label class="ws-toggle-label">
+                                <input type="checkbox" id="wsWait" checked>
+                                Wait for delivery confirmation (recommended)
+                            </label>
+                        </div>
+                    </details>
+
+                    <!-- Send -->
+                    <button class="action-btn ws-send-btn" id="wsSendBtn" onclick="sendWebhook()">
+                        Send Message
+                    </button>
+                </div>
+
+                <!-- Right: Response + History -->
+                <div class="ws-right">
+                    <div class="ws-section">
+                        <div class="ws-section-title">Response</div>
+                        <div id="wsResponseEmpty" class="ws-empty-state">
+                            <div class="ws-empty-icon">📡</div>
+                            <p>Send a message to see the response</p>
+                        </div>
+                        <div id="wsResponseContent" class="ws-response-content" style="display:none"></div>
+                    </div>
+
+                    <div class="ws-section">
+                        <div class="ws-section-title">Recent Sends</div>
+                        <div id="wsHistory" class="ws-history">
+                            <div class="ws-empty-state" style="padding:16px 0">
+                                <p style="font-size:0.82rem;color:var(--text-secondary)">No sends yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <script src="/static/js/webhook-sender.js?v={{ v }}"></script>
+</body>
+</html>

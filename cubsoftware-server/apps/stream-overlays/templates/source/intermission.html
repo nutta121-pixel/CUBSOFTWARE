@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1920">
+<title>Intermission</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:1920px;height:1080px;overflow:hidden;}
+#overlay{width:1920px;height:1080px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+--bg:#0a0a1a;--bg2:#1a0a0a;--accent:#ff9900;--text1:#fff;--text2:#aaa;--font:'Orbitron';font-family:var(--font),sans-serif;background:var(--bg);}
+.bg-animated-gradient{animation:bgShift 10s ease infinite;background-size:400% 400% !important;}
+@keyframes bgShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+.scene-card{position:relative;z-index:2;max-width:1100px;width:90%;text-align:center;}
+.logo-img{max-width:160px;max-height:90px;object-fit:contain;display:none;margin:0 auto 20px;}
+.logo-img.visible{display:block;}
+.intermission-label{font-size:16px;letter-spacing:8px;color:var(--text2);opacity:.7;margin-bottom:20px;}
+.scene-title{font-size:72px;font-weight:900;color:var(--text1);letter-spacing:4px;}
+.game-title{font-size:36px;color:var(--accent);margin-top:12px;font-family:Poppins,sans-serif;font-weight:600;}
+.scene-subtitle{font-size:24px;color:var(--text2);margin-top:12px;font-family:Poppins,sans-serif;}
+.divider{width:400px;height:2px;background:var(--accent);margin:24px auto;opacity:.5;border-radius:1px;}
+
+#overlay.neon::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:60px 60px;}
+#overlay.neon .scene-card{border:1px solid var(--accent);border-radius:12px;padding:60px 80px;box-shadow:0 0 60px color-mix(in srgb,var(--accent) 25%,transparent);}
+#overlay.neon .scene-title{text-shadow:0 0 30px var(--accent);}
+#overlay.neon .divider{background:linear-gradient(90deg,transparent,var(--accent),transparent);height:1px;}
+
+#overlay.retro::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.15) 2px,rgba(0,0,0,.15) 4px);pointer-events:none;}
+#overlay.retro .scene-title{font-family:'Share Tech Mono',monospace;letter-spacing:6px;}
+#overlay.retro .game-title{font-family:'Share Tech Mono',monospace;}
+
+#overlay.cozy .scene-card{background:rgba(255,255,255,.05);border-radius:24px;padding:60px 80px;border:1px solid rgba(255,255,255,.1);}
+#overlay.cozy .scene-title{font-family:Pacifico,cursive;font-size:64px;}
+
+#overlay.gradient .scene-title{background:linear-gradient(135deg,var(--text1),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+#overlay.gradient .divider{background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+
+#overlay.gaming::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,color-mix(in srgb,var(--accent) 15%,transparent) 0%,transparent 70%);}
+#overlay.gaming .scene-title{text-transform:uppercase;letter-spacing:10px;font-size:80px;}
+#overlay.gaming .game-title{font-family:Rajdhani,sans-serif;letter-spacing:4px;font-size:40px;}
+
+#particles{position:absolute;inset:0;z-index:1;pointer-events:none;}
+.social-row{display:flex;gap:20px;justify-content:center;margin-top:28px;flex-wrap:wrap;}
+.social-link{display:flex;align-items:center;gap:8px;color:var(--text2);}
+.social-link .platform{color:var(--accent);font-weight:600;font-size:14px;text-transform:uppercase;letter-spacing:1px;}
+.social-link .handle{font-size:16px;font-family:Poppins,sans-serif;}
+.scene-card{animation:fadeIn 1.5s ease forwards;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.slide-anim .scene-card{animation:slideIn 1.2s cubic-bezier(.22,1,.36,1) forwards;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-60px)}to{opacity:1;transform:translateX(0)}}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Bangers&family=Bebas+Neue&family=Black+Ops+One&family=Boogaloo&family=Bungee&family=Chakra+Petch:wght@400;600;700&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;600;700&family=Courier+Prime:wght@400;700&family=Creepster&family=DM+Sans:wght@400;500;700&family=Exo+2:wght@400;600;700&family=Fira+Code:wght@400;500&family=Fredoka+One&family=Goldman:wght@400;700&family=Inter:wght@400;500;600;700&family=Lobster&family=Lora:wght@400;600;700&family=Manrope:wght@400;500;700&family=Montserrat:wght@400;600;700;800&family=Nunito:wght@400;600;700&family=Orbitron:wght@700;900&family=Outfit:wght@400;600;700&family=Pacifico&family=Playfair+Display:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Press+Start+2P&family=Quantico:wght@400;700&family=Rajdhani:wght@400;500;600;700&family=Righteous&family=Roboto:wght@400;500;700&family=Russo+One&family=Share+Tech+Mono&family=Source+Code+Pro:wght@400;600&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&family=Teko:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/overlays/static/css/overlays-effects.css?v={{ v }}">
+</head>
+<body>
+<div id="overlay" class="minimal">
+    <canvas id="particles"></canvas>
+    <canvas id="bg-effects" width="1920" height="1080"></canvas>
+    <div class="scene-card">
+        <img id="logoImg" class="logo-img" src="" alt="">
+        <div class="intermission-label">— INTERMISSION —</div>
+        <div id="sceneTitle" class="scene-title">Intermission</div>
+        <div id="gameTitle" class="game-title"></div>
+        <div class="divider"></div>
+        <div id="sceneSubtitle" class="scene-subtitle">Taking a short break between games</div>
+        <div id="socialRow" class="social-row"></div>
+    </div>
+</div>
+<script src="/overlays/static/js/overlays-effects.js?v={{ v }}"></script>
+<script>
+const SCENE_ID='{{ scene_id }}';
+const DISCORD_USER_ID='{{ discord_user_id }}';
+let particleAnim=null;
+async function loadConfig(){try{const r=await fetch('/overlays/api/scenes/'+SCENE_ID+'/config');if(r.ok){const c=await r.json();applyConfig(c);}}catch(e){}}
+function applyConfig(cfg){
+    const el=document.getElementById('overlay');
+    el.className=cfg.template||'minimal';
+    const bt=cfg.background_type||'gradient';
+    if(bt==='solid')el.style.background=cfg.bg_color||'#0a0a1a';
+    else if(bt==='animated-gradient'){el.style.background=`linear-gradient(${cfg.bg_gradient_angle||90}deg,${cfg.bg_gradient_from||'#0a0a1a'},${cfg.bg_gradient_to||'#1a0a0a'},${cfg.bg_gradient_from||'#0a0a1a'})`;el.style.backgroundSize='400% 400%';el.classList.add('bg-animated-gradient');}
+    else el.style.background=`linear-gradient(${cfg.bg_gradient_angle||90}deg,${cfg.bg_gradient_from||'#0a0a1a'},${cfg.bg_gradient_to||'#1a0a0a'})`;
+    el.style.setProperty('--accent',cfg.accent_color||'#ff9900');
+    el.style.setProperty('--text1',cfg.text_primary||'#fff');
+    el.style.setProperty('--text2',cfg.text_secondary||'#aaa');
+    applyFontConfig(cfg, el);
+    applyAnimationClass(cfg, el);
+    document.getElementById('sceneTitle').textContent=cfg.title||'Intermission';
+    document.getElementById('sceneSubtitle').textContent=cfg.subtitle||'Taking a short break between games';
+    const gt=document.getElementById('gameTitle');
+    if(cfg.game_title){gt.textContent=cfg.game_title;gt.style.display='block';}else gt.style.display='none';
+    const li=document.getElementById('logoImg');if(cfg.logo_url){li.src=cfg.logo_url;li.classList.add('visible');}else li.classList.remove('visible');
+    applyTextEffect(cfg, el); applyLogoEffect(cfg, el); applyBackgroundEffect(cfg); applyBranding(cfg);
+    const social=cfg.social||{},sr=document.getElementById('socialRow');sr.innerHTML='';
+    Object.entries(social).forEach(([p,h])=>{if(!h)return;const d=document.createElement('div');d.className='social-link';d.innerHTML=`<span class="platform">${p}</span><span class="handle">${h}</span>`;sr.appendChild(d);});
+    if(particleAnim)cancelAnimationFrame(particleAnim);
+    if(cfg.particles)initParticles(cfg.particle_color||cfg.accent_color||'#ff9900');
+    let s=document.getElementById('custom-style');if(!s){s=document.createElement('style');s.id='custom-style';document.head.appendChild(s);}s.textContent=cfg.custom_css||'';
+    applyVisualFX(cfg, el);
+    applyClock(cfg);
+    applyGoalBar(cfg);
+    applyViewerQueue(cfg);
+    if(cfg.show_alerts)initSceneAlerts(DISCORD_USER_ID,cfg.scene_alert_position);
+}
+function initParticles(color){
+    const c=document.getElementById('particles');c.width=1920;c.height=1080;const ctx=c.getContext('2d');
+    const pts=Array.from({length:60},()=>({x:Math.random()*1920,y:Math.random()*1080,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,r:Math.random()*2+.5,a:Math.random()*.4+.1}));
+    function draw(){ctx.clearRect(0,0,1920,1080);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=1920;if(p.x>1920)p.x=0;if(p.y<0)p.y=1080;if(p.y>1080)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);const r=parseInt(color.slice(1,3)||'ff',16),g=parseInt(color.slice(3,5)||'99',16),b=parseInt(color.slice(5,7)||'00',16);ctx.fillStyle=`rgba(${r},${g},${b},${p.a})`;ctx.fill();});particleAnim=requestAnimationFrame(draw);}
+    draw();
+}
+function connectSSE(){const es=new EventSource('/overlays/source/'+SCENE_ID+'/events');es.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='update')applyConfig(m.config);};es.onerror=()=>{es.close();setTimeout(connectSSE,3000);};}
+loadConfig().then(()=>connectSSE());
+</script>
+</body></html>

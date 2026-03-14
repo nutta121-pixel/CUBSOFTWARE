@@ -1,0 +1,638 @@
+/* Multi-Twitch Page Styles */
+
+.twitch-main {
+    flex: 1;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 70px);
+    overflow: hidden;
+}
+
+/* ── Top Bar ── */
+.twitch-topbar {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid rgba(88, 101, 242, 0.2);
+    flex-shrink: 0;
+    z-index: 100;
+}
+
+/* ── Row 1: Centered title ── */
+.topbar-title-row {
+    text-align: center;
+    padding: 18px 22px 18px;
+    border-bottom: 1px solid rgba(88, 101, 242, 0.1);
+}
+
+.topbar-hero-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1;
+}
+
+.topbar-gradient-text {
+    background: linear-gradient(135deg, #009dff 0%, #8a2be2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ── Row 2: Controls — 3 equal columns ── */
+.topbar-controls {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 22px;
+    background: rgba(0, 0, 0, 0.45);
+    border-top: 1px solid rgba(88, 101, 242, 0.12);
+    backdrop-filter: blur(6px);
+}
+
+/* ── Left column: channel input + tags ── */
+.topbar-channel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    justify-self: start;
+    min-width: 0;
+    width: 100%;
+    max-width: 420px;
+}
+
+.add-channel-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(88, 101, 242, 0.22);
+    border-radius: 8px;
+    padding: 7px 12px;
+    transition: border-color 0.2s, background 0.2s;
+}
+.add-channel-form:focus-within {
+    border-color: rgba(88, 101, 242, 0.5);
+    background: rgba(88, 101, 242, 0.05);
+}
+
+.twitch-icon {
+    width: 14px;
+    height: 14px;
+    color: rgba(88, 101, 242, 0.6);
+    flex-shrink: 0;
+}
+
+.add-channel-form input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.87rem;
+    min-width: 0;
+}
+.add-channel-form input::placeholder { color: rgba(255,255,255,0.26); }
+
+.btn-add {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 13px;
+    background: #5865f2;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.79rem;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+.btn-add:hover { background: #4752c4; }
+.btn-add svg { width: 13px; height: 13px; }
+
+.channel-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.channel-tag {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px 3px 7px;
+    background: rgba(88, 101, 242, 0.1);
+    border: 1px solid rgba(88, 101, 242, 0.28);
+    border-radius: 20px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+    color: #a5b4fc;
+    cursor: default;
+}
+
+.channel-tag .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(88, 101, 242, 0.6);
+    flex-shrink: 0;
+}
+
+.channel-tag button {
+    background: none;
+    border: none;
+    color: rgba(165, 180, 252, 0.4);
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.85rem;
+    line-height: 1;
+    transition: color 0.2s;
+}
+.channel-tag button:hover { color: #f55; }
+
+/* ── Center column: Hide Chats ── */
+.topbar-center {
+    display: flex;
+    justify-content: center;
+}
+
+.btn-toggle-chats {
+    padding: 8px 20px;
+    background: rgba(88, 101, 242, 0.1);
+    border: 1px solid rgba(88, 101, 242, 0.3);
+    border-radius: 7px;
+    color: rgba(165, 180, 252, 0.85);
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.btn-toggle-chats:hover {
+    background: rgba(88, 101, 242, 0.2);
+    border-color: rgba(88, 101, 242, 0.55);
+    color: #a5b4fc;
+}
+
+/* ── Right column: Auth ── */
+.twitch-auth-area {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.auth-logged-out,
+.auth-logged-in {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.auth-twitch-icon {
+    width: 17px;
+    height: 17px;
+    color: #9147ff;
+    flex-shrink: 0;
+    opacity: 0.8;
+}
+
+.auth-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    text-align: right;
+}
+
+.auth-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.6);
+    white-space: nowrap;
+}
+
+.auth-hint {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.67rem;
+    color: rgba(255,255,255,0.28);
+    white-space: nowrap;
+}
+
+.btn-twitch-login {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: #9147ff;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: background 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-twitch-login:hover { background: #7c2de0; }
+
+.auth-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #9147ff;
+    flex-shrink: 0;
+}
+
+.auth-username {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.83rem;
+    color: #c4a4ff;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.btn-logout {
+    padding: 5px 11px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px;
+    color: rgba(255,255,255,0.4);
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.72rem;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.btn-logout:hover { background: rgba(255,60,60,0.1); border-color: rgba(255,60,60,0.5); color: #f77; }
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* ── Empty State ── */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 80px 20px;
+    color: rgba(255,255,255,0.3);
+    width: 100%;
+    height: 100%;
+}
+.empty-state svg { width: 64px; height: 64px; opacity: 0.3; }
+.empty-state h2 { font-size: 1.3rem; font-weight: 600; margin: 0; color: rgba(255,255,255,0.5); }
+.empty-state p { margin: 0; font-size: 0.9rem; }
+
+/* ── Streams Grid ── */
+.streams-grid {
+    flex: 1;
+    display: grid;
+    gap: 4px;
+    padding: 4px;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* Grid divides all available space evenly */
+.streams-grid[data-count="1"] {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+}
+.streams-grid[data-count="2"] {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+}
+.streams-grid[data-count="3"] {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr;
+}
+.streams-grid[data-count="4"] {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+.streams-grid[data-count="5"],
+.streams-grid[data-count="6"] {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+}
+
+/* ── Stream Panel ── */
+.stream-panel {
+    display: flex;
+    flex-direction: column;
+    background: #0e0e18;
+    border: 1px solid rgba(145, 71, 255, 0.15);
+    border-radius: 6px;
+    overflow: hidden;
+    /* height: 100% ensures the panel fills its grid cell completely,
+       giving every child a real measured height to work against */
+    height: 100%;
+    min-height: 0;
+}
+
+.stream-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    background: rgba(145, 71, 255, 0.1);
+    border-bottom: 1px solid rgba(145, 71, 255, 0.15);
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.stream-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+/* ── Status badges ── */
+.stream-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    display: none;
+}
+.stream-badge.visible { display: block; }
+
+.live-badge {
+    background: #e00;
+    color: #fff;
+}
+
+.offline-badge {
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.45);
+}
+
+.stream-channel-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #c4a4ff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-open-twitch {
+    padding: 3px 8px;
+    background: rgba(145, 71, 255, 0.2);
+    border: 1px solid rgba(145, 71, 255, 0.4);
+    border-radius: 4px;
+    color: #c4a4ff;
+    font-size: 0.72rem;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+.btn-open-twitch:hover { background: rgba(145, 71, 255, 0.35); }
+
+.btn-remove-stream {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.3);
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+}
+.btn-remove-stream:hover { color: #f55; }
+
+/* ── Video + Chat container ── */
+.stream-body {
+    display: flex;
+    /* flex-basis: 0 is the key — with 'auto' the browser uses intrinsic
+       content height first, letting chat messages push the panel open.
+       With 0 it starts from nothing and only grows via flex-grow. */
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ── Video Wrap ── */
+/* Twitch.Player injects a div+iframe inside here */
+.stream-video-wrap {
+    flex: 1;
+    background: #000;
+    min-width: 0;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Force Twitch Player injected elements to fill the wrap completely */
+.stream-video-wrap > div,
+.stream-video-wrap iframe {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+}
+
+/* ── Chat Panel ── */
+.stream-chat {
+    width: 260px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: #0a0a14;
+    border-left: 1px solid rgba(145, 71, 255, 0.15);
+    /* overflow: hidden clips anything that tries to escape */
+    overflow: hidden;
+    /* min-height: 0 lets the flex child shrink below its content size */
+    min-height: 0;
+}
+
+.chat-messages {
+    /* Same zero-basis trick — grow to fill available height,
+       never push the panel open based on content */
+    flex: 1 1 0;
+    overflow-y: auto;
+    min-height: 0;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(145, 71, 255, 0.3) transparent;
+}
+.chat-messages::-webkit-scrollbar { width: 4px; }
+.chat-messages::-webkit-scrollbar-thumb { background: rgba(145, 71, 255, 0.3); border-radius: 2px; }
+
+.chat-msg {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    word-break: break-word;
+    color: rgba(255,255,255,0.85);
+}
+
+.chat-msg-user {
+    font-weight: 700;
+    color: #9147ff;
+}
+
+.chat-msg-text { color: rgba(255,255,255,0.85); }
+
+.chat-msg.system {
+    color: rgba(255,255,255,0.35);
+    font-style: italic;
+    font-size: 0.75rem;
+}
+
+.chat-connecting {
+    color: rgba(145, 71, 255, 0.6);
+    font-style: italic;
+    font-size: 0.75rem;
+    padding: 4px 0;
+}
+
+/* ── Chat Input ── */
+.chat-input-area {
+    border-top: 1px solid rgba(145, 71, 255, 0.15);
+    padding: 8px;
+    background: rgba(0,0,0,0.3);
+    flex-shrink: 0;
+}
+
+.chat-input-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.chat-input-row input {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(145, 71, 255, 0.25);
+    border-radius: 5px;
+    padding: 6px 8px;
+    color: #fff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    outline: none;
+    min-width: 0;
+    transition: border-color 0.2s;
+}
+.chat-input-row input:focus { border-color: rgba(145, 71, 255, 0.6); }
+.chat-input-row input::placeholder { color: rgba(255,255,255,0.3); }
+
+.btn-chat-send {
+    padding: 6px 10px;
+    background: #9147ff;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+.btn-chat-send:hover { background: #7c2de0; }
+
+.chat-login-prompt {
+    text-align: center;
+    padding: 6px;
+}
+
+.btn-chat-login {
+    font-size: 0.75rem;
+    color: #9147ff;
+    background: none;
+    border: 1px solid rgba(145, 71, 255, 0.4);
+    border-radius: 5px;
+    padding: 5px 12px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.2s;
+    width: 100%;
+}
+.btn-chat-login:hover { background: rgba(145, 71, 255, 0.1); }
+
+/* Narrow chat for 3-col layouts */
+.streams-grid[data-count="3"] .stream-chat,
+.streams-grid[data-count="5"] .stream-chat,
+.streams-grid[data-count="6"] .stream-chat {
+    width: 200px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .streams-grid[data-count="2"],
+    .streams-grid[data-count="3"],
+    .streams-grid[data-count="4"],
+    .streams-grid[data-count="5"],
+    .streams-grid[data-count="6"] {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .topbar-hero-title {
+        font-size: 2.2rem;
+    }
+
+    .topbar-title-row {
+        padding: 12px 16px;
+    }
+
+    .topbar-controls {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 8px 16px;
+    }
+
+    .topbar-channel-section {
+        max-width: 100%;
+    }
+
+    .topbar-center {
+        justify-content: flex-start;
+    }
+
+    .twitch-auth-area {
+        justify-content: flex-start;
+    }
+
+    .auth-text {
+        text-align: left;
+    }
+}
+
+@media (max-width: 600px) {
+    .stream-chat { display: none; }
+    .twitch-topbar { top: 0; }
+
+    .topbar-hero-title {
+        font-size: 1.6rem;
+    }
+
+    .topbar-title-row {
+        padding: 10px 14px;
+    }
+}

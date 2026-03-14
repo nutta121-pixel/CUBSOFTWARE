@@ -1,0 +1,14 @@
+{
+  "categoryFilters": {
+    "WEBSITE": false,
+    "WEBSOCKET": false,
+    "QUEST": true,
+    "BOSS": true,
+    "DATABASE": true,
+    "API": true,
+    "COMMAND": true,
+    "EVENT": true,
+    "TRAVEL": true,
+    "LEADERBOARD": true
+  }
+}

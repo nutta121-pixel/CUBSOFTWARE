@@ -1,0 +1,3337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Bot Dashboard | CUB SOFTWARE</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dashboard-header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .dashboard-header h1 svg {
+            width: 32px;
+            height: 32px;
+            color: #5865f2;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .user-info .username {
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .logout-btn:hover {
+            border-color: #ed4245;
+            color: #ed4245;
+        }
+
+        .section {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section h2 svg {
+            width: 20px;
+            height: 20px;
+            color: #5865f2;
+        }
+
+        /* Add Bot Form */
+        .add-bot-form {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .add-bot-form input {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .add-bot-form input:focus {
+            outline: none;
+            border-color: #5865f2;
+        }
+
+        .add-bot-form button {
+            padding: 0.75rem 1.5rem;
+            background: #5865f2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-bot-form button:hover {
+            background: #4752c4;
+        }
+
+        /* Bot List */
+        .bot-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .bot-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bot-card:hover {
+            border-color: #5865f2;
+        }
+
+        .bot-card.active {
+            border-color: #5865f2;
+            background: rgba(88, 101, 242, 0.1);
+        }
+
+        .bot-card img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+        }
+
+        .bot-card .bot-info {
+            flex: 1;
+        }
+
+        .bot-card .bot-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .bot-card .bot-id {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .bot-card .bot-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .bot-card .bot-status .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #57f287;
+        }
+
+        .bot-card .bot-status .dot.offline {
+            background: #ed4245;
+        }
+
+        .bot-card .delete-btn {
+            padding: 0.5rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .bot-card .delete-btn:hover {
+            background: rgba(237, 66, 69, 0.1);
+            color: #ed4245;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Bot Details Panel */
+        .bot-details {
+            display: none;
+        }
+
+        .bot-details.active {
+            display: block;
+        }
+
+        .guild-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .guild-card {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .guild-card:hover {
+            border-color: #5865f2;
+        }
+
+        .guild-card img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+        }
+
+        .guild-card .guild-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .guild-card.active {
+            border-color: #5865f2;
+            background: rgba(88, 101, 242, 0.1);
+        }
+
+        /* Guild Details Panel */
+        .guild-details-panel {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .guild-details-panel.active {
+            display: block;
+        }
+
+        .guild-details-panel h4 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .guild-details-panel h4 svg {
+            width: 18px;
+            height: 18px;
+            color: #5865f2;
+        }
+
+        .guild-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .guild-tab {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .guild-tab:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .guild-tab.active {
+            background: #5865f2;
+            color: white;
+        }
+
+        .guild-tab-content {
+            display: none;
+        }
+
+        .guild-tab-content.active {
+            display: block;
+        }
+
+        .channel-list {
+            display: grid;
+            gap: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .channel-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .channel-item:hover {
+            border-color: #5865f2;
+        }
+
+        .channel-item svg {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+        }
+
+        .channel-item .channel-name {
+            flex: 1;
+        }
+
+        .channel-item .channel-actions {
+            display: flex;
+            gap: 0.25rem;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .channel-item:hover .channel-actions {
+            opacity: 1;
+        }
+
+        .channel-item .action-btn {
+            padding: 0.25rem 0.5rem;
+            background: var(--bg-primary);
+            border: none;
+            border-radius: 4px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .channel-item .action-btn:hover {
+            background: #5865f2;
+            color: white;
+        }
+
+        .channel-item .action-btn.msg-btn {
+            background: #57f287;
+            color: #000;
+            opacity: 1;
+        }
+
+        .channel-item .action-btn.msg-btn:hover {
+            background: #3ba55c;
+        }
+
+        .member-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .member-item img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .member-item .member-info {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .member-item .member-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .member-item .member-id {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: monospace;
+            white-space: nowrap;
+        }
+
+        .member-item .member-actions {
+            display: flex;
+            gap: 0.25rem;
+            flex-shrink: 0;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .member-item:hover .member-actions {
+            opacity: 1;
+        }
+
+        .member-item .action-btn {
+            padding: 0.25rem 0.5rem;
+            background: var(--bg-primary);
+            border: none;
+            border-radius: 4px;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .member-item .action-btn:hover {
+            background: #5865f2;
+            color: white;
+        }
+
+        .member-item .action-btn.msg-btn {
+            background: #57f287;
+            color: #000;
+        }
+
+        .member-item .action-btn.msg-btn:hover {
+            background: #3ba55c;
+        }
+
+        /* Quick Message Modal */
+        .quick-msg-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quick-msg-modal.active {
+            display: flex;
+        }
+
+        .quick-msg-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            margin: 1rem;
+        }
+
+        .quick-msg-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .quick-msg-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .quick-msg-header h3 svg {
+            width: 20px;
+            height: 20px;
+            color: #5865f2;
+        }
+
+        .quick-msg-header .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .quick-msg-header .close-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .quick-msg-target {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .quick-msg-target img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+        }
+
+        .quick-msg-target .target-name {
+            font-weight: 500;
+        }
+
+        .quick-msg-target .target-id {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .quick-msg-form textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            min-height: 100px;
+            resize: vertical;
+            margin-bottom: 1rem;
+            font-family: inherit;
+        }
+
+        .quick-msg-form textarea:focus {
+            outline: none;
+            border-color: #5865f2;
+        }
+
+        .quick-msg-form button {
+            width: 100%;
+            padding: 0.75rem;
+            background: #57f287;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-msg-form button:hover {
+            background: #3ba55c;
+        }
+
+        .quick-msg-form button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* DM List Section */
+        .dm-list-section {
+            margin-top: 1.5rem;
+        }
+
+        .dm-list {
+            display: grid;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .dm-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dm-item:hover {
+            border-color: #5865f2;
+            background: rgba(88, 101, 242, 0.05);
+        }
+
+        .dm-item img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .dm-item .dm-info {
+            flex: 1;
+        }
+
+        .dm-item .dm-username {
+            font-weight: 500;
+        }
+
+        .dm-item .dm-user-id {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: monospace;
+        }
+
+        .dm-item .open-dm {
+            padding: 0.5rem 1rem;
+            background: #5865f2;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .dm-item .open-dm:hover {
+            background: #4752c4;
+        }
+
+        /* Feature Tabs */
+        .feature-tabs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .feature-tab {
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .feature-tab:hover {
+            border-color: #5865f2;
+            color: var(--text-primary);
+        }
+
+        .feature-tab.active {
+            background: #5865f2;
+            border-color: #5865f2;
+            color: white;
+        }
+
+        .feature-panel {
+            display: none;
+        }
+
+        .feature-panel.active {
+            display: block;
+        }
+
+        /* Embed Builder */
+        .embed-preview {
+            background: #2f3136;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-left: 4px solid #5865f2;
+        }
+
+        .embed-preview .embed-author {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .embed-preview .embed-title {
+            font-weight: 600;
+            color: #00b0f4;
+            margin-bottom: 0.5rem;
+        }
+
+        .embed-preview .embed-description {
+            color: #dcddde;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .embed-preview .embed-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 0.5rem;
+        }
+
+        .embed-preview .embed-field {
+            margin-bottom: 0.5rem;
+        }
+
+        .embed-preview .embed-field-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .embed-preview .embed-field-value {
+            font-size: 0.85rem;
+            color: #b9bbbe;
+        }
+
+        .embed-preview .embed-thumbnail {
+            float: right;
+            max-width: 80px;
+            border-radius: 4px;
+            margin-left: 1rem;
+        }
+
+        .embed-preview .embed-image {
+            max-width: 100%;
+            border-radius: 4px;
+            margin-top: 0.75rem;
+        }
+
+        .embed-preview .embed-footer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            color: #72767d;
+        }
+
+        .embed-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .embed-form-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #5865f2;
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-group .color-picker {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group .color-picker input[type="color"] {
+            width: 50px;
+            height: 36px;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+        }
+
+        .embed-fields-list {
+            margin-top: 1rem;
+        }
+
+        .embed-field-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 0.5rem;
+            align-items: end;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .embed-field-item input {
+            width: 100%;
+            padding: 0.5rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+
+        .embed-field-item .inline-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .embed-field-item .remove-btn {
+            padding: 0.5rem;
+            background: transparent;
+            border: none;
+            color: #ed4245;
+            cursor: pointer;
+        }
+
+        .add-field-btn {
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px dashed var(--border-color);
+            border-radius: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .add-field-btn:hover {
+            border-color: #5865f2;
+            color: #5865f2;
+        }
+
+        /* User Lookup */
+        .user-lookup-result {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-top: 1rem;
+        }
+
+        .user-lookup-result .user-avatar-section {
+            text-align: center;
+        }
+
+        .user-lookup-result .user-avatar {
+            width: 128px;
+            height: 128px;
+            border-radius: 50%;
+            margin-bottom: 0.5rem;
+        }
+
+        .user-lookup-result .user-details {
+            flex: 1;
+        }
+
+        .user-lookup-result .user-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-lookup-result .user-username {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .user-lookup-result .user-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .user-lookup-result .info-item {
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border-radius: 8px;
+        }
+
+        .user-lookup-result .info-item .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.25rem;
+        }
+
+        .user-lookup-result .info-item .value {
+            font-weight: 500;
+        }
+
+        .user-lookup-result .user-banner {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        /* Role Tags */
+        .role-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .role-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            font-size: 0.85rem;
+        }
+
+        .role-tag .role-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .role-tag .assign-btn {
+            background: none;
+            border: none;
+            color: #57f287;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1rem;
+        }
+
+        .role-tag .remove-btn {
+            background: none;
+            border: none;
+            color: #ed4245;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1rem;
+        }
+
+        /* Moderation Panel */
+        .mod-action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .mod-action-card {
+            padding: 1.25rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .mod-action-card h4 {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .mod-action-card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .mod-action-card .kick-btn {
+            background: #faa61a;
+            color: #000;
+        }
+
+        .mod-action-card .ban-btn {
+            background: #ed4245;
+            color: white;
+        }
+
+        .mod-action-card .timeout-btn {
+            background: #5865f2;
+            color: white;
+        }
+
+        .mod-action-card button {
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Webhook List */
+        .webhook-list {
+            display: grid;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .webhook-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .webhook-item img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+        }
+
+        .webhook-item .webhook-info {
+            flex: 1;
+        }
+
+        .webhook-item .webhook-name {
+            font-weight: 600;
+        }
+
+        .webhook-item .webhook-url {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: monospace;
+            word-break: break-all;
+        }
+
+        .webhook-item .webhook-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Invite List */
+        .invite-list {
+            display: grid;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .invite-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .invite-item .invite-code {
+            font-family: monospace;
+            font-weight: 600;
+            color: #5865f2;
+        }
+
+        .invite-item .invite-channel {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .invite-item .invite-uses {
+            margin-left: auto;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Audit Log */
+        .audit-log-list {
+            display: grid;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .audit-log-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+        }
+
+        .audit-log-item img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .audit-log-item .log-action {
+            flex: 1;
+        }
+
+        .audit-log-item .log-action-type {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .audit-log-item .log-user {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .audit-log-item .log-reason {
+            font-size: 0.8rem;
+            color: #faa61a;
+            font-style: italic;
+        }
+
+        /* Send Message Form */
+        .message-form {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-primary);
+            border-radius: 8px;
+        }
+
+        .message-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .message-form input,
+        .message-form textarea {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .message-form textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .message-form button {
+            padding: 0.75rem 1.5rem;
+            background: #57f287;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .message-form button:hover {
+            background: #3ba55c;
+        }
+
+        /* Whitelist Section */
+        .whitelist-section {
+            margin-top: 2rem;
+        }
+
+        .whitelist-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .whitelist-tag {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .whitelist-tag .remove-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .whitelist-tag .remove-btn:hover {
+            color: #ed4245;
+        }
+
+        .add-whitelist-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .add-whitelist-form input {
+            flex: 1;
+            max-width: 250px;
+            padding: 0.5rem 1rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+        }
+
+        .add-whitelist-form button {
+            padding: 0.5rem 1rem;
+            background: #5865f2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: #5865f2;
+            color: white;
+            border-radius: 8px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: #ed4245;
+        }
+
+        .toast.success {
+            background: #57f287;
+            color: #000;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+
+            .add-bot-form {
+                flex-direction: column;
+            }
+
+            .add-bot-form input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <main>
+            <div class="dashboard-container">
+                <div class="dashboard-header">
+                    <h1>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <circle cx="15.5" cy="8.5" r="1.5"/>
+                            <path d="M9 15h6"/>
+                        </svg>
+                        Bot Dashboard
+                    </h1>
+                    <div class="user-info">
+                        <img src="{{ user.avatar }}" alt="Avatar">
+                        <span class="username">{{ user.username }}</span>
+                        <a href="/bot-dashboard/auth/logout" class="logout-btn">Logout</a>
+                    </div>
+                </div>
+
+                <!-- Add Bot Section -->
+                <div class="section">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="8" x2="12" y2="16"/>
+                            <line x1="8" y1="12" x2="16" y2="12"/>
+                        </svg>
+                        Add Bot
+                    </h2>
+                    <form class="add-bot-form" onsubmit="addBot(event)">
+                        <input type="text" id="bot-token" placeholder="Bot Token" required>
+                        <input type="text" id="bot-name" placeholder="Bot Name (optional)">
+                        <button type="submit">Add Bot</button>
+                    </form>
+                </div>
+
+                <!-- Vanity URL Section -->
+                <div class="section">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                        </svg>
+                        Your Profile URL
+                    </h2>
+                    <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Set a custom URL so others can view your public profile at <strong>cubsoftware.site/u/yourslug</strong></p>
+                    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+                        <div style="display:flex;align-items:center;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;overflow:hidden;flex:1;min-width:200px;">
+                            <span style="padding:0.75rem 0.75rem;color:var(--text-muted);font-size:0.85rem;white-space:nowrap;border-right:1px solid var(--border-color);">cubsoftware.site/u/</span>
+                            <input type="text" id="vanity-input" placeholder="yourslug" maxlength="32"
+                                style="flex:1;padding:0.75rem;background:transparent;border:none;color:var(--text-primary);font-size:0.9rem;outline:none;"
+                                oninput="vanityCheck(this.value)">
+                        </div>
+                        <button onclick="vanitySave()" style="padding:0.75rem 1.5rem;background:#5865f2;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Save</button>
+                        <button onclick="vanityDelete()" id="vanity-delete-btn" style="display:none;padding:0.75rem 1rem;background:transparent;color:#ED4245;border:1px solid #ED4245;border-radius:8px;font-weight:600;cursor:pointer;">Remove</button>
+                    </div>
+                    <div id="vanity-status" style="margin-top:0.6rem;font-size:0.85rem;min-height:1.2em;"></div>
+                    <div id="vanity-url-display" style="display:none;margin-top:0.75rem;padding:0.75rem 1rem;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;font-size:0.9rem;">
+                        Your profile: <a id="vanity-url-link" href="#" target="_blank" style="color:#5865f2;font-weight:600;"></a>
+                    </div>
+                </div>
+
+                <!-- Bot List Section -->
+                <div class="section">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        Your Bots
+                    </h2>
+                    <div class="bot-list" id="bot-list">
+                        {% if bots %}
+                            {% for bot_id, bot in bots.items() %}
+                            <div class="bot-card" data-bot-id="{{ bot_id }}" onclick="selectBot('{{ bot_id }}')">
+                                <img src="{{ bot.avatar or '/static/images/default-avatar.png' }}" alt="">
+                                <div class="bot-info">
+                                    <div class="bot-name">{{ bot.name }}</div>
+                                    <div class="bot-id">{{ bot_id }}</div>
+                                </div>
+                                <div class="bot-status">
+                                    <span class="dot"></span>
+                                </div>
+                                <button class="delete-btn" onclick="event.stopPropagation(); deleteBot('{{ bot_id }}')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                        <polyline points="3 6 5 6 21 6"/>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                                    <circle cx="15.5" cy="8.5" r="1.5"/>
+                                    <path d="M9 15h6"/>
+                                </svg>
+                                <p>No bots configured yet. Add a bot using the form above.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Bot Details Section -->
+                <div class="section bot-details" id="bot-details">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                        </svg>
+                        Bot Details
+                        <span id="selected-bot-name" style="margin-left: auto; font-weight: normal; font-size: 0.9rem; color: var(--text-muted);"></span>
+                    </h2>
+
+                    <div id="bot-info-loading" style="text-align: center; padding: 2rem;">
+                        <div class="loading"></div>
+                        <p style="margin-top: 1rem; color: var(--text-muted);">Loading bot info...</p>
+                    </div>
+
+                    <div id="bot-info-content" style="display: none;">
+                        <p><strong>Servers:</strong> <span id="bot-guild-count">0</span></p>
+
+                        <!-- Feature Tabs -->
+                        <div class="feature-tabs">
+                            <button class="feature-tab active" onclick="switchFeatureTab('servers')">Servers</button>
+                            <button class="feature-tab" onclick="switchFeatureTab('messages')">Messages</button>
+                            <button class="feature-tab" onclick="switchFeatureTab('embeds')">Embed Builder</button>
+                            <button class="feature-tab" onclick="switchFeatureTab('lookup')">User Lookup</button>
+                            <button class="feature-tab" onclick="switchFeatureTab('moderation')">Moderation</button>
+                            <button class="feature-tab" onclick="switchFeatureTab('roles')">Roles</button>
+                            <button class="feature-tab" onclick="switchFeatureTab('webhooks')">Webhooks</button>
+                            <button class="feature-tab" onclick="switchFeatureTab('invites')">Invites</button>
+                            <button class="feature-tab" onclick="switchFeatureTab('audit')">Audit Log</button>
+                        </div>
+
+                        <!-- Servers Panel -->
+                        <div class="feature-panel active" id="panel-servers">
+                            <h3>Server List</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">Click on a server to view its members and channels</p>
+                            <div class="guild-list" id="guild-list"></div>
+
+                            <!-- Guild Details Panel -->
+                            <div class="guild-details-panel" id="guild-details-panel">
+                                <h4 id="guild-details-title">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                    </svg>
+                                    <span>Server Details</span>
+                                </h4>
+                                <div class="guild-tabs">
+                                    <button class="guild-tab active" onclick="switchGuildTab('channels')">Channels</button>
+                                    <button class="guild-tab" onclick="switchGuildTab('members')">Members</button>
+                                    <button class="guild-tab" onclick="switchGuildTab('roles')">Roles</button>
+                                    <button class="guild-tab" onclick="switchGuildTab('voice')">Voice</button>
+                                </div>
+                                <div class="guild-tab-content active" id="tab-channels">
+                                    <div class="channel-list" id="channel-list">
+                                        <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading channels...</p>
+                                    </div>
+                                    <h4 style="margin-top: 1rem;">Create Channel</h4>
+                                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                        <input type="text" id="new-channel-name" placeholder="Channel name" style="flex: 1; padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                                        <select id="new-channel-type" style="padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                                            <option value="0">Text</option>
+                                            <option value="2">Voice</option>
+                                        </select>
+                                        <button onclick="createChannel()" style="padding: 0.5rem 1rem; background: #57f287; border: none; border-radius: 6px; color: #000; font-weight: 600; cursor: pointer;">Create</button>
+                                    </div>
+                                </div>
+                                <div class="guild-tab-content" id="tab-members">
+                                    <div class="member-list" id="member-list">
+                                        <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading members...</p>
+                                    </div>
+                                </div>
+                                <div class="guild-tab-content" id="tab-roles">
+                                    <div class="role-list" id="role-list">
+                                        <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading roles...</p>
+                                    </div>
+                                </div>
+                                <div class="guild-tab-content" id="tab-voice">
+                                    <div id="voice-channel-list">
+                                        <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading voice channels...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Messages Panel -->
+                        <div class="feature-panel" id="panel-messages">
+                            <h3>Direct Messages</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">Click on a conversation to view messages</p>
+                            <div class="dm-list" id="dm-list">
+                                <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading DMs...</p>
+                            </div>
+
+                            <h3 style="margin-top: 2rem;">Send Channel Message</h3>
+                            <div class="message-form">
+                                <label>Channel ID</label>
+                                <input type="text" id="message-channel-id" placeholder="Enter channel ID">
+                                <label>Message</label>
+                                <textarea id="message-content" placeholder="Enter your message..."></textarea>
+                                <button onclick="sendMessage()">Send Message</button>
+                            </div>
+
+                            <h3 style="margin-top: 1.5rem;">Send Direct Message</h3>
+                            <div class="message-form">
+                                <label>User ID</label>
+                                <input type="text" id="dm-user-id" placeholder="Enter Discord user ID">
+                                <label>Message</label>
+                                <textarea id="dm-content" placeholder="Enter your DM..."></textarea>
+                                <button onclick="sendDM()">Send DM</button>
+                            </div>
+                        </div>
+
+                        <!-- Embed Builder Panel -->
+                        <div class="feature-panel" id="panel-embeds">
+                            <h3>Embed Builder</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Create rich embed messages</p>
+
+                            <div class="form-group">
+                                <label>Channel ID</label>
+                                <input type="text" id="embed-channel-id" placeholder="Enter channel ID">
+                            </div>
+
+                            <div class="embed-form-grid">
+                                <div class="form-group">
+                                    <label>Title</label>
+                                    <input type="text" id="embed-title" placeholder="Embed title" oninput="updateEmbedPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Color</label>
+                                    <div class="color-picker">
+                                        <input type="color" id="embed-color" value="#5865f2" oninput="updateEmbedPreview()">
+                                        <input type="text" id="embed-color-hex" value="#5865f2" placeholder="#5865f2" oninput="syncColorFromHex()">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="embed-description" placeholder="Embed description" oninput="updateEmbedPreview()"></textarea>
+                            </div>
+
+                            <div class="embed-form-grid">
+                                <div class="form-group">
+                                    <label>Author Name</label>
+                                    <input type="text" id="embed-author-name" placeholder="Author name" oninput="updateEmbedPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Author Icon URL</label>
+                                    <input type="text" id="embed-author-icon" placeholder="https://..." oninput="updateEmbedPreview()">
+                                </div>
+                            </div>
+
+                            <div class="embed-form-grid">
+                                <div class="form-group">
+                                    <label>Thumbnail URL</label>
+                                    <input type="text" id="embed-thumbnail" placeholder="https://..." oninput="updateEmbedPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Image URL</label>
+                                    <input type="text" id="embed-image" placeholder="https://..." oninput="updateEmbedPreview()">
+                                </div>
+                            </div>
+
+                            <div class="embed-form-grid">
+                                <div class="form-group">
+                                    <label>Footer Text</label>
+                                    <input type="text" id="embed-footer-text" placeholder="Footer text" oninput="updateEmbedPreview()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Footer Icon URL</label>
+                                    <input type="text" id="embed-footer-icon" placeholder="https://..." oninput="updateEmbedPreview()">
+                                </div>
+                            </div>
+
+                            <h4 style="margin-top: 1rem;">Fields</h4>
+                            <div class="embed-fields-list" id="embed-fields-list"></div>
+                            <button class="add-field-btn" onclick="addEmbedField()">+ Add Field</button>
+
+                            <h4 style="margin-top: 1.5rem;">Preview</h4>
+                            <div class="embed-preview" id="embed-preview">
+                                <div class="embed-description" style="color: #72767d;">Your embed preview will appear here</div>
+                            </div>
+
+                            <button onclick="sendEmbed()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #57f287; border: none; border-radius: 8px; color: #000; font-weight: 600; cursor: pointer; width: 100%;">Send Embed</button>
+                        </div>
+
+                        <!-- User Lookup Panel -->
+                        <div class="feature-panel" id="panel-lookup">
+                            <h3>User Lookup</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Look up any Discord user by their ID</p>
+
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" id="lookup-user-id" placeholder="Enter user ID" style="flex: 1; padding: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
+                                <button onclick="lookupUser()" style="padding: 0.75rem 1.5rem; background: #5865f2; border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;">Lookup</button>
+                            </div>
+
+                            <div id="user-lookup-result"></div>
+                        </div>
+
+                        <!-- Moderation Panel -->
+                        <div class="feature-panel" id="panel-moderation">
+                            <h3>Moderation</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Kick, ban, or timeout users across any server.</p>
+
+                            <div class="form-group">
+                                <label>Server</label>
+                                <select id="mod-server-select" onchange="onModServerChange()" style="padding: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); width: 100%;">
+                                    <option value="">-- Select a server --</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>User ID</label>
+                                <input type="text" id="mod-user-id" placeholder="Enter user ID to moderate">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Reason (optional)</label>
+                                <input type="text" id="mod-reason" placeholder="Reason for action">
+                            </div>
+
+                            <div class="mod-action-grid">
+                                <div class="mod-action-card">
+                                    <h4>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                            <polyline points="16 17 21 12 16 7"/>
+                                            <line x1="21" y1="12" x2="9" y2="12"/>
+                                        </svg>
+                                        Kick
+                                    </h4>
+                                    <p>Remove user from server</p>
+                                    <button class="kick-btn" onclick="kickUser()">Kick User</button>
+                                </div>
+
+                                <div class="mod-action-card">
+                                    <h4>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                                        </svg>
+                                        Ban
+                                    </h4>
+                                    <p>Permanently ban user</p>
+                                    <button class="ban-btn" onclick="banUser()">Ban User</button>
+                                </div>
+
+                                <div class="mod-action-card">
+                                    <h4>
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        Timeout
+                                    </h4>
+                                    <p>Temporarily mute user</p>
+                                    <select id="timeout-duration" style="margin-bottom: 0.5rem; padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); width: 100%;">
+                                        <option value="1">1 minute</option>
+                                        <option value="5" selected>5 minutes</option>
+                                        <option value="10">10 minutes</option>
+                                        <option value="60">1 hour</option>
+                                        <option value="1440">1 day</option>
+                                        <option value="10080">1 week</option>
+                                    </select>
+                                    <button class="timeout-btn" onclick="timeoutUser()">Timeout</button>
+                                </div>
+                            </div>
+
+                            <!-- Power Tools -->
+                            <h4 style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">Power Tools</h4>
+                            <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;">Advanced actions for the selected server.</p>
+                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                                <button onclick="grantHighestRole()" style="padding: 0.75rem 1.25rem; background: #5865f2; border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;">Grant Me Highest Role</button>
+                                <button onclick="createAdminRole()" style="padding: 0.75rem 1.25rem; background: #57f287; border: none; border-radius: 8px; color: #000; font-weight: 600; cursor: pointer;">Create Admin Role</button>
+                            </div>
+                        </div>
+
+                        <!-- Roles Panel -->
+                        <div class="feature-panel" id="panel-roles">
+                            <h3>Role Management</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">View and manage server roles. Select a server first.</p>
+
+                            <div id="roles-panel-content">
+                                <p style="color: var(--text-muted);">Select a server from the Servers tab to view roles.</p>
+                            </div>
+                        </div>
+
+                        <!-- Webhooks Panel -->
+                        <div class="feature-panel" id="panel-webhooks">
+                            <h3>Webhook Manager</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Create and manage webhooks. Select a server first.</p>
+
+                            <div id="webhook-list" class="webhook-list">
+                                <p style="color: var(--text-muted);">Select a server from the Servers tab to view webhooks.</p>
+                            </div>
+
+                            <h4 style="margin-top: 1.5rem;">Create Webhook</h4>
+                            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                <input type="text" id="webhook-channel-id" placeholder="Channel ID" style="flex: 1; padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                                <input type="text" id="webhook-name" placeholder="Webhook name" style="flex: 1; padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                                <button onclick="createWebhook()" style="padding: 0.5rem 1rem; background: #57f287; border: none; border-radius: 6px; color: #000; font-weight: 600; cursor: pointer;">Create</button>
+                            </div>
+
+                            <h4 style="margin-top: 1.5rem;">Send via Webhook</h4>
+                            <div class="form-group">
+                                <label>Webhook URL</label>
+                                <input type="text" id="webhook-send-url" placeholder="https://discord.com/api/webhooks/...">
+                            </div>
+                            <div class="form-group">
+                                <label>Username (optional)</label>
+                                <input type="text" id="webhook-send-username" placeholder="Custom username">
+                            </div>
+                            <div class="form-group">
+                                <label>Message</label>
+                                <textarea id="webhook-send-content" placeholder="Message content"></textarea>
+                            </div>
+                            <button onclick="sendWebhookMessage()" style="padding: 0.75rem 1.5rem; background: #5865f2; border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;">Send</button>
+                        </div>
+
+                        <!-- Invites Panel -->
+                        <div class="feature-panel" id="panel-invites">
+                            <h3>Server Invites</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">View and create server invites. Select a server first.</p>
+
+                            <div id="invite-list" class="invite-list">
+                                <p style="color: var(--text-muted);">Select a server from the Servers tab to view invites.</p>
+                            </div>
+
+                            <h4 style="margin-top: 1.5rem;">Create Invite</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0.5rem; margin-top: 0.5rem;">
+                                <input type="text" id="invite-channel-id" placeholder="Channel ID" style="padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                                <select id="invite-max-age" style="padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                                    <option value="1800">30 mins</option>
+                                    <option value="3600">1 hour</option>
+                                    <option value="21600">6 hours</option>
+                                    <option value="43200">12 hours</option>
+                                    <option value="86400" selected>1 day</option>
+                                    <option value="604800">7 days</option>
+                                    <option value="0">Never</option>
+                                </select>
+                                <select id="invite-max-uses" style="padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                                    <option value="0">Unlimited</option>
+                                    <option value="1">1 use</option>
+                                    <option value="5">5 uses</option>
+                                    <option value="10">10 uses</option>
+                                    <option value="25">25 uses</option>
+                                    <option value="50">50 uses</option>
+                                    <option value="100">100 uses</option>
+                                </select>
+                                <button onclick="createInvite()" style="padding: 0.5rem 1rem; background: #57f287; border: none; border-radius: 6px; color: #000; font-weight: 600; cursor: pointer;">Create</button>
+                            </div>
+                        </div>
+
+                        <!-- Audit Log Panel -->
+                        <div class="feature-panel" id="panel-audit">
+                            <h3>Audit Log</h3>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">View server audit logs. Select a server first.</p>
+
+                            <div id="audit-log-list" class="audit-log-list">
+                                <p style="color: var(--text-muted);">Select a server from the Servers tab to view audit logs.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Whitelist Section (Owner Only) -->
+                {% if user.id == '378501056008683530' %}
+                <div class="section whitelist-section">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        Whitelist Management
+                    </h2>
+                    <p style="color: var(--text-muted); margin-bottom: 1rem;">Only whitelisted users can access this dashboard.</p>
+                    <div class="whitelist-list" id="whitelist-list">
+                        <!-- Populated by JS -->
+                    </div>
+                    <form class="add-whitelist-form" onsubmit="addToWhitelist(event)">
+                        <input type="text" id="whitelist-user-id" placeholder="Discord User ID">
+                        <button type="submit">Add</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </main>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <!-- Quick Message Modal -->
+    <div class="quick-msg-modal" id="quick-msg-modal" onclick="closeQuickMsgModal(event)">
+        <div class="quick-msg-content" onclick="event.stopPropagation()">
+            <div class="quick-msg-header">
+                <h3>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span id="quick-msg-title">Send Message</span>
+                </h3>
+                <button class="close-btn" onclick="closeQuickMsgModal()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="quick-msg-target" id="quick-msg-target">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="36" height="36" id="quick-msg-icon">
+                    <path d="M4 9h16M4 15h16M10 3l-2 18M16 3l-2 18"/>
+                </svg>
+                <img src="" alt="" id="quick-msg-avatar" style="display: none;">
+                <div>
+                    <div class="target-name" id="quick-msg-name">Channel Name</div>
+                    <div class="target-id" id="quick-msg-id">123456789</div>
+                </div>
+            </div>
+            <form class="quick-msg-form" onsubmit="sendQuickMessage(event)">
+                <textarea id="quick-msg-content" placeholder="Type your message..." required></textarea>
+                <button type="submit" id="quick-msg-send">Send Message</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let selectedBotId = null;
+
+        function showToast(message, type = '') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast ' + type + ' show';
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // ── Vanity URL ──────────────────────────────────────
+        let vanityCheckTimer = null;
+
+        async function loadVanity() {
+            try {
+                const res = await fetch('/api/bot-dashboard/vanity');
+                const data = await res.json();
+                if (data.slug) {
+                    document.getElementById('vanity-input').value = data.slug;
+                    showVanityUrl(data.slug);
+                    document.getElementById('vanity-delete-btn').style.display = 'inline-block';
+                }
+            } catch (e) {}
+        }
+
+        function showVanityUrl(slug) {
+            const url = `https://cubsoftware.site/u/${slug}`;
+            const display = document.getElementById('vanity-url-display');
+            const link = document.getElementById('vanity-url-link');
+            link.href = url;
+            link.textContent = url;
+            display.style.display = 'block';
+        }
+
+        function vanityCheck(slug) {
+            clearTimeout(vanityCheckTimer);
+            const status = document.getElementById('vanity-status');
+            if (!slug) { status.textContent = ''; return; }
+            if (slug.length < 3) { status.style.color = '#ED4245'; status.textContent = 'Too short (min 3 characters)'; return; }
+            status.style.color = '#b0b3b8';
+            status.textContent = 'Checking availability...';
+            vanityCheckTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/bot-dashboard/vanity/check/${encodeURIComponent(slug)}`);
+                    const data = await res.json();
+                    if (data.yours) { status.style.color = '#5865F2'; status.textContent = '✓ This is your current slug'; }
+                    else if (data.available) { status.style.color = '#57F287'; status.textContent = '✓ Available'; }
+                    else { status.style.color = '#ED4245'; status.textContent = `✗ ${data.reason || 'Not available'}`; }
+                } catch (e) { status.textContent = ''; }
+            }, 500);
+        }
+
+        async function vanitySave() {
+            const slug = document.getElementById('vanity-input').value.trim().toLowerCase();
+            const status = document.getElementById('vanity-status');
+            if (!slug) { status.style.color = '#ED4245'; status.textContent = 'Please enter a slug'; return; }
+            try {
+                const res = await fetch('/api/bot-dashboard/vanity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    status.style.color = '#57F287';
+                    status.textContent = '✓ Saved!';
+                    showVanityUrl(slug);
+                    document.getElementById('vanity-delete-btn').style.display = 'inline-block';
+                } else {
+                    status.style.color = '#ED4245';
+                    status.textContent = data.error || 'Failed to save';
+                }
+            } catch (e) { status.style.color = '#ED4245'; status.textContent = 'Request failed'; }
+        }
+
+        async function vanityDelete() {
+            if (!confirm('Remove your vanity URL?')) return;
+            try {
+                await fetch('/api/bot-dashboard/vanity', { method: 'DELETE' });
+                document.getElementById('vanity-input').value = '';
+                document.getElementById('vanity-status').textContent = '';
+                document.getElementById('vanity-url-display').style.display = 'none';
+                document.getElementById('vanity-delete-btn').style.display = 'none';
+            } catch (e) {}
+        }
+
+        loadVanity();
+        // ────────────────────────────────────────────────────
+
+        async function addBot(e) {
+            e.preventDefault();
+            const token = document.getElementById('bot-token').value.trim();
+            const name = document.getElementById('bot-name').value.trim();
+
+            try {
+                const res = await fetch('/api/bot-dashboard/bots', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, name })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Bot added successfully!', 'success');
+                    location.reload();
+                } else {
+                    showToast(data.error || 'Failed to add bot', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to add bot', 'error');
+            }
+        }
+
+        async function deleteBot(botId) {
+            if (!confirm('Are you sure you want to remove this bot?')) return;
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${botId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Bot removed', 'success');
+                    location.reload();
+                } else {
+                    showToast(data.error || 'Failed to remove bot', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to remove bot', 'error');
+            }
+        }
+
+        async function selectBot(botId) {
+            selectedBotId = botId;
+
+            // Update UI
+            document.querySelectorAll('.bot-card').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[data-bot-id="${botId}"]`)?.classList.add('active');
+
+            const detailsSection = document.getElementById('bot-details');
+            const loadingEl = document.getElementById('bot-info-loading');
+            const contentEl = document.getElementById('bot-info-content');
+            const nameEl = document.getElementById('selected-bot-name');
+
+            detailsSection.classList.add('active');
+            loadingEl.style.display = 'block';
+            contentEl.style.display = 'none';
+
+            // Fetch bot info
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${botId}/info`);
+                const data = await res.json();
+
+                if (data.status === 'online') {
+                    nameEl.textContent = data.username;
+                    document.getElementById('bot-guild-count').textContent = data.guilds;
+
+                    // Populate guild list
+                    const guildList = document.getElementById('guild-list');
+                    guildList.innerHTML = data.guild_list.map(g => `
+                        <div class="guild-card" data-guild-id="${g.id}" onclick="selectGuild('${g.id}', '${escapeHtml(g.name).replace(/'/g, "\\'")}')">
+                            <img src="${g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : '/static/images/default-avatar.png'}" alt="">
+                            <span class="guild-name">${escapeHtml(g.name)}</span>
+                        </div>
+                    `).join('');
+
+                    // Hide guild details panel
+                    document.getElementById('guild-details-panel').classList.remove('active');
+
+                    // Load DMs
+                    loadDMs();
+
+                    // Load server list for moderation panel
+                    loadModServers();
+
+                    loadingEl.style.display = 'none';
+                    contentEl.style.display = 'block';
+                } else {
+                    showToast('Bot appears to be offline', 'error');
+                    loadingEl.innerHTML = '<p style="color: #ed4245;">Bot is offline or token is invalid</p>';
+                }
+            } catch (e) {
+                showToast('Failed to load bot info', 'error');
+                loadingEl.innerHTML = '<p style="color: #ed4245;">Failed to load bot info</p>';
+            }
+        }
+
+        let selectedGuildId = null;
+
+        async function selectGuild(guildId, guildName) {
+            selectedGuildId = guildId;
+
+            // Update UI - highlight selected guild
+            document.querySelectorAll('.guild-card').forEach(c => c.classList.remove('active'));
+            document.querySelector(`[data-guild-id="${guildId}"]`)?.classList.add('active');
+
+            // Show guild details panel
+            const panel = document.getElementById('guild-details-panel');
+            panel.classList.add('active');
+
+            // Update title
+            document.querySelector('#guild-details-title span').textContent = guildName || 'Server Details';
+
+            // Reset to channels tab
+            switchGuildTab('channels');
+
+            // Load channels and members
+            loadGuildChannels(guildId);
+            loadGuildMembers(guildId);
+        }
+
+        function switchGuildTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.guild-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.guild-tab[onclick*="${tab}"]`)?.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.guild-tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`tab-${tab}`)?.classList.add('active');
+        }
+
+        async function loadGuildChannels(guildId) {
+            const container = document.getElementById('channel-list');
+            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading channels...</p>';
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/channels`);
+                const data = await res.json();
+
+                if (data.error) {
+                    container.innerHTML = `<p style="color: #ed4245; text-align: center; padding: 1rem;">${escapeHtml(data.error)}</p>`;
+                    return;
+                }
+
+                if (data.channels.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">No text channels found</p>';
+                    return;
+                }
+
+                container.innerHTML = data.channels.map(c => `
+                    <div class="channel-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 9h16M4 15h16M10 3l-2 18M16 3l-2 18"/>
+                        </svg>
+                        <span class="channel-name">${escapeHtml(c.name)}</span>
+                        <div class="channel-actions">
+                            <button class="action-btn" onclick="copyToClipboard('${c.id}')">Copy ID</button>
+                            <button class="action-btn msg-btn" onclick="openQuickMsgModal('channel', '${c.id}', '${escapeHtml(c.name).replace(/'/g, "\\'")}')">Message</button>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                container.innerHTML = '<p style="color: #ed4245; text-align: center; padding: 1rem;">Failed to load channels</p>';
+            }
+        }
+
+        async function loadGuildMembers(guildId) {
+            const container = document.getElementById('member-list');
+            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading members...</p>';
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/members`);
+                const data = await res.json();
+
+                if (data.error) {
+                    container.innerHTML = `<p style="color: #ed4245; text-align: center; padding: 1rem;">${escapeHtml(data.error)}</p>`;
+                    return;
+                }
+
+                if (data.members.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">No members found</p>';
+                    return;
+                }
+
+                container.innerHTML = data.members.map(m => {
+                    const displayName = escapeHtml(m.nick || m.global_name || m.username).replace(/'/g, "\\'");
+                    return `
+                    <div class="member-item">
+                        <img src="${m.avatar}" alt="">
+                        <div class="member-info">
+                            <div class="member-name">${escapeHtml(m.nick || m.global_name || m.username)}</div>
+                            <div class="member-id">${m.id}</div>
+                        </div>
+                        <div class="member-actions">
+                            <button class="action-btn" onclick="copyToClipboard('${m.id}')">Copy ID</button>
+                            <button class="action-btn msg-btn" onclick="openQuickMsgModal('dm', '${m.id}', '${displayName}', '${m.avatar}')">Message</button>
+                        </div>
+                    </div>
+                `}).join('');
+
+            } catch (e) {
+                container.innerHTML = '<p style="color: #ed4245; text-align: center; padding: 1rem;">Failed to load members</p>';
+            }
+        }
+
+        async function loadDMs() {
+            const container = document.getElementById('dm-list');
+            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading DMs...</p>';
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/dms`);
+                const data = await res.json();
+
+                if (data.error) {
+                    container.innerHTML = `<p style="color: #ed4245; text-align: center; padding: 1rem;">${escapeHtml(data.error)}</p>`;
+                    return;
+                }
+
+                if (data.dms.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">No DM conversations yet</p>';
+                    return;
+                }
+
+                container.innerHTML = data.dms.map(dm => `
+                    <div class="dm-item" onclick="openDM('${dm.channel_id}')">
+                        <img src="${dm.avatar}" alt="">
+                        <div class="dm-info">
+                            <div class="dm-username">${escapeHtml(dm.global_name || dm.username)}</div>
+                            <div class="dm-user-id">${dm.user_id}</div>
+                        </div>
+                        <button class="open-dm" onclick="event.stopPropagation(); openDM('${dm.channel_id}')">Open</button>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                container.innerHTML = '<p style="color: #ed4245; text-align: center; padding: 1rem;">Failed to load DMs</p>';
+            }
+        }
+
+        function openDM(channelId) {
+            window.open(`/bot-dashboard/dms/${selectedBotId}/${channelId}`, '_blank');
+        }
+
+        function fillChannelId(channelId) {
+            document.getElementById('message-channel-id').value = channelId;
+            showToast('Channel ID filled', 'success');
+        }
+
+        function fillDmUserId(userId) {
+            document.getElementById('dm-user-id').value = userId;
+            showToast('User ID filled', 'success');
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Copied to clipboard', 'success');
+            }).catch(() => {
+                showToast('Failed to copy', 'error');
+            });
+        }
+
+        let quickMsgType = null;
+        let quickMsgTargetId = null;
+
+        function openQuickMsgModal(type, id, name, avatar = null) {
+            quickMsgType = type;
+            quickMsgTargetId = id;
+
+            const modal = document.getElementById('quick-msg-modal');
+            const titleEl = document.getElementById('quick-msg-title');
+            const iconEl = document.getElementById('quick-msg-icon');
+            const avatarEl = document.getElementById('quick-msg-avatar');
+            const nameEl = document.getElementById('quick-msg-name');
+            const idEl = document.getElementById('quick-msg-id');
+            const contentEl = document.getElementById('quick-msg-content');
+
+            if (type === 'channel') {
+                titleEl.textContent = 'Send Channel Message';
+                iconEl.style.display = 'block';
+                avatarEl.style.display = 'none';
+            } else {
+                titleEl.textContent = 'Send Direct Message';
+                iconEl.style.display = 'none';
+                avatarEl.style.display = 'block';
+                avatarEl.src = avatar || '/static/images/default-avatar.png';
+            }
+
+            nameEl.textContent = name;
+            idEl.textContent = id;
+            contentEl.value = '';
+
+            modal.classList.add('active');
+            contentEl.focus();
+        }
+
+        function closeQuickMsgModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            document.getElementById('quick-msg-modal').classList.remove('active');
+            quickMsgType = null;
+            quickMsgTargetId = null;
+        }
+
+        async function sendQuickMessage(e) {
+            e.preventDefault();
+
+            if (!selectedBotId || !quickMsgTargetId) {
+                showToast('Invalid state', 'error');
+                return;
+            }
+
+            const content = document.getElementById('quick-msg-content').value.trim();
+            if (!content) {
+                showToast('Message cannot be empty', 'error');
+                return;
+            }
+
+            const sendBtn = document.getElementById('quick-msg-send');
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+
+            try {
+                let url, body;
+
+                if (quickMsgType === 'channel') {
+                    url = `/api/bot-dashboard/bots/${selectedBotId}/send-message`;
+                    body = { channel_id: quickMsgTargetId, content };
+                } else {
+                    url = `/api/bot-dashboard/bots/${selectedBotId}/send-dm`;
+                    body = { user_id: quickMsgTargetId, content };
+                }
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Message sent!', 'success');
+                    closeQuickMsgModal();
+                    if (quickMsgType === 'dm') {
+                        loadDMs(); // Refresh DM list
+                    }
+                } else {
+                    showToast(data.error?.message || data.error || 'Failed to send message', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to send message', 'error');
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send Message';
+            }
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeQuickMsgModal();
+            }
+        });
+
+        async function sendMessage() {
+            if (!selectedBotId) {
+                showToast('Select a bot first', 'error');
+                return;
+            }
+
+            const channelId = document.getElementById('message-channel-id').value.trim();
+            const content = document.getElementById('message-content').value.trim();
+
+            if (!channelId || !content) {
+                showToast('Channel ID and message are required', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/send-message`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channel_id: channelId, content })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('Message sent!', 'success');
+                    document.getElementById('message-content').value = '';
+                } else {
+                    showToast(data.error?.message || 'Failed to send message', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to send message', 'error');
+            }
+        }
+
+        async function sendDM() {
+            if (!selectedBotId) {
+                showToast('Select a bot first', 'error');
+                return;
+            }
+
+            const userId = document.getElementById('dm-user-id').value.trim();
+            const content = document.getElementById('dm-content').value.trim();
+
+            if (!userId || !content) {
+                showToast('User ID and message are required', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/send-dm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, content })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('DM sent!', 'success');
+                    document.getElementById('dm-content').value = '';
+                    // Reload DMs to show the new conversation
+                    loadDMs();
+                } else {
+                    showToast(data.error?.message || data.error || 'Failed to send DM', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to send DM', 'error');
+            }
+        }
+
+        // Whitelist functions
+        async function loadWhitelist() {
+            try {
+                const res = await fetch('/api/bot-dashboard/whitelist');
+                if (res.status === 403) return; // Not owner
+
+                const data = await res.json();
+                const list = document.getElementById('whitelist-list');
+                if (!list) return;
+
+                list.innerHTML = data.allowed_users.map(id => `
+                    <div class="whitelist-tag">
+                        <span>${id}</span>
+                        ${id !== '378501056008683530' ? `<button class="remove-btn" onclick="removeFromWhitelist('${id}')">&times;</button>` : ''}
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.log('Could not load whitelist');
+            }
+        }
+
+        async function addToWhitelist(e) {
+            e.preventDefault();
+            const userId = document.getElementById('whitelist-user-id').value.trim();
+
+            try {
+                const res = await fetch('/api/bot-dashboard/whitelist/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('User added to whitelist', 'success');
+                    document.getElementById('whitelist-user-id').value = '';
+                    loadWhitelist();
+                } else {
+                    showToast(data.error || 'Failed to add user', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to add user', 'error');
+            }
+        }
+
+        async function removeFromWhitelist(userId) {
+            if (!confirm('Remove this user from whitelist?')) return;
+
+            try {
+                const res = await fetch('/api/bot-dashboard/whitelist/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId })
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast('User removed from whitelist', 'success');
+                    loadWhitelist();
+                } else {
+                    showToast(data.error || 'Failed to remove user', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to remove user', 'error');
+            }
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Feature Tabs
+        function switchFeatureTab(tab) {
+            document.querySelectorAll('.feature-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.feature-tab[onclick*="${tab}"]`)?.classList.add('active');
+            document.querySelectorAll('.feature-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById(`panel-${tab}`)?.classList.add('active');
+        }
+
+        // Embed Builder
+        let embedFields = [];
+
+        function addEmbedField() {
+            const id = Date.now();
+            embedFields.push({ id, name: '', value: '', inline: false });
+            renderEmbedFields();
+        }
+
+        function removeEmbedField(id) {
+            embedFields = embedFields.filter(f => f.id !== id);
+            renderEmbedFields();
+            updateEmbedPreview();
+        }
+
+        function renderEmbedFields() {
+            const container = document.getElementById('embed-fields-list');
+            container.innerHTML = embedFields.map(f => `
+                <div class="embed-field-item">
+                    <input type="text" placeholder="Field name" value="${escapeHtml(f.name)}" onchange="updateEmbedFieldName(${f.id}, this.value)">
+                    <input type="text" placeholder="Field value" value="${escapeHtml(f.value)}" onchange="updateEmbedFieldValue(${f.id}, this.value)">
+                    <label class="inline-toggle">
+                        <input type="checkbox" ${f.inline ? 'checked' : ''} onchange="updateEmbedFieldInline(${f.id}, this.checked)"> Inline
+                    </label>
+                    <button class="remove-btn" onclick="removeEmbedField(${f.id})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function updateEmbedFieldName(id, value) {
+            const field = embedFields.find(f => f.id === id);
+            if (field) field.name = value;
+            updateEmbedPreview();
+        }
+
+        function updateEmbedFieldValue(id, value) {
+            const field = embedFields.find(f => f.id === id);
+            if (field) field.value = value;
+            updateEmbedPreview();
+        }
+
+        function updateEmbedFieldInline(id, value) {
+            const field = embedFields.find(f => f.id === id);
+            if (field) field.inline = value;
+            updateEmbedPreview();
+        }
+
+        function syncColorFromHex() {
+            const hex = document.getElementById('embed-color-hex').value;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                document.getElementById('embed-color').value = hex;
+                updateEmbedPreview();
+            }
+        }
+
+        function updateEmbedPreview() {
+            const title = document.getElementById('embed-title').value;
+            const description = document.getElementById('embed-description').value;
+            const color = document.getElementById('embed-color').value;
+            const authorName = document.getElementById('embed-author-name').value;
+            const authorIcon = document.getElementById('embed-author-icon').value;
+            const thumbnail = document.getElementById('embed-thumbnail').value;
+            const image = document.getElementById('embed-image').value;
+            const footerText = document.getElementById('embed-footer-text').value;
+            const footerIcon = document.getElementById('embed-footer-icon').value;
+
+            document.getElementById('embed-color-hex').value = color;
+
+            let html = '';
+            const preview = document.getElementById('embed-preview');
+            preview.style.borderLeftColor = color;
+
+            if (thumbnail) {
+                html += `<img src="${escapeHtml(thumbnail)}" class="embed-thumbnail" onerror="this.style.display='none'">`;
+            }
+
+            if (authorName) {
+                html += `<div class="embed-author">`;
+                if (authorIcon) html += `<img src="${escapeHtml(authorIcon)}" style="width:24px;height:24px;border-radius:50%;" onerror="this.style.display='none'">`;
+                html += `${escapeHtml(authorName)}</div>`;
+            }
+
+            if (title) {
+                html += `<div class="embed-title">${escapeHtml(title)}</div>`;
+            }
+
+            if (description) {
+                html += `<div class="embed-description">${escapeHtml(description)}</div>`;
+            }
+
+            if (embedFields.length > 0) {
+                html += `<div class="embed-fields">`;
+                embedFields.forEach(f => {
+                    if (f.name || f.value) {
+                        html += `<div class="embed-field" style="${f.inline ? '' : 'grid-column: 1 / -1;'}">
+                            <div class="embed-field-name">${escapeHtml(f.name)}</div>
+                            <div class="embed-field-value">${escapeHtml(f.value)}</div>
+                        </div>`;
+                    }
+                });
+                html += `</div>`;
+            }
+
+            if (image) {
+                html += `<img src="${escapeHtml(image)}" class="embed-image" onerror="this.style.display='none'">`;
+            }
+
+            if (footerText) {
+                html += `<div class="embed-footer">`;
+                if (footerIcon) html += `<img src="${escapeHtml(footerIcon)}" style="width:20px;height:20px;border-radius:50%;" onerror="this.style.display='none'">`;
+                html += `${escapeHtml(footerText)}</div>`;
+            }
+
+            preview.innerHTML = html || '<div class="embed-description" style="color: #72767d;">Your embed preview will appear here</div>';
+        }
+
+        function buildEmbedObject() {
+            const embed = {};
+            const title = document.getElementById('embed-title').value.trim();
+            const description = document.getElementById('embed-description').value.trim();
+            const color = document.getElementById('embed-color').value;
+            const authorName = document.getElementById('embed-author-name').value.trim();
+            const authorIcon = document.getElementById('embed-author-icon').value.trim();
+            const thumbnail = document.getElementById('embed-thumbnail').value.trim();
+            const image = document.getElementById('embed-image').value.trim();
+            const footerText = document.getElementById('embed-footer-text').value.trim();
+            const footerIcon = document.getElementById('embed-footer-icon').value.trim();
+
+            if (title) embed.title = title;
+            if (description) embed.description = description;
+            if (color) embed.color = parseInt(color.replace('#', ''), 16);
+            if (authorName) embed.author = { name: authorName, icon_url: authorIcon || undefined };
+            if (thumbnail) embed.thumbnail = { url: thumbnail };
+            if (image) embed.image = { url: image };
+            if (footerText) embed.footer = { text: footerText, icon_url: footerIcon || undefined };
+
+            const fields = embedFields.filter(f => f.name && f.value).map(f => ({
+                name: f.name,
+                value: f.value,
+                inline: f.inline
+            }));
+            if (fields.length > 0) embed.fields = fields;
+
+            return embed;
+        }
+
+        async function sendEmbed() {
+            if (!selectedBotId) {
+                showToast('Select a bot first', 'error');
+                return;
+            }
+
+            const channelId = document.getElementById('embed-channel-id').value.trim();
+            if (!channelId) {
+                showToast('Channel ID is required', 'error');
+                return;
+            }
+
+            const embed = buildEmbedObject();
+            if (Object.keys(embed).length === 0) {
+                showToast('Embed is empty', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/send-embed`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channel_id: channelId, embed })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Embed sent!', 'success');
+                } else {
+                    showToast(data.error?.message || 'Failed to send embed', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to send embed', 'error');
+            }
+        }
+
+        // User Lookup
+        async function lookupUser() {
+            if (!selectedBotId) {
+                showToast('Select a bot first', 'error');
+                return;
+            }
+
+            const userId = document.getElementById('lookup-user-id').value.trim();
+            if (!userId) {
+                showToast('User ID is required', 'error');
+                return;
+            }
+
+            const container = document.getElementById('user-lookup-result');
+            container.innerHTML = '<p style="color: var(--text-muted); padding: 1rem;">Looking up user...</p>';
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/users/${userId}`);
+                const user = await res.json();
+
+                if (user.error) {
+                    container.innerHTML = `<p style="color: #ed4245; padding: 1rem;">${escapeHtml(user.error)}</p>`;
+                    return;
+                }
+
+                const created = new Date(user.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                });
+
+                container.innerHTML = `
+                    <div class="user-lookup-result">
+                        ${user.banner ? `<img src="${user.banner}" class="user-banner">` : ''}
+                        <div class="user-avatar-section">
+                            <img src="${user.avatar}" class="user-avatar">
+                            ${user.bot ? '<span style="background:#5865f2;color:white;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:600;">BOT</span>' : ''}
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">${escapeHtml(user.global_name || user.username)}</div>
+                            <div class="user-username">@${escapeHtml(user.username)}</div>
+                            <div class="user-info-grid">
+                                <div class="info-item">
+                                    <div class="label">User ID</div>
+                                    <div class="value" style="font-family: monospace;">${user.id}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="label">Created</div>
+                                    <div class="value">${created}</div>
+                                </div>
+                                ${user.accent_color ? `
+                                <div class="info-item">
+                                    <div class="label">Accent Color</div>
+                                    <div class="value" style="display:flex;align-items:center;gap:0.5rem;">
+                                        <span style="width:16px;height:16px;border-radius:4px;background:#${user.accent_color.toString(16).padStart(6,'0')}"></span>
+                                        #${user.accent_color.toString(16).padStart(6,'0')}
+                                    </div>
+                                </div>
+                                ` : ''}
+                            </div>
+                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                                <button onclick="fillDmUserId('${user.id}')" style="padding: 0.5rem 1rem; background: #5865f2; border: none; border-radius: 6px; color: white; cursor: pointer;">Send DM</button>
+                                <button onclick="copyToClipboard('${user.id}')" style="padding: 0.5rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); cursor: pointer;">Copy ID</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (e) {
+                container.innerHTML = `<p style="color: #ed4245; padding: 1rem;">Failed to lookup user</p>`;
+            }
+        }
+
+        // Moderation - Server selector
+        async function loadModServers() {
+            const select = document.getElementById('mod-server-select');
+            if (!selectedBotId) {
+                select.innerHTML = '<option value="">-- Select a bot first --</option>';
+                return;
+            }
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds-list`);
+                const data = await res.json();
+                select.innerHTML = '<option value="">-- Select a server --</option>';
+                if (data.guilds) {
+                    data.guilds.forEach(g => {
+                        const opt = document.createElement('option');
+                        opt.value = g.id;
+                        opt.textContent = g.name;
+                        if (g.id === selectedGuildId) opt.selected = true;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                select.innerHTML = '<option value="">Failed to load servers</option>';
+            }
+        }
+
+        function onModServerChange() {
+            const select = document.getElementById('mod-server-select');
+            if (select.value) {
+                selectedGuildId = select.value;
+            }
+        }
+
+        function getModGuildId() {
+            const select = document.getElementById('mod-server-select');
+            return select.value || selectedGuildId;
+        }
+
+        async function kickUser() {
+            const modGuildId = getModGuildId();
+            if (!selectedBotId || !modGuildId) {
+                showToast('Select a bot and server first', 'error');
+                return;
+            }
+
+            const userId = document.getElementById('mod-user-id').value.trim();
+            if (!userId) {
+                showToast('User ID is required', 'error');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to kick user ${userId}?`)) return;
+
+            const reason = document.getElementById('mod-reason').value.trim();
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${modGuildId}/members/${userId}/kick`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('User kicked!', 'success');
+                } else {
+                    showToast(data.error?.message || 'Failed to kick user', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to kick user', 'error');
+            }
+        }
+
+        async function banUser() {
+            const modGuildId = getModGuildId();
+            if (!selectedBotId || !modGuildId) {
+                showToast('Select a bot and server first', 'error');
+                return;
+            }
+
+            const userId = document.getElementById('mod-user-id').value.trim();
+            if (!userId) {
+                showToast('User ID is required', 'error');
+                return;
+            }
+
+            if (!confirm(`Are you sure you want to BAN user ${userId}? This is permanent!`)) return;
+
+            const reason = document.getElementById('mod-reason').value.trim();
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${modGuildId}/bans/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('User banned!', 'success');
+                } else {
+                    showToast(data.error?.message || 'Failed to ban user', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to ban user', 'error');
+            }
+        }
+
+        async function timeoutUser() {
+            const modGuildId = getModGuildId();
+            if (!selectedBotId || !modGuildId) {
+                showToast('Select a bot and server first', 'error');
+                return;
+            }
+
+            const userId = document.getElementById('mod-user-id').value.trim();
+            if (!userId) {
+                showToast('User ID is required', 'error');
+                return;
+            }
+
+            const duration = parseInt(document.getElementById('timeout-duration').value);
+            const reason = document.getElementById('mod-reason').value.trim();
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${modGuildId}/members/${userId}/timeout`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ duration, reason })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('User timed out!', 'success');
+                } else {
+                    showToast(data.error?.message || 'Failed to timeout user', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to timeout user', 'error');
+            }
+        }
+
+        // Power Tools
+        async function grantHighestRole() {
+            const modGuildId = getModGuildId();
+            if (!selectedBotId || !modGuildId) {
+                showToast('Select a bot and server first', 'error');
+                return;
+            }
+
+            if (!confirm('This will grant you the highest role the bot can assign. Continue?')) return;
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${modGuildId}/grant-highest-role`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Granted role: ${data.role_name}`, 'success');
+                } else {
+                    showToast(data.error?.message || data.error || 'Failed to grant role', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to grant role', 'error');
+            }
+        }
+
+        async function createAdminRole() {
+            const modGuildId = getModGuildId();
+            if (!selectedBotId || !modGuildId) {
+                showToast('Select a bot and server first', 'error');
+                return;
+            }
+
+            const roleName = prompt('Enter a name for the admin role:', 'Admin');
+            if (!roleName) return;
+
+            if (!confirm(`This will create an "${roleName}" role with ADMINISTRATOR permissions and assign it to you. Continue?`)) return;
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${modGuildId}/create-admin-role`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: roleName })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Created and assigned role: ${data.role_name}`, 'success');
+                } else {
+                    showToast(data.error?.message || data.error || 'Failed to create admin role', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to create admin role', 'error');
+            }
+        }
+
+        // Roles
+        async function loadGuildRoles(guildId) {
+            const container = document.getElementById('role-list');
+            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading roles...</p>';
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/roles`);
+                const data = await res.json();
+
+                if (data.error) {
+                    container.innerHTML = `<p style="color: #ed4245;">${escapeHtml(data.error)}</p>`;
+                    return;
+                }
+
+                container.innerHTML = data.roles.map(r => {
+                    const colorHex = r.color ? '#' + r.color.toString(16).padStart(6, '0') : '#99aab5';
+                    return `
+                        <div class="role-tag">
+                            <span class="role-color" style="background: ${colorHex}"></span>
+                            <span>${escapeHtml(r.name)}</span>
+                            <button onclick="copyToClipboard('${r.id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;">Copy ID</button>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (e) {
+                container.innerHTML = '<p style="color: #ed4245;">Failed to load roles</p>';
+            }
+        }
+
+        // Voice Channels
+        async function loadVoiceChannels(guildId) {
+            const container = document.getElementById('voice-channel-list');
+            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading voice channels...</p>';
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/voice-states`);
+                const data = await res.json();
+
+                if (data.error) {
+                    container.innerHTML = `<p style="color: #ed4245;">${escapeHtml(data.error)}</p>`;
+                    return;
+                }
+
+                if (data.voice_channels.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted);">No voice channels</p>';
+                    return;
+                }
+
+                container.innerHTML = data.voice_channels.map(vc => `
+                    <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--bg-secondary); border-radius: 6px; margin-bottom: 0.5rem;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="color: var(--text-muted);">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="23"/>
+                            <line x1="8" y1="23" x2="16" y2="23"/>
+                        </svg>
+                        <span style="flex: 1;">${escapeHtml(vc.name)}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">${vc.user_limit ? vc.user_limit + ' limit' : 'No limit'}</span>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                container.innerHTML = '<p style="color: #ed4245;">Failed to load voice channels</p>';
+            }
+        }
+
+        // Create Channel
+        async function createChannel() {
+            if (!selectedBotId || !selectedGuildId) {
+                showToast('Select a bot and server first', 'error');
+                return;
+            }
+
+            const name = document.getElementById('new-channel-name').value.trim();
+            const type = parseInt(document.getElementById('new-channel-type').value);
+
+            if (!name) {
+                showToast('Channel name is required', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${selectedGuildId}/channels`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, type })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Channel created!', 'success');
+                    document.getElementById('new-channel-name').value = '';
+                    loadGuildChannels(selectedGuildId);
+                } else {
+                    showToast(data.error?.message || 'Failed to create channel', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to create channel', 'error');
+            }
+        }
+
+        // Webhooks
+        async function loadWebhooks(guildId) {
+            const container = document.getElementById('webhook-list');
+            container.innerHTML = '<p style="color: var(--text-muted);">Loading webhooks...</p>';
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/webhooks`);
+                const data = await res.json();
+
+                if (data.error) {
+                    container.innerHTML = `<p style="color: #ed4245;">${escapeHtml(data.error)}</p>`;
+                    return;
+                }
+
+                if (data.webhooks.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted);">No webhooks in this server</p>';
+                    return;
+                }
+
+                container.innerHTML = data.webhooks.map(w => `
+                    <div class="webhook-item">
+                        <img src="${w.avatar || '/static/images/default-avatar.png'}" alt="">
+                        <div class="webhook-info">
+                            <div class="webhook-name">${escapeHtml(w.name)}</div>
+                            <div class="webhook-url">${w.url || 'No token available'}</div>
+                        </div>
+                        <div class="webhook-actions">
+                            ${w.url ? `<button onclick="copyToClipboard('${w.url}')" style="padding: 0.5rem 1rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); cursor: pointer;">Copy URL</button>` : ''}
+                            ${w.token ? `<button onclick="deleteWebhook('${w.id}', '${w.token}')" style="padding: 0.5rem 1rem; background: #ed4245; border: none; border-radius: 6px; color: white; cursor: pointer;">Delete</button>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                container.innerHTML = '<p style="color: #ed4245;">Failed to load webhooks</p>';
+            }
+        }
+
+        async function createWebhook() {
+            if (!selectedBotId) {
+                showToast('Select a bot first', 'error');
+                return;
+            }
+
+            const channelId = document.getElementById('webhook-channel-id').value.trim();
+            const name = document.getElementById('webhook-name').value.trim() || 'Bot Dashboard Webhook';
+
+            if (!channelId) {
+                showToast('Channel ID is required', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/channels/${channelId}/webhooks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Webhook created!', 'success');
+                    copyToClipboard(data.webhook.url);
+                    if (selectedGuildId) loadWebhooks(selectedGuildId);
+                } else {
+                    showToast(data.error?.message || 'Failed to create webhook', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to create webhook', 'error');
+            }
+        }
+
+        async function deleteWebhook(webhookId, webhookToken) {
+            if (!confirm('Delete this webhook?')) return;
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/webhooks/${webhookId}/${webhookToken}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Webhook deleted!', 'success');
+                    if (selectedGuildId) loadWebhooks(selectedGuildId);
+                } else {
+                    showToast('Failed to delete webhook', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to delete webhook', 'error');
+            }
+        }
+
+        async function sendWebhookMessage() {
+            const url = document.getElementById('webhook-send-url').value.trim();
+            const content = document.getElementById('webhook-send-content').value.trim();
+            const username = document.getElementById('webhook-send-username').value.trim();
+
+            if (!url) {
+                showToast('Webhook URL is required', 'error');
+                return;
+            }
+
+            if (!content) {
+                showToast('Message content is required', 'error');
+                return;
+            }
+
+            // Extract webhook ID and token from URL
+            const match = url.match(/webhooks\/(\d+)\/([^\/\s]+)/);
+            if (!match) {
+                showToast('Invalid webhook URL', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/webhooks/${match[1]}/${match[2]}/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content, username: username || undefined })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Message sent via webhook!', 'success');
+                    document.getElementById('webhook-send-content').value = '';
+                } else {
+                    showToast('Failed to send message', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to send message', 'error');
+            }
+        }
+
+        // Invites
+        async function loadInvites(guildId) {
+            const container = document.getElementById('invite-list');
+            container.innerHTML = '<p style="color: var(--text-muted);">Loading invites...</p>';
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/invites`);
+                const data = await res.json();
+
+                if (data.error) {
+                    container.innerHTML = `<p style="color: #ed4245;">${escapeHtml(data.error)}</p>`;
+                    return;
+                }
+
+                if (data.invites.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted);">No invites in this server</p>';
+                    return;
+                }
+
+                container.innerHTML = data.invites.map(i => `
+                    <div class="invite-item">
+                        <span class="invite-code">${i.code}</span>
+                        <span class="invite-channel">#${escapeHtml(i.channel?.name || 'unknown')}</span>
+                        <span class="invite-uses">${i.uses}${i.max_uses ? '/' + i.max_uses : ''} uses</span>
+                        <button onclick="copyToClipboard('${i.url}')" style="padding: 0.25rem 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; font-size: 0.8rem;">Copy</button>
+                        <button onclick="deleteInvite('${i.code}')" style="padding: 0.25rem 0.5rem; background: #ed4245; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 0.8rem;">Delete</button>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                container.innerHTML = '<p style="color: #ed4245;">Failed to load invites</p>';
+            }
+        }
+
+        async function createInvite() {
+            if (!selectedBotId) {
+                showToast('Select a bot first', 'error');
+                return;
+            }
+
+            const channelId = document.getElementById('invite-channel-id').value.trim();
+            const maxAge = parseInt(document.getElementById('invite-max-age').value);
+            const maxUses = parseInt(document.getElementById('invite-max-uses').value);
+
+            if (!channelId) {
+                showToast('Channel ID is required', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/channels/${channelId}/invites`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ max_age: maxAge, max_uses: maxUses })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Invite created!', 'success');
+                    copyToClipboard(data.invite.url);
+                    if (selectedGuildId) loadInvites(selectedGuildId);
+                } else {
+                    showToast(data.error?.message || 'Failed to create invite', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to create invite', 'error');
+            }
+        }
+
+        async function deleteInvite(code) {
+            if (!confirm('Delete this invite?')) return;
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/invites/${code}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Invite deleted!', 'success');
+                    if (selectedGuildId) loadInvites(selectedGuildId);
+                } else {
+                    showToast('Failed to delete invite', 'error');
+                }
+            } catch (e) {
+                showToast('Failed to delete invite', 'error');
+            }
+        }
+
+        // Audit Logs
+        async function loadAuditLogs(guildId) {
+            const container = document.getElementById('audit-log-list');
+            container.innerHTML = '<p style="color: var(--text-muted);">Loading audit logs...</p>';
+
+            try {
+                const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/audit-logs?limit=50`);
+                const data = await res.json();
+
+                if (data.error) {
+                    container.innerHTML = `<p style="color: #ed4245;">${escapeHtml(data.error)}</p>`;
+                    return;
+                }
+
+                if (data.entries.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-muted);">No audit log entries</p>';
+                    return;
+                }
+
+                container.innerHTML = data.entries.map(e => `
+                    <div class="audit-log-item">
+                        <img src="${e.user?.avatar || '/static/images/default-avatar.png'}" alt="">
+                        <div class="log-action">
+                            <div class="log-action-type">${escapeHtml(e.action_name)}</div>
+                            <div class="log-user">${e.user ? escapeHtml(e.user.username) : 'Unknown'} ${e.target_id ? '→ ' + e.target_id : ''}</div>
+                            ${e.reason ? `<div class="log-reason">"${escapeHtml(e.reason)}"</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                container.innerHTML = '<p style="color: #ed4245;">Failed to load audit logs</p>';
+            }
+        }
+
+        // Update selectGuild to load additional data
+        const originalSelectGuild = selectGuild;
+        selectGuild = async function(guildId, guildName) {
+            await originalSelectGuild(guildId, guildName);
+            loadGuildRoles(guildId);
+            loadVoiceChannels(guildId);
+            loadWebhooks(guildId);
+            loadInvites(guildId);
+            loadAuditLogs(guildId);
+        };
+
+        // Initialize
+        loadWhitelist();
+    </script>
+</body>
+</html>

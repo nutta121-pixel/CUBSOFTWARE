@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Calculator Suite - Basic, Scientific, Mortgage & More | Free Online</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="All-in-one calculator suite. Basic arithmetic, scientific functions, mortgage payments, BMI, age, percentage, date/time, fuel cost, finance, and unit conversions. Free and works offline.">
+    <meta name="keywords" content="calculator, scientific calculator, mortgage calculator, BMI calculator, age calculator, percentage calculator, date calculator, fuel calculator, unit converter, free online calculator">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/calculator-suite">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Calculator Suite - 10 Calculators in One | Free">
+    <meta property="og:description" content="The ultimate calculator toolkit. Basic, scientific, mortgage, BMI, age, percentage, date/time, fuel, finance, and conversion calculators - all in your browser.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/calculator-suite">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+    <meta property="og:image" content="https://cubsoftware.site/static/images/company-logo.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/calculator-suite.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="calc-container">
+            <div class="calc-header">
+                <h1>Calculator Suite</h1>
+                <p>All the calculators you need in one place</p>
+            </div>
+
+            <!-- Calculator Selection Tabs -->
+            <div class="calc-selection">
+                <button class="calc-tab active" data-calculator="basic">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="4" y="2" width="16" height="20" rx="2"/>
+                        <line x1="8" y1="6" x2="16" y2="6"/>
+                        <line x1="8" y1="10" x2="8" y2="10.01"/>
+                        <line x1="12" y1="10" x2="12" y2="10.01"/>
+                        <line x1="16" y1="10" x2="16" y2="10.01"/>
+                        <line x1="8" y1="14" x2="8" y2="14.01"/>
+                        <line x1="12" y1="14" x2="12" y2="14.01"/>
+                        <line x1="16" y1="14" x2="16" y2="14.01"/>
+                        <line x1="8" y1="18" x2="8" y2="18.01"/>
+                        <line x1="12" y1="18" x2="12" y2="18.01"/>
+                        <line x1="16" y1="18" x2="16" y2="18.01"/>
+                    </svg>
+                    Basic
+                </button>
+                <button class="calc-tab" data-calculator="scientific">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"/>
+                        <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/>
+                    </svg>
+                    Scientific
+                </button>
+                <button class="calc-tab" data-calculator="mortgage">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    Mortgage
+                </button>
+                <button class="calc-tab" data-calculator="finance">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="1" x2="12" y2="23"/>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                    Finance
+                </button>
+                <button class="calc-tab" data-calculator="fuel">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 22V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v14"/>
+                        <path d="M17 12h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-3-4"/>
+                        <path d="M3 22h14"/>
+                        <path d="M7 10h6"/>
+                    </svg>
+                    Fuel
+                </button>
+                <button class="calc-tab" data-calculator="bmi">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    BMI
+                </button>
+                <button class="calc-tab" data-calculator="age">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    Age
+                </button>
+                <button class="calc-tab" data-calculator="date">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Date/Time
+                </button>
+                <button class="calc-tab" data-calculator="percentage">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="5" x2="5" y2="19"/>
+                        <circle cx="6.5" cy="6.5" r="2.5"/>
+                        <circle cx="17.5" cy="17.5" r="2.5"/>
+                    </svg>
+                    Percentage
+                </button>
+                <button class="calc-tab" data-calculator="conversion">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="17 1 21 5 17 9"/>
+                        <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+                        <polyline points="7 23 3 19 7 15"/>
+                        <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+                    </svg>
+                    Convert
+                </button>
+            </div>
+
+            <!-- Panel 1: Basic Calculator -->
+            <div class="calc-panel active" id="basic-panel">
+                <div class="basic-calculator">
+                    <div class="calc-display">
+                        <div class="calc-history" id="basicHistory"></div>
+                        <input type="text" class="calc-input" id="basicDisplay" value="0" readonly>
+                    </div>
+                    <div class="calc-buttons">
+                        <button class="calc-btn func" data-action="clear">AC</button>
+                        <button class="calc-btn func" data-action="backspace">&#9003;</button>
+                        <button class="calc-btn func" data-action="percent">%</button>
+                        <button class="calc-btn operator" data-action="divide">&divide;</button>
+
+                        <button class="calc-btn number" data-value="7">7</button>
+                        <button class="calc-btn number" data-value="8">8</button>
+                        <button class="calc-btn number" data-value="9">9</button>
+                        <button class="calc-btn operator" data-action="multiply">&times;</button>
+
+                        <button class="calc-btn number" data-value="4">4</button>
+                        <button class="calc-btn number" data-value="5">5</button>
+                        <button class="calc-btn number" data-value="6">6</button>
+                        <button class="calc-btn operator" data-action="subtract">&minus;</button>
+
+                        <button class="calc-btn number" data-value="1">1</button>
+                        <button class="calc-btn number" data-value="2">2</button>
+                        <button class="calc-btn number" data-value="3">3</button>
+                        <button class="calc-btn operator" data-action="add">+</button>
+
+                        <button class="calc-btn number zero" data-value="0">0</button>
+                        <button class="calc-btn number" data-action="decimal">.</button>
+                        <button class="calc-btn equals" data-action="equals">=</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 2: Scientific Calculator -->
+            <div class="calc-panel" id="scientific-panel">
+                <div class="scientific-calculator">
+                    <div class="calc-display">
+                        <div class="calc-history" id="sciHistory"></div>
+                        <input type="text" class="calc-input" id="sciDisplay" value="0" readonly>
+                    </div>
+                    <div class="sci-mode-toggle">
+                        <button class="mode-btn active" data-mode="deg">DEG</button>
+                        <button class="mode-btn" data-mode="rad">RAD</button>
+                    </div>
+                    <div class="calc-buttons scientific">
+                        <button class="calc-btn sci" data-action="sin">sin</button>
+                        <button class="calc-btn sci" data-action="cos">cos</button>
+                        <button class="calc-btn sci" data-action="tan">tan</button>
+                        <button class="calc-btn sci" data-action="log">log</button>
+                        <button class="calc-btn sci" data-action="ln">ln</button>
+
+                        <button class="calc-btn sci" data-action="sqrt">&radic;</button>
+                        <button class="calc-btn sci" data-action="square">x&sup2;</button>
+                        <button class="calc-btn sci" data-action="power">x<sup>y</sup></button>
+                        <button class="calc-btn sci" data-action="pi">&pi;</button>
+                        <button class="calc-btn sci" data-action="e">e</button>
+
+                        <button class="calc-btn sci" data-action="openParen">(</button>
+                        <button class="calc-btn sci" data-action="closeParen">)</button>
+                        <button class="calc-btn sci" data-action="factorial">n!</button>
+                        <button class="calc-btn sci" data-action="abs">|x|</button>
+                        <button class="calc-btn sci" data-action="inverse">1/x</button>
+
+                        <button class="calc-btn func" data-action="clear">AC</button>
+                        <button class="calc-btn func" data-action="backspace">&#9003;</button>
+                        <button class="calc-btn func" data-action="percent">%</button>
+                        <button class="calc-btn operator" data-action="divide">&divide;</button>
+                        <button class="calc-btn operator" data-action="multiply">&times;</button>
+
+                        <button class="calc-btn number" data-value="7">7</button>
+                        <button class="calc-btn number" data-value="8">8</button>
+                        <button class="calc-btn number" data-value="9">9</button>
+                        <button class="calc-btn operator" data-action="subtract">&minus;</button>
+                        <button class="calc-btn operator" data-action="add">+</button>
+
+                        <button class="calc-btn number" data-value="4">4</button>
+                        <button class="calc-btn number" data-value="5">5</button>
+                        <button class="calc-btn number" data-value="6">6</button>
+                        <button class="calc-btn number" data-value="1">1</button>
+                        <button class="calc-btn number" data-value="2">2</button>
+
+                        <button class="calc-btn number" data-value="3">3</button>
+                        <button class="calc-btn number" data-value="0">0</button>
+                        <button class="calc-btn number" data-action="decimal">.</button>
+                        <button class="calc-btn equals sci-equals" data-action="equals">=</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 3: Mortgage Calculator -->
+            <div class="calc-panel" id="mortgage-panel">
+                <div class="mortgage-calculator">
+                    <div class="input-section">
+                        <div class="form-group">
+                            <label for="homePrice">Home Price</label>
+                            <div class="input-with-prefix">
+                                <span class="prefix">$</span>
+                                <input type="number" id="homePrice" value="500000" min="0">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="downPayment">Down Payment</label>
+                            <div class="input-with-prefix">
+                                <span class="prefix">$</span>
+                                <input type="number" id="downPayment" value="100000" min="0">
+                            </div>
+                            <span class="helper-text" id="downPaymentPercent">20% of home price</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="interestRate">Interest Rate (%)</label>
+                            <input type="number" id="interestRate" value="6.5" min="0" max="100" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label for="loanTerm">Loan Term</label>
+                            <select id="loanTerm">
+                                <option value="30">30 years</option>
+                                <option value="25">25 years</option>
+                                <option value="20">20 years</option>
+                                <option value="15">15 years</option>
+                                <option value="10">10 years</option>
+                            </select>
+                        </div>
+                        <button class="calculate-btn" id="calculateMortgage">Calculate</button>
+                    </div>
+
+                    <div class="results-section" id="mortgageResults">
+                        <div class="result-card primary">
+                            <span class="result-label">Monthly Payment</span>
+                            <span class="result-value" id="monthlyPayment">$0</span>
+                        </div>
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <span class="result-label">Loan Amount</span>
+                                <span class="result-value" id="loanAmount">$0</span>
+                            </div>
+                            <div class="result-card">
+                                <span class="result-label">Total Interest</span>
+                                <span class="result-value" id="totalInterest">$0</span>
+                            </div>
+                            <div class="result-card">
+                                <span class="result-label">Total Payment</span>
+                                <span class="result-value" id="totalPayment">$0</span>
+                            </div>
+                        </div>
+
+                        <button class="toggle-schedule" id="toggleAmortization">
+                            Show Amortization Schedule
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9"/>
+                            </svg>
+                        </button>
+                        <div class="amortization-table" id="amortizationTable">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Year</th>
+                                        <th>Principal</th>
+                                        <th>Interest</th>
+                                        <th>Balance</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="amortizationBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 4: Finance Calculator -->
+            <div class="calc-panel" id="finance-panel">
+                <div class="finance-calculator">
+                    <div class="sub-tabs">
+                        <button class="sub-tab active" data-calc="compound">Compound Interest</button>
+                        <button class="sub-tab" data-calc="savings">Savings Goal</button>
+                        <button class="sub-tab" data-calc="loan">Loan Repayment</button>
+                    </div>
+
+                    <!-- Compound Interest -->
+                    <div class="sub-panel active" id="compound-finance">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="principalAmount">Principal Amount</label>
+                                <div class="input-with-prefix">
+                                    <span class="prefix">$</span>
+                                    <input type="number" id="principalAmount" value="10000" min="0">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="annualRate">Annual Interest Rate (%)</label>
+                                <input type="number" id="annualRate" value="5" min="0" max="100" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="compoundYears">Time Period (Years)</label>
+                                <input type="number" id="compoundYears" value="10" min="1" max="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="compoundFreq">Compound Frequency</label>
+                                <select id="compoundFreq">
+                                    <option value="1">Annually</option>
+                                    <option value="2">Semi-Annually</option>
+                                    <option value="4">Quarterly</option>
+                                    <option value="12" selected>Monthly</option>
+                                    <option value="365">Daily</option>
+                                </select>
+                            </div>
+                            <button class="calculate-btn" id="calculateCompound">Calculate</button>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Final Amount</span>
+                                <span class="result-value" id="compoundFinal">$0</span>
+                            </div>
+                            <div class="result-grid">
+                                <div class="result-card">
+                                    <span class="result-label">Total Interest Earned</span>
+                                    <span class="result-value" id="compoundInterest">$0</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Effective Annual Rate</span>
+                                    <span class="result-value" id="effectiveRate">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Savings Goal -->
+                    <div class="sub-panel" id="savings-finance">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="savingsGoal">Savings Goal</label>
+                                <div class="input-with-prefix">
+                                    <span class="prefix">$</span>
+                                    <input type="number" id="savingsGoal" value="50000" min="0">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="savingsYears">Time to Save (Years)</label>
+                                <input type="number" id="savingsYears" value="5" min="1" max="100">
+                            </div>
+                            <div class="form-group">
+                                <label for="savingsRate">Annual Interest Rate (%)</label>
+                                <input type="number" id="savingsRate" value="4" min="0" max="100" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="initialSavings">Initial Deposit (Optional)</label>
+                                <div class="input-with-prefix">
+                                    <span class="prefix">$</span>
+                                    <input type="number" id="initialSavings" value="0" min="0">
+                                </div>
+                            </div>
+                            <button class="calculate-btn" id="calculateSavings">Calculate</button>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Monthly Deposit Needed</span>
+                                <span class="result-value" id="monthlyDeposit">$0</span>
+                            </div>
+                            <div class="result-grid">
+                                <div class="result-card">
+                                    <span class="result-label">Total Deposits</span>
+                                    <span class="result-value" id="totalDeposits">$0</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Interest Earned</span>
+                                    <span class="result-value" id="savingsInterestEarned">$0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loan Repayment -->
+                    <div class="sub-panel" id="loan-finance">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="loanPrincipal">Loan Amount</label>
+                                <div class="input-with-prefix">
+                                    <span class="prefix">$</span>
+                                    <input type="number" id="loanPrincipal" value="20000" min="0">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="loanInterestRate">Annual Interest Rate (%)</label>
+                                <input type="number" id="loanInterestRate" value="8" min="0" max="100" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="loanTermMonths">Loan Term (Months)</label>
+                                <input type="number" id="loanTermMonths" value="36" min="1" max="600">
+                            </div>
+                            <button class="calculate-btn" id="calculateLoan">Calculate</button>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Monthly Payment</span>
+                                <span class="result-value" id="loanMonthlyPayment">$0</span>
+                            </div>
+                            <div class="result-grid">
+                                <div class="result-card">
+                                    <span class="result-label">Total Payment</span>
+                                    <span class="result-value" id="loanTotalPayment">$0</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Total Interest</span>
+                                    <span class="result-value" id="loanTotalInterest">$0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 5: Fuel Calculator -->
+            <div class="calc-panel" id="fuel-panel">
+                <div class="fuel-calculator">
+                    <div class="sub-tabs">
+                        <button class="sub-tab active" data-calc="tripcost">Trip Cost</button>
+                        <button class="sub-tab" data-calc="efficiency">Fuel Efficiency</button>
+                        <button class="sub-tab" data-calc="compare">Compare Prices</button>
+                    </div>
+
+                    <!-- Trip Cost -->
+                    <div class="sub-panel active" id="tripcost-fuel">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="tripDistance">Trip Distance</label>
+                                <div class="input-with-suffix">
+                                    <input type="number" id="tripDistance" value="500" min="0">
+                                    <span class="suffix">km</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="fuelEfficiency">Fuel Efficiency</label>
+                                <div class="input-with-suffix">
+                                    <input type="number" id="fuelEfficiency" value="8" min="0" step="0.1">
+                                    <span class="suffix">L/100km</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="fuelPrice">Fuel Price</label>
+                                <div class="input-with-prefix-suffix">
+                                    <span class="prefix">$</span>
+                                    <input type="number" id="fuelPrice" value="2.50" min="0" step="0.01">
+                                    <span class="suffix">/L</span>
+                                </div>
+                            </div>
+                            <button class="calculate-btn" id="calculateTripCost">Calculate</button>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Total Trip Cost</span>
+                                <span class="result-value" id="tripCost">$0</span>
+                            </div>
+                            <div class="result-grid">
+                                <div class="result-card">
+                                    <span class="result-label">Fuel Required</span>
+                                    <span class="result-value" id="fuelRequired">0 L</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Cost per km</span>
+                                    <span class="result-value" id="costPerKm">$0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fuel Efficiency -->
+                    <div class="sub-panel" id="efficiency-fuel">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="distanceTraveled">Distance Traveled</label>
+                                <div class="input-with-suffix">
+                                    <input type="number" id="distanceTraveled" value="450" min="0">
+                                    <span class="suffix">km</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="fuelUsed">Fuel Used</label>
+                                <div class="input-with-suffix">
+                                    <input type="number" id="fuelUsed" value="40" min="0" step="0.1">
+                                    <span class="suffix">L</span>
+                                </div>
+                            </div>
+                            <button class="calculate-btn" id="calculateEfficiency">Calculate</button>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Fuel Efficiency</span>
+                                <span class="result-value" id="calcEfficiency">0 L/100km</span>
+                            </div>
+                            <div class="result-card">
+                                <span class="result-label">Distance per Litre</span>
+                                <span class="result-value" id="kmPerLitre">0 km/L</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Compare Prices -->
+                    <div class="sub-panel" id="compare-fuel">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="station1Price">Station 1 Price</label>
+                                <div class="input-with-prefix-suffix">
+                                    <span class="prefix">$</span>
+                                    <input type="number" id="station1Price" value="2.45" min="0" step="0.01">
+                                    <span class="suffix">/L</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="station2Price">Station 2 Price</label>
+                                <div class="input-with-prefix-suffix">
+                                    <span class="prefix">$</span>
+                                    <input type="number" id="station2Price" value="2.55" min="0" step="0.01">
+                                    <span class="suffix">/L</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="tankSize">Tank Size</label>
+                                <div class="input-with-suffix">
+                                    <input type="number" id="tankSize" value="50" min="0">
+                                    <span class="suffix">L</span>
+                                </div>
+                            </div>
+                            <button class="calculate-btn" id="calculateCompare">Compare</button>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Savings per Tank</span>
+                                <span class="result-value" id="tankSavings">$0</span>
+                            </div>
+                            <div class="result-grid">
+                                <div class="result-card">
+                                    <span class="result-label">Station 1 Fill Cost</span>
+                                    <span class="result-value" id="station1Cost">$0</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Station 2 Fill Cost</span>
+                                    <span class="result-value" id="station2Cost">$0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 6: BMI Calculator -->
+            <div class="calc-panel" id="bmi-panel">
+                <div class="bmi-calculator">
+                    <div class="unit-toggle">
+                        <button class="unit-btn" data-unit="imperial">Imperial (ft/lbs)</button>
+                        <button class="unit-btn active" data-unit="metric">Metric (cm/kg)</button>
+                    </div>
+
+                    <div class="input-section">
+                        <!-- Imperial Inputs -->
+                        <div class="imperial-inputs" id="imperialInputs" style="display: none;">
+                            <div class="form-group">
+                                <label>Height</label>
+                                <div class="height-inputs">
+                                    <div class="height-field">
+                                        <input type="number" id="heightFeet" placeholder="5" min="0" max="8">
+                                        <span>ft</span>
+                                    </div>
+                                    <div class="height-field">
+                                        <input type="number" id="heightInches" placeholder="10" min="0" max="11">
+                                        <span>in</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="weightLbs">Weight</label>
+                                <div class="input-with-suffix">
+                                    <input type="number" id="weightLbs" placeholder="170" min="0">
+                                    <span class="suffix">lbs</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Metric Inputs -->
+                        <div class="metric-inputs" id="metricInputs">
+                            <div class="form-group">
+                                <label for="heightCm">Height</label>
+                                <div class="input-with-suffix">
+                                    <input type="number" id="heightCm" placeholder="175" min="0">
+                                    <span class="suffix">cm</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="weightKg">Weight</label>
+                                <div class="input-with-suffix">
+                                    <input type="number" id="weightKg" placeholder="70" min="0">
+                                    <span class="suffix">kg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="calculate-btn" id="calculateBMI">Calculate BMI</button>
+                    </div>
+
+                    <div class="results-section" id="bmiResults">
+                        <div class="bmi-display">
+                            <div class="bmi-value" id="bmiValue">--</div>
+                            <div class="bmi-category" id="bmiCategory">Enter your measurements</div>
+                        </div>
+
+                        <div class="bmi-scale">
+                            <div class="scale-bar">
+                                <div class="scale-indicator" id="bmiIndicator"></div>
+                            </div>
+                            <div class="scale-labels">
+                                <span>Underweight<br>&lt;18.5</span>
+                                <span>Normal<br>18.5-24.9</span>
+                                <span>Overweight<br>25-29.9</span>
+                                <span>Obese<br>30+</span>
+                            </div>
+                        </div>
+
+                        <div class="bmi-info">
+                            <h4>BMI Categories</h4>
+                            <ul>
+                                <li><span class="cat underweight">Underweight:</span> Less than 18.5</li>
+                                <li><span class="cat normal">Normal weight:</span> 18.5 - 24.9</li>
+                                <li><span class="cat overweight">Overweight:</span> 25 - 29.9</li>
+                                <li><span class="cat obese">Obese:</span> 30 or greater</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 7: Age Calculator -->
+            <div class="calc-panel" id="age-panel">
+                <div class="age-calculator">
+                    <div class="input-section">
+                        <div class="form-group">
+                            <label for="birthDate">Date of Birth</label>
+                            <input type="date" id="birthDate">
+                        </div>
+                        <div class="form-group">
+                            <label for="targetDate">Calculate Age As Of</label>
+                            <input type="date" id="targetDate">
+                        </div>
+                        <button class="calculate-btn" id="calculateAge">Calculate Age</button>
+                    </div>
+
+                    <div class="results-section" id="ageResults">
+                        <div class="result-card primary large">
+                            <span class="result-label">Your Age</span>
+                            <div class="age-display">
+                                <span class="age-part"><span id="ageYears">0</span> years</span>
+                                <span class="age-part"><span id="ageMonths">0</span> months</span>
+                                <span class="age-part"><span id="ageDays">0</span> days</span>
+                            </div>
+                        </div>
+
+                        <div class="result-grid">
+                            <div class="result-card">
+                                <span class="result-label">Total Months</span>
+                                <span class="result-value" id="totalMonths">0</span>
+                            </div>
+                            <div class="result-card">
+                                <span class="result-label">Total Weeks</span>
+                                <span class="result-value" id="totalWeeks">0</span>
+                            </div>
+                            <div class="result-card">
+                                <span class="result-label">Total Days</span>
+                                <span class="result-value" id="totalDays">0</span>
+                            </div>
+                            <div class="result-card">
+                                <span class="result-label">Total Hours</span>
+                                <span class="result-value" id="totalHours">0</span>
+                            </div>
+                        </div>
+
+                        <div class="birthday-info" id="birthdayInfo">
+                            <div class="result-card accent">
+                                <span class="result-label">Next Birthday</span>
+                                <span class="result-value" id="nextBirthday">--</span>
+                            </div>
+                            <div class="result-card">
+                                <span class="result-label">Days Until Birthday</span>
+                                <span class="result-value" id="daysUntilBirthday">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 8: Date/Time Calculator -->
+            <div class="calc-panel" id="date-panel">
+                <div class="date-calculator">
+                    <div class="sub-tabs">
+                        <button class="sub-tab active" data-calc="difference">Date Difference</button>
+                        <button class="sub-tab" data-calc="addsubtract">Add/Subtract</button>
+                        <button class="sub-tab" data-calc="workdays">Working Days</button>
+                    </div>
+
+                    <!-- Date Difference -->
+                    <div class="sub-panel active" id="difference-date">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="diffStartDate">Start Date</label>
+                                <input type="date" id="diffStartDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="diffEndDate">End Date</label>
+                                <input type="date" id="diffEndDate">
+                            </div>
+                            <button class="calculate-btn" id="calculateDifference">Calculate</button>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Difference</span>
+                                <span class="result-value" id="dateDiff">0 days</span>
+                            </div>
+                            <div class="result-grid">
+                                <div class="result-card">
+                                    <span class="result-label">Years</span>
+                                    <span class="result-value" id="diffYears">0</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Months</span>
+                                    <span class="result-value" id="diffMonths">0</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Weeks</span>
+                                    <span class="result-value" id="diffWeeks">0</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Days</span>
+                                    <span class="result-value" id="diffDays">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add/Subtract Days -->
+                    <div class="sub-panel" id="addsubtract-date">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="baseDate">Start Date</label>
+                                <input type="date" id="baseDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="daysToAdd">Days to Add/Subtract</label>
+                                <div class="add-subtract-row">
+                                    <select id="addOrSubtract">
+                                        <option value="add">Add</option>
+                                        <option value="subtract">Subtract</option>
+                                    </select>
+                                    <input type="number" id="daysToAdd" value="30" min="0">
+                                    <span>days</span>
+                                </div>
+                            </div>
+                            <button class="calculate-btn" id="calculateAddSubtract">Calculate</button>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Result Date</span>
+                                <span class="result-value" id="resultDate">--</span>
+                            </div>
+                            <div class="result-card">
+                                <span class="result-label">Day of Week</span>
+                                <span class="result-value" id="resultDayOfWeek">--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Working Days -->
+                    <div class="sub-panel" id="workdays-date">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="workStartDate">Start Date</label>
+                                <input type="date" id="workStartDate">
+                            </div>
+                            <div class="form-group">
+                                <label for="workEndDate">End Date</label>
+                                <input type="date" id="workEndDate">
+                            </div>
+                            <button class="calculate-btn" id="calculateWorkdays">Calculate</button>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Working Days</span>
+                                <span class="result-value" id="workingDays">0</span>
+                            </div>
+                            <div class="result-grid">
+                                <div class="result-card">
+                                    <span class="result-label">Total Days</span>
+                                    <span class="result-value" id="totalCalendarDays">0</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Weekend Days</span>
+                                    <span class="result-value" id="weekendDays">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 9: Percentage Calculator -->
+            <div class="calc-panel" id="percentage-panel">
+                <div class="percentage-calculator">
+                    <div class="sub-tabs">
+                        <button class="sub-tab active" data-calc="basic">% of Number</button>
+                        <button class="sub-tab" data-calc="whatPercent">What %?</button>
+                        <button class="sub-tab" data-calc="change">% Change</button>
+                        <button class="sub-tab" data-calc="increase">+/- by %</button>
+                    </div>
+
+                    <!-- Basic: What is X% of Y? -->
+                    <div class="sub-panel active" id="basic-percentage">
+                        <div class="input-section">
+                            <div class="percent-question">
+                                What is
+                                <input type="number" id="percentOf" value="15">
+                                % of
+                                <input type="number" id="percentOfNumber" value="200">
+                                ?
+                            </div>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Result</span>
+                                <span class="result-value" id="percentOfResult">30</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- What percent is X of Y? -->
+                    <div class="sub-panel" id="whatPercent-percentage">
+                        <div class="input-section">
+                            <div class="percent-question">
+                                <input type="number" id="whatPercentNum" value="30">
+                                is what % of
+                                <input type="number" id="whatPercentOf" value="200">
+                                ?
+                            </div>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Result</span>
+                                <span class="result-value" id="whatPercentResult">15%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Percentage change -->
+                    <div class="sub-panel" id="change-percentage">
+                        <div class="input-section">
+                            <div class="percent-question">
+                                From
+                                <input type="number" id="changeFrom" value="100">
+                                to
+                                <input type="number" id="changeTo" value="150">
+                            </div>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Percentage Change</span>
+                                <span class="result-value" id="changeResult">+50%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Increase/Decrease by percent -->
+                    <div class="sub-panel" id="increase-percentage">
+                        <div class="input-section">
+                            <div class="percent-question">
+                                <input type="number" id="increaseNum" value="100">
+                                <select id="increaseType">
+                                    <option value="increase">increased by</option>
+                                    <option value="decrease">decreased by</option>
+                                </select>
+                                <input type="number" id="increasePercent" value="25">
+                                %
+                            </div>
+                        </div>
+                        <div class="results-section">
+                            <div class="result-card primary">
+                                <span class="result-label">Result</span>
+                                <span class="result-value" id="increaseResult">125</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 10: Conversion Calculator -->
+            <div class="calc-panel" id="conversion-panel">
+                <div class="conversion-calculator">
+                    <div class="sub-tabs">
+                        <button class="sub-tab active" data-calc="temperature">Temperature</button>
+                        <button class="sub-tab" data-calc="length">Length</button>
+                        <button class="sub-tab" data-calc="weight">Weight</button>
+                        <button class="sub-tab" data-calc="volume">Volume</button>
+                    </div>
+
+                    <!-- Temperature -->
+                    <div class="sub-panel active" id="temperature-conversion">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="tempValue">Temperature</label>
+                                <input type="number" id="tempValue" value="20" step="0.1">
+                            </div>
+                            <div class="form-group">
+                                <label for="tempFrom">From</label>
+                                <select id="tempFrom">
+                                    <option value="celsius" selected>Celsius (&deg;C)</option>
+                                    <option value="fahrenheit">Fahrenheit (&deg;F)</option>
+                                    <option value="kelvin">Kelvin (K)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="results-section">
+                            <div class="conversion-results" id="tempResults">
+                                <div class="result-card">
+                                    <span class="result-label">Celsius</span>
+                                    <span class="result-value" id="tempCelsius">20 &deg;C</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Fahrenheit</span>
+                                    <span class="result-value" id="tempFahrenheit">68 &deg;F</span>
+                                </div>
+                                <div class="result-card">
+                                    <span class="result-label">Kelvin</span>
+                                    <span class="result-value" id="tempKelvin">293.15 K</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Length -->
+                    <div class="sub-panel" id="length-conversion">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="lengthValue">Length</label>
+                                <input type="number" id="lengthValue" value="100" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="lengthFrom">From</label>
+                                <select id="lengthFrom">
+                                    <option value="cm" selected>Centimeters (cm)</option>
+                                    <option value="m">Meters (m)</option>
+                                    <option value="km">Kilometers (km)</option>
+                                    <option value="inch">Inches (in)</option>
+                                    <option value="feet">Feet (ft)</option>
+                                    <option value="yard">Yards (yd)</option>
+                                    <option value="mile">Miles (mi)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="results-section">
+                            <div class="conversion-results" id="lengthResults">
+                                <div class="result-card"><span class="result-label">Centimeters</span><span class="result-value" id="lengthCm">100 cm</span></div>
+                                <div class="result-card"><span class="result-label">Meters</span><span class="result-value" id="lengthM">1 m</span></div>
+                                <div class="result-card"><span class="result-label">Kilometers</span><span class="result-value" id="lengthKm">0.001 km</span></div>
+                                <div class="result-card"><span class="result-label">Inches</span><span class="result-value" id="lengthInch">39.37 in</span></div>
+                                <div class="result-card"><span class="result-label">Feet</span><span class="result-value" id="lengthFeet">3.28 ft</span></div>
+                                <div class="result-card"><span class="result-label">Miles</span><span class="result-value" id="lengthMile">0.00062 mi</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weight -->
+                    <div class="sub-panel" id="weight-conversion">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="weightValue">Weight</label>
+                                <input type="number" id="weightValue" value="1" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="weightFrom">From</label>
+                                <select id="weightFrom">
+                                    <option value="kg" selected>Kilograms (kg)</option>
+                                    <option value="g">Grams (g)</option>
+                                    <option value="mg">Milligrams (mg)</option>
+                                    <option value="lb">Pounds (lb)</option>
+                                    <option value="oz">Ounces (oz)</option>
+                                    <option value="stone">Stone (st)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="results-section">
+                            <div class="conversion-results" id="weightResults">
+                                <div class="result-card"><span class="result-label">Kilograms</span><span class="result-value" id="weightKg">1 kg</span></div>
+                                <div class="result-card"><span class="result-label">Grams</span><span class="result-value" id="weightG">1000 g</span></div>
+                                <div class="result-card"><span class="result-label">Pounds</span><span class="result-value" id="weightLb">2.205 lb</span></div>
+                                <div class="result-card"><span class="result-label">Ounces</span><span class="result-value" id="weightOz">35.27 oz</span></div>
+                                <div class="result-card"><span class="result-label">Stone</span><span class="result-value" id="weightStone">0.157 st</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Volume -->
+                    <div class="sub-panel" id="volume-conversion">
+                        <div class="input-section">
+                            <div class="form-group">
+                                <label for="volumeValue">Volume</label>
+                                <input type="number" id="volumeValue" value="1" step="0.01">
+                            </div>
+                            <div class="form-group">
+                                <label for="volumeFrom">From</label>
+                                <select id="volumeFrom">
+                                    <option value="l" selected>Litres (L)</option>
+                                    <option value="ml">Millilitres (mL)</option>
+                                    <option value="gal">Gallons (US)</option>
+                                    <option value="qt">Quarts (US)</option>
+                                    <option value="pt">Pints (US)</option>
+                                    <option value="cup">Cups (US)</option>
+                                    <option value="floz">Fluid Ounces (US)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="results-section">
+                            <div class="conversion-results" id="volumeResults">
+                                <div class="result-card"><span class="result-label">Litres</span><span class="result-value" id="volumeL">1 L</span></div>
+                                <div class="result-card"><span class="result-label">Millilitres</span><span class="result-value" id="volumeMl">1000 mL</span></div>
+                                <div class="result-card"><span class="result-label">Gallons (US)</span><span class="result-value" id="volumeGal">0.264 gal</span></div>
+                                <div class="result-card"><span class="result-label">Quarts (US)</span><span class="result-value" id="volumeQt">1.057 qt</span></div>
+                                <div class="result-card"><span class="result-label">Pints (US)</span><span class="result-value" id="volumePt">2.113 pt</span></div>
+                                <div class="result-card"><span class="result-label">Cups (US)</span><span class="result-value" id="volumeCup">4.227 cups</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+    <script src="/static/js/calculator-suite.js?v={{ v }}"></script>
+</body>
+</html>

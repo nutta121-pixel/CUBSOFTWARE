@@ -1,0 +1,432 @@
+/* Timer Tools Styles */
+
+.timer-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.timer-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.timer-header h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.timer-header p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* Timer Tabs */
+.timer-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.timer-tab {
+    flex: 1;
+    padding: 1rem;
+    background: var(--surface-color);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-muted);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.timer-tab:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.timer-tab.active {
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Timer Panels */
+.timer-panel {
+    display: none;
+    background: var(--surface-color);
+    border-radius: 16px;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+}
+
+.timer-panel.active {
+    display: block;
+}
+
+/* Timer Display */
+.timer-display {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.time-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: 2px;
+}
+
+.timer-display.pomodoro .time-value {
+    font-size: 5rem;
+}
+
+/* Timer Controls */
+.timer-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.timer-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    min-width: 100px;
+}
+
+.timer-btn.start {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+}
+
+.timer-btn.start:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+}
+
+.timer-btn.secondary {
+    background: var(--dark-bg);
+    color: var(--text-light);
+    border: 1px solid var(--border-color);
+}
+
+.timer-btn.secondary:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.timer-btn.danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+    border: 1px solid var(--error);
+}
+
+.timer-btn.danger:hover {
+    background: var(--error);
+    color: white;
+}
+
+.timer-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Laps Section */
+.laps-section {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+}
+
+.laps-section h3 {
+    color: var(--text-light);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.laps-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.lap-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: var(--dark-bg);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.lap-item:last-child {
+    margin-bottom: 0;
+}
+
+.lap-number {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.lap-time {
+    color: var(--text-light);
+    font-family: 'Orbitron', monospace;
+}
+
+.lap-diff {
+    color: var(--primary);
+    font-size: 0.85rem;
+}
+
+/* Countdown Setup */
+.countdown-setup {
+    margin-bottom: 2rem;
+}
+
+.time-inputs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.time-input-group {
+    text-align: center;
+}
+
+.time-input-group input {
+    width: 80px;
+    padding: 1rem;
+    font-size: 2rem;
+    font-family: 'Orbitron', monospace;
+    text-align: center;
+    background: var(--dark-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-light);
+    outline: none;
+}
+
+.time-input-group input:focus {
+    border-color: var(--primary);
+}
+
+.time-input-group label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.time-separator {
+    font-size: 2rem;
+    color: var(--text-muted);
+    padding-bottom: 1.5rem;
+}
+
+.preset-times {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.preset-btn {
+    padding: 0.75rem 1.25rem;
+    background: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+}
+
+.preset-btn:hover {
+    border-color: var(--primary);
+    background: rgba(88, 101, 242, 0.1);
+}
+
+/* Pomodoro */
+.pomodoro-status {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.status-label {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 0.25rem;
+}
+
+.status-label.break {
+    color: var(--accent-color);
+}
+
+.session-count {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.pomodoro-progress {
+    height: 8px;
+    background: var(--dark-bg);
+    border-radius: 4px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.progress-bar.break {
+    background: linear-gradient(90deg, var(--accent-color), #10b981);
+}
+
+.pomodoro-settings {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+    margin-top: 1rem;
+}
+
+.pomodoro-settings h3 {
+    color: var(--text-light);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.setting-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.setting-group label {
+    color: var(--text-muted);
+}
+
+.setting-input {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.setting-input input {
+    width: 60px;
+    padding: 0.5rem;
+    font-size: 1rem;
+    text-align: center;
+    background: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-light);
+    outline: none;
+}
+
+.setting-input input:focus {
+    border-color: var(--primary);
+}
+
+.setting-input span {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--primary);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1001;
+    font-family: 'Poppins', sans-serif;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .timer-container {
+        padding: 1rem;
+    }
+
+    .timer-header h1 {
+        font-size: 2rem;
+    }
+
+    .time-value {
+        font-size: 3rem;
+    }
+
+    .timer-display.pomodoro .time-value {
+        font-size: 3.5rem;
+    }
+
+    .timer-controls {
+        flex-wrap: wrap;
+    }
+
+    .timer-btn {
+        flex: 1;
+        min-width: 80px;
+        padding: 0.875rem 1rem;
+    }
+
+    .time-input-group input {
+        width: 60px;
+        font-size: 1.5rem;
+        padding: 0.75rem;
+    }
+
+    .time-separator {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .time-value {
+        font-size: 2.5rem;
+    }
+
+    .timer-display.pomodoro .time-value {
+        font-size: 3rem;
+    }
+
+    .preset-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+}

@@ -1,0 +1,329 @@
+/* Unit Converter Styles */
+
+.converter-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.converter-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.converter-header h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.converter-header p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* Category Tabs */
+.category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.category-tab {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--surface-color);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.category-tab svg {
+    width: 18px;
+    height: 18px;
+}
+
+.category-tab:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.category-tab.active {
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Converter Panel */
+.converter-panel {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.converter-inputs {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+}
+
+.converter-inputs .input-group {
+    flex: 1;
+}
+
+.converter-inputs label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.input-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.input-row input {
+    flex: 1;
+    padding: 1rem;
+    background: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-light);
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.input-row input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.input-row input[readonly] {
+    background: rgba(88, 101, 242, 0.1);
+    border-color: var(--primary);
+}
+
+.input-row select {
+    width: 140px;
+    padding: 1rem;
+    background: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-light);
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.input-row select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Swap Button */
+.swap-btn {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-bottom: 0.25rem;
+}
+
+.swap-btn:hover {
+    transform: rotate(180deg);
+    box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+}
+
+.swap-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Conversion Formula */
+.conversion-formula {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: var(--dark-bg);
+    border-radius: 10px;
+    text-align: center;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+}
+
+.conversion-formula .highlight {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Quick Reference */
+.quick-reference {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+
+.quick-reference h3 {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.reference-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.reference-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--dark-bg);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.reference-card .from {
+    color: var(--text-muted);
+}
+
+.reference-card .equals {
+    color: var(--text-muted);
+    margin: 0 0.5rem;
+}
+
+.reference-card .to {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--success);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .converter-container {
+        padding: 1rem;
+    }
+
+    .converter-header h1 {
+        font-size: 2rem;
+    }
+
+    .category-tabs {
+        gap: 0.4rem;
+    }
+
+    .category-tab {
+        padding: 0.6rem 0.9rem;
+        font-size: 0.8rem;
+    }
+
+    .category-tab svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .converter-inputs {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .swap-btn {
+        align-self: center;
+        transform: rotate(90deg);
+    }
+
+    .swap-btn:hover {
+        transform: rotate(270deg);
+    }
+
+    .input-row {
+        flex-direction: column;
+    }
+
+    .input-row select {
+        width: 100%;
+    }
+
+    .reference-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .converter-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .converter-header p {
+        font-size: 1rem;
+    }
+
+    .converter-panel {
+        padding: 1.25rem;
+    }
+
+    .category-tab {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    .category-tab svg {
+        display: none;
+    }
+
+    .input-row input {
+        font-size: 1.1rem;
+        padding: 0.75rem;
+    }
+
+    .conversion-formula {
+        font-size: 0.85rem;
+    }
+}

@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1920">
+<title>Camera Frame</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+
+#overlay {
+    width: 1920px; height: 1080px; position: relative; overflow: hidden;
+    background: transparent;
+    --fc: #ffffff;
+    --hc: #ffffff;
+    --rc: #ff2020;
+    --fo: 1;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+/* ── Corner brackets ─────────────────────────────────────────── */
+.cc {
+    position: absolute;
+    width: 80px; height: 80px;
+    border-color: var(--fc);
+    border-style: solid;
+    opacity: var(--fo);
+    transition: border-color .3s, opacity .3s, width .3s, height .3s;
+}
+.cc.tl { top: 40px; left: 40px; border-width: 3px 0 0 3px; }
+.cc.tr { top: 40px; right: 40px; border-width: 3px 3px 0 0; }
+.cc.bl { bottom: 40px; left: 40px; border-width: 0 0 3px 3px; }
+.cc.br { bottom: 40px; right: 40px; border-width: 0 3px 3px 0; }
+
+/* ── Midpoint tick marks ─────────────────────────────────────── */
+.ct { position: absolute; background: var(--fc); opacity: var(--fo); transition: background .3s; }
+.ct.top { top: 40px; left: 50%; transform: translateX(-50%); width: 2px; height: 16px; }
+.ct.bot { bottom: 40px; left: 50%; transform: translateX(-50%); width: 2px; height: 16px; }
+.ct.lft { left: 40px; top: 50%; transform: translateY(-50%); height: 2px; width: 16px; }
+.ct.rgt { right: 40px; top: 50%; transform: translateY(-50%); height: 2px; width: 16px; }
+
+/* ── Full inset border ───────────────────────────────────────── */
+#camBorder {
+    position: absolute; inset: 30px;
+    border: 1px solid var(--fc);
+    border-radius: 0;
+    opacity: 0.2;
+    display: none;
+    pointer-events: none;
+    transition: all .3s;
+}
+
+/* ── REC indicator ───────────────────────────────────────────── */
+#camRec {
+    position: absolute;
+    top: 50px; left: 60px;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 28px; font-weight: 700;
+    color: var(--hc);
+    letter-spacing: 3px;
+    transition: color .3s;
+}
+#recDot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--rc);
+    box-shadow: 0 0 10px var(--rc), 0 0 20px var(--rc);
+    animation: recBlink 1s step-end infinite;
+    flex-shrink: 0;
+    transition: background .3s, box-shadow .3s;
+}
+@keyframes recBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.rec-paused { animation-play-state: paused !important; }
+
+/* ── Timecode ────────────────────────────────────────────────── */
+#camTimecode {
+    position: absolute;
+    top: 50px; right: 60px;
+    font-size: 22px; color: var(--hc);
+    letter-spacing: 2px; opacity: .92;
+    text-shadow: 0 0 8px rgba(0,0,0,.8);
+    transition: color .3s;
+}
+
+/* ── Battery ─────────────────────────────────────────────────── */
+#camBattery {
+    position: absolute;
+    top: 90px; right: 60px;
+    display: none; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--hc); letter-spacing: 1px;
+}
+.batt-bar {
+    position: relative;
+    width: 44px; height: 14px;
+    border: 2px solid var(--hc); border-radius: 3px;
+    display: flex; align-items: center; padding: 1px 2px;
+}
+.batt-bar::after {
+    content: '';
+    position: absolute; right: -5px; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 7px;
+    background: var(--hc); border-radius: 0 2px 2px 0;
+}
+#battFill {
+    height: 100%; width: 80%;
+    background: var(--hc);
+    border-radius: 1px;
+    transition: width 2s linear, background .5s;
+}
+
+/* ── Crosshair / focus reticle ───────────────────────────────── */
+#camCrosshair {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    pointer-events: none;
+}
+.ch-h { position: absolute; top: 50%; left: -35px; width: 70px; height: 1px; background: var(--fc); opacity: .5; transform: translateY(-50%); }
+.ch-v { position: absolute; left: 50%; top: -35px; width: 1px; height: 70px; background: var(--fc); opacity: .5; transform: translateX(-50%); }
+.ch-gap { position: absolute; top: 50%; left: 50%; width: 14px; height: 14px; background: transparent; transform: translate(-50%, -50%); }
+.ch-ring {
+    position: absolute; top: 50%; left: 50%;
+    width: 50px; height: 50px;
+    border: 1px solid var(--fc); border-radius: 50%;
+    opacity: .45;
+    transform: translate(-50%, -50%);
+    animation: focusPulse 3s ease-in-out infinite;
+}
+.ch-ring2 {
+    position: absolute; top: 50%; left: 50%;
+    width: 80px; height: 80px;
+    border: 1px solid var(--fc); border-radius: 50%;
+    opacity: .2;
+    transform: translate(-50%, -50%);
+}
+@keyframes focusPulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: .45; }
+    50% { transform: translate(-50%, -50%) scale(1.08); opacity: .25; }
+}
+
+/* ── Zoom indicator ──────────────────────────────────────────── */
+#camZoom {
+    position: absolute; bottom: 80px; right: 60px;
+    font-size: 16px; color: var(--hc); letter-spacing: 2px;
+    opacity: .7; display: none;
+}
+#camZoomBar {
+    position: absolute; bottom: 100px; right: 60px;
+    width: 80px; height: 3px; background: rgba(255,255,255,.15);
+    display: none;
+}
+#camZoomFill { height: 100%; background: var(--hc); width: 50%; transition: width .3s; }
+
+/* ── Date ────────────────────────────────────────────────────── */
+#camDate {
+    position: absolute; bottom: 80px; left: 60px;
+    font-size: 16px; color: var(--hc); letter-spacing: 2px;
+    opacity: .7; display: none;
+}
+
+/* ── Extra HUD metadata row ──────────────────────────────────── */
+#camMeta {
+    position: absolute; bottom: 80px; left: 60px;
+    font-size: 13px; color: var(--hc); letter-spacing: 1px;
+    opacity: .55; display: none;
+    line-height: 1.6;
+}
+
+/* ── Label at bottom centre ──────────────────────────────────── */
+#camLabel {
+    position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
+    font-size: 24px; color: var(--hc);
+    letter-spacing: 5px; text-transform: uppercase;
+    white-space: nowrap; opacity: .88;
+    text-shadow: 0 0 12px rgba(0,0,0,.9);
+    transition: color .3s, font-size .3s;
+}
+
+/* ── Scanlines ───────────────────────────────────────────────── */
+#scanlines {
+    position: absolute; inset: 0; z-index: 20; pointer-events: none; display: none;
+    background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,.1) 2px, rgba(0,0,0,.1) 4px
+    );
+}
+
+/* ── Grain ───────────────────────────────────────────────────── */
+#grain {
+    position: absolute; inset: 0; z-index: 21; pointer-events: none;
+    opacity: .07; display: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    animation: grainShift .12s steps(1) infinite;
+}
+@keyframes grainShift {
+    0%  { background-position: 0   0;    }
+    20% { background-position: -80px -40px; }
+    40% { background-position: 60px  80px; }
+    60% { background-position: -40px 120px; }
+    80% { background-position: 100px -60px; }
+}
+
+/* ── Vignette ────────────────────────────────────────────────── */
+#vignette {
+    position: absolute; inset: 0; z-index: 19; pointer-events: none; display: none;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.75) 100%);
+}
+
+/* ── Colour tint ─────────────────────────────────────────────── */
+#tintOverlay {
+    position: absolute; inset: 0; z-index: 18; pointer-events: none;
+    display: none; mix-blend-mode: color;
+}
+
+/* ── Flicker ─────────────────────────────────────────────────── */
+@keyframes camFlicker {
+    0%, 90%, 100% { opacity: 1; }
+    91% { opacity: .88; } 93% { opacity: 1; } 95% { opacity: .92; }
+}
+/* ── Zoom breath ─────────────────────────────────────────────── */
+@keyframes camBreath {
+    0%, 100% { transform: scale(1); }
+    50%       { transform: scale(1.018); }
+}
+/* ── Chromatic aberration ────────────────────────────────────── */
+@keyframes aberr {
+    0%, 100% { text-shadow: -1px 0 rgba(255,0,0,.5), 1px 0 rgba(0,255,255,.5); }
+    50%       { text-shadow: 1px 0 rgba(255,0,0,.5), -1px 0 rgba(0,255,255,.5); }
+}
+.aberr-active { animation: aberr 2.5s ease-in-out infinite; }
+
+/* ═══════════════════════════════════════════════════════════════
+   FRAME STYLES
+═══════════════════════════════════════════════════════════════ */
+
+/* ── DOUBLE: inner nested bracket ───────────────────────────── */
+#overlay[data-style="double"] .cc::after {
+    content: ''; position: absolute; inset: 8px;
+    border-color: var(--fc); border-style: solid; opacity: .45;
+}
+#overlay[data-style="double"] .cc.tl::after { border-width: 2px 0 0 2px; }
+#overlay[data-style="double"] .cc.tr::after { border-width: 2px 2px 0 0; }
+#overlay[data-style="double"] .cc.bl::after { border-width: 0 0 2px 2px; }
+#overlay[data-style="double"] .cc.br::after { border-width: 0 2px 2px 0; }
+
+/* ── CROSS: corner plus-marks instead of L-brackets ─────────── */
+#overlay[data-style="cross"] .cc {
+    border: none !important;
+    width: 26px !important; height: 26px !important;
+}
+#overlay[data-style="cross"] .cc::before,
+#overlay[data-style="cross"] .cc::after {
+    content: ''; position: absolute;
+    background: var(--fc); opacity: var(--fo);
+}
+#overlay[data-style="cross"] .cc::before { width: 100%; height: 2px; top: 50%; transform: translateY(-50%); left: 0; }
+#overlay[data-style="cross"] .cc::after  { height: 100%; width: 2px; left: 50%; transform: translateX(-50%); top: 0; }
+
+/* ── CINEMA: letterbox bars + thin corner marks ──────────────── */
+#camLetterTop, #camLetterBot {
+    position: absolute; left: 0; right: 0; z-index: 30;
+    pointer-events: none; display: none;
+    background: #000;
+}
+#camLetterTop { top: 0; }
+#camLetterBot { bottom: 0; }
+#overlay[data-style="cinema"] .cc {
+    width: 40px !important; height: 2px !important;
+    border-width: 0 !important;
+    border-top: 0 !important; border-bottom: 0 !important;
+    border-left: 0 !important; border-right: 0 !important;
+    background: var(--fc); opacity: var(--fo);
+}
+#overlay[data-style="cinema"] .cc::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 2px; height: 20px; background: var(--fc);
+}
+#overlay[data-style="cinema"] .cc.tr::before { left: auto; right: 0; }
+#overlay[data-style="cinema"] .cc.bl::before { top: auto; bottom: 0; }
+#overlay[data-style="cinema"] .cc.br::before { left: auto; right: 0; top: auto; bottom: 0; }
+
+/* ── TACTICAL: grid overlay ──────────────────────────────────── */
+#camGrid {
+    position: absolute; inset: 0; z-index: 7; pointer-events: none; display: none;
+    background-image:
+        linear-gradient(rgba(0,255,65,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,65,.035) 1px, transparent 1px);
+    background-size: 80px 80px;
+}
+#overlay[data-style="tactical"] .cc {
+    border-color: #00ff41 !important;
+    box-shadow: 0 0 6px rgba(0,255,65,.4);
+}
+#overlay[data-style="tactical"] .ct { background: #00ff41 !important; }
+
+/* ── VHS: tracking noise lines ───────────────────────────────── */
+#camVhsBar {
+    position: absolute; left: 0; right: 0; z-index: 26;
+    pointer-events: none; display: none;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), rgba(255,200,100,.12), transparent);
+    animation: vhsDrift 6s linear infinite;
+}
+@keyframes vhsDrift {
+    0%   { top: -4px;  opacity: 0; }
+    5%   { opacity: 1; }
+    95%  { opacity: 1; }
+    100% { top: 1084px; opacity: 0; }
+}
+#overlay[data-style="vhs"] #camLabel {
+    font-family: 'Courier New', monospace !important;
+    letter-spacing: 3px !important;
+}
+#overlay[data-style="vhs"] #camRec,
+#overlay[data-style="vhs"] #camTimecode {
+    font-family: 'Courier New', monospace !important;
+}
+
+/* ── NEON: glowing brackets ──────────────────────────────────── */
+#overlay[data-style="neon"] .cc {
+    filter: drop-shadow(0 0 4px var(--fc)) drop-shadow(0 0 10px var(--fc));
+}
+#overlay[data-style="neon"] #camRec,
+#overlay[data-style="neon"] #camLabel,
+#overlay[data-style="neon"] #camTimecode {
+    text-shadow: 0 0 8px var(--hc), 0 0 20px var(--hc);
+}
+
+/* ── SCIFI: sweep scan line + diagonal corner cuts ───────────── */
+#camScanLine {
+    position: absolute; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent 0%, var(--fc) 40%, rgba(255,255,255,.8) 50%, var(--fc) 60%, transparent 100%);
+    opacity: 0; z-index: 22; pointer-events: none;
+    animation: scanSweep 5s ease-in-out infinite;
+}
+@keyframes scanSweep {
+    0%         { top: 0;      opacity: 0; }
+    3%         { opacity: .35; }
+    97%        { opacity: .35; }
+    100%       { top: 1080px; opacity: 0; }
+}
+#overlay[data-style="scifi"] #camScanLine { display: block; }
+/* Diagonal cut on corner brackets for sci-fi */
+#overlay[data-style="scifi"] .cc {
+    clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%, 0 12px);
+}
+#overlay[data-style="scifi"] .cc.tr { clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+#overlay[data-style="scifi"] .cc.bl { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%); }
+#overlay[data-style="scifi"] .cc.br { clip-path: polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px)); }
+
+/* ── BROADCAST: lower-third label bar ───────────────────────── */
+#camBroadcastBar {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 80px; z-index: 28; pointer-events: none; display: none;
+    background: rgba(0,0,0,.7);
+    border-top: 3px solid var(--rc);
+    display: none; align-items: center; justify-content: space-between;
+    padding: 0 60px;
+}
+#overlay[data-style="broadcast"] #camLabel {
+    position: static !important;
+    transform: none !important;
+    font-size: 26px !important;
+    letter-spacing: 4px !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+}
+#overlay[data-style="broadcast"] .cc { border-color: var(--fc); }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&family=Rajdhani:wght@400;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="overlay">
+
+    <!-- Corner brackets -->
+    <div class="cc tl"></div>
+    <div class="cc tr"></div>
+    <div class="cc bl"></div>
+    <div class="cc br"></div>
+
+    <!-- Midpoint ticks -->
+    <div class="ct top"></div>
+    <div class="ct bot"></div>
+    <div class="ct lft"></div>
+    <div class="ct rgt"></div>
+
+    <!-- Full border (optional) -->
+    <div id="camBorder"></div>
+
+    <!-- REC -->
+    <div id="camRec">
+        <span id="recText">REC</span>
+        <div id="recDot"></div>
+    </div>
+
+    <!-- Timecode -->
+    <div id="camTimecode">00:00:00</div>
+
+    <!-- Battery -->
+    <div id="camBattery">
+        <div class="batt-bar"><div id="battFill"></div></div>
+        <span id="battText">80%</span>
+    </div>
+
+    <!-- Crosshair -->
+    <div id="camCrosshair">
+        <div class="ch-h"></div>
+        <div class="ch-v"></div>
+        <div class="ch-gap"></div>
+        <div class="ch-ring"></div>
+        <div class="ch-ring2"></div>
+    </div>
+
+    <!-- Zoom -->
+    <div id="camZoomBar"><div id="camZoomFill"></div></div>
+    <div id="camZoom">1.0×</div>
+
+    <!-- Date / metadata -->
+    <div id="camDate"></div>
+    <div id="camMeta"></div>
+
+    <!-- Label -->
+    <div id="camLabel">CAM</div>
+
+    <!-- Effects -->
+    <div id="scanlines"></div>
+    <div id="grain"></div>
+    <div id="vignette"></div>
+    <div id="tintOverlay"></div>
+
+    <!-- Frame style extras -->
+    <div id="camLetterTop"></div>
+    <div id="camLetterBot"></div>
+    <div id="camGrid"></div>
+    <div id="camVhsBar"></div>
+    <div id="camScanLine"></div>
+    <!-- Broadcast bar (wraps label in broadcast style) -->
+    <div id="camBroadcastBar"></div>
+
+</div>
+
+<script>
+const SCENE_ID = '{{ scene_id }}';
+let config = {};
+let _tcStart = Date.now();
+let _tcInterval = null;
+let _battLevel = 80;
+let _battTimer = null;
+
+// ── Timecode ──────────────────────────────────────────────────────────────────
+function tickTimecode() {
+    const el = document.getElementById('camTimecode');
+    if (!el || el.style.display === 'none') return;
+    if (config.cam_timecode_style === 'clock') {
+        el.textContent = new Date().toTimeString().slice(0, 8);
+    } else {
+        const s = Math.floor((Date.now() - _tcStart) / 1000);
+        const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+        const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+        const ss = String(s % 60).padStart(2, '0');
+        el.textContent = `${hh}:${mm}:${ss}`;
+    }
+}
+
+// ── Battery drain ─────────────────────────────────────────────────────────────
+function drainBattery() {
+    if (!config.cam_battery_drain) return;
+    _battLevel = Math.max(0, _battLevel - 0.03);
+    const fill = document.getElementById('battFill');
+    const txt  = document.getElementById('battText');
+    if (fill) fill.style.width = _battLevel + '%';
+    if (txt)  txt.textContent = Math.floor(_battLevel) + '%';
+    const low  = _battLevel < 15;
+    const warn = _battLevel < 30;
+    if (fill) fill.style.background = low ? '#ff3030' : warn ? '#ffaa00' : 'var(--hc)';
+}
+
+// ── Apply config ──────────────────────────────────────────────────────────────
+function applyConfig(cfg) {
+    config = cfg;
+    const el = document.getElementById('overlay');
+
+    // Background
+    const bt = cfg.background_type || 'transparent';
+    if (!bt || bt === 'transparent') {
+        el.style.background = 'transparent';
+    } else if (bt === 'solid') {
+        el.style.background = cfg.bg_color || '#000000';
+    } else {
+        el.style.background = `linear-gradient(${cfg.bg_gradient_angle||135}deg,${cfg.bg_gradient_from||'#000'},${cfg.bg_gradient_to||'#111'})`;
+    }
+
+    // CSS vars
+    const fc = cfg.cam_frame_color || '#ffffff';
+    const hc = cfg.cam_hud_color   || '#ffffff';
+    const rc = cfg.cam_rec_dot_color || '#ff2020';
+    const fo = Math.max(0, Math.min(100, parseInt(cfg.cam_frame_opacity) ?? 100)) / 100;
+    el.style.setProperty('--fc', fc);
+    el.style.setProperty('--hc', hc);
+    el.style.setProperty('--rc', rc);
+    el.style.setProperty('--fo', fo);
+    document.getElementById('recDot').style.background = rc;
+    document.getElementById('recDot').style.boxShadow = `0 0 10px ${rc}, 0 0 24px ${rc}`;
+
+    // ── Corners ──────────────────────────────────────────────────────────────
+    const csz = Math.max(30, parseInt(cfg.cam_corner_size) || 80);
+    const cth = Math.max(1,  parseInt(cfg.cam_corner_thickness) || 3);
+    const cm  = Math.max(10, parseInt(cfg.cam_corner_margin) || 40);
+    const cr  = Math.max(0,  parseInt(cfg.cam_corner_radius) || 0);
+    const bwMap = { tl:[cth,0,0,cth], tr:[cth,cth,0,0], bl:[0,0,cth,cth], br:[0,cth,cth,0] };
+    const brMap = { tl:[cr,0,0,cr],   tr:[cr,cr,0,0],   bl:[0,0,cr,cr],   br:[0,cr,cr,0] };
+    const posMap = {
+        tl: { top: cm+'px', left: cm+'px' },
+        tr: { top: cm+'px', right: cm+'px' },
+        bl: { bottom: cm+'px', left: cm+'px' },
+        br: { bottom: cm+'px', right: cm+'px' },
+    };
+    document.querySelectorAll('.cc').forEach(c => {
+        const id = [...c.classList].find(x => x !== 'cc');
+        c.style.width  = csz + 'px';
+        c.style.height = csz + 'px';
+        const bw = bwMap[id], br_ = brMap[id], pos = posMap[id];
+        c.style.borderWidth  = bw.map(v => v + 'px').join(' ');
+        c.style.borderRadius = br_.map(v => v + 'px').join(' ');
+        Object.assign(c.style, pos);
+        // Reset opposite pos
+        if (id === 'tl' || id === 'tr') { c.style.bottom = ''; }
+        if (id === 'bl' || id === 'br') { c.style.top = ''; }
+        if (id === 'tl' || id === 'bl') { c.style.right = ''; }
+        if (id === 'tr' || id === 'br') { c.style.left = ''; }
+    });
+
+    // Ticks
+    const showTicks = cfg.cam_ticks_show !== false;
+    document.querySelectorAll('.ct').forEach(t => t.style.display = showTicks ? 'block' : 'none');
+    // Position ticks at margin
+    document.querySelector('.ct.top').style.top    = cm + 'px';
+    document.querySelector('.ct.bot').style.bottom = cm + 'px';
+    document.querySelector('.ct.lft').style.left   = cm + 'px';
+    document.querySelector('.ct.rgt').style.right  = cm + 'px';
+
+    // Full border
+    const showBorder = cfg.cam_full_border || false;
+    const borderEl = document.getElementById('camBorder');
+    borderEl.style.display = showBorder ? 'block' : 'none';
+    if (showBorder) {
+        const margin = cm + csz * 0.6;
+        borderEl.style.inset = margin + 'px';
+        borderEl.style.borderColor = fc;
+        borderEl.style.opacity = (parseInt(cfg.cam_border_opacity) || 20) / 100;
+        borderEl.style.borderWidth = (parseInt(cfg.cam_border_thickness) || 1) + 'px';
+        borderEl.style.borderRadius = (parseInt(cfg.cam_border_radius) || 0) + 'px';
+    }
+
+    // ── REC ──────────────────────────────────────────────────────────────────
+    const recEl = document.getElementById('camRec');
+    const showRec = cfg.cam_rec_show !== false;
+    recEl.style.display = showRec ? 'flex' : 'none';
+    if (showRec) {
+        recEl.style.top  = (cm + 12) + 'px';
+        recEl.style.left = (cm + 16) + 'px';
+        recEl.style.fontSize = (parseInt(cfg.cam_rec_size) || 28) + 'px';
+        document.getElementById('recText').textContent = cfg.cam_rec_text || 'REC';
+        const dotEl = document.getElementById('recDot');
+        dotEl.style.display = cfg.cam_rec_dot_show !== false ? 'block' : 'none';
+        dotEl.classList.toggle('rec-paused', !cfg.cam_rec_blink);
+        // Chromatic aberration on REC text
+        document.getElementById('recText').classList.toggle('aberr-active', cfg.cam_chromatic || false);
+    }
+
+    // ── Timecode ─────────────────────────────────────────────────────────────
+    const tcEl = document.getElementById('camTimecode');
+    const showTc = cfg.cam_timecode_show !== false;
+    tcEl.style.display = showTc ? 'block' : 'none';
+    if (showTc) {
+        tcEl.style.top   = (cm + 12) + 'px';
+        tcEl.style.right = (cm + 16) + 'px';
+        tcEl.style.fontSize = (parseInt(cfg.cam_timecode_size) || 22) + 'px';
+    }
+
+    // ── Battery ───────────────────────────────────────────────────────────────
+    const battEl = document.getElementById('camBattery');
+    const showBatt = cfg.cam_battery_show || false;
+    battEl.style.display = showBatt ? 'flex' : 'none';
+    if (showBatt) {
+        battEl.style.top   = (cm + 54) + 'px';
+        battEl.style.right = (cm + 16) + 'px';
+        if (!cfg.cam_battery_drain) {
+            _battLevel = parseFloat(cfg.cam_battery_level) || 80;
+            const fill = document.getElementById('battFill');
+            const txt  = document.getElementById('battText');
+            fill.style.width = _battLevel + '%';
+            txt.textContent  = Math.floor(_battLevel) + '%';
+            fill.style.background = _battLevel < 15 ? '#ff3030' : _battLevel < 30 ? '#ffaa00' : 'var(--hc)';
+        }
+    }
+
+    // ── Crosshair ─────────────────────────────────────────────────────────────
+    document.getElementById('camCrosshair').style.display = cfg.cam_crosshair_show ? 'block' : 'none';
+
+    // ── Zoom ──────────────────────────────────────────────────────────────────
+    const showZoom = cfg.cam_zoom_show || false;
+    const zoomEl = document.getElementById('camZoom');
+    const zoomBarEl = document.getElementById('camZoomBar');
+    zoomEl.style.display    = showZoom ? 'block' : 'none';
+    zoomBarEl.style.display = showZoom ? 'block' : 'none';
+    if (showZoom) {
+        const zval = parseFloat(cfg.cam_zoom_level) || 1.0;
+        zoomEl.textContent = zval.toFixed(1) + '×';
+        zoomEl.style.bottom    = (cm + 28) + 'px';
+        zoomEl.style.right     = (cm + 16) + 'px';
+        zoomBarEl.style.bottom = (cm + 50) + 'px';
+        zoomBarEl.style.right  = (cm + 16) + 'px';
+        // Fill bar: 1.0x = 50%, 0.5x = 10%, 5.0x = 100%
+        const pct = Math.min(100, Math.max(5, ((zval - 0.5) / 4.5) * 100));
+        document.getElementById('camZoomFill').style.width = pct + '%';
+    }
+
+    // ── Date ──────────────────────────────────────────────────────────────────
+    const showDate = cfg.cam_date_show || false;
+    const dateEl = document.getElementById('camDate');
+    dateEl.style.display = showDate ? 'block' : 'none';
+    if (showDate) {
+        const d = new Date();
+        dateEl.textContent = [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('.');
+        dateEl.style.bottom = (cm + 28) + 'px';
+        dateEl.style.left   = (cm + 16) + 'px';
+    }
+
+    // ── Metadata row (decorative camera info) ─────────────────────────────────
+    const showMeta = cfg.cam_meta_show || false;
+    const metaEl = document.getElementById('camMeta');
+    metaEl.style.display = showMeta ? 'block' : 'none';
+    if (showMeta) {
+        metaEl.innerHTML = [
+            cfg.cam_meta_aperture ? `f/${cfg.cam_meta_aperture}` : '',
+            cfg.cam_meta_shutter  ? `1/${cfg.cam_meta_shutter}s` : '',
+            cfg.cam_meta_iso      ? `ISO ${cfg.cam_meta_iso}` : '',
+            cfg.cam_meta_wb       ? `WB ${cfg.cam_meta_wb}K`  : '',
+        ].filter(Boolean).join('&nbsp;&nbsp;·&nbsp;&nbsp;');
+        metaEl.style.bottom = (showDate ? cm + 52 : cm + 28) + 'px';
+        metaEl.style.left   = (cm + 16) + 'px';
+    }
+
+    // ── Label ─────────────────────────────────────────────────────────────────
+    const labelEl = document.getElementById('camLabel');
+    const showLabel = cfg.cam_label_show !== false;
+    labelEl.style.display   = showLabel ? 'block' : 'none';
+    labelEl.textContent      = cfg.cam_label || 'CAM';
+    labelEl.style.bottom     = (cm + 12) + 'px';
+    labelEl.style.fontSize   = (parseInt(cfg.cam_label_size) || 24) + 'px';
+    labelEl.style.fontFamily = cfg.cam_label_font ? `'${cfg.cam_label_font}', monospace` : "'Share Tech Mono', monospace";
+    labelEl.style.letterSpacing = (parseInt(cfg.cam_label_spacing) || 5) + 'px';
+
+    // ── Effects ───────────────────────────────────────────────────────────────
+    document.getElementById('scanlines').style.display = cfg.cam_scanlines ? 'block' : 'none';
+    document.getElementById('grain').style.display     = cfg.cam_grain     ? 'block' : 'none';
+    document.getElementById('vignette').style.display  = cfg.cam_vignette  ? 'block' : 'none';
+
+    // Grain opacity
+    if (cfg.cam_grain) document.getElementById('grain').style.opacity = (parseInt(cfg.cam_grain_strength) || 7) / 100;
+
+    // Scanline density
+    if (cfg.cam_scanlines) {
+        const gap = parseInt(cfg.cam_scanline_gap) || 4;
+        document.getElementById('scanlines').style.backgroundImage =
+            `repeating-linear-gradient(0deg,transparent,transparent ${gap-2}px,rgba(0,0,0,.1) ${gap-2}px,rgba(0,0,0,.1) ${gap}px)`;
+    }
+
+    // Colour tint
+    const tintEl = document.getElementById('tintOverlay');
+    const tint = cfg.cam_color_tint || 'none';
+    const tintMap = { green: '#00ff41', sepia: '#a0522d', blue: '#0044ff', amber: '#ff8800', red: '#ff1a1a', purple: '#7b2dbc' };
+    if (tint !== 'none' && tintMap[tint]) {
+        tintEl.style.display    = 'block';
+        tintEl.style.background = tintMap[tint];
+        tintEl.style.opacity    = (parseInt(cfg.cam_tint_strength) || 30) / 100;
+        // Night vision: make everything green
+        if (tint === 'green') {
+            el.style.setProperty('--fc', '#00ff41');
+            el.style.setProperty('--hc', '#00ff41');
+        }
+    } else {
+        tintEl.style.display = 'none';
+    }
+
+    // ── Frame style ───────────────────────────────────────────────────────────
+    const fstyle = cfg.cam_frame_style || 'brackets';
+    el.dataset.style = fstyle;
+
+    // Letterbox bars (cinema)
+    const letterH = Math.max(40, parseInt(cfg.cam_letterbox_height) || 100);
+    const ltTop = document.getElementById('camLetterTop');
+    const ltBot = document.getElementById('camLetterBot');
+    const showCinema = fstyle === 'cinema';
+    ltTop.style.display = showCinema ? 'block' : 'none';
+    ltBot.style.display = showCinema ? 'block' : 'none';
+    if (showCinema) { ltTop.style.height = letterH + 'px'; ltBot.style.height = letterH + 'px'; }
+
+    // Tactical grid
+    document.getElementById('camGrid').style.display = fstyle === 'tactical' ? 'block' : 'none';
+    if (fstyle === 'tactical' && cfg.cam_crosshair_show !== false) {
+        document.getElementById('camCrosshair').style.display = 'block';
+    }
+
+    // VHS bar
+    document.getElementById('camVhsBar').style.display = fstyle === 'vhs' ? 'block' : 'none';
+
+    // Broadcast bar: move label inside it
+    const bbEl = document.getElementById('camBroadcastBar');
+    const labelEl2 = document.getElementById('camLabel');
+    if (fstyle === 'broadcast') {
+        bbEl.style.display = 'flex';
+        if (labelEl2.parentNode !== bbEl) bbEl.appendChild(labelEl2);
+    } else {
+        bbEl.style.display = 'none';
+        if (labelEl2.parentNode !== el) el.appendChild(labelEl2);
+    }
+
+    // Label font
+    const labelFont = cfg.cam_label_font || 'Share Tech Mono';
+    labelEl2.style.fontFamily = `'${labelFont}', monospace`;
+
+    // Composite animations (flicker + zoom breath)
+    const anims = [];
+    if (cfg.cam_flicker)  anims.push('camFlicker 8s step-end infinite');
+    if (cfg.cam_zoom_anim) anims.push('camBreath 9s ease-in-out infinite');
+    el.style.animation = anims.join(', ') || 'none';
+
+    // Custom CSS
+    let st = document.getElementById('custom-style');
+    if (!st) { st = document.createElement('style'); st.id = 'custom-style'; document.head.appendChild(st); }
+    st.textContent = cfg.custom_css || '';
+}
+
+// ── SSE & load ────────────────────────────────────────────────────────────────
+function connectSSE() {
+    const es = new EventSource('/overlays/source/' + SCENE_ID + '/events');
+    es.onmessage = e => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'update') applyConfig(msg.config);
+        else if (msg.type === 'channel_points_reaction') handleChannelPointsReaction(msg.reaction, msg.event);
+    };
+    es.onerror = () => { es.close(); setTimeout(connectSSE, 3000); };
+}
+
+async function loadConfig(retries = 5, delay = 1000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const r = await fetch('/overlays/api/scenes/' + SCENE_ID + '/config');
+            if (r.ok) { config = await r.json(); applyConfig(config); return; }
+        } catch(e) {}
+        if (i < retries - 1) await new Promise(res => setTimeout(res, delay));
+    }
+}
+
+_tcInterval  = setInterval(tickTimecode, 1000);
+_battTimer   = setInterval(drainBattery, 4000);
+
+loadConfig().then(() => connectSSE());
+
+window.addEventListener('message', e => {
+    if (e.data && e.data.type === 'preview-update') applyConfig(e.data.config);
+});
+</script>
+</body>
+</html>

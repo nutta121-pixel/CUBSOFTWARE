@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Discord Timestamp Generator | CUB SOFTWARE</title>
+    <meta name="description" content="Generate Discord timestamp codes instantly. Pick a date and time, get all &lt;t:unix:format&gt; codes ready to copy and paste.">
+    <meta name="keywords" content="discord timestamp, discord time format, unix timestamp, discord t: format, discord date, discord relative time">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/timestamp-generator">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Discord Timestamp Generator | CUB SOFTWARE">
+    <meta property="og:description" content="Generate Discord timestamp codes instantly. Pick a date and time, get all format codes ready to copy.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/timestamp-generator">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/timestamp-generator.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="tg-container">
+
+            <!-- Hero -->
+            <div class="tg-hero">
+                <div class="tg-hero-badge">Discord Tool</div>
+                <h1>Timestamp Generator</h1>
+                <p>Pick a date and time — get every Discord <code>&lt;t:unix:format&gt;</code> code instantly, ready to copy and paste.</p>
+            </div>
+
+            <!-- Main Card -->
+            <div class="tg-card">
+
+                <!-- Input Row -->
+                <div class="tg-input-section">
+                    <div class="tg-input-group">
+                        <label for="tgDate">Date</label>
+                        <input type="date" id="tgDate">
+                    </div>
+                    <div class="tg-input-group">
+                        <label for="tgTime">Time</label>
+                        <input type="time" id="tgTime">
+                    </div>
+                    <div class="tg-input-group">
+                        <label for="tgTimezone">Timezone</label>
+                        <select id="tgTimezone"></select>
+                    </div>
+                    <div class="tg-input-group tg-unix-group">
+                        <label for="tgUnixInput">Or paste a Unix timestamp</label>
+                        <input type="number" id="tgUnixInput" placeholder="e.g. 1700000000">
+                    </div>
+                </div>
+
+                <!-- Quick Buttons -->
+                <div class="tg-quick-row">
+                    <button class="tg-quick-btn" onclick="setNow()">Now</button>
+                    <button class="tg-quick-btn" onclick="setOffset(60)">+1 hour</button>
+                    <button class="tg-quick-btn" onclick="setOffset(60*24)">+1 day</button>
+                    <button class="tg-quick-btn" onclick="setOffset(60*24*7)">+1 week</button>
+                    <button class="tg-quick-btn" onclick="setOffset(60*24*30)">+1 month</button>
+                </div>
+
+                <!-- Unix display -->
+                <div class="tg-unix-display" id="tgUnixDisplay">
+                    <span class="tg-unix-label">Unix Timestamp</span>
+                    <span class="tg-unix-value" id="tgUnixValue">—</span>
+                </div>
+
+            </div>
+
+            <!-- Formats Grid -->
+            <div class="tg-formats-grid" id="tgFormatsGrid">
+
+                <div class="tg-format-card" data-flag="t">
+                    <div class="tg-format-top">
+                        <div class="tg-format-label">Short Time</div>
+                        <code class="tg-format-flag">:t</code>
+                    </div>
+                    <div class="tg-format-preview" id="preview-t">—</div>
+                    <div class="tg-format-code-row">
+                        <code class="tg-code" id="code-t">—</code>
+                        <button class="tg-copy-btn" onclick="copyCode('t')">Copy</button>
+                    </div>
+                </div>
+
+                <div class="tg-format-card" data-flag="T">
+                    <div class="tg-format-top">
+                        <div class="tg-format-label">Long Time</div>
+                        <code class="tg-format-flag">:T</code>
+                    </div>
+                    <div class="tg-format-preview" id="preview-T">—</div>
+                    <div class="tg-format-code-row">
+                        <code class="tg-code" id="code-T">—</code>
+                        <button class="tg-copy-btn" onclick="copyCode('T')">Copy</button>
+                    </div>
+                </div>
+
+                <div class="tg-format-card" data-flag="d">
+                    <div class="tg-format-top">
+                        <div class="tg-format-label">Short Date</div>
+                        <code class="tg-format-flag">:d</code>
+                    </div>
+                    <div class="tg-format-preview" id="preview-d">—</div>
+                    <div class="tg-format-code-row">
+                        <code class="tg-code" id="code-d">—</code>
+                        <button class="tg-copy-btn" onclick="copyCode('d')">Copy</button>
+                    </div>
+                </div>
+
+                <div class="tg-format-card" data-flag="D">
+                    <div class="tg-format-top">
+                        <div class="tg-format-label">Long Date</div>
+                        <code class="tg-format-flag">:D</code>
+                    </div>
+                    <div class="tg-format-preview" id="preview-D">—</div>
+                    <div class="tg-format-code-row">
+                        <code class="tg-code" id="code-D">—</code>
+                        <button class="tg-copy-btn" onclick="copyCode('D')">Copy</button>
+                    </div>
+                </div>
+
+                <div class="tg-format-card tg-format-card--wide" data-flag="f">
+                    <div class="tg-format-top">
+                        <div class="tg-format-label">Short Date/Time</div>
+                        <code class="tg-format-flag">:f</code>
+                    </div>
+                    <div class="tg-format-preview" id="preview-f">—</div>
+                    <div class="tg-format-code-row">
+                        <code class="tg-code" id="code-f">—</code>
+                        <button class="tg-copy-btn" onclick="copyCode('f')">Copy</button>
+                    </div>
+                </div>
+
+                <div class="tg-format-card tg-format-card--wide" data-flag="F">
+                    <div class="tg-format-top">
+                        <div class="tg-format-label">Long Date/Time</div>
+                        <code class="tg-format-flag">:F</code>
+                    </div>
+                    <div class="tg-format-preview" id="preview-F">—</div>
+                    <div class="tg-format-code-row">
+                        <code class="tg-code" id="code-F">—</code>
+                        <button class="tg-copy-btn" onclick="copyCode('F')">Copy</button>
+                    </div>
+                </div>
+
+                <div class="tg-format-card tg-format-card--wide tg-format-card--relative" data-flag="R">
+                    <div class="tg-format-top">
+                        <div class="tg-format-label">Relative Time</div>
+                        <code class="tg-format-flag">:R</code>
+                    </div>
+                    <div class="tg-format-preview" id="preview-R">—</div>
+                    <div class="tg-format-code-row">
+                        <code class="tg-code" id="code-R">—</code>
+                        <button class="tg-copy-btn" onclick="copyCode('R')">Copy</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Copy All -->
+            <div class="tg-copy-all-row">
+                <button class="tg-copy-all-btn" onclick="copyAll()">Copy All Formats</button>
+            </div>
+
+            <!-- Info -->
+            <div class="tg-info-box">
+                <div class="tg-info-title">How to use in Discord</div>
+                <p>Paste any <code>&lt;t:UNIX:FLAG&gt;</code> code directly into a Discord message. Discord renders it live for every viewer in their own timezone and locale. The <strong>Relative</strong> format (<code>:R</code>) updates automatically — great for countdowns and deadlines.</p>
+            </div>
+
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="tg-toast" id="tgToast"></div>
+
+    <script src="/static/js/timestamp-generator.js?v={{ v }}"></script>
+</body>
+</html>

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src https://cubsoftware.site https://cdn.discordapp.com">
+    <title>CUBSOFTWARE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a1a;
+            --bg-secondary: rgba(30, 30, 60, 0.5);
+            --bg-card: rgba(30, 30, 60, 0.8);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-blue: #009dff;
+            --accent-purple: #8a2be2;
+            --text-primary: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.6);
+            --success: #57f287;
+            --error: #ed4245;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Custom Titlebar */
+        .titlebar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 32px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0 10px;
+            -webkit-app-region: drag;
+        }
+
+        .titlebar-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .titlebar-buttons {
+            display: flex;
+            gap: 8px;
+            -webkit-app-region: no-drag;
+        }
+
+        .titlebar-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .titlebar-btn:hover {
+            opacity: 0.8;
+        }
+
+        .btn-minimize {
+            background: #ffbd2e;
+        }
+
+        .btn-close {
+            background: #ff5f57;
+        }
+
+        /* Main Content */
+        .main-content {
+            height: calc(100vh - 32px);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* Logo */
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .app-name {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .app-version {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        /* Status Card */
+        .status-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--error);
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            display: none;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-secondary);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            transition: 0.3s;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--accent-blue);
+        }
+
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(24px);
+        }
+
+        /* User Info */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-blue);
+        }
+
+        .user-details h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .user-details p {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 157, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-discord {
+            background: #5865f2;
+            color: white;
+        }
+
+        .btn-discord:hover {
+            background: #4752c4;
+        }
+
+        .btn-logout {
+            background: transparent;
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        .btn-logout:hover {
+            background: rgba(237, 66, 69, 0.1);
+        }
+
+        /* Settings */
+        .settings-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .settings-section h3 {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-row:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-size: 14px;
+        }
+
+        .setting-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Login View */
+        .login-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: calc(100vh - 32px - 40px);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .login-view p {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        /* Links */
+        .link-btn {
+            color: var(--accent-blue);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        .link-btn:hover {
+            color: var(--accent-purple);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 15px;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Titlebar -->
+    <div class="titlebar">
+        <span class="titlebar-title">CUBSOFTWARE</span>
+        <div class="titlebar-buttons">
+            <button class="titlebar-btn btn-minimize" onclick="window.electronAPI.minimizeWindow()"></button>
+            <button class="titlebar-btn btn-close" onclick="window.electronAPI.closeWindow()"></button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            <div class="logo">C</div>
+            <div class="app-name">CUBSOFTWARE</div>
+            <div class="app-version">v1.0.0</div>
+        </div>
+
+        <!-- Login View -->
+        <div id="login-view" class="login-view">
+            <p>Connect your Discord account to set custom Rich Presence that syncs with cubsoftware.site</p>
+            <button class="btn btn-discord" onclick="login()">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+                    <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02z"/>
+                </svg>
+                Login with Discord
+            </button>
+        </div>
+
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="hidden">
+            <!-- Status Card -->
+            <div class="status-card">
+                <div class="status-header">
+                    <div class="status-indicator">
+                        <div class="status-dot" id="status-dot"></div>
+                        <span class="status-text" id="status-text">Disconnected</span>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="presence-toggle" onchange="togglePresence(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="user-info">
+                    <img class="user-avatar" id="user-avatar" src="" alt="Avatar">
+                    <div class="user-details">
+                        <h3 id="user-name">Username</h3>
+                        <p id="user-id">ID: 000000000000000000</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="settings-section">
+                <h3>Quick Actions</h3>
+                <button class="btn btn-primary" onclick="openPresenceSettings()" style="margin-bottom: 10px;">
+                    Configure Presence
+                </button>
+                <button class="btn btn-secondary" onclick="refreshPresence()">
+                    Refresh Presence
+                </button>
+            </div>
+
+            <!-- Settings -->
+            <div class="settings-section">
+                <h3>Settings</h3>
+                <div class="setting-row">
+                    <div>
+                        <div class="setting-label">Start with Windows</div>
+                        <div class="setting-desc">Launch app when you log in</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="autostart-toggle" onchange="setAutoStart(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <div>
+                        <div class="setting-label">Minimize to Tray</div>
+                        <div class="setting-desc">Keep running in background</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="tray-toggle" checked onchange="setMinimizeToTray(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Logout -->
+            <button class="btn btn-logout" onclick="logout()">
+                Logout
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <button class="link-btn" onclick="openWebsite()">cubsoftware.site</button>
+        </div>
+    </div>
+
+    <script>
+        let apiBase = '';
+
+        // Initialize
+        async function init() {
+            apiBase = await window.electronAPI.getApiBase();
+
+            const user = await window.electronAPI.getStore('user');
+            if (user) {
+                showDashboard(user);
+            } else {
+                showLogin();
+            }
+
+            // Load settings
+            const presenceEnabled = await window.electronAPI.getStore('presenceEnabled');
+            document.getElementById('presence-toggle').checked = presenceEnabled !== false;
+
+            const autoStart = await window.electronAPI.getAutoStart();
+            document.getElementById('autostart-toggle').checked = autoStart;
+
+            const minimizeToTray = await window.electronAPI.getStore('minimizeToTray');
+            document.getElementById('tray-toggle').checked = minimizeToTray !== false;
+
+            // Listen for presence toggle from tray
+            window.electronAPI.onPresenceToggled((enabled) => {
+                document.getElementById('presence-toggle').checked = enabled;
+                updateStatus(enabled);
+            });
+
+            updateStatus(presenceEnabled !== false);
+        }
+
+        function showLogin() {
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('dashboard-view').classList.add('hidden');
+        }
+
+        function showDashboard(user) {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('hidden');
+
+            document.getElementById('user-avatar').src = user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+            document.getElementById('user-name').textContent = user.username || 'Unknown';
+            document.getElementById('user-id').textContent = `ID: ${user.id || 'Unknown'}`;
+        }
+
+        function updateStatus(enabled) {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+
+            if (enabled) {
+                dot.classList.add('connected');
+                text.textContent = 'Connected';
+            } else {
+                dot.classList.remove('connected');
+                text.textContent = 'Disconnected';
+            }
+        }
+
+        async function login() {
+            // Open OAuth in external browser
+            const redirectUri = encodeURIComponent(`${apiBase}/apps/presence/callback`);
+            const authUrl = `${apiBase}/apps/presence/auth/discord?desktop=true`;
+            window.electronAPI.openExternal(authUrl);
+
+            // Start polling for login completion
+            pollForLogin();
+        }
+
+        async function pollForLogin() {
+            // Poll the server for login completion
+            // This is a simple approach - the server stores a temporary token
+            // that the app can retrieve
+            const pollInterval = setInterval(async () => {
+                try {
+                    const deviceId = await window.electronAPI.getStore('deviceId') || generateDeviceId();
+                    await window.electronAPI.setStore('deviceId', deviceId);
+
+                    const response = await fetch(`${apiBase}/api/presence/auth/poll?device_id=${deviceId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success && data.access_token) {
+                            clearInterval(pollInterval);
+                            await window.electronAPI.login({
+                                accessToken: data.access_token,
+                                refreshToken: data.refresh_token,
+                                user: data.user
+                            });
+                            showDashboard(data.user);
+                            updateStatus(true);
+                        }
+                    }
+                } catch (e) {
+                    // Ignore polling errors
+                }
+            }, 2000);
+
+            // Stop polling after 5 minutes
+            setTimeout(() => clearInterval(pollInterval), 300000);
+        }
+
+        function generateDeviceId() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        async function logout() {
+            await window.electronAPI.logout();
+            showLogin();
+            updateStatus(false);
+        }
+
+        async function togglePresence(enabled) {
+            await window.electronAPI.togglePresence(enabled);
+            updateStatus(enabled);
+        }
+
+        async function setAutoStart(enabled) {
+            await window.electronAPI.setAutoStart(enabled);
+        }
+
+        async function setMinimizeToTray(enabled) {
+            await window.electronAPI.setStore('minimizeToTray', enabled);
+        }
+
+        function openPresenceSettings() {
+            window.electronAPI.openExternal(`${apiBase}/apps/presence`);
+        }
+
+        async function refreshPresence() {
+            await window.electronAPI.refreshPresence();
+        }
+
+        function openWebsite() {
+            window.electronAPI.openExternal(apiBase);
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

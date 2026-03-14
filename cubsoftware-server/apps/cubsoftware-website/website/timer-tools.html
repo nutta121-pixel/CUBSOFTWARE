@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Timer Tools - Stopwatch, Countdown & Pomodoro | Free</title>
+
+    <meta name="description" content="Free timer tools: Stopwatch with lap times, countdown timer, and Pomodoro focus sessions. Works offline.">
+    <meta name="keywords" content="stopwatch, countdown timer, pomodoro timer, lap timer, focus timer, online timer">
+    <meta name="author" content="CUB">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/timer-tools.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="timer-container">
+            <div class="timer-header">
+                <h1>Timer Tools</h1>
+                <p>Stopwatch, countdown, and focus timers</p>
+            </div>
+
+            <div class="timer-tabs">
+                <button class="timer-tab active" data-tab="stopwatch">Stopwatch</button>
+                <button class="timer-tab" data-tab="countdown">Countdown</button>
+                <button class="timer-tab" data-tab="pomodoro">Pomodoro</button>
+            </div>
+
+            <!-- Stopwatch Panel -->
+            <div class="timer-panel active" id="stopwatch-panel">
+                <div class="timer-display">
+                    <span class="time-value" id="stopwatchDisplay">00:00:00.00</span>
+                </div>
+                <div class="timer-controls">
+                    <button class="timer-btn start" id="stopwatchStart">Start</button>
+                    <button class="timer-btn secondary" id="stopwatchLap">Lap</button>
+                    <button class="timer-btn danger" id="stopwatchReset">Reset</button>
+                </div>
+                <div class="laps-section" id="lapsSection">
+                    <h3>Lap Times</h3>
+                    <div class="laps-list" id="lapsList"></div>
+                </div>
+            </div>
+
+            <!-- Countdown Panel -->
+            <div class="timer-panel" id="countdown-panel">
+                <div class="countdown-setup" id="countdownSetup">
+                    <div class="time-inputs">
+                        <div class="time-input-group">
+                            <input type="number" id="countdownHours" value="0" min="0" max="99">
+                            <label>Hours</label>
+                        </div>
+                        <span class="time-separator">:</span>
+                        <div class="time-input-group">
+                            <input type="number" id="countdownMinutes" value="5" min="0" max="59">
+                            <label>Minutes</label>
+                        </div>
+                        <span class="time-separator">:</span>
+                        <div class="time-input-group">
+                            <input type="number" id="countdownSeconds" value="0" min="0" max="59">
+                            <label>Seconds</label>
+                        </div>
+                    </div>
+                    <div class="preset-times">
+                        <button class="preset-btn" data-minutes="1">1 min</button>
+                        <button class="preset-btn" data-minutes="5">5 min</button>
+                        <button class="preset-btn" data-minutes="10">10 min</button>
+                        <button class="preset-btn" data-minutes="15">15 min</button>
+                        <button class="preset-btn" data-minutes="30">30 min</button>
+                        <button class="preset-btn" data-minutes="60">1 hour</button>
+                    </div>
+                </div>
+                <div class="timer-display" id="countdownDisplay" style="display: none;">
+                    <span class="time-value" id="countdownTime">00:00:00</span>
+                </div>
+                <div class="timer-controls">
+                    <button class="timer-btn start" id="countdownStart">Start</button>
+                    <button class="timer-btn secondary" id="countdownPause" style="display: none;">Pause</button>
+                    <button class="timer-btn danger" id="countdownReset">Reset</button>
+                </div>
+            </div>
+
+            <!-- Pomodoro Panel -->
+            <div class="timer-panel" id="pomodoro-panel">
+                <div class="pomodoro-status" id="pomodoroStatus">
+                    <span class="status-label">Focus Time</span>
+                    <span class="session-count">Session <span id="sessionCount">1</span> of <span id="totalSessions">4</span></span>
+                </div>
+                <div class="timer-display pomodoro">
+                    <span class="time-value" id="pomodoroTime">25:00</span>
+                </div>
+                <div class="pomodoro-progress">
+                    <div class="progress-bar" id="pomodoroProgress"></div>
+                </div>
+                <div class="timer-controls">
+                    <button class="timer-btn start" id="pomodoroStart">Start Focus</button>
+                    <button class="timer-btn secondary" id="pomodoroPause" style="display: none;">Pause</button>
+                    <button class="timer-btn secondary" id="pomodoroSkip">Skip</button>
+                    <button class="timer-btn danger" id="pomodoroReset">Reset</button>
+                </div>
+                <div class="pomodoro-settings">
+                    <h3>Settings</h3>
+                    <div class="setting-group">
+                        <label>Focus Duration</label>
+                        <div class="setting-input">
+                            <input type="number" id="focusDuration" value="25" min="1" max="120">
+                            <span>min</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label>Short Break</label>
+                        <div class="setting-input">
+                            <input type="number" id="shortBreak" value="5" min="1" max="30">
+                            <span>min</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label>Long Break</label>
+                        <div class="setting-input">
+                            <input type="number" id="longBreak" value="15" min="1" max="60">
+                            <span>min</span>
+                        </div>
+                    </div>
+                    <div class="setting-group">
+                        <label>Sessions until Long Break</label>
+                        <div class="setting-input">
+                            <input type="number" id="sessionsUntilLong" value="4" min="1" max="10">
+                            <span>sessions</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Time's up!</div>
+    <script src="/static/js/timer-tools.js?v={{ v }}"></script>
+</body>
+</html>

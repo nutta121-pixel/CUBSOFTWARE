@@ -1,0 +1,14 @@
+# YouTube Cookies File Example
+#
+# To use YouTube authentication:
+# 1. Export cookies from your browser while logged into YouTube
+# 2. Save as "youtube_cookies.txt" in this directory
+# 3. Never commit this file to git (it's in .gitignore)
+#
+# The file should be in Netscape cookie format like this:
+#
+# .youtube.com    TRUE    /    TRUE    0    YSC    <your-value>
+# .youtube.com    TRUE    /    TRUE    1234567890    VISITOR_INFO1_LIVE    <your-value>
+# ...etc
+#
+# For instructions on exporting cookies, see DEPLOYMENT.md

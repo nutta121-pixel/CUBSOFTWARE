@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Audio Trimmer - Trim & Edit Audio Files | Free</title>
+
+    <meta name="description" content="Trim, cut, and edit audio files in your browser. Adjust volume, fade in/out, and export. Free online audio editor.">
+    <meta name="keywords" content="audio trimmer, audio cutter, trim mp3, audio editor, free audio trimmer">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/audio-trimmer.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="audio-container">
+            <div class="audio-header">
+                <h1>Audio Trimmer</h1>
+                <p>Trim, cut, and edit audio files in your browser</p>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-box" id="uploadBox">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M9 18V5l12-2v13"></path>
+                        <circle cx="6" cy="18" r="3"></circle>
+                        <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                    <h3>Drop audio file here</h3>
+                    <p>or click to browse</p>
+                    <p class="supported-formats">Supports: MP3, WAV, OGG, M4A, FLAC</p>
+                    <input type="file" id="audioInput" accept="audio/*" hidden>
+                </div>
+            </div>
+
+            <!-- Editor Section -->
+            <div class="editor-section" id="editorSection" style="display: none;">
+                <div class="file-info">
+                    <div class="file-details">
+                        <span class="file-name" id="fileName">audio.mp3</span>
+                        <span class="file-duration" id="fileDuration">0:00</span>
+                    </div>
+                    <button class="btn-change-file" id="changeFileBtn">Change File</button>
+                </div>
+
+                <!-- Waveform -->
+                <div class="waveform-container">
+                    <div class="waveform-wrapper">
+                        <canvas id="waveformCanvas"></canvas>
+                        <div class="playhead" id="playhead"></div>
+                        <div class="trim-overlay left" id="trimLeft"></div>
+                        <div class="trim-overlay right" id="trimRight"></div>
+                        <div class="trim-handle left" id="handleLeft">
+                            <div class="handle-grip"></div>
+                        </div>
+                        <div class="trim-handle right" id="handleRight">
+                            <div class="handle-grip"></div>
+                        </div>
+                    </div>
+                    <div class="time-labels">
+                        <span id="startTime">0:00</span>
+                        <span id="endTime">0:00</span>
+                    </div>
+                </div>
+
+                <!-- Trim Info -->
+                <div class="trim-info">
+                    <div class="trim-input-group">
+                        <label>Start</label>
+                        <input type="text" id="trimStartInput" value="0:00.000" pattern="[0-9]+:[0-9]{2}\.[0-9]{3}">
+                    </div>
+                    <div class="trim-duration">
+                        <label>Selection</label>
+                        <span id="selectionDuration">0:00.000</span>
+                    </div>
+                    <div class="trim-input-group">
+                        <label>End</label>
+                        <input type="text" id="trimEndInput" value="0:00.000" pattern="[0-9]+:[0-9]{2}\.[0-9]{3}">
+                    </div>
+                </div>
+
+                <!-- Playback Controls -->
+                <div class="playback-controls">
+                    <button class="control-btn" id="playSelectionBtn" title="Play Selection">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </button>
+                    <button class="control-btn" id="playPauseBtn" title="Play/Pause">
+                        <svg class="play-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        <svg class="pause-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                        </svg>
+                    </button>
+                    <button class="control-btn" id="stopBtn" title="Stop">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                        </svg>
+                    </button>
+                    <div class="current-time">
+                        <span id="currentTimeDisplay">0:00.000</span>
+                    </div>
+                </div>
+
+                <!-- Audio Options -->
+                <div class="audio-options">
+                    <div class="option-group">
+                        <label>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            </svg>
+                            Volume
+                        </label>
+                        <input type="range" id="volumeSlider" min="0" max="200" value="100">
+                        <span id="volumeValue">100%</span>
+                    </div>
+                    <div class="option-group">
+                        <label>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 12h4l3 9L13 3l3 6h4"></path>
+                            </svg>
+                            Fade In
+                        </label>
+                        <input type="range" id="fadeInSlider" min="0" max="5000" value="0" step="100">
+                        <span id="fadeInValue">0ms</span>
+                    </div>
+                    <div class="option-group">
+                        <label>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M2 12h4l3 9L13 3l3 6h4"></path>
+                            </svg>
+                            Fade Out
+                        </label>
+                        <input type="range" id="fadeOutSlider" min="0" max="5000" value="0" step="100">
+                        <span id="fadeOutValue">0ms</span>
+                    </div>
+                </div>
+
+                <!-- Export Options -->
+                <div class="export-section">
+                    <div class="export-options">
+                        <div class="option-group">
+                            <label>Format</label>
+                            <select id="exportFormat">
+                                <option value="mp3">MP3</option>
+                                <option value="wav">WAV</option>
+                            </select>
+                        </div>
+                        <div class="option-group" id="qualityGroup">
+                            <label>Quality</label>
+                            <select id="exportQuality">
+                                <option value="128">128 kbps</option>
+                                <option value="192" selected>192 kbps</option>
+                                <option value="256">256 kbps</option>
+                                <option value="320">320 kbps</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn-export" id="exportBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Export Audio
+                    </button>
+                </div>
+
+                <!-- Processing Indicator -->
+                <div class="processing" id="processing" style="display: none;">
+                    <div class="processing-spinner"></div>
+                    <span id="processingText">Processing...</span>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+    <script src="/static/js/audio-trimmer.js?v={{ v }}"></script>
+</body>
+</html>

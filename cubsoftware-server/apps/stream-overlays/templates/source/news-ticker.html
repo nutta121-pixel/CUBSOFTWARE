@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1920">
+<title>News Ticker</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+#overlay {
+    width: 1920px; height: 1080px; position: relative; overflow: hidden;
+    background: transparent;
+    --primary: #cc0000;
+    --secondary: #1a1a2e;
+    --text: #ffffff;
+    --ticker-bg: #cc0000;
+    --ticker-text: #ffffff;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+/* ── Transparent viewport cutout hint ───────────────────────── */
+/* The user adds their webcam/game in OBS below this browser source */
+#viewport {
+    position: absolute;
+    background: transparent;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────── */
+#topBar {
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 72px; z-index: 10;
+    background: var(--secondary);
+    display: flex; align-items: center;
+    padding: 0 28px; gap: 20px;
+    border-bottom: 4px solid var(--primary);
+}
+#channelLogo {
+    height: 44px; width: 44px; object-fit: contain;
+    border-radius: 6px; display: none;
+}
+#channelName {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 26px; font-weight: 900; color: var(--text);
+    letter-spacing: 3px; text-transform: uppercase;
+    flex-shrink: 0;
+}
+#topSpacer { flex: 1; }
+#topClock {
+    font-size: 22px; color: var(--text); opacity: .85;
+    letter-spacing: 2px; font-family: 'Share Tech Mono', monospace;
+}
+#topWeather {
+    font-size: 18px; color: var(--text); opacity: .7;
+    margin-left: 16px; display: none;
+}
+#liveBadge {
+    background: var(--primary); color: #fff;
+    font-size: 13px; font-weight: 700; letter-spacing: 3px;
+    padding: 4px 14px; border-radius: 4px;
+    animation: livePulse 2s ease-in-out infinite;
+}
+@keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+/* ── Breaking banner ─────────────────────────────────────────── */
+#breakingBanner {
+    position: absolute; top: 72px; left: 0; right: 0;
+    height: 54px; z-index: 10;
+    display: flex; align-items: stretch; display: none;
+}
+#breakingLabel {
+    background: var(--primary);
+    display: flex; align-items: center;
+    padding: 0 28px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 17px; font-weight: 900;
+    color: #fff; letter-spacing: 3px; white-space: nowrap;
+    flex-shrink: 0;
+}
+#breakingLabel::after {
+    content: '';
+    position: absolute; left: 0; bottom: -4px; right: 0; height: 4px;
+    background: var(--primary); opacity: .5;
+}
+#breakingHeadline {
+    flex: 1;
+    background: var(--secondary);
+    display: flex; align-items: center;
+    padding: 0 24px;
+    font-size: 22px; font-weight: 600; color: var(--text);
+    overflow: hidden;
+}
+#breakingHeadlineText {
+    white-space: nowrap;
+    animation: none;
+}
+
+/* ── Ticker bar at bottom ────────────────────────────────────── */
+#tickerBar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 56px; z-index: 10;
+    display: flex; align-items: stretch; display: none;
+}
+#tickerLabel {
+    background: var(--primary);
+    display: flex; align-items: center;
+    padding: 0 22px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px; font-weight: 900;
+    color: #fff; letter-spacing: 2px; white-space: nowrap;
+    flex-shrink: 0; min-width: 140px; justify-content: center;
+}
+#tickerTrack {
+    flex: 1; background: var(--ticker-bg);
+    overflow: hidden; position: relative;
+    display: flex; align-items: center;
+}
+#tickerContent {
+    position: absolute; white-space: nowrap;
+    font-size: 20px; font-weight: 600;
+    color: var(--ticker-text);
+    letter-spacing: 1px;
+    will-change: transform;
+}
+
+/* ── Chyron lower-third ──────────────────────────────────────── */
+#chyron {
+    position: absolute; left: 0; right: 0;
+    z-index: 10; display: none;
+    flex-direction: column; bottom: 56px;
+}
+#chyronTop {
+    background: var(--primary);
+    padding: 6px 28px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px; font-weight: 900;
+    color: #fff; letter-spacing: 4px; text-transform: uppercase;
+    display: inline-block; align-self: flex-start;
+}
+#chyronMain {
+    background: var(--secondary);
+    padding: 10px 28px;
+    font-size: 28px; font-weight: 700;
+    color: var(--text); letter-spacing: 1px;
+    border-left: 6px solid var(--primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STYLE VARIANTS
+═══════════════════════════════════════════════════════════════ */
+
+/* ── BROADCAST: classic TV news ─────────────────────────────── */
+#overlay[data-style="broadcast"] #topBar {
+    height: 80px;
+    background: linear-gradient(90deg, #000014, var(--secondary));
+}
+#overlay[data-style="broadcast"] #channelName {
+    font-size: 30px;
+}
+#overlay[data-style="broadcast"] #breakingLabel {
+    font-size: 14px; letter-spacing: 4px;
+}
+#overlay[data-style="broadcast"] #chyronMain {
+    font-size: 32px;
+}
+
+/* ── MINIMAL: clean, subtle ─────────────────────────────────── */
+#overlay[data-style="minimal"] #topBar {
+    background: rgba(0,0,0,.7);
+    backdrop-filter: blur(8px);
+    border-bottom-color: var(--primary);
+    height: 64px;
+}
+#overlay[data-style="minimal"] #tickerBar #tickerLabel {
+    background: rgba(0,0,0,.85);
+    border-right: 3px solid var(--primary);
+}
+#overlay[data-style="minimal"] #tickerTrack {
+    background: rgba(0,0,0,.65);
+    backdrop-filter: blur(6px);
+}
+#overlay[data-style="minimal"] #chyronTop { border-radius: 0 6px 0 0; }
+
+/* ── RETRO: old-school 80s news ─────────────────────────────── */
+#overlay[data-style="retro"] {
+    font-family: 'Courier Prime', monospace !important;
+}
+#overlay[data-style="retro"] #topBar {
+    background: #1a0000;
+    border-bottom: 6px solid #ff4400;
+}
+#overlay[data-style="retro"] #channelName {
+    color: #ff8800; font-family: 'Courier Prime', monospace; letter-spacing: 5px;
+}
+#overlay[data-style="retro"] #breakingLabel { background: #ff4400; }
+#overlay[data-style="retro"] #breakingHeadline { background: #2a0000; }
+#overlay[data-style="retro"] #tickerBar #tickerLabel { background: #ff4400; }
+#overlay[data-style="retro"] #tickerTrack { background: #1a0000; }
+#overlay[data-style="retro"] #chyronTop { background: #ff4400; }
+#overlay[data-style="retro"] #chyronMain { background: #2a0000; border-left-color: #ff4400; font-family: 'Courier Prime', monospace; }
+/* Scanlines on retro */
+#overlay[data-style="retro"]::after {
+    content: '';
+    position: absolute; inset: 0; z-index: 50; pointer-events: none;
+    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);
+}
+
+/* ── CYBER: neon futuristic ─────────────────────────────────── */
+#overlay[data-style="cyber"] #topBar {
+    background: rgba(0,0,20,.9);
+    border-bottom: 2px solid var(--primary);
+    box-shadow: 0 0 20px var(--primary), inset 0 0 30px rgba(0,0,0,.5);
+}
+#overlay[data-style="cyber"] #channelName {
+    text-shadow: 0 0 10px var(--primary), 0 0 30px var(--primary);
+}
+#overlay[data-style="cyber"] #liveBadge {
+    box-shadow: 0 0 12px var(--primary), 0 0 24px var(--primary);
+}
+#overlay[data-style="cyber"] #breakingLabel {
+    box-shadow: 2px 0 12px var(--primary);
+}
+#overlay[data-style="cyber"] #chyronTop {
+    text-shadow: 0 0 8px var(--primary);
+    box-shadow: 0 0 16px var(--primary);
+}
+#overlay[data-style="cyber"] #tickerBar #tickerLabel {
+    box-shadow: 2px 0 12px var(--primary);
+    text-shadow: 0 0 8px #fff;
+}
+
+/* ── Corner accent marks ─────────────────────────────────────── */
+.news-corner {
+    position: absolute; width: 30px; height: 30px;
+    border-color: var(--primary); border-style: solid; opacity: .5; z-index: 5;
+    display: none;
+}
+.news-corner.tl { top: 72px; left: 0; border-width: 3px 0 0 3px; }
+.news-corner.tr { top: 72px; right: 0; border-width: 3px 3px 0 0; }
+.news-corner.bl { bottom: 56px; left: 0; border-width: 0 0 3px 3px; }
+.news-corner.br { bottom: 56px; right: 0; border-width: 0 3px 3px 0; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Courier+Prime:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/overlays/static/css/overlays-effects.css?v={{ v }}">
+</head>
+<body>
+<div id="overlay">
+    <!-- Viewport indicator (purely for layout reference — transparent) -->
+    <div id="viewport"></div>
+
+    <!-- Top bar -->
+    <div id="topBar">
+        <img id="channelLogo" src="" alt="">
+        <div id="channelName">STREAM NEWS</div>
+        <div id="topSpacer"></div>
+        <div id="topWeather"></div>
+        <div id="topClock">00:00:00</div>
+        <div id="liveBadge">● LIVE</div>
+    </div>
+
+    <!-- Breaking news banner (below top bar) -->
+    <div id="breakingBanner">
+        <div id="breakingLabel">BREAKING NEWS</div>
+        <div id="breakingHeadline"><span id="breakingHeadlineText"></span></div>
+    </div>
+
+    <!-- Corner accents -->
+    <div class="news-corner tl"></div>
+    <div class="news-corner tr"></div>
+    <div class="news-corner bl"></div>
+    <div class="news-corner br"></div>
+
+    <!-- Chyron lower-third -->
+    <div id="chyron">
+        <div id="chyronTop">LIVE</div>
+        <div id="chyronMain">Stream is live now</div>
+    </div>
+
+    <!-- Ticker bar (bottom) -->
+    <div id="tickerBar">
+        <div id="tickerLabel">HEADLINES</div>
+        <div id="tickerTrack">
+            <div id="tickerContent"></div>
+        </div>
+    </div>
+</div>
+
+<script src="/overlays/static/js/overlays-effects.js?v={{ v }}"></script>
+<script>
+const SCENE_ID = '{{ scene_id }}';
+let config = {};
+let _tickerAnim = null;
+let _headlineIdx = 0;
+let _headlines = [];
+let _headlineTimer = null;
+
+// ── Clock ─────────────────────────────────────────────────────────────────────
+setInterval(() => {
+    const el = document.getElementById('topClock');
+    if (el) el.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+}, 1000);
+
+// ── Ticker scroll ─────────────────────────────────────────────────────────────
+function startTicker() {
+    const track = document.getElementById('tickerTrack');
+    const content = document.getElementById('tickerContent');
+    if (!track || !content) return;
+    if (_tickerAnim) cancelAnimationFrame(_tickerAnim);
+
+    const speed = Math.max(20, parseInt(config.news_ticker_speed) || 80); // px/s
+    let pos = track.offsetWidth;
+    content.style.transform = `translateX(${pos}px)`;
+
+    let last = performance.now();
+    function step(now) {
+        const dt = (now - last) / 1000;
+        last = now;
+        pos -= speed * dt;
+        const totalW = content.scrollWidth;
+        if (pos < -totalW) pos = track.offsetWidth;
+        content.style.transform = `translateX(${pos}px)`;
+        _tickerAnim = requestAnimationFrame(step);
+    }
+    _tickerAnim = requestAnimationFrame(step);
+}
+
+function setTickerText(headlines) {
+    const content = document.getElementById('tickerContent');
+    if (!content) return;
+    const separator = '&nbsp;&nbsp;&nbsp;◆&nbsp;&nbsp;&nbsp;';
+    content.innerHTML = headlines.map(h => `<span>${h}</span>`).join(separator);
+}
+
+// ── Breaking headline rotation ────────────────────────────────────────────────
+function rotateBreaking() {
+    if (!_headlines.length) return;
+    _headlineIdx = (_headlineIdx + 1) % _headlines.length;
+    const el = document.getElementById('breakingHeadlineText');
+    if (!el) return;
+    el.style.opacity = '0';
+    setTimeout(() => {
+        el.textContent = _headlines[_headlineIdx];
+        el.style.transition = 'opacity .5s';
+        el.style.opacity = '1';
+    }, 400);
+}
+
+// ── Apply config ──────────────────────────────────────────────────────────────
+function applyConfig(cfg) {
+    config = cfg;
+    const el = document.getElementById('overlay');
+
+    // Background
+    const bt = cfg.background_type || 'transparent';
+    if (!bt || bt === 'transparent') el.style.background = 'transparent';
+    else if (bt === 'solid') el.style.background = cfg.bg_color || '#0a0a1a';
+    else el.style.background = `linear-gradient(${cfg.bg_gradient_angle||180}deg,${cfg.bg_gradient_from||'#0a0a1a'},${cfg.bg_gradient_to||'#1a1a2e'})`;
+
+    // CSS vars
+    el.style.setProperty('--primary',     cfg.news_primary_color   || '#cc0000');
+    el.style.setProperty('--secondary',   cfg.news_secondary_color || '#1a1a2e');
+    el.style.setProperty('--text',        cfg.news_text_color      || '#ffffff');
+    el.style.setProperty('--ticker-bg',   cfg.news_ticker_bg       || '#cc0000');
+    el.style.setProperty('--ticker-text', cfg.news_ticker_text     || '#ffffff');
+
+    // Style
+    el.dataset.style = cfg.news_style || 'breaking';
+
+    // Top bar
+    document.getElementById('channelName').textContent = cfg.news_channel_name || 'STREAM NEWS';
+    const logoEl = document.getElementById('channelLogo');
+    if (cfg.news_channel_logo) { logoEl.src = cfg.news_channel_logo; logoEl.style.display = 'block'; }
+    else logoEl.style.display = 'none';
+
+    // Clock
+    document.getElementById('topClock').style.display = cfg.news_clock_show !== false ? 'block' : 'none';
+
+    // Weather
+    const weatherEl = document.getElementById('topWeather');
+    weatherEl.style.display = cfg.news_weather_show ? 'block' : 'none';
+    weatherEl.textContent = cfg.news_weather_text || '';
+
+    // Headlines array
+    _headlines = (cfg.news_headlines || '').split('\n').map(h => h.trim()).filter(Boolean);
+    if (!_headlines.length) _headlines = ['Welcome to the stream!'];
+    _headlineIdx = 0;
+
+    // Breaking banner
+    const showBreaking = cfg.news_breaking_show !== false;
+    const bannerEl = document.getElementById('breakingBanner');
+    bannerEl.style.display = showBreaking ? 'flex' : 'none';
+    if (showBreaking) {
+        document.getElementById('breakingLabel').textContent = cfg.news_breaking_text || 'BREAKING NEWS';
+        document.getElementById('breakingHeadlineText').textContent = _headlines[0] || '';
+        // Rotate headlines
+        clearInterval(_headlineTimer);
+        _headlineTimer = setInterval(rotateBreaking, 8000);
+    }
+
+    // Ticker
+    const showTicker = cfg.news_ticker_show !== false;
+    const tickerEl = document.getElementById('tickerBar');
+    tickerEl.style.display = showTicker ? 'flex' : 'none';
+    if (showTicker) {
+        setTickerText(_headlines);
+        startTicker();
+    } else {
+        if (_tickerAnim) cancelAnimationFrame(_tickerAnim);
+    }
+
+    // Chyron
+    const showChyron = cfg.news_chyron_show !== false;
+    const chyronEl = document.getElementById('chyron');
+    chyronEl.style.display = showChyron ? 'flex' : 'none';
+    // Position chyron above ticker
+    chyronEl.style.bottom = showTicker ? '56px' : '0';
+    if (showChyron) {
+        document.getElementById('chyronTop').textContent = cfg.news_chyron_label || 'LIVE';
+        document.getElementById('chyronMain').textContent = cfg.news_chyron_text || 'Stream is live now';
+    }
+
+    // Corner accents
+    const showCorners = cfg.news_corners_show || false;
+    document.querySelectorAll('.news-corner').forEach(c => c.style.display = showCorners ? 'block' : 'none');
+
+    // Custom CSS
+    let st = document.getElementById('custom-style');
+    if (!st) { st = document.createElement('style'); st.id = 'custom-style'; document.head.appendChild(st); }
+    st.textContent = cfg.custom_css || '';
+}
+
+// ── SSE & load ────────────────────────────────────────────────────────────────
+function connectSSE() {
+    const es = new EventSource('/overlays/source/' + SCENE_ID + '/events');
+    es.onmessage = e => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'update') applyConfig(msg.config);
+        else if (msg.type === 'channel_points_reaction') handleChannelPointsReaction(msg.reaction, msg.event);
+    };
+    es.onerror = () => { es.close(); setTimeout(connectSSE, 3000); };
+}
+
+async function loadConfig(retries = 5, delay = 1000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const r = await fetch('/overlays/api/scenes/' + SCENE_ID + '/config');
+            if (r.ok) { config = await r.json(); applyConfig(config); return; }
+        } catch(e) {}
+        if (i < retries - 1) await new Promise(res => setTimeout(res, delay));
+    }
+}
+
+loadConfig().then(() => connectSSE());
+window.addEventListener('message', e => {
+    if (e.data && e.data.type === 'preview-update') applyConfig(e.data.config);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HexEchoTV Wordle</title>
+    <script>
+        // Auto-reload every 2 seconds to update OBS browser source
+        setTimeout(function() {
+            location.reload();
+        }, 2000);
+    </script>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: transparent;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            background: rgba(0, 0, 0, 0.85);
+            padding: 30px 50px;
+            border-radius: 15px;
+            border: 3px solid #6c63ff;
+            box-shadow: 0 8px 32px rgba(108, 99, 255, 0.4);
+        }
+        h1 {
+            margin: 0 0 30px 0;
+            font-size: 48px;
+            text-align: center;
+            color: #6c63ff;
+            text-shadow: 0 0 20px rgba(108, 99, 255, 0.8);
+        }
+        .word-display {
+            font-size: 72px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+            letter-spacing: 15px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+        }
+        .guesses-container {
+            margin-top: 30px;
+        }
+        .guess-row {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            justify-content: center;
+        }
+        .letter-box {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .correct {
+            background-color: #538d4e;
+            border-color: #538d4e;
+        }
+        .present {
+            background-color: #b59f3b;
+            border-color: #b59f3b;
+        }
+        .absent {
+            background-color: #3a3a3c;
+            border-color: #3a3a3c;
+        }
+        .game-status {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 24px;
+        }
+        .win-text {
+            color: #538d4e;
+            font-weight: bold;
+            font-size: 36px;
+        }
+        .lose-text {
+            color: #ff6b6b;
+            font-weight: bold;
+            font-size: 36px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>HexEchoTV<br>Wordle Challenge</h1>
+        <div style="text-align: center; font-size: 24px; margin-bottom: 20px; color: #aaa;">Player: HexEchoTV</div>
+        <div class="word-display">ERUPT</div>
+        <div class="guesses-container">
+            <div class="guess-row">
+                <div class="letter-box absent">G</div>
+                <div class="letter-box correct">R</div>
+                <div class="letter-box present">E</div>
+                <div class="letter-box absent">A</div>
+                <div class="letter-box correct">T</div>
+            </div>
+            <div class="guess-row">
+                <div class="letter-box absent">B</div>
+                <div class="letter-box correct">R</div>
+                <div class="letter-box absent">I</div>
+                <div class="letter-box present">E</div>
+                <div class="letter-box correct">T</div>
+            </div>
+            <div class="guess-row">
+                <div class="letter-box correct">E</div>
+                <div class="letter-box correct">R</div>
+                <div class="letter-box absent">O</div>
+                <div class="letter-box absent">L</div>
+                <div class="letter-box correct">T</div>
+            </div>
+            <div class="guess-row">
+                <div class="letter-box correct">E</div>
+                <div class="letter-box correct">R</div>
+                <div class="letter-box absent">A</div>
+                <div class="letter-box absent">S</div>
+                <div class="letter-box correct">T</div>
+            </div>
+            <div class="guess-row">
+                <div class="letter-box correct">E</div>
+                <div class="letter-box correct">R</div>
+                <div class="letter-box absent">Q</div>
+                <div class="letter-box absent">M</div>
+                <div class="letter-box correct">T</div>
+            </div>
+            <div class="guess-row">
+                <div class="letter-box correct">E</div>
+                <div class="letter-box correct">R</div>
+                <div class="letter-box absent">K</div>
+                <div class="letter-box absent">Q</div>
+                <div class="letter-box correct">T</div>
+            </div>
+        </div>
+        <div class="game-status lose-text">❌ Game Over ❌</div>
+    </div>
+</body>
+</html>

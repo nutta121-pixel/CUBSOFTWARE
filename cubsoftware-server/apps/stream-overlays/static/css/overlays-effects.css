@@ -1,0 +1,968 @@
+/* overlays-effects.css — Shared animation & effect styles for all overlay source templates */
+
+/* ─── BG Effects Canvas ─── */
+#bg-effects { position: absolute; inset: 0; z-index: 0; pointer-events: none; width: 1920px; height: 1080px; }
+
+/* ─── Scene Animations (new names, applied to #overlay) ─── */
+
+/* Zoom In */
+.anim-zoom .scene-card { animation: sceneZoomIn 1s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneZoomIn { from{opacity:0;transform:scale(.4)} to{opacity:1;transform:scale(1)} }
+
+/* Spin In */
+.anim-spin-in .scene-card { animation: sceneSpinIn 1.2s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneSpinIn { from{opacity:0;transform:rotate(-180deg) scale(.5)} to{opacity:1;transform:rotate(0deg) scale(1)} }
+
+/* Blur In */
+.anim-blur-in .scene-card { animation: sceneBlurIn 1.5s ease forwards; }
+@keyframes sceneBlurIn { from{opacity:0;filter:blur(30px)} to{opacity:1;filter:blur(0)} }
+
+/* Shake (continuous) */
+.anim-shake .scene-card { animation: sceneShake 0.5s ease-in-out infinite; }
+@keyframes sceneShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
+
+/* Flicker (neon effect) */
+.anim-flicker .scene-card { animation: sceneFlicker 4s ease-in-out infinite; }
+@keyframes sceneFlicker { 0%,100%{opacity:1} 5%{opacity:.8} 10%{opacity:1} 15%{opacity:.6} 20%{opacity:1} 50%{opacity:1} 55%{opacity:.85} 60%{opacity:1} 80%{opacity:1} 85%{opacity:.7} 90%{opacity:1} }
+
+/* Rubber Band */
+.anim-rubber-band .scene-card { animation: sceneRubberBand 1s ease forwards; }
+@keyframes sceneRubberBand {
+    0%{opacity:0;transform:scaleX(.3)}
+    30%{opacity:1;transform:scaleX(1.25)}
+    40%{transform:scaleX(.75)}
+    50%{transform:scaleX(1.15)}
+    65%{transform:scaleX(.95)}
+    75%{transform:scaleX(1.05)}
+    100%{transform:scaleX(1)}
+}
+
+/* Swing */
+.anim-swing .scene-card { transform-origin: top center; animation: sceneSwing 1.5s ease forwards; }
+@keyframes sceneSwing {
+    0%{opacity:0;transform:rotate(-90deg)}
+    40%{opacity:1;transform:rotate(20deg)}
+    55%{transform:rotate(-10deg)}
+    65%{transform:rotate(5deg)}
+    75%{transform:rotate(-3deg)}
+    100%{transform:rotate(0)}
+}
+
+/* Flip */
+.anim-flip .scene-card { animation: sceneFlip 1s cubic-bezier(.22,1,.36,1) forwards; perspective: 1200px; }
+@keyframes sceneFlip { from{opacity:0;transform:perspective(1200px) rotateY(-90deg)} to{opacity:1;transform:perspective(1200px) rotateY(0)} }
+
+/* Roll In */
+.anim-roll-in .scene-card { animation: sceneRollIn 1s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneRollIn { from{opacity:0;transform:translateX(-100%) rotate(-120deg)} to{opacity:1;transform:translateX(0) rotate(0)} }
+
+/* Typewriter (handled in JS — this just hides overflow) */
+.anim-typewriter .scene-card { }
+.anim-typewriter .scene-title { border-right: 3px solid var(--accent); overflow: hidden; white-space: nowrap; }
+
+/* Drop */
+.anim-drop .scene-card { animation: sceneDrop 0.8s cubic-bezier(.68,-.55,.27,1.55) forwards; }
+@keyframes sceneDrop { from{opacity:0;transform:translateY(-120px)} to{opacity:1;transform:translateY(0)} }
+
+/* Pop (scale from center) */
+.anim-pop .scene-card { animation: scenePop 0.6s cubic-bezier(.68,-.55,.27,1.55) forwards; }
+@keyframes scenePop { 0%{opacity:0;transform:scale(0)} 80%{transform:scale(1.08)} 100%{opacity:1;transform:scale(1)} }
+
+/* ─── Text Effects ─── */
+
+/* Glow */
+#overlay.text-fx-glow .scene-title { filter: drop-shadow(0 0 12px var(--accent)) drop-shadow(0 0 24px var(--accent)); }
+
+/* Neon Flicker */
+#overlay.text-fx-neon-flicker .scene-title { animation: textNeonFlicker 3s ease-in-out infinite; }
+@keyframes textNeonFlicker {
+    0%,100%{opacity:1;text-shadow:0 0 10px var(--accent),0 0 20px var(--accent)}
+    5%{opacity:.8} 10%{opacity:1} 15%{opacity:.6;text-shadow:none} 20%{opacity:1;text-shadow:0 0 10px var(--accent),0 0 20px var(--accent)}
+    50%{opacity:1;text-shadow:0 0 10px var(--accent),0 0 20px var(--accent)}
+    55%{opacity:.85} 60%{opacity:1}
+}
+
+/* Rainbow */
+#overlay.text-fx-rainbow .scene-title { animation: textRainbow 4s linear infinite; }
+@keyframes textRainbow { 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+
+/* Gradient Text */
+#overlay.text-fx-gradient .scene-title {
+    background: linear-gradient(135deg, var(--accent), var(--text1), var(--accent));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: textGradientShift 3s linear infinite;
+}
+@keyframes textGradientShift { to{background-position:200% center} }
+
+/* Outline */
+#overlay.text-fx-outline .scene-title {
+    -webkit-text-stroke: 2px var(--accent);
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+}
+
+/* Shadow Pulse */
+#overlay.text-fx-shadow-pulse .scene-title { animation: shadowPulse 2s ease-in-out infinite; }
+@keyframes shadowPulse {
+    0%,100%{text-shadow:2px 2px 0 var(--accent),4px 4px 0 rgba(0,0,0,.3)}
+    50%{text-shadow:4px 4px 0 var(--accent),8px 8px 0 rgba(0,0,0,.3)}
+}
+
+/* Blur Pulse */
+#overlay.text-fx-blur .scene-title { animation: textBlur 3s ease-in-out infinite; }
+@keyframes textBlur { 0%,100%{filter:blur(0)} 50%{filter:blur(2px)} }
+
+/* Glitch */
+#overlay.text-fx-glitch .scene-title { animation: textGlitch 3s infinite; position: relative; }
+@keyframes textGlitch {
+    0%,85%,100%{transform:none;text-shadow:none;clip-path:none}
+    87%{transform:skewX(-10deg) translateX(4px);text-shadow:-2px 0 var(--accent),2px 0 #0f0;clip-path:inset(0 0 70% 0)}
+    89%{transform:skewX(5deg) translateX(-4px);text-shadow:2px 0 var(--accent),-2px 0 #0f0;clip-path:inset(30% 0 30% 0)}
+    91%{transform:none;text-shadow:none;clip-path:none}
+}
+
+/* Wave */
+#overlay.text-fx-wave .scene-title { animation: textWave 2s ease-in-out infinite; }
+@keyframes textWave { 0%,100%{transform:skewX(0deg)} 25%{transform:skewX(3deg)} 75%{transform:skewX(-3deg)} }
+
+/* ─── Logo Effects ─── */
+#overlay.logo-fx-float .logo-img { animation: logoFloat 4s ease-in-out infinite; }
+@keyframes logoFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
+
+#overlay.logo-fx-pulse-glow .logo-img { animation: logoPulseGlow 2s ease-in-out infinite; }
+@keyframes logoPulseGlow {
+    0%,100%{filter:drop-shadow(0 0 0px var(--accent))}
+    50%{filter:drop-shadow(0 0 20px var(--accent)) drop-shadow(0 0 40px var(--accent))}
+}
+
+#overlay.logo-fx-spin .logo-img { animation: logoSpin 8s linear infinite; }
+@keyframes logoSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+#overlay.logo-fx-bounce .logo-img { animation: logoBounce 2s cubic-bezier(.36,.07,.19,.97) infinite; }
+@keyframes logoBounce { 0%,100%{transform:translateY(0)} 20%{transform:translateY(-20px)} 35%{transform:translateY(0)} 50%{transform:translateY(-10px)} 65%{transform:translateY(0)} }
+
+#overlay.logo-fx-shake .logo-img { animation: logoShake 0.6s ease-in-out infinite; }
+@keyframes logoShake { 0%,100%{transform:rotate(0deg)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
+
+#overlay.logo-fx-fade-pulse .logo-img { animation: logoFadePulse 3s ease-in-out infinite; }
+@keyframes logoFadePulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ═══════════════════════════════════════════════════════════════
+   DECORATIVE FRAME SYSTEM (injected by overlays-effects.js)
+═══════════════════════════════════════════════════════════════ */
+
+/* ─── Corner brackets ─── */
+.frame-corners { position:absolute; inset:0; pointer-events:none; z-index:10; }
+.frame-corners i { position:absolute; display:block; width:60px; height:60px; transition:opacity .3s; }
+.frame-corners i:nth-child(1) { top:32px;  left:32px;  border-top:3px solid var(--accent); border-left:3px solid var(--accent); }
+.frame-corners i:nth-child(2) { top:32px;  right:32px; border-top:3px solid var(--accent); border-right:3px solid var(--accent); }
+.frame-corners i:nth-child(3) { bottom:32px; left:32px;  border-bottom:3px solid var(--accent); border-left:3px solid var(--accent); }
+.frame-corners i:nth-child(4) { bottom:32px; right:32px; border-bottom:3px solid var(--accent); border-right:3px solid var(--accent); }
+/* Hidden by default — templates opt in */
+.frame-corners i { opacity:0; }
+
+/* ─── Diagonal stripe panels (esports / broadcast) ─── */
+.overlay-diag { position:absolute; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.overlay-diag span { position:absolute; top:0; height:100%; pointer-events:none; opacity:0; }
+.overlay-diag span:nth-child(1) { right:-5%; width:45%; background:linear-gradient(to left,color-mix(in srgb,var(--accent) 10%,transparent),transparent); clip-path:polygon(15% 0%,100% 0%,100% 100%,0% 100%); }
+.overlay-diag span:nth-child(2) { right:-5%; width:28%; background:linear-gradient(to left,color-mix(in srgb,var(--accent) 5%,transparent),transparent); clip-path:polygon(40% 0%,100% 0%,100% 100%,25% 100%); }
+
+/* ─── Cinematic letterbox ─── */
+.overlay-letterbox { position:absolute; inset:0; pointer-events:none; z-index:9; }
+.overlay-letterbox b { position:absolute; left:0; width:100%; background:#000; height:0; transition:height .5s; display:block; }
+.overlay-letterbox b:first-child { top:0; }
+.overlay-letterbox b:last-child  { bottom:0; }
+
+/* ─── Edge accent lines ─── */
+.overlay-edge-lines { position:absolute; inset:0; pointer-events:none; z-index:8; }
+.overlay-edge-lines s { position:absolute; left:0; width:100%; height:0; display:block; background:linear-gradient(90deg,transparent,var(--accent),transparent); opacity:0; }
+.overlay-edge-lines s:first-child { top:0; }
+.overlay-edge-lines s:last-child  { bottom:0; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW TEMPLATE: ESPORTS
+   Angular HUD with diagonal panels, corner brackets, bold type
+═══════════════════════════════════════════════════════════════ */
+#overlay.esports .overlay-diag span   { opacity:1; }
+#overlay.esports .frame-corners i     { opacity:1; }
+#overlay.esports .overlay-edge-lines s { opacity:.6; height:2px; }
+
+#overlay.esports .scene-card {
+    text-align:left; padding:48px 64px; position:relative;
+}
+#overlay.esports .scene-title {
+    font-size:96px; font-weight:900; color:var(--text1);
+    text-transform:uppercase; letter-spacing:4px; line-height:.95;
+    filter:drop-shadow(0 0 24px color-mix(in srgb,var(--accent) 40%,transparent));
+}
+#overlay.esports .scene-subtitle {
+    font-size:26px; color:var(--accent);
+    font-family:Rajdhani,'Chakra Petch',sans-serif;
+    letter-spacing:5px; text-transform:uppercase; margin-top:14px;
+}
+#overlay.esports .divider,
+#overlay.esports [class$="-bar"] {
+    width:100px; height:4px; background:var(--accent);
+    margin:20px 0; border-radius:0;
+    position:relative;
+}
+#overlay.esports .divider::after,
+#overlay.esports [class$="-bar"]::after {
+    content:''; position:absolute;
+    right:-18px; top:50%; transform:translateY(-50%);
+    width:10px; height:10px; background:var(--accent);
+    clip-path:polygon(0% 50%,50% 0%,100% 50%,50% 100%);
+}
+#overlay.esports .countdown-display {
+    font-size:120px; font-weight:900; color:var(--accent);
+    letter-spacing:8px; font-family:Orbitron,sans-serif;
+    filter:drop-shadow(0 0 30px color-mix(in srgb,var(--accent) 60%,transparent));
+}
+#overlay.esports .social-row { justify-content:flex-start; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW TEMPLATE: VAPORWAVE
+   Retrowave grid, neon lines, chrome text
+═══════════════════════════════════════════════════════════════ */
+#overlay.vaporwave::before {
+    content:''; position:absolute; bottom:0; left:0; width:100%; height:55%;
+    background:
+        linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);
+    background-size:80px 80px;
+    transform:perspective(400px) rotateX(60deg);
+    transform-origin:bottom center;
+    pointer-events:none; z-index:0;
+}
+#overlay.vaporwave::after {
+    content:''; position:absolute; top:40%; left:0; width:100%; height:3px;
+    background:linear-gradient(90deg,transparent,var(--accent),color-mix(in srgb,var(--accent) 50%,#ff00ff),var(--accent),transparent);
+    box-shadow:0 0 20px var(--accent),0 0 40px var(--accent);
+    pointer-events:none; z-index:1;
+    animation:vwScan 4s ease-in-out infinite;
+}
+@keyframes vwScan { 0%,100%{opacity:.6;transform:scaleX(.8)} 50%{opacity:1;transform:scaleX(1)} }
+
+#overlay.vaporwave .frame-corners i { opacity:1; }
+#overlay.vaporwave .frame-corners i { width:40px; height:40px; }
+
+#overlay.vaporwave .scene-card { text-align:center; z-index:2; }
+#overlay.vaporwave .scene-title {
+    font-size:88px; font-weight:900; letter-spacing:6px;
+    background:linear-gradient(180deg,#fff 0%,color-mix(in srgb,var(--accent) 80%,#ff00ff) 50%,var(--accent) 100%);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    text-transform:uppercase;
+    filter:drop-shadow(0 0 20px color-mix(in srgb,var(--accent) 50%,#ff00ff));
+}
+#overlay.vaporwave .scene-subtitle {
+    font-size:24px; color:var(--text2); font-family:Syncopate,sans-serif;
+    letter-spacing:8px; text-transform:uppercase; margin-top:16px;
+}
+#overlay.vaporwave .divider,
+#overlay.vaporwave [class$="-bar"] {
+    width:60%; height:1px; margin:24px auto;
+    background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 80%,#ff00ff),transparent);
+    box-shadow:0 0 10px var(--accent);
+}
+#overlay.vaporwave .countdown-display {
+    font-size:100px; font-weight:900;
+    background:linear-gradient(135deg,#fff,var(--accent));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    filter:drop-shadow(0 0 20px color-mix(in srgb,var(--accent) 60%,transparent));
+    letter-spacing:6px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW TEMPLATE: GLASS
+   Frosted glassmorphism card, gradient border, clean
+═══════════════════════════════════════════════════════════════ */
+#overlay.glass .scene-card {
+    background:rgba(255,255,255,.07);
+    backdrop-filter:blur(24px) saturate(180%);
+    -webkit-backdrop-filter:blur(24px) saturate(180%);
+    border-radius:24px;
+    padding:64px 88px;
+    text-align:center;
+    position:relative;
+    /* animated gradient border */
+    border:1px solid rgba(255,255,255,.2);
+    box-shadow:
+        0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent),
+        0 24px 80px rgba(0,0,0,.4),
+        inset 0 1px 0 rgba(255,255,255,.15);
+}
+#overlay.glass .scene-card::before {
+    content:''; position:absolute; inset:-1px; border-radius:24px;
+    background:linear-gradient(135deg,
+        color-mix(in srgb,var(--accent) 60%,transparent),
+        transparent 40%,
+        transparent 60%,
+        color-mix(in srgb,var(--accent) 30%,transparent));
+    z-index:-1; pointer-events:none;
+    animation:glassBorderSpin 6s linear infinite;
+}
+@keyframes glassBorderSpin { from{filter:hue-rotate(0deg)} to{filter:hue-rotate(360deg)} }
+#overlay.glass .scene-title {
+    font-size:76px; font-weight:900; color:var(--text1);
+    letter-spacing:3px; text-shadow:0 2px 20px rgba(0,0,0,.5);
+}
+#overlay.glass .scene-subtitle {
+    font-size:26px; color:var(--text2); font-family:Poppins,sans-serif;
+    margin-top:14px;
+}
+#overlay.glass .divider,
+#overlay.glass [class$="-bar"] {
+    width:160px; height:2px; margin:28px auto;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    border-radius:2px;
+}
+#overlay.glass .countdown-display {
+    font-size:100px; font-weight:700; color:var(--accent);
+    text-shadow:0 0 40px color-mix(in srgb,var(--accent) 50%,transparent);
+    margin:20px 0;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW TEMPLATE: CINEMATIC
+   Letterbox bars, elegant wide layout, film aesthetic
+═══════════════════════════════════════════════════════════════ */
+#overlay.cinematic .overlay-letterbox b { height:90px; }
+#overlay.cinematic .overlay-letterbox b:first-child { box-shadow:0 2px 0 color-mix(in srgb,var(--accent) 60%,transparent); }
+#overlay.cinematic .overlay-letterbox b:last-child  { box-shadow:0 -2px 0 color-mix(in srgb,var(--accent) 60%,transparent); }
+
+#overlay.cinematic .scene-card { text-align:center; padding:0 100px; }
+#overlay.cinematic .scene-title {
+    font-size:82px; font-weight:900; color:var(--text1);
+    letter-spacing:12px; text-transform:uppercase;
+    font-family:Cinzel,'Cormorant Garamond',serif;
+}
+#overlay.cinematic .scene-subtitle {
+    font-size:22px; color:var(--text2); letter-spacing:6px;
+    text-transform:uppercase; font-family:Poppins,sans-serif;
+    margin-top:14px;
+}
+#overlay.cinematic .divider,
+#overlay.cinematic [class$="-bar"] {
+    width:300px; height:1px; margin:28px auto;
+    background:linear-gradient(90deg,transparent,var(--text2),transparent);
+}
+#overlay.cinematic .countdown-display {
+    font-size:88px; font-weight:700; color:var(--accent);
+    font-family:Cinzel,serif; letter-spacing:8px; margin:20px 0;
+}
+/* Decorative dots flanking divider */
+#overlay.cinematic .divider::before,
+#overlay.cinematic .divider::after {
+    content:'◆'; position:absolute; top:50%; transform:translateY(-50%);
+    color:var(--accent); font-size:12px;
+}
+#overlay.cinematic .divider::before { left:-24px; }
+#overlay.cinematic .divider::after  { right:-24px; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW TEMPLATE: BROADCAST
+   Live TV / news broadcast aesthetic, lower-third accent
+═══════════════════════════════════════════════════════════════ */
+#overlay.broadcast .overlay-edge-lines s:last-child { opacity:1; height:4px; }
+#overlay.broadcast .frame-corners i { opacity:1; width:40px; height:40px; }
+
+#overlay.broadcast .scene-card {
+    text-align:left;
+    border-left:6px solid var(--accent);
+    padding:40px 56px;
+    position:relative;
+    background:linear-gradient(90deg,rgba(0,0,0,.45),transparent);
+}
+#overlay.broadcast .scene-title {
+    font-size:84px; font-weight:900; color:var(--text1);
+    letter-spacing:2px; line-height:1;
+    text-shadow:2px 2px 0 rgba(0,0,0,.6);
+}
+#overlay.broadcast .scene-subtitle {
+    font-size:28px; color:var(--accent);
+    font-family:Rajdhani,'Space Grotesk',sans-serif;
+    font-weight:600; letter-spacing:3px;
+    text-transform:uppercase; margin-top:12px;
+}
+#overlay.broadcast .divider,
+#overlay.broadcast [class$="-bar"] {
+    width:200px; height:4px; background:var(--accent);
+    margin:18px 0; border-radius:0;
+}
+#overlay.broadcast .countdown-display {
+    font-size:110px; font-weight:900; color:var(--text1);
+    letter-spacing:6px;
+    text-shadow:0 0 20px color-mix(in srgb,var(--accent) 50%,transparent);
+}
+#overlay.broadcast .social-row { justify-content:flex-start; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ENHANCED EXISTING TEMPLATES — upgraded with frame decorations
+═══════════════════════════════════════════════════════════════ */
+
+/* Neon — animated border glow pulse */
+#overlay.neon .frame-corners i { opacity:1; animation:neonCornerPulse 2s ease-in-out infinite; }
+@keyframes neonCornerPulse { 0%,100%{opacity:.5;box-shadow:none} 50%{opacity:1} }
+#overlay.neon .overlay-edge-lines s { opacity:.4; height:1px; animation:neonEdgePulse 2s ease-in-out infinite; }
+@keyframes neonEdgePulse { 0%,100%{opacity:.2} 50%{opacity:.7} }
+
+/* Gaming — corner brackets + edge lines */
+#overlay.gaming .frame-corners i { opacity:.8; width:80px; height:80px; }
+#overlay.gaming .frame-corners i:nth-child(1),
+#overlay.gaming .frame-corners i:nth-child(2) { top:24px; }
+#overlay.gaming .frame-corners i:nth-child(3),
+#overlay.gaming .frame-corners i:nth-child(4) { bottom:24px; }
+#overlay.gaming .frame-corners i:nth-child(1),
+#overlay.gaming .frame-corners i:nth-child(3) { left:24px; }
+#overlay.gaming .frame-corners i:nth-child(2),
+#overlay.gaming .frame-corners i:nth-child(4) { right:24px; }
+#overlay.gaming .overlay-edge-lines s { opacity:.5; height:2px; }
+
+/* Retro — full border + corners to match CRT style */
+#overlay.retro .frame-corners i { opacity:.35; border-color:var(--accent); width:50px; height:50px; }
+#overlay.retro .overlay-edge-lines s { opacity:.3; height:1px; }
+
+/* Cozy — soft warm inner glow at edges */
+#overlay.cozy .overlay-edge-lines s:first-child { opacity:.25; height:1px; }
+#overlay.cozy .overlay-edge-lines s:last-child { opacity:.25; height:1px; }
+#overlay.cozy .frame-corners i { opacity:.2; width:32px; height:32px; }
+
+/* Gradient — animated edge shimmer */
+#overlay.gradient .overlay-edge-lines s { opacity:.3; height:1px; animation:gradEdgePulse 4s ease-in-out infinite; }
+@keyframes gradEdgePulse { 0%,100%{opacity:.15} 50%{opacity:.5} }
+
+/* Minimal — subtle corner marks only */
+#overlay.minimal .frame-corners i { opacity:.12; width:28px; height:28px; }
+
+/* Gaming — add inner radial pulse for more drama */
+#overlay.gaming .frame-corners i { animation:gamingCornerPulse 2.5s ease-in-out infinite; }
+@keyframes gamingCornerPulse { 0%,100%{opacity:.6;filter:none} 50%{opacity:1;filter:drop-shadow(0 0 8px var(--accent))} }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   FEATURED PEOPLE — bottom-left panel
+═══════════════════════════════════════════════════════════════ */
+
+.ov-featured-people {
+    position: absolute; bottom: 120px; left: 48px; z-index: 10;
+    display: flex; gap: 20px; pointer-events: none;
+}
+.ov-fp-card {
+    display: flex; align-items: center; gap: 14px;
+    background: rgba(0,0,0,.55); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,.12); border-radius: 12px;
+    padding: 12px 20px;
+    border-left: 3px solid var(--accent, #7c3aed);
+    animation: fpSlideIn .6s ease forwards;
+    opacity: 0;
+}
+.ov-fp-card:nth-child(2) { animation-delay: .12s; }
+.ov-fp-card:nth-child(3) { animation-delay: .24s; }
+@keyframes fpSlideIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+.ov-fp-avatar {
+    width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--accent, #7c3aed);
+    background: rgba(255,255,255,.08);
+    flex-shrink: 0;
+}
+.ov-fp-info { display: flex; flex-direction: column; gap: 2px; }
+.ov-fp-name {
+    font-family: var(--font, 'Orbitron'), sans-serif;
+    font-size: 22px; font-weight: 700; color: var(--text1, #fff); letter-spacing: 1px;
+}
+.ov-fp-role {
+    font-family: Poppins, sans-serif;
+    font-size: 16px; color: var(--accent, #7c3aed); letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GAMES LIST — top-right panel
+═══════════════════════════════════════════════════════════════ */
+
+.ov-games-list {
+    position: absolute; top: 48px; right: 48px; z-index: 10;
+    display: flex; flex-direction: column; gap: 12px;
+    pointer-events: none; align-items: flex-end;
+}
+.ov-game-item {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(0,0,0,.55); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,.12); border-radius: 10px;
+    padding: 10px 18px;
+    border-right: 3px solid var(--accent, #7c3aed);
+    animation: gmSlideIn .6s ease forwards;
+    opacity: 0;
+}
+.ov-game-item:nth-child(2) { animation-delay: .1s; }
+.ov-game-item:nth-child(3) { animation-delay: .2s; }
+@keyframes gmSlideIn { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
+
+.ov-game-icon { font-size: 22px; line-height: 1; }
+.ov-game-name {
+    font-family: var(--font, 'Orbitron'), sans-serif;
+    font-size: 20px; font-weight: 700; color: var(--text1, #fff); letter-spacing: 1px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BRANDING BAR — absolute bottom strip
+═══════════════════════════════════════════════════════════════ */
+
+.ov-branding-bar {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 20;
+    height: 32px; display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: rgba(0,0,0,.55); backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(255,255,255,.06);
+    font-family: Poppins, sans-serif; font-size: 13px; color: rgba(255,255,255,.45);
+    letter-spacing: .5px; pointer-events: none; white-space: nowrap; overflow: hidden;
+}
+.ov-branding-bar .ov-brand-logo {
+    font-family: Orbitron, sans-serif; font-size: 12px; font-weight: 700;
+    color: #e53e3e; letter-spacing: 1.5px; white-space: nowrap;
+}
+.ov-branding-bar .ov-brand-sep { opacity: .3; flex-shrink: 0; }
+.ov-branding-bar .ov-brand-url { font-size: 12px; color: rgba(255,255,255,.35); white-space: nowrap; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW SCENE ANIMATIONS
+═══════════════════════════════════════════════════════════════ */
+
+/* Slide Up (from below) */
+.anim-slide-up .scene-card { animation: sceneSlideUp 1s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneSlideUp { from{opacity:0;transform:translateY(100px)} to{opacity:1;transform:translateY(0)} }
+
+/* Slide Down (from above) */
+.anim-slide-down .scene-card { animation: sceneSlideDown 1s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneSlideDown { from{opacity:0;transform:translateY(-100px)} to{opacity:1;transform:translateY(0)} }
+
+/* Slide Left (from right side) */
+.anim-slide-left .scene-card { animation: sceneSlideLeft 1s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneSlideLeft { from{opacity:0;transform:translateX(100px)} to{opacity:1;transform:translateX(0)} }
+
+/* Jello (elastic wobbly entry) */
+.anim-jello .scene-card { animation: sceneJello 1.2s ease forwards; }
+@keyframes sceneJello {
+    0%{opacity:0;transform:scale(.8)}
+    25%{opacity:1;transform:scale(1.15) skewX(-10deg) skewY(-2deg)}
+    40%{transform:scale(.9) skewX(8deg) skewY(2deg)}
+    55%{transform:scale(1.07) skewX(-4deg)}
+    70%{transform:scale(.97) skewX(2deg)}
+    85%{transform:scale(1.02)}
+    100%{opacity:1;transform:scale(1) skewX(0) skewY(0)}
+}
+
+/* Heartbeat (continuous double-pump) */
+.anim-heartbeat .scene-card { animation: sceneHeartbeat 1.2s ease-in-out infinite; }
+@keyframes sceneHeartbeat {
+    0%,100%{transform:scale(1)} 14%{transform:scale(1.07)} 28%{transform:scale(1)}
+    42%{transform:scale(1.04)} 56%{transform:scale(1)}
+}
+
+/* Breathe (slow subtle scale) */
+.anim-breathe .scene-card { animation: sceneBreathe 5s ease-in-out infinite; }
+@keyframes sceneBreathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.025)} }
+
+/* Sway (gentle rotation) */
+.anim-sway .scene-card { animation: sceneSway 4s ease-in-out infinite; transform-origin: center bottom; }
+@keyframes sceneSway { 0%,100%{transform:rotate(0deg)} 25%{transform:rotate(1.5deg)} 75%{transform:rotate(-1.5deg)} }
+
+/* TV On (horizontal line expand) */
+.anim-tv-on .scene-card { animation: sceneTvOn 0.7s ease forwards; }
+@keyframes sceneTvOn {
+    0%{opacity:0;transform:scaleY(0) scaleX(0)}
+    20%{opacity:1;transform:scaleY(0.01) scaleX(1.2)}
+    50%{transform:scaleY(1.08) scaleX(1)}
+    70%{transform:scaleY(0.96)}
+    100%{transform:scaleY(1) scaleX(1)}
+}
+
+/* Unfold (expand from flat line) */
+.anim-unfold .scene-card { transform-origin:center; animation:sceneUnfold .9s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneUnfold { from{opacity:0;transform:scaleY(0)} 60%{opacity:1} to{opacity:1;transform:scaleY(1)} }
+
+/* Tilt In (3D perspective from above) */
+.anim-tilt-in .scene-card { animation:sceneTiltIn 1s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneTiltIn { from{opacity:0;transform:perspective(800px) rotateX(50deg) translateY(60px)} to{opacity:1;transform:perspective(800px) rotateX(0) translateY(0)} }
+
+/* Nod (gentle vertical float) */
+.anim-nod .scene-card { animation:sceneNod 2.5s ease-in-out infinite; }
+@keyframes sceneNod { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+
+/* Spin Y (horizontal flip in) */
+.anim-spin-y .scene-card { animation:sceneSpinY 1s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneSpinY { from{opacity:0;transform:perspective(800px) rotateY(90deg)} to{opacity:1;transform:perspective(800px) rotateY(0)} }
+
+/* Glide (slow horizontal drift) */
+.anim-glide .scene-card { animation:sceneGlide 4s ease-in-out infinite; }
+@keyframes sceneGlide { 0%,100%{transform:translateX(0)} 50%{transform:translateX(18px)} }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW TEXT EFFECTS
+═══════════════════════════════════════════════════════════════ */
+
+/* Fire */
+#overlay.text-fx-fire .scene-title {
+    color:#ff6600;
+    text-shadow:0 0 10px #ff6600,0 0 30px #ff3300,0 0 60px #ff0000;
+    animation:textFire 1.5s ease-in-out infinite alternate;
+}
+@keyframes textFire {
+    from{text-shadow:0 0 10px #ff6600,0 0 30px #ff3300,0 0 60px #ff0000}
+    to{text-shadow:0 0 20px #ff9900,0 0 45px #ff6600,0 0 90px #ff3300}
+}
+
+/* Ice */
+#overlay.text-fx-ice .scene-title {
+    color:#a8eeff;
+    text-shadow:0 0 12px #00ccff,0 0 28px #0088ff,0 0 50px rgba(0,150,255,.4);
+    animation:textIce 3s ease-in-out infinite;
+}
+@keyframes textIce { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.15) hue-rotate(10deg)} }
+
+/* Gold Shimmer */
+#overlay.text-fx-gold .scene-title {
+    background:linear-gradient(90deg,#b8860b,#ffd700,#fff8dc,#ffd700,#b8860b);
+    background-size:300% auto;
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    animation:textGold 2s linear infinite;
+}
+@keyframes textGold { to{background-position:300% center} }
+
+/* Chromatic Aberration */
+#overlay.text-fx-chromatic .scene-title { animation:textChromatic 0.12s steps(1) infinite; }
+@keyframes textChromatic {
+    0%,100%{text-shadow:-2px 0 #ff0000,2px 0 #0000ff}
+    33%{text-shadow:-3px 0 #ff0044,3px 0 #00ff44}
+    66%{text-shadow:2px 0 #ff00aa,-2px 0 #00ffff}
+}
+
+/* Hologram */
+#overlay.text-fx-hologram .scene-title {
+    color:#00ffcc;
+    text-shadow:0 0 8px #00ffcc,0 0 16px #00ffcc;
+    animation:textHologram 2s ease-in-out infinite;
+}
+@keyframes textHologram {
+    0%,100%{opacity:1;filter:brightness(1)}
+    20%{opacity:.85;filter:brightness(1.4) hue-rotate(15deg)}
+    50%{opacity:1;text-shadow:0 0 20px #00ffcc,0 0 40px #00ffcc;filter:brightness(1.6)}
+    80%{opacity:.9;filter:brightness(.9) hue-rotate(-10deg)}
+}
+
+/* Pulse Scale */
+#overlay.text-fx-pulse-scale .scene-title { animation:textPulseScale 1.8s ease-in-out infinite; }
+@keyframes textPulseScale { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+
+/* Neon Sign (intense flicker glow) */
+#overlay.text-fx-neon-sign .scene-title {
+    text-shadow:0 0 7px #fff,0 0 10px #fff,0 0 21px var(--accent),0 0 42px var(--accent),0 0 82px var(--accent);
+    animation:textNeonSign 3s ease-in-out infinite;
+}
+@keyframes textNeonSign {
+    0%,19.9%,21.1%,22.9%,24.1%,54.9%,56.1%,100%{
+        text-shadow:0 0 7px #fff,0 0 10px #fff,0 0 21px var(--accent),0 0 42px var(--accent),0 0 82px var(--accent);opacity:1;
+    }
+    20%,23%,55%{text-shadow:none;opacity:.6;}
+}
+
+/* TV Static */
+#overlay.text-fx-static .scene-title { animation:textStatic .12s steps(1) infinite; }
+@keyframes textStatic {
+    0%{transform:translate(0,0)}10%{transform:translate(-2px,1px)}
+    20%{transform:translate(2px,-1px)}30%{transform:translate(0,0)}
+    40%{transform:translate(1px,2px)}50%{transform:translate(-2px,-1px)}
+    60%{transform:translate(0,0)}70%{transform:translate(2px,0)}
+    80%{transform:translate(-1px,1px)}100%{transform:translate(0,0)}
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW LOGO EFFECTS
+═══════════════════════════════════════════════════════════════ */
+
+#overlay.logo-fx-swing .logo-img { transform-origin:top center;animation:logoSwing 3.5s ease-in-out infinite; }
+@keyframes logoSwing { 0%,100%{transform:rotate(0deg)} 25%{transform:rotate(12deg)} 75%{transform:rotate(-12deg)} }
+
+#overlay.logo-fx-zoom-pulse .logo-img { animation:logoZoomPulse 2.5s ease-in-out infinite; }
+@keyframes logoZoomPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.14)} }
+
+#overlay.logo-fx-color-shift .logo-img { animation:logoColorShift 4s linear infinite; }
+@keyframes logoColorShift { from{filter:hue-rotate(0deg)} to{filter:hue-rotate(360deg)} }
+
+#overlay.logo-fx-flicker .logo-img { animation:logoFlicker 3s ease-in-out infinite; }
+@keyframes logoFlicker { 0%,82%,84%,86%,91%,100%{opacity:1} 83%,85%,87%,90%{opacity:.3} }
+
+#overlay.logo-fx-glow-trail .logo-img { animation:logoGlowTrail 2s ease-in-out infinite; }
+@keyframes logoGlowTrail {
+    0%,100%{filter:drop-shadow(0 0 4px var(--accent))}
+    50%{filter:drop-shadow(0 0 20px var(--accent)) drop-shadow(0 12px 24px var(--accent))}
+}
+
+#overlay.logo-fx-morph-glow .logo-img { animation:logoMorphGlow 3s ease-in-out infinite; }
+@keyframes logoMorphGlow {
+    0%,100%{filter:drop-shadow(0 0 5px var(--accent)) brightness(1)}
+    33%{filter:drop-shadow(0 0 18px var(--accent)) brightness(1.2) hue-rotate(20deg)}
+    66%{filter:drop-shadow(0 0 10px var(--accent)) brightness(.9) hue-rotate(-15deg)}
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   OVERLAY EXTRAS — Vignette · Scanlines · Frame
+═══════════════════════════════════════════════════════════════ */
+
+.ov-vignette {
+    position:absolute;inset:0;pointer-events:none;z-index:7;
+    background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.82) 100%);
+}
+.ov-vignette.soft { background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65) 100%); }
+.ov-scanlines {
+    position:absolute;inset:0;pointer-events:none;z-index:8;
+    background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.09) 3px,rgba(0,0,0,.09) 4px);
+}
+.ov-frame-hud .frame-corners i {
+    opacity:1 !important; width:80px !important; height:80px !important;
+    animation:hudCornerSpin 3s linear infinite;
+}
+@keyframes hudCornerSpin { 0%,100%{border-color:var(--ov-frame-color,var(--accent));opacity:1} 50%{opacity:.5} }
+.ov-frame-show .frame-corners i { opacity:1 !important; border-color:var(--ov-frame-color,var(--accent)); }
+.ov-frame-show .overlay-edge-lines s { opacity:.5; height:2px; background:linear-gradient(90deg,transparent,var(--ov-frame-color,var(--accent)),transparent); }
+.ov-frame-hide .frame-corners i { opacity:0 !important; }
+.ov-frame-hide .overlay-edge-lines s { opacity:0 !important; }
+
+/* Corner sizes */
+.ov-corners-sm .frame-corners i { width:36px !important; height:36px !important; }
+.ov-corners-lg .frame-corners i { width:90px !important; height:90px !important; }
+
+/* ─── New Scene Animations ─── */
+
+/* Wipe — content reveals behind a sweeping bar */
+.anim-wipe .scene-card { animation: sceneWipe 1s cubic-bezier(.22,1,.36,1) forwards; clip-path: inset(0 100% 0 0); }
+@keyframes sceneWipe { to { clip-path: inset(0 0% 0 0); } }
+
+/* Flip 3D — perspective Y-axis flip */
+.anim-flip-3d { perspective: 1200px; }
+.anim-flip-3d .scene-card { animation: sceneFlip3D 1s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneFlip3D { from { opacity:0; transform: rotateY(-90deg) scale(.8); } to { opacity:1; transform: rotateY(0deg) scale(1); } }
+
+/* Spiral — spins and scales in */
+.anim-spiral .scene-card { animation: sceneSpiral 1.1s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneSpiral { from { opacity:0; transform: rotate(-360deg) scale(0); } to { opacity:1; transform: rotate(0deg) scale(1); } }
+
+/* Glitch-in — flickers then snaps */
+.anim-glitch-in .scene-card { animation: sceneGlitchIn 1.2s steps(1) forwards; }
+@keyframes sceneGlitchIn {
+  0%{opacity:0;transform:translate(-8px,4px) skewX(6deg)}
+  20%{opacity:.7;transform:translate(6px,-4px) skewX(-4deg)}
+  35%{opacity:0;transform:translate(-10px,6px) skewX(8deg)}
+  50%{opacity:.8;transform:translate(4px,-2px) skewX(-2deg)}
+  65%{opacity:0;transform:translate(-4px,8px)}
+  80%{opacity:1;transform:translate(2px,-1px)}
+  100%{opacity:1;transform:none}
+}
+
+/* Pixel-in — pixelated zoom in */
+.anim-pixel-in .scene-card { animation: scenePixelIn .9s steps(8) forwards; }
+@keyframes scenePixelIn { from { opacity:0; transform:scale(1.6); filter:blur(12px) contrast(2); } to { opacity:1; transform:scale(1); filter:none; } }
+
+/* Zoom-blur — zooms in with motion blur */
+.anim-zoom-blur .scene-card { animation: sceneZoomBlur .8s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneZoomBlur { from { opacity:0; transform:scale(1.5); filter:blur(20px); } to { opacity:1; transform:scale(1); filter:none; } }
+
+/* Shatter — scale and snap in */
+.anim-shatter .scene-card { animation: sceneShatter 1s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneShatter {
+  0%{opacity:0;transform:scale(1.4) skewX(10deg);filter:blur(8px)}
+  40%{opacity:.6;transform:scale(.95) skewX(-3deg);filter:blur(2px)}
+  70%{transform:scale(1.02) skewX(1deg);filter:none}
+  100%{opacity:1;transform:scale(1);filter:none}
+}
+
+/* Cinematic — letterbox slide + fade */
+.anim-cinematic .scene-card { animation: sceneCinematic 1.4s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneCinematic { from { opacity:0; transform:scale(1.06); filter:brightness(.4); } to { opacity:1; transform:scale(1); filter:brightness(1); } }
+
+
+/* ─── Scene Alert Card (initSceneAlerts) ─── */
+.scene-alert-card {
+    position: absolute; z-index: 9999;
+    background: rgba(10,10,20,0.92); border: 1px solid #7c3aed;
+    border-radius: 10px; padding: 14px 22px; min-width: 260px; max-width: 420px;
+    opacity: 0; transform: translateX(120%); transition: opacity 0.4s ease, transform 0.4s cubic-bezier(.22,1,.36,1);
+    pointer-events: none; box-shadow: 0 0 24px rgba(124,58,237,0.35);
+}
+.scene-alert-card.sa-visible { opacity: 1; transform: translateX(0); }
+.scene-alert-card .sa-label {
+    font-size: 10px; color: #7c3aed; font-family: Orbitron, sans-serif;
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px;
+}
+.scene-alert-card .sa-msg {
+    font-size: 20px; color: #ffffff; font-family: Orbitron, sans-serif; font-weight: 700;
+}
+
+/* ─── New Scene Animations ─── */
+#overlay.anim-morph .scene-card { animation: sceneMorph 1s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes sceneMorph { 0%{opacity:0;border-radius:50%;transform:scale(.5)} 60%{border-radius:20%} 100%{opacity:1;border-radius:0;transform:scale(1)} }
+
+#overlay.anim-levitate .scene-card { animation: sceneLevitate 4s ease-in-out infinite; }
+@keyframes sceneLevitate { 0%,100%{transform:translateY(0);filter:drop-shadow(0 8px 20px rgba(0,0,0,.3))} 50%{transform:translateY(-12px);filter:drop-shadow(0 20px 30px rgba(0,0,0,.5))} }
+
+#overlay.anim-scan-reveal .scene-card { animation: sceneScanReveal .8s ease forwards; }
+@keyframes sceneScanReveal { 0%{clip-path:inset(0 0 100% 0)} 100%{clip-path:inset(0 0 0% 0)} }
+
+#overlay.anim-neon-boot .scene-card { animation: sceneNeonBoot 1.2s steps(1) forwards; }
+@keyframes sceneNeonBoot {
+    0%{opacity:0;filter:brightness(0)} 10%{opacity:1;filter:brightness(3)} 15%{opacity:.1} 25%{opacity:1;filter:brightness(2)} 30%{opacity:.3} 40%{opacity:1;filter:brightness(1.5)} 50%{opacity:.6} 60%{opacity:1;filter:brightness(1.2)} 80%{filter:brightness(1)} 100%{opacity:1;filter:brightness(1)}
+}
+
+/* ─── New Logo Effects ─── */
+#overlay.logo-fx-swing .logo-img { transform-origin: top center; animation: logoSwing 2s ease-in-out infinite; }
+@keyframes logoSwing { 0%,100%{transform:rotate(0deg)} 25%{transform:rotate(12deg)} 75%{transform:rotate(-12deg)} }
+
+#overlay.logo-fx-glitch .logo-img { animation: logoGlitch 3s infinite; }
+@keyframes logoGlitch {
+    0%,90%,100%{transform:none;filter:none}
+    92%{transform:translateX(-4px);filter:drop-shadow(4px 0 #f00) drop-shadow(-4px 0 #0ff)}
+    94%{transform:translateX(4px);filter:drop-shadow(-4px 0 #f00) drop-shadow(4px 0 #0ff)}
+    96%{transform:none;filter:none}
+    98%{transform:translateX(-2px);filter:drop-shadow(2px 0 #f00)}
+}
+
+#overlay.logo-fx-rainbow-glow .logo-img { animation: logoRainbowGlow 3s linear infinite; }
+@keyframes logoRainbowGlow { 0%{filter:drop-shadow(0 0 12px #f00)} 17%{filter:drop-shadow(0 0 12px #ff0)} 33%{filter:drop-shadow(0 0 12px #0f0)} 50%{filter:drop-shadow(0 0 12px #0ff)} 67%{filter:drop-shadow(0 0 12px #00f)} 83%{filter:drop-shadow(0 0 12px #f0f)} 100%{filter:drop-shadow(0 0 12px #f00)} }
+
+#overlay.logo-fx-heartbeat .logo-img { animation: logoHeartbeat 1.2s ease-in-out infinite; }
+@keyframes logoHeartbeat { 0%,100%{transform:scale(1)} 14%{transform:scale(1.1)} 28%{transform:scale(1)} 42%{transform:scale(1.15)} 70%{transform:scale(1)} }
+
+/* ─── New Text Effects ─── */
+#overlay.text-fx-fire .scene-title {
+    background: linear-gradient(to top, #ff6600, #ffcc00, #fff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    animation: textFireNew 1.5s ease-in-out infinite;
+}
+@keyframes textFireNew { 0%,100%{filter:blur(0)} 50%{filter:blur(1px) brightness(1.2)} }
+
+#overlay.text-fx-hologram .scene-title {
+    color: #4fffb0 !important; text-shadow: 0 0 8px #4fffb0, 0 0 20px #00ffcc;
+    animation: textHologramNew 3s linear infinite;
+}
+@keyframes textHologramNew {
+    0%,100%{clip-path:none;opacity:1} 10%{clip-path:inset(40% 0 40% 0)} 11%{clip-path:none}
+    20%{clip-path:inset(70% 0 20% 0)} 21%{clip-path:none} 80%{opacity:1} 82%{opacity:.6} 84%{opacity:1}
+}
+
+#overlay.text-fx-stamp .scene-title {
+    -webkit-text-stroke: 3px var(--accent); -webkit-text-fill-color: transparent;
+    animation: textStamp 2s ease-in-out infinite;
+}
+@keyframes textStamp { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(.92)} }
+
+/* ═══════════════════════════════════════════════════════════════
+   NEW TEMPLATE: LO-FI
+   Warm sepia tones, soft gradients, chill streamer aesthetic
+   Perfect for study streams, chill music, just-chatting
+═══════════════════════════════════════════════════════════════ */
+#overlay.lofi {
+    --lf-warm: #e8c17a;
+    --lf-amber: #d4915a;
+    --lf-cream: #f5e6c8;
+    --lf-shadow: rgba(80,40,10,.6);
+}
+
+/* Warm dust overlay */
+#overlay.lofi::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+    background:
+        radial-gradient(ellipse at 20% 80%, rgba(232,193,122,.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(212,145,90,.10) 0%, transparent 50%);
+}
+
+/* Subtle grain texture */
+#overlay.lofi::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='.06'/%3E%3C/svg%3E");
+    opacity: .5;
+}
+
+#overlay.lofi .scene-card {
+    text-align: center; padding: 56px 80px; position: relative; z-index: 3;
+    background: rgba(245,230,200,.06);
+    border-radius: 24px;
+    border: 1px solid rgba(232,193,122,.2);
+    box-shadow: 0 24px 80px var(--lf-shadow), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+/* Warm top border glow */
+#overlay.lofi .scene-card::before {
+    content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--lf-warm), transparent);
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(232,193,122,.4);
+}
+
+#overlay.lofi .scene-title {
+    font-size: 72px; font-weight: 700; letter-spacing: 2px;
+    color: var(--lf-cream);
+    text-shadow: 0 2px 20px var(--lf-shadow), 0 0 40px rgba(232,193,122,.2);
+    font-family: Pacifico, 'Lobster', cursive;
+    line-height: 1.1;
+}
+
+#overlay.lofi .scene-subtitle {
+    font-size: 24px; color: var(--lf-warm);
+    font-family: Poppins, sans-serif;
+    font-weight: 400; letter-spacing: 1px;
+    margin-top: 14px; opacity: .85;
+}
+
+#overlay.lofi .divider,
+#overlay.lofi [class$="-bar"] {
+    width: 160px; height: 2px; margin: 24px auto;
+    background: linear-gradient(90deg, transparent, var(--lf-warm), transparent);
+    border-radius: 2px; opacity: .6;
+}
+
+#overlay.lofi .countdown-display {
+    font-size: 96px; font-weight: 700; letter-spacing: 4px;
+    color: var(--lf-amber);
+    text-shadow: 0 0 30px rgba(212,145,90,.4);
+    font-family: Pacifico, cursive;
+    margin: 24px 0;
+}
+
+/* Gentle warm glow on corner brackets */
+#overlay.lofi .frame-corners i {
+    opacity: .4;
+    border-color: var(--lf-warm);
+    width: 40px; height: 40px;
+}
+
+/* Soft floating animation override */
+#overlay.lofi .scene-card {
+    animation: lofiFloat 8s ease-in-out infinite;
+}
+@keyframes lofiFloat {
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-10px)}
+}
+
+
+/* ─── New Continuous Scene Animations ─── */
+#overlay.anim-cascade .scene-card > * { opacity: 0; animation: sceneCascadeItem .5s ease forwards; }
+#overlay.anim-cascade .scene-card > *:nth-child(1) { animation-delay: .1s; }
+#overlay.anim-cascade .scene-card > *:nth-child(2) { animation-delay: .25s; }
+#overlay.anim-cascade .scene-card > *:nth-child(3) { animation-delay: .4s; }
+#overlay.anim-cascade .scene-card > *:nth-child(4) { animation-delay: .55s; }
+#overlay.anim-cascade .scene-card > *:nth-child(n+5) { animation-delay: .7s; }
+@keyframes sceneCascadeItem { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1920">
+<title>Live</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:1920px;height:1080px;overflow:hidden;}
+#overlay{width:1920px;height:1080px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+--bg:#000;--bg2:#0a0a1a;--accent:#e91916;--text1:#fff;--text2:#aaa;--font:'Orbitron';font-family:var(--font),sans-serif;background:var(--bg);}
+
+#overlay.minimal .scene-card{text-align:center;}
+#overlay.minimal .live-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(233,25,22,.15);border:1px solid var(--accent);border-radius:6px;padding:10px 24px;font-size:24px;letter-spacing:6px;color:var(--text1);}
+#overlay.minimal .live-dot{width:12px;height:12px;background:var(--accent);border-radius:50%;animation:livePulse 1.5s ease-in-out infinite;}
+#overlay.minimal .scene-title{font-size:48px;font-weight:700;color:var(--text2);margin-top:20px;opacity:.7;}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+#overlay.neon::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:80px 80px;}
+#overlay.neon .scene-card{position:absolute;bottom:60px;left:60px;border:1px solid var(--accent);border-radius:8px;padding:20px 32px;box-shadow:0 0 30px color-mix(in srgb,var(--accent) 30%,transparent);}
+#overlay.neon .live-badge{display:flex;align-items:center;gap:8px;font-size:20px;letter-spacing:4px;color:var(--text1);text-shadow:0 0 20px var(--accent);}
+#overlay.neon .live-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px var(--accent);animation:livePulse 1.5s ease-in-out infinite;}
+#overlay.neon .scene-title{font-size:30px;color:var(--text2);margin-top:8px;}
+
+#overlay.retro::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.1) 2px,rgba(0,0,0,.1) 4px);pointer-events:none;}
+#overlay.retro .scene-card{position:absolute;bottom:60px;left:60px;}
+#overlay.retro .live-badge{display:flex;align-items:center;gap:8px;font-size:18px;color:var(--accent);font-family:'Share Tech Mono',monospace;letter-spacing:4px;}
+#overlay.retro .live-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;animation:livePulse 1.5s ease-in-out infinite;}
+#overlay.retro .scene-title{font-size:26px;color:var(--text2);font-family:'Share Tech Mono',monospace;margin-top:6px;}
+
+#overlay.cozy .scene-card{position:absolute;bottom:60px;left:60px;background:rgba(255,255,255,.08);border-radius:16px;padding:20px 32px;border:1px solid rgba(255,255,255,.15);}
+#overlay.cozy .live-badge{display:flex;align-items:center;gap:8px;font-size:18px;color:var(--text1);font-family:Poppins,sans-serif;}
+#overlay.cozy .live-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;animation:livePulse 1.5s ease-in-out infinite;}
+#overlay.cozy .scene-title{font-size:28px;color:var(--text2);margin-top:8px;font-family:Pacifico,cursive;}
+
+#overlay.gradient::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at bottom left,color-mix(in srgb,var(--accent) 20%,transparent) 0%,transparent 50%);}
+#overlay.gradient .scene-card{text-align:center;}
+#overlay.gradient .live-badge{display:inline-flex;align-items:center;gap:10px;font-size:22px;letter-spacing:4px;background:linear-gradient(135deg,var(--text1),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+#overlay.gradient .live-dot{width:12px;height:12px;background:var(--accent);border-radius:50%;animation:livePulse 1.5s ease-in-out infinite;-webkit-text-fill-color:initial;}
+#overlay.gradient .scene-title{font-size:40px;color:var(--text2);margin-top:16px;}
+
+#overlay.gaming::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center bottom,color-mix(in srgb,var(--accent) 25%,transparent) 0%,transparent 60%);}
+#overlay.gaming .scene-card{position:absolute;bottom:40px;left:0;right:0;display:flex;justify-content:center;}
+#overlay.gaming .live-badge{display:flex;align-items:center;gap:12px;font-size:20px;letter-spacing:8px;color:var(--text1);text-transform:uppercase;border-top:2px solid var(--accent);padding-top:12px;}
+#overlay.gaming .live-dot{width:12px;height:12px;background:var(--accent);border-radius:50%;box-shadow:0 0 12px var(--accent);animation:livePulse 1.2s ease-in-out infinite;}
+#overlay.gaming .scene-title{font-size:28px;color:var(--text2);font-family:Rajdhani,sans-serif;letter-spacing:4px;margin-left:16px;}
+
+.scene-card{position:relative;z-index:2;}
+#particles{position:absolute;inset:0;z-index:1;pointer-events:none;}
+
+/* Co-players panel */
+#coPlayersPanel{position:absolute;bottom:70px;flex-direction:column;gap:7px;z-index:3;max-width:800px;}
+#coPlayersPanel.pos-left{left:60px;right:auto;align-items:flex-start;}
+#coPlayersPanel.pos-center{left:50%;transform:translateX(-50%);right:auto;align-items:center;}
+#coPlayersPanel.pos-right{right:60px;left:auto;align-items:flex-end;}
+.cp-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text2);margin-bottom:2px;white-space:nowrap;}
+.cp-chip{display:inline-flex;align-items:center;gap:10px;padding:8px 18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:24px;font-size:14px;font-weight:600;color:var(--text1);letter-spacing:1px;white-space:nowrap;}
+.cp-twitch{font-size:11px;color:var(--accent);opacity:.9;letter-spacing:.5px;}
+
+/* Games panel */
+#gamesPanel{position:absolute;top:80px;flex-direction:column;gap:6px;z-index:3;max-width:700px;}
+#gamesPanel.pos-left{left:60px;right:auto;align-items:flex-start;}
+#gamesPanel.pos-center{left:50%;transform:translateX(-50%);right:auto;align-items:center;}
+#gamesPanel.pos-right{right:60px;left:auto;align-items:flex-end;}
+.gp-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--text2);margin-bottom:2px;white-space:nowrap;}
+.gp-chip{display:block;padding:7px 18px;border-radius:6px;font-size:13px;font-weight:600;color:var(--text2);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);letter-spacing:1px;white-space:nowrap;}
+.gp-chip.current{color:var(--text1);background:color-mix(in srgb,var(--accent) 15%,transparent);border-color:var(--accent);}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Bangers&family=Bebas+Neue&family=Black+Ops+One&family=Boogaloo&family=Bungee&family=Chakra+Petch:wght@400;600;700&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;600;700&family=Courier+Prime:wght@400;700&family=Creepster&family=DM+Sans:wght@400;500;700&family=Exo+2:wght@400;600;700&family=Fira+Code:wght@400;500&family=Fredoka+One&family=Goldman:wght@400;700&family=Inter:wght@400;500;600;700&family=Lobster&family=Lora:wght@400;600;700&family=Manrope:wght@400;500;700&family=Montserrat:wght@400;600;700;800&family=Nunito:wght@400;600;700&family=Orbitron:wght@700;900&family=Outfit:wght@400;600;700&family=Pacifico&family=Playfair+Display:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Press+Start+2P&family=Quantico:wght@400;700&family=Rajdhani:wght@400;500;600;700&family=Righteous&family=Roboto:wght@400;500;700&family=Russo+One&family=Share+Tech+Mono&family=Source+Code+Pro:wght@400;600&family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&family=Teko:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/overlays/static/css/overlays-effects.css?v={{ v }}">
+</head>
+<body>
+<div id="overlay" class="minimal">
+    <canvas id="particles"></canvas>
+    <canvas id="bg-effects" width="1920" height="1080"></canvas>
+    <div class="scene-card">
+        <div class="live-badge">
+            <span class="live-dot"></span>
+            <span>LIVE</span>
+        </div>
+        <div id="sceneTitle" class="scene-title">Just Chatting</div>
+    </div>
+    <div id="gamesPanel" style="display:none"></div>
+    <div id="coPlayersPanel" style="display:none"></div>
+</div>
+<script src="/overlays/static/js/overlays-effects.js?v={{ v }}"></script>
+<script>
+const SCENE_ID='{{ scene_id }}';
+const DISCORD_USER_ID='{{ discord_user_id }}';
+let particleAnim=null;
+async function loadConfig(){try{const r=await fetch('/overlays/api/scenes/'+SCENE_ID+'/config');if(r.ok){const c=await r.json();applyConfig(c);}}catch(e){}}
+function applyConfig(cfg){
+    const el=document.getElementById('overlay');
+    el.className=cfg.template||'minimal';
+    const bt=cfg.background_type||'solid';
+    if(bt==='solid')el.style.background=cfg.bg_color||'#000';
+    else el.style.background=`linear-gradient(${cfg.bg_gradient_angle||180}deg,${cfg.bg_gradient_from||'#0a0a1a'},${cfg.bg_gradient_to||'#000'})`;
+    el.style.setProperty('--accent',cfg.accent_color||'#e91916');
+    el.style.setProperty('--text1',cfg.text_primary||'#fff');
+    el.style.setProperty('--text2',cfg.text_secondary||'#aaa');
+    applyFontConfig(cfg, el);
+    applyAnimationClass(cfg, el);
+    document.getElementById('sceneTitle').textContent=cfg.title||'Just Chatting';
+    if(particleAnim)cancelAnimationFrame(particleAnim);
+    if(cfg.particles)initParticles(cfg.particle_color||cfg.accent_color||'#e91916');
+    applyTextEffect(cfg, el); applyLogoEffect(cfg, el); applyBackgroundEffect(cfg); applyBranding(cfg);
+    let s=document.getElementById('custom-style');if(!s){s=document.createElement('style');s.id='custom-style';document.head.appendChild(s);}s.textContent=cfg.custom_css||'';
+    // Co-players
+    const cpPanel=document.getElementById('coPlayersPanel');
+    if(cpPanel){const players=cfg.co_players||[];
+    cpPanel.className='pos-'+(cfg.co_players_position||'right');
+    if(players.length>0){cpPanel.style.display='flex';
+    cpPanel.innerHTML='<span class="cp-label">Playing with</span>'+players.map(p=>`<span class="cp-chip"><span>${esc(p.name)}</span>${p.twitch?`<span class="cp-twitch">${esc(p.twitch)}</span>`:''}</span>`).join('');}
+    else cpPanel.style.display='none';}
+    // Games
+    const gpPanel=document.getElementById('gamesPanel');
+    if(gpPanel){const games=cfg.games_list||[];
+    gpPanel.className='pos-'+(cfg.games_position||'right');
+    if(games.length>0){gpPanel.style.display='flex';
+    gpPanel.innerHTML='<span class="gp-label">Games being played this stream</span>'+games.map((g,i)=>`<span class="gp-chip${i===0?' current':''}">${esc(g.title)}</span>`).join('');}
+    else gpPanel.style.display='none';}
+    applyVisualFX(cfg, el);
+    applyClock(cfg);
+    applyGoalBar(cfg);
+    applyViewerQueue(cfg);
+    if(cfg.show_alerts)initSceneAlerts(DISCORD_USER_ID,cfg.scene_alert_position);
+}
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function initParticles(color){
+    const c=document.getElementById('particles');c.width=1920;c.height=1080;const ctx=c.getContext('2d');
+    const pts=Array.from({length:40},()=>({x:Math.random()*1920,y:Math.random()*1080,vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,r:Math.random()*1.5+.5,a:Math.random()*.3+.05}));
+    function draw(){ctx.clearRect(0,0,1920,1080);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=1920;if(p.x>1920)p.x=0;if(p.y<0)p.y=1080;if(p.y>1080)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);const r=parseInt(color.slice(1,3)||'e9',16),g=parseInt(color.slice(3,5)||'19',16),b=parseInt(color.slice(5,7)||'16',16);ctx.fillStyle=`rgba(${r},${g},${b},${p.a})`;ctx.fill();});particleAnim=requestAnimationFrame(draw);}
+    draw();
+}
+function connectSSE(){const es=new EventSource('/overlays/source/'+SCENE_ID+'/events');es.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='update')applyConfig(m.config);};es.onerror=()=>{es.close();setTimeout(connectSSE,3000);};}
+loadConfig().then(()=>connectSSE());
+</script>
+</body></html>

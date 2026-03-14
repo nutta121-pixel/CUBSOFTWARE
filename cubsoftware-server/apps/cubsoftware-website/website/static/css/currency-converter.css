@@ -1,0 +1,372 @@
+/* Currency Converter Styles */
+
+.converter-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.converter-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.converter-header h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.converter-header p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* Main Converter Card */
+.converter-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-group label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.amount-input-wrapper {
+    position: relative;
+}
+
+.amount-input-wrapper input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-light);
+    font-size: 1.5rem;
+    font-family: 'Orbitron', monospace;
+    font-weight: 700;
+}
+
+.amount-input-wrapper input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Currency Selectors */
+.currency-selectors {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.currency-select-group {
+    flex: 1;
+}
+
+.currency-select-group label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.currency-select-group select {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    background: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-light);
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+}
+
+.currency-select-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.swap-btn {
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--dark-bg);
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.swap-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: rotate(180deg);
+}
+
+/* Result Display */
+.result-display {
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.15) 0%, rgba(124, 58, 237, 0.15) 100%);
+    border: 1px solid var(--primary);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.result-amount {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+}
+
+.result-rate {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* Rate Info */
+.rate-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+}
+
+.rate-label {
+    color: var(--text-muted);
+}
+
+.rate-value {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.rate-updated {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+/* Quick Amounts */
+.quick-amounts {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.quick-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.quick-btn {
+    padding: 0.5rem 1rem;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quick-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* Popular Rates */
+.popular-rates {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.popular-rates h2 {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.popular-rates h2 span {
+    color: var(--primary);
+}
+
+.rates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.75rem;
+}
+
+.rate-card {
+    background: var(--dark-bg);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.rate-card.loading {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+}
+
+.rate-card .currency {
+    font-weight: 600;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.rate-card .value {
+    font-family: 'Orbitron', monospace;
+    color: var(--primary);
+    font-size: 1rem;
+}
+
+/* Info Section */
+.converter-info {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+
+.converter-info h2 {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+}
+
+.converter-info p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.info-features {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.info-feature {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.info-feature svg {
+    color: var(--primary);
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-light);
+    font-size: 0.95rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .converter-container {
+        padding: 1rem;
+    }
+
+    .converter-header h1 {
+        font-size: 2rem;
+    }
+
+    .converter-card {
+        padding: 1.25rem;
+    }
+
+    .currency-selectors {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .swap-btn {
+        align-self: center;
+        transform: rotate(90deg);
+    }
+
+    .swap-btn:hover {
+        transform: rotate(270deg);
+    }
+
+    .result-amount {
+        font-size: 2rem;
+    }
+
+    .amount-input-wrapper input {
+        font-size: 1.25rem;
+    }
+
+    .quick-amounts {
+        justify-content: center;
+    }
+
+    .info-features {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .result-amount {
+        font-size: 1.75rem;
+    }
+
+    .rates-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

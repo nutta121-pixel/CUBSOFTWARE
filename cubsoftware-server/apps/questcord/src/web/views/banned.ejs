@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Denied | QuestCord</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #ed4245;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 0 40px rgba(237, 66, 69, 0.3);
+        }
+
+        .icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #ed4245;
+            margin-bottom: 15px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #b9bbbe;
+            margin-bottom: 30px;
+        }
+
+        .ban-info {
+            background: rgba(237, 66, 69, 0.1);
+            border-left: 4px solid #ed4245;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #b9bbbe;
+        }
+
+        .info-value {
+            color: #ffffff;
+            text-align: right;
+            word-break: break-all;
+        }
+
+        .reason-box {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #faa61a;
+        }
+
+        .contact {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #72767d;
+        }
+
+        .contact a {
+            color: #5865f2;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .contact a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            h1 { font-size: 2rem; }
+            .icon { font-size: 60px; }
+            .info-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .info-value {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🚫</div>
+        <h1>Access Denied</h1>
+        <p class="subtitle">Your IP address has been banned from accessing QuestCord</p>
+
+        <div class="ban-info">
+            <div class="info-row">
+                <span class="info-label">IP Address:</span>
+                <span class="info-value"><%= banInfo.ip_address %></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Banned By:</span>
+                <span class="info-value"><%= banInfo.banned_by %></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Ban Date:</span>
+                <span class="info-value"><%= new Date(banInfo.banned_at * 1000).toLocaleString() %></span>
+            </div>
+            <% if (banInfo.permanent) { %>
+                <div class="info-row">
+                    <span class="info-label">Duration:</span>
+                    <span class="info-value">Permanent</span>
+                </div>
+            <% } else { %>
+                <div class="info-row">
+                    <span class="info-label">Expires:</span>
+                    <span class="info-value"><%= new Date(banInfo.expires_at * 1000).toLocaleString() %></span>
+                </div>
+            <% } %>
+        </div>
+
+        <div class="reason-box">
+            <strong>Reason:</strong> <%= banInfo.reason %>
+        </div>
+
+        <div class="contact">
+            <p>If you believe this is a mistake, please contact us through our</p>
+            <a href="https://discord.gg/ACGKvKkZ5Z" target="_blank">Discord Support Server</a>
+        </div>
+    </div>
+</body>
+</html>

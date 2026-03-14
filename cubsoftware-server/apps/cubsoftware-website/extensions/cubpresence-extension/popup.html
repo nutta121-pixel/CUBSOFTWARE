@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            width: 300px;
+            padding: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #ffffff;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #333;
+        }
+        .header img {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+        }
+        .header h1 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: #252540;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #666;
+        }
+        .status-dot.connected {
+            background: #57f287;
+        }
+        .status-dot.connecting {
+            background: #faa61a;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        .status-dot.disconnected {
+            background: #ed4245;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .status-text {
+            flex: 1;
+        }
+        .status-title {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .status-detail {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+        .presence-info {
+            background: #252540;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .presence-info h3 {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .presence-row {
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .presence-row span {
+            color: #888;
+        }
+        .btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary {
+            background: #5865f2;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #4752c4;
+        }
+        .btn-danger {
+            background: #ed4245;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #c93b3e;
+        }
+        .btn-secondary {
+            background: #4f545c;
+            color: white;
+            margin-top: 8px;
+        }
+        .btn-secondary:hover {
+            background: #5d6269;
+        }
+        .no-config {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .no-config p {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        a {
+            color: #5865f2;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .debug-toggle {
+            width: 100%;
+            padding: 6px;
+            margin-top: 8px;
+            background: none;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #555;
+            font-size: 11px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .debug-toggle:hover { border-color: #555; color: #888; }
+        #debugPanel {
+            display: none;
+            margin-top: 8px;
+            background: #0d0d1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 11px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .dbg-section { margin-bottom: 10px; }
+        .dbg-title { color: #9146ff; font-weight: 700; margin-bottom: 4px; border-bottom: 1px solid #222; padding-bottom: 2px; }
+        .dbg-row { display: flex; gap: 6px; margin-bottom: 2px; }
+        .dbg-label { color: #555; min-width: 110px; flex-shrink: 0; }
+        .dbg-val { color: #ccc; word-break: break-all; }
+        .dbg-ok { color: #4cff88; }
+        .dbg-fail { color: #ff6b6b; }
+        .dbg-warn { color: #ffd666; }
+        .dbg-badge { padding: 0 5px; border-radius: 3px; font-size: 10px; }
+        .dbg-badge.ok { background: #1a4a2a; color: #4cff88; }
+        .dbg-badge.fail { background: #4a1a1a; color: #ff6b6b; }
+        .dbg-log { color: #ccc; margin-bottom: 1px; }
+        .dbg-log.error { color: #ff6b6b; }
+        .dbg-log.warn { color: #ffd666; }
+        .dbg-log.info { color: #66ccff; }
+        .dbg-actions { display: flex; gap: 6px; margin-bottom: 8px; }
+        .dbg-btn { flex: 1; padding: 4px; background: #1a1a2e; border: 1px solid #333; border-radius: 4px; color: #888; font-size: 10px; cursor: pointer; }
+        .dbg-btn:hover { border-color: #9146ff; color: #9146ff; }
+        .linux-tip { background: #2a1a1a; border: 1px solid #4a2a2a; border-radius: 6px; padding: 8px; margin-top: 8px; font-size: 11px; color: #ffd666; display: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="icons/icon48.png" alt="CubPresence">
+        <h1>CubPresence</h1>
+    </div>
+
+    <div class="status">
+        <div class="status-dot" id="statusDot"></div>
+        <div class="status-text">
+            <div class="status-title" id="statusTitle">Checking...</div>
+            <div class="status-detail" id="statusDetail"></div>
+        </div>
+    </div>
+
+    <div id="presenceInfo" class="presence-info" style="display: none;">
+        <h3>Current Presence</h3>
+        <div class="presence-row"><span>Details:</span> <span id="infoDetails">-</span></div>
+        <div class="presence-row"><span>State:</span> <span id="infoState">-</span></div>
+    </div>
+
+    <div id="connectedActions" style="display: none;">
+        <button class="btn btn-danger" id="disconnectBtn">Disconnect</button>
+    </div>
+
+    <div id="noConfig" class="no-config" style="display: none;">
+        <p>No active presence configuration.</p>
+        <a href="https://cubsoftware.site/apps/cubpresence" target="_blank">Open CubPresence</a>
+    </div>
+
+    <button class="btn btn-secondary" id="openSiteBtn">Open CubPresence Website</button>
+
+    <div id="linuxTip" class="linux-tip">
+        <strong>Linux detected</strong> — Discord uses a Unix socket, not TCP.<br>
+        Run <code>python3 discord-rpc-bridge.py</code> (included in the extension folder) to bridge it, then reconnect.
+    </div>
+
+    <button class="debug-toggle" id="debugToggle">▸ Debug</button>
+    <div id="debugPanel">
+        <div class="dbg-actions">
+            <button class="dbg-btn" id="dbgScanBtn">Scan Ports</button>
+            <button class="dbg-btn" id="dbgLogsBtn">Refresh Logs</button>
+            <button class="dbg-btn" id="dbgCopyBtn">Copy</button>
+        </div>
+        <div id="dbgContent"><span style="color:#555">Click "Scan Ports" or "Refresh Logs"</span></div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

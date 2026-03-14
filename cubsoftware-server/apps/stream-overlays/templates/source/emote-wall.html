@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1920">
+<title>Emote Wall</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;}
+#overlay{width:1920px;height:1080px;position:relative;overflow:hidden;background:transparent;transition:background .5s;}
+#emote-canvas{position:absolute;inset:0;width:1920px;height:1080px;}
+#status{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);font-family:'Orbitron',sans-serif;font-size:12px;color:rgba(255,255,255,.3);letter-spacing:2px;pointer-events:none;transition:opacity .5s;}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/overlays/static/css/overlays-effects.css?v={{ v }}">
+</head>
+<body>
+<div id="overlay">
+    <canvas id="emote-canvas" width="1920" height="1080"></canvas>
+    <div id="status"></div>
+</div>
+<script src="/overlays/static/js/overlays-effects.js?v={{ v }}"></script>
+<script>
+const SCENE_ID = '{{ scene_id }}';
+let config = {};
+let emotes = [];
+const canvas = document.getElementById('emote-canvas');
+const ctx = canvas.getContext('2d');
+const STATUS = document.getElementById('status');
+
+// ── Image cache ──────────────────────────────────────────────────────────────
+const emoteCache = {};
+function loadEmoteImg(url) {
+    if (emoteCache[url]) return emoteCache[url];
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+    emoteCache[url] = img;
+    return img;
+}
+
+// ── Spawn a single emote particle ────────────────────────────────────────────
+function spawnEmote(url) {
+    const maxOnScreen = Math.max(10, parseInt(config.emote_max_on_screen) || 200);
+    if (emotes.length >= maxOnScreen) return;
+
+    const sizeMin = Math.max(20, parseInt(config.emote_size_min) || parseInt(config.emote_size) || 60);
+    const sizeMax = Math.max(sizeMin, parseInt(config.emote_size_max) || sizeMin + 60);
+    const size = sizeMin + Math.random() * (sizeMax - sizeMin);
+
+    const speedMin = Math.max(10, parseInt(config.emote_speed_min) || parseInt(config.emote_speed) || 50);
+    const speedMax = Math.max(speedMin, parseInt(config.emote_speed_max) || speedMin + 70);
+    const speed = speedMin + Math.random() * (speedMax - speedMin);
+
+    const spreadFactor = Math.max(0, parseFloat(config.emote_spread) || 30) / 100;
+    const gravity = parseFloat(config.emote_gravity) || 0;
+
+    let dir = config.emote_direction || 'up';
+    if (dir === 'random') dir = ['up','down','left','right'][Math.floor(Math.random() * 4)];
+
+    const img = loadEmoteImg(url);
+    let x, y, vx, vy;
+
+    if (dir === 'burst') {
+        x = 960 - size / 2 + (Math.random() - 0.5) * 300;
+        y = 540 - size / 2 + (Math.random() - 0.5) * 300;
+        const angle = Math.random() * Math.PI * 2;
+        vx = Math.cos(angle) * speed;
+        vy = Math.sin(angle) * speed;
+    } else if (dir === 'up') {
+        x = Math.random() * (1920 - size);
+        y = 1080 + size;
+        vx = (Math.random() - 0.5) * 2 * speed * spreadFactor;
+        vy = -(speed * (0.8 + Math.random() * 0.4));
+    } else if (dir === 'down') {
+        x = Math.random() * (1920 - size);
+        y = -size;
+        vx = (Math.random() - 0.5) * 2 * speed * spreadFactor;
+        vy = speed * (0.8 + Math.random() * 0.4);
+    } else if (dir === 'left') {
+        x = 1920 + size;
+        y = Math.random() * (1080 - size);
+        vx = -(speed * (0.8 + Math.random() * 0.4));
+        vy = (Math.random() - 0.5) * 2 * speed * spreadFactor;
+    } else { // right
+        x = -size;
+        y = Math.random() * (1080 - size);
+        vx = speed * (0.8 + Math.random() * 0.4);
+        vy = (Math.random() - 0.5) * 2 * speed * spreadFactor;
+    }
+
+    const spinSpeedDeg = parseFloat(config.emote_spin_speed) || 5;
+    const spinRad = spinSpeedDeg * Math.PI / 180 / 60; // radians per frame
+
+    emotes.push({
+        img, x, y, vx, vy, size, gravity,
+        alpha: 1,
+        maxOpacity: Math.max(0.05, Math.min(1, parseFloat(config.emote_opacity) || 1)),
+        fade: config.emote_fade !== false,
+        fadeStart: parseFloat(config.emote_fade_start) || 3,
+        spin: config.emote_spin || false,
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: config.emote_spin ? (Math.random() < 0.5 ? 1 : -1) * (0.3 + Math.random() * 0.7) * spinRad : 0,
+        bounce: config.emote_bounce || false,
+        scaleIn: config.emote_scale_in !== false,
+        scale: 0,
+        glow: config.emote_glow || false,
+        glowSize: parseInt(config.emote_glow_size) || 15,
+        glowColor: config.emote_glow_color || '#ffffff',
+        born: Date.now(),
+    });
+}
+
+// ── Main draw loop ────────────────────────────────────────────────────────────
+function drawLoop() {
+    ctx.clearRect(0, 0, 1920, 1080);
+    const now = Date.now();
+
+    emotes = emotes.filter(e => e.alpha > 0.005 && e.scale >= 0);
+
+    emotes.forEach(e => {
+        // Physics
+        e.vy += e.gravity / 60;
+        e.x += e.vx / 60;
+        e.y += e.vy / 60;
+
+        // Rotation
+        if (e.spin) e.rotation += e.rotSpeed;
+
+        // Scale-in
+        if (e.scaleIn && e.scale < 1) {
+            e.scale = Math.min(1, e.scale + 0.07);
+        } else if (!e.scaleIn) {
+            e.scale = 1;
+        }
+
+        // Bounce off walls
+        if (e.bounce) {
+            if (e.x < 0) { e.x = 0; e.vx = Math.abs(e.vx) * 0.85; }
+            else if (e.x > 1920 - e.size) { e.x = 1920 - e.size; e.vx = -Math.abs(e.vx) * 0.85; }
+            if (e.y < 0) { e.y = 0; e.vy = Math.abs(e.vy) * 0.85; }
+            else if (e.y > 1080 - e.size) { e.y = 1080 - e.size; e.vy = -Math.abs(e.vy) * 0.85; }
+        } else {
+            // Remove when off-screen
+            if (e.x < -e.size * 2 || e.x > 1920 + e.size * 2 ||
+                e.y < -e.size * 2 || e.y > 1080 + e.size * 2) {
+                e.alpha = 0; return;
+            }
+        }
+
+        // Fade out
+        if (e.fade) {
+            const age = (now - e.born) / 1000;
+            if (age > e.fadeStart) e.alpha = Math.max(0, e.alpha - 0.012);
+        }
+
+        if (!e.img.complete || !e.img.naturalWidth) return;
+
+        const drawSize = e.size * e.scale;
+        if (drawSize < 1) return;
+
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, Math.min(e.maxOpacity, e.alpha));
+        if (e.glow) {
+            ctx.shadowBlur = e.glowSize;
+            ctx.shadowColor = e.glowColor;
+        }
+        ctx.translate(e.x + e.size / 2, e.y + e.size / 2);
+        if (e.spin) ctx.rotate(e.rotation);
+        ctx.drawImage(e.img, -drawSize / 2, -drawSize / 2, drawSize, drawSize);
+        ctx.restore();
+    });
+
+    requestAnimationFrame(drawLoop);
+}
+drawLoop();
+
+// ── Parse Twitch IRC emote tags → CDN URLs ────────────────────────────────────
+function parseTwitchEmotes(tagStr) {
+    const urls = [];
+    if (!tagStr) return urls;
+    const emoteTag = (tagStr.match(/emotes=([^;]*)/) || [])[1];
+    if (!emoteTag) return urls;
+    emoteTag.split('/').forEach(part => {
+        if (!part) return;
+        const [id] = part.split(':');
+        if (id) urls.push(`https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/3.0`);
+    });
+    return urls;
+}
+
+// ── Twitch IRC WebSocket ──────────────────────────────────────────────────────
+let twitchWs = null;
+let twitchChannel = '';
+let twitchReconnectTimer = null;
+
+function connectTwitchChat(channel) {
+    if (!channel) { STATUS.textContent = 'Enter your Twitch channel name in the editor'; STATUS.style.opacity = '1'; return; }
+    clearTimeout(twitchReconnectTimer);
+    if (twitchWs) { twitchWs.onclose = null; twitchWs.close(); twitchWs = null; }
+    twitchChannel = channel.replace('#', '').toLowerCase();
+    STATUS.textContent = `Connecting to #${twitchChannel}...`;
+
+    twitchWs = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+    twitchWs.onopen = () => {
+        twitchWs.send('CAP REQ :twitch.tv/tags');
+        twitchWs.send('PASS oauth:ANONYMOUS');
+        twitchWs.send('NICK justinfan' + Math.floor(Math.random() * 99999));
+        twitchWs.send('JOIN #' + twitchChannel);
+        STATUS.textContent = `Connected to #${twitchChannel}`;
+        setTimeout(() => { if (config.show_status !== false) STATUS.textContent = ''; }, 3000);
+    };
+    twitchWs.onmessage = ev => {
+        ev.data.split('\r\n').forEach(line => {
+            if (!line) return;
+            if (line.startsWith('PING')) { twitchWs.send('PONG :tmi.twitch.tv'); return; }
+            const privmsg = line.match(/^@([^\s]*) :[\S]+ PRIVMSG #\S+ :(.*)$/);
+            if (!privmsg) return;
+            const emoteUrls = parseTwitchEmotes(privmsg[1]);
+            if (!emoteUrls.length) return;
+            const density = Math.max(1, Math.min(20, parseInt(config.emote_density) || 5));
+            const delay = Math.max(0, parseInt(config.emote_spawn_delay) || 80);
+            emoteUrls.slice(0, density).forEach((url, i) => {
+                setTimeout(() => spawnEmote(url), i * delay);
+            });
+        });
+    };
+    twitchWs.onerror = () => {};
+    twitchWs.onclose = () => {
+        STATUS.textContent = 'Reconnecting...';
+        twitchReconnectTimer = setTimeout(() => connectTwitchChat(twitchChannel), 5000);
+    };
+}
+
+// ── Test spawn (postMessage from editor) ─────────────────────────────────────
+window.addEventListener('message', e => {
+    if (!e.data) return;
+    if (e.data.type === 'preview-update') { applyConfig(e.data.config); return; }
+    if (e.data.type === 'emote-test-spawn') {
+        const testEmotes = [
+            'https://static-cdn.jtvnw.net/emoticons/v2/425618/default/dark/3.0', // PogChamp
+            'https://static-cdn.jtvnw.net/emoticons/v2/1/default/dark/3.0',       // :)
+            'https://static-cdn.jtvnw.net/emoticons/v2/25/default/dark/3.0',      // Kappa
+            'https://static-cdn.jtvnw.net/emoticons/v2/65/default/dark/3.0',      // twitchRaid
+            'https://static-cdn.jtvnw.net/emoticons/v2/88/default/dark/3.0',      // PJSalt
+        ];
+        const delay = Math.max(0, parseInt(config.emote_spawn_delay) || 80);
+        testEmotes.forEach((url, i) => setTimeout(() => spawnEmote(url), i * delay));
+    }
+});
+
+// ── Config ────────────────────────────────────────────────────────────────────
+async function loadConfig(retries = 5, delay = 1000) {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const r = await fetch('/overlays/api/scenes/' + SCENE_ID + '/config');
+            if (r.ok) { config = await r.json(); applyConfig(config); return; }
+        } catch(e) {}
+        if (i < retries - 1) await new Promise(res => setTimeout(res, delay));
+    }
+}
+
+function applyConfig(cfg) {
+    config = cfg;
+    const el = document.getElementById('overlay');
+    const bt = cfg.background_type || 'transparent';
+    if (bt === 'transparent' || !bt) {
+        el.style.background = 'transparent';
+    } else if (bt === 'solid') {
+        el.style.background = cfg.bg_color || '#0a0a1a';
+    } else {
+        el.style.background = `linear-gradient(${cfg.bg_gradient_angle || 135}deg, ${cfg.bg_gradient_from || '#0a0a1a'}, ${cfg.bg_gradient_to || '#1a0a2e'})`;
+    }
+    STATUS.style.opacity = cfg.show_status !== false ? '1' : '0';
+    const newChannel = (cfg.twitch_channel || '').toLowerCase().trim();
+    if (newChannel && newChannel !== twitchChannel) {
+        connectTwitchChat(newChannel);
+    } else if (!newChannel) {
+        STATUS.textContent = 'Enter your Twitch channel name in the editor';
+        STATUS.style.opacity = '1';
+    }
+    let st = document.getElementById('custom-style');
+    if (!st) { st = document.createElement('style'); st.id = 'custom-style'; document.head.appendChild(st); }
+    st.textContent = cfg.custom_css || '';
+}
+
+function connectSSE() {
+    const es = new EventSource('/overlays/source/' + SCENE_ID + '/events');
+    es.onmessage = e => {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'update') applyConfig(msg.config);
+        else if (msg.type === 'channel_points_reaction') handleChannelPointsReaction(msg.reaction, msg.event);
+    };
+    es.onerror = () => { es.close(); setTimeout(connectSSE, 3000); };
+}
+
+loadConfig().then(() => connectSSE());
+</script>
+</body>
+</html>

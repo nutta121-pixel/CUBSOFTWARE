@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Random Picker - Coin Flip, Dice Roll, Random Number | CUB SOFTWARE</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Free random picker tools: coin flip, dice roll, random number, yes/no, card draw, letter generator, pick from list, team maker, shuffle list.">
+    <meta name="keywords" content="random picker, coin flip, dice roll, random number generator, decision maker, pick random, card draw, team generator, shuffle list, yes or no">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/random-picker">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Random Picker - Coin Flip, Dice Roll & More | CUB SOFTWARE">
+    <meta property="og:description" content="Free random picker tools. Flip coins, roll dice, pick from lists, generate random numbers.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/random-picker">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+    <meta property="og:image" content="https://cubsoftware.site/static/images/company-logo.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/random-picker.css?v={{ v }}">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <span class="logo-text">
+                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                </span>
+            </a>
+            <nav class="site-nav" id="siteNav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/#apps" class="nav-link">Tools</a>
+                <div class="nav-dropdown">
+                    <button class="nav-link dropdown-toggle">
+                        Our Bots
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="https://questcord.fun" target="_blank">QuestCord</a>
+                        <a href="/cleanme">CleanMe</a>
+                    </div>
+                </div>
+                <a href="/contact" class="nav-link">Contact</a>
+            </nav>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="picker-container">
+        <h1 class="page-title">Random Picker</h1>
+        <p class="page-subtitle">Quick decision tools for when you can't decide</p>
+
+        <div class="tools-grid">
+            <!-- Row 1: 6 single cards -->
+            <!-- Coin Flip -->
+            <section class="tool-card" id="coinFlip">
+                <h2>Coin Flip</h2>
+                <div class="coin-container">
+                    <div class="coin" id="coin">
+                        <div class="coin-side coin-heads">
+                            <span class="coin-brand"><span class="brand-cub">CUB</span><span class="brand-software">SOFTWARE</span></span>
+                            <span class="coin-text">HEADS</span>
+                        </div>
+                        <div class="coin-side coin-tails">
+                            <span class="coin-brand"><span class="brand-cub">CUB</span><span class="brand-software">SOFTWARE</span></span>
+                            <span class="coin-text">TAILS</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="result" id="coinResult">Click to flip!</div>
+                <button class="action-btn" onclick="flipCoin()">Flip Coin</button>
+                <div class="stats">
+                    <span>Heads: <strong id="headsCount">0</strong></span>
+                    <span>Tails: <strong id="tailsCount">0</strong></span>
+                </div>
+            </section>
+
+            <!-- Dice Roll -->
+            <section class="tool-card" id="diceRoll">
+                <h2>Dice Roll</h2>
+                <div class="dice-container" id="diceContainer">
+                    <div class="dice" id="dice">
+                        <div class="dice-face dice-face-front dice-face-1">
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                        </div>
+                        <div class="dice-face dice-face-back dice-face-6">
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                        </div>
+                        <div class="dice-face dice-face-right dice-face-3">
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                        </div>
+                        <div class="dice-face dice-face-left dice-face-4">
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                        </div>
+                        <div class="dice-face dice-face-top dice-face-2">
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                        </div>
+                        <div class="dice-face dice-face-bottom dice-face-5">
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                            <span class="dice-dot"></span><span class="dice-dot"></span><span class="dice-dot"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="result" id="diceResult">Click to roll!</div>
+                <button class="action-btn" onclick="rollDice()">Roll</button>
+            </section>
+
+            <!-- Card Draw -->
+            <section class="tool-card" id="cardDraw">
+                <h2>Card Draw</h2>
+                <div class="card-container">
+                    <div class="playing-card showing-back" id="card">
+                        <div class="card-front">
+                            <span class="card-corner card-corner-top">
+                                <span class="card-value" id="cardValue">?</span>
+                                <span class="card-suit" id="cardSuit"></span>
+                            </span>
+                            <span class="card-center-suit" id="cardCenterSuit"></span>
+                            <span class="card-corner card-corner-bottom">
+                                <span class="card-value" id="cardValueBottom">?</span>
+                                <span class="card-suit" id="cardSuitBottom"></span>
+                            </span>
+                        </div>
+                        <div class="card-back">
+                            <div class="card-back-design">
+                                <span class="card-brand"><span class="brand-cub">CUB</span><span class="brand-software">SOFTWARE</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="result" id="cardResult">Draw a card!</div>
+                <button class="action-btn" onclick="drawCard()">Draw</button>
+            </section>
+
+            <!-- Random Number -->
+            <section class="tool-card" id="randomNumber">
+                <h2>Random Number</h2>
+                <div class="text-display" id="numberDisplay">?</div>
+                <div class="number-inputs">
+                    <div class="input-group">
+                        <label>Min</label>
+                        <input type="number" id="minNumber" value="1">
+                    </div>
+                    <div class="input-group">
+                        <label>Max</label>
+                        <input type="number" id="maxNumber" value="100">
+                    </div>
+                </div>
+                <button class="action-btn" onclick="generateNumber()">Generate</button>
+            </section>
+
+            <!-- Yes/No -->
+            <section class="tool-card" id="yesNo">
+                <h2>Yes or No?</h2>
+                <div class="text-display" id="yesnoDisplay">?</div>
+                <button class="action-btn" onclick="yesOrNo()">Decide</button>
+            </section>
+
+            <!-- Letter Generator -->
+            <section class="tool-card" id="letterGen">
+                <h2>Random Letter</h2>
+                <div class="text-display" id="letterDisplay">?</div>
+                <button class="action-btn" onclick="generateLetter()">Generate</button>
+            </section>
+
+            <!-- Row 2: 3 wide cards (span 2 each) -->
+            <!-- Pick From List -->
+            <section class="tool-card tool-card-wide" id="pickFromList">
+                <h2>Pick From List</h2>
+                <div class="list-picker">
+                    <div class="list-input-section">
+                        <textarea id="listInput" placeholder="Enter items (one per line)"></textarea>
+                        <div class="list-actions">
+                            <button class="action-btn secondary" onclick="clearList()">Clear</button>
+                            <button class="action-btn" onclick="pickFromList()">Pick</button>
+                        </div>
+                    </div>
+                    <div class="list-result-section">
+                        <div class="picked-item" id="pickedItem">
+                            <span class="picked-label">Winner</span>
+                            <span class="picked-value" id="pickedValue">?</span>
+                        </div>
+                        <div class="pick-options">
+                            <label class="toggle-option">
+                                <input type="checkbox" id="removeAfterPick">
+                                <span>Remove after pick</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Team Generator -->
+            <section class="tool-card tool-card-wide" id="teamGen">
+                <h2>Team Generator</h2>
+                <div class="team-generator">
+                    <div class="team-input-section">
+                        <textarea id="teamInput" placeholder="Enter names (one per line)"></textarea>
+                        <div class="team-controls">
+                            <label>Teams:</label>
+                            <input type="number" id="teamCount" value="2" min="2" max="10">
+                            <button class="action-btn" onclick="generateTeams()">Generate</button>
+                        </div>
+                    </div>
+                    <div class="team-results" id="teamResults">
+                        <span class="result">Enter names and generate!</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Shuffle List -->
+            <section class="tool-card tool-card-wide" id="shuffleList">
+                <h2>Shuffle List</h2>
+                <div class="shuffle-container">
+                    <div class="shuffle-input-section">
+                        <textarea id="shuffleInput" placeholder="Enter items to shuffle (one per line)"></textarea>
+                        <button class="action-btn" onclick="shuffleList()">Shuffle</button>
+                    </div>
+                    <div class="shuffle-result-section">
+                        <div class="shuffle-output" id="shuffleOutput">
+                            <span class="result">Shuffled order appears here</span>
+                        </div>
+                        <button class="action-btn secondary" onclick="copyShuffled()">Copy Result</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Settings Bar -->
+        <div class="settings-bar">
+            <div class="setting-item">
+                <label>Animation Speed:</label>
+                <select id="speedSelect" onchange="updateSpeed()">
+                    <option value="fast">Fast</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="slow">Slow</option>
+                    <option value="dramatic">Dramatic</option>
+                </select>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-text">
+                &copy; 2026 CUB SOFTWARE. Made with love by
+                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/status">Status</a>
+                <a href="/terms">Terms</a>
+                <a href="/privacy">Privacy</a>
+                <a href="/copyright">Copyright</a>
+                <a href="/report">Report Issue</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/random-picker.js?v={{ v }}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const nav = document.getElementById('siteNav');
+        if (mobileBtn && nav) {
+            mobileBtn.addEventListener('click', function() {
+                nav.classList.toggle('active');
+                mobileBtn.classList.toggle('active');
+            });
+        }
+        document.querySelectorAll('.dropdown-toggle').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    this.parentElement.classList.toggle('active');
+                }
+            });
+        });
+    });
+    </script>
+</body>
+</html>

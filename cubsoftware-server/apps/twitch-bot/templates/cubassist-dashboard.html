@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>CubAssist — Twitch Bot | CUB SOFTWARE</title>
+<link rel="icon" type="image/png" href="/static/images/company-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+<style>
+/* ── Page-level overrides ────────────────────────────────────────────── */
+body { overflow: hidden; }
+.main-container {
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.site-header { flex-shrink: 0; }
+
+/* ── CSS vars aligned with site theme ───────────────────────────────── */
+:root {
+    --surface:  rgba(15, 15, 35, 0.95);
+    --surface2: rgba(20, 20, 50, 0.8);
+    --card-bg:  rgba(30, 30, 60, 0.5);
+    --border:   rgba(255, 255, 255, 0.1);
+    --accent:   #5865f2;
+    --accent-hover: #4752c4;
+    --twitch:   #9146ff;
+    --text:     #ffffff;
+    --text-sec: #b9bbbe;
+    --danger:   #ed4245;
+    --success:  #57f287;
+    --warn:     #f59e0b;
+    --radius:   12px;
+}
+
+/* ── Top status bar ─────────────────────────────────────────────────── */
+.app-topbar {
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 24px; height: 52px; flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid var(--border);
+}
+.topbar-logo { font-family: 'Orbitron', sans-serif; font-size: 17px; font-weight: 900; color: var(--twitch); letter-spacing: 2px; }
+.topbar-logo span { color: var(--text-sec); font-size: 12px; font-family: 'Poppins', sans-serif; font-weight: 400; margin-left: 8px; letter-spacing: 0; }
+.topbar-status {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 14px; font-size: 13px; color: var(--text-sec);
+}
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-sec); flex-shrink: 0; transition: background .3s; }
+.status-dot.online  { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 2s infinite; }
+.status-dot.offline { background: var(--danger); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; }
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+.btn { padding: 7px 16px; border-radius: 8px; border: none; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
+.btn-primary  { background: var(--accent); color: #fff; }
+.btn-primary:hover  { background: var(--accent-hover); }
+.btn-success  { background: var(--success); color: #000; }
+.btn-success:hover  { background: #3ba55c; }
+.btn-danger   { background: var(--danger); color: #fff; }
+.btn-danger:hover   { background: #c0392b; }
+.btn-ghost    { background: rgba(255,255,255,.06); color: var(--text-sec); border: 1px solid var(--border); }
+.btn-ghost:hover    { background: rgba(255,255,255,.1); color: var(--text); }
+.btn-twitch   { background: var(--twitch); color: #fff; }
+.btn-twitch:hover   { background: #7c35e0; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── App layout ─────────────────────────────────────────────────────── */
+.app-layout { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+/* ── Sidebar ────────────────────────────────────────────────────────── */
+.app-sidebar {
+    width: 200px; flex-shrink: 0;
+    background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; padding: 12px 0; gap: 2px;
+    overflow-y: auto;
+}
+.nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; cursor: pointer; font-size: 14px;
+    font-weight: 500; color: var(--text-sec);
+    transition: all .15s; user-select: none;
+    font-family: 'Poppins', sans-serif;
+}
+.nav-item:hover { background: rgba(255,255,255,.06); color: var(--text); }
+.nav-item.active { background: rgba(88,101,242,.15); color: var(--accent); border-left: 2px solid var(--accent); }
+.nav-item .ni { font-size: 16px; width: 20px; text-align: center; }
+.nav-divider { height: 1px; background: var(--border); margin: 8px 16px; }
+.nav-section-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-sec); padding: 8px 20px 4px; opacity: .5; font-family: 'Poppins', sans-serif; }
+
+/* ── Main content ───────────────────────────────────────────────────── */
+.app-main { flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+.tab { display: none; flex: 1; overflow-y: auto; padding: 28px 32px; }
+.tab.active { display: flex; flex-direction: column; gap: 24px; }
+
+/* ── Cards ──────────────────────────────────────────────────────────── */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 24px;
+}
+.card-title { font-size: 13px; font-weight: 600; color: var(--text-sec); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.card-row { display: flex; gap: 16px; }
+.card-row > .card { flex: 1; }
+
+/* ── Stats row ──────────────────────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 20px; }
+.stat-val { font-family: 'Orbitron', sans-serif; font-size: 28px; font-weight: 700; color: var(--text); }
+.stat-label { font-size: 12px; color: var(--text-sec); margin-top: 4px; }
+
+/* ── Forms ──────────────────────────────────────────────────────────── */
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 12px; font-weight: 600; color: var(--text-sec); text-transform: uppercase; letter-spacing: .5px; }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+input[type=text], input[type=url], input[type=number], input[type=password], select, textarea {
+    background: rgba(255,255,255,.05); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 12px; color: var(--text);
+    font-family: 'Poppins', sans-serif; font-size: 13px; width: 100%;
+    outline: none; transition: border-color .15s;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+select { cursor: pointer; }
+textarea { resize: vertical; min-height: 80px; font-family: 'Fira Code', monospace; }
+
+/* ── Toggle ─────────────────────────────────────────────────────────── */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.toggle-row:last-child { border-bottom: none; }
+.toggle-info { display: flex; flex-direction: column; gap: 2px; }
+.toggle-info strong { font-size: 14px; }
+.toggle-info small { font-size: 12px; color: var(--text-sec); }
+.toggle { position: relative; width: 44px; height: 24px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; inset: 0; background: rgba(255,255,255,.1); border: 1px solid var(--border); border-radius: 24px; cursor: pointer; transition: .2s; }
+.toggle-slider::before { content: ''; position: absolute; width: 18px; height: 18px; left: 2px; top: 2px; background: var(--text-sec); border-radius: 50%; transition: .2s; }
+.toggle input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
+.toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: #fff; }
+
+/* ── Table ──────────────────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { background: rgba(255,255,255,.05); padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--text-sec); white-space: nowrap; }
+tbody td { padding: 11px 14px; border-top: 1px solid var(--border); vertical-align: middle; }
+tbody tr:hover td { background: rgba(255,255,255,.02); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-everyone    { background: rgba(255,255,255,.1);  color: var(--text-sec); }
+.badge-subscriber  { background: rgba(124,58,237,.2);  color: #a78bfa; }
+.badge-vip         { background: rgba(245,158,11,.15); color: var(--warn); }
+.badge-moderator   { background: rgba(88,101,242,.2);  color: #818cf8; }
+.badge-broadcaster { background: rgba(145,70,255,.2);  color: var(--twitch); }
+.cmd-response { font-family: 'Fira Code', monospace; color: var(--text-sec); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.action-btns { display: flex; gap: 6px; }
+.dot-enabled  { width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block; }
+.dot-disabled { width: 8px; height: 8px; border-radius: 50%; background: var(--text-sec); display: inline-block; }
+
+/* ── Chat log ───────────────────────────────────────────────────────── */
+.chat-log {
+    background: rgba(255,255,255,.03); border: 1px solid var(--border);
+    border-radius: 8px; height: 300px; overflow-y: auto;
+    padding: 10px; display: flex; flex-direction: column; gap: 3px;
+    font-family: 'Fira Code', monospace; font-size: 12px;
+}
+.chat-msg { display: flex; gap: 8px; align-items: baseline; }
+.chat-ts   { color: var(--text-sec); font-size: 10px; flex-shrink: 0; }
+.chat-nick { font-weight: 600; flex-shrink: 0; }
+.chat-text { color: #d4d4e0; word-break: break-word; }
+.chat-input-row { display: flex; gap: 8px; margin-top: 10px; }
+.chat-input-row input { flex: 1; }
+
+/* ── Modal ──────────────────────────────────────────────────────────── */
+.modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,.75);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2000; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.modal-backdrop.open { opacity: 1; pointer-events: all; }
+.modal {
+    background: rgba(20, 20, 50, 0.98); border: 1px solid var(--border);
+    border-radius: 16px; padding: 28px 32px; width: 520px; max-width: 95vw;
+    max-height: 90vh; overflow-y: auto;
+    transform: translateY(20px); transition: transform .2s;
+}
+.modal-backdrop.open .modal { transform: translateY(0); }
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; font-family: 'Poppins', sans-serif; }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+/* ── Empty state ────────────────────────────────────────────────────── */
+.empty { text-align: center; padding: 48px 20px; color: var(--text-sec); }
+.empty .icon { font-size: 40px; margin-bottom: 12px; }
+.empty p { font-size: 14px; }
+
+/* ── Toast ──────────────────────────────────────────────────────────── */
+#toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: rgba(30,30,60,.98); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 20px; font-size: 13px; z-index: 9999;
+    opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap;
+    font-family: 'Poppins', sans-serif;
+}
+#toast.show { opacity: 1; }
+#toast.t-success { border-color: var(--success); color: var(--success); }
+#toast.t-error   { border-color: var(--danger);  color: var(--danger); }
+
+/* ── Hint ───────────────────────────────────────────────────────────── */
+.hint { font-size: 12px; color: var(--text-sec); line-height: 1.5; }
+.hint code { font-family: 'Fira Code', monospace; background: rgba(255,255,255,.07); padding: 1px 6px; border-radius: 4px; font-size: 11px; color: #a78bfa; }
+
+/* ── Variable chips ─────────────────────────────────────────────────── */
+.var-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.var-chip { font-family: 'Fira Code', monospace; font-size: 11px; background: rgba(255,255,255,.06); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; color: #a78bfa; cursor: pointer; transition: border-color .15s; }
+.var-chip:hover { border-color: var(--accent); }
+
+/* ── Status badges ──────────────────────────────────────────────────── */
+.connected-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; font-family: 'Poppins', sans-serif; }
+.connected-badge.on  { background: rgba(87,242,135,.15); color: var(--success); border: 1px solid rgba(87,242,135,.3); }
+.connected-badge.off { background: rgba(237,66,69,.1);   color: var(--danger);  border: 1px solid rgba(237,66,69,.2); }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .app-sidebar { width: 56px; }
+    .nav-item span:not(.ni) { display: none; }
+    .nav-section-label { display: none; }
+    .tab { padding: 16px; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="main-container">
+
+    {% include 'header.html' %}
+
+    <!-- Status bar -->
+    <div class="app-topbar">
+        <div class="topbar-logo">CubAssist <span>Twitch Bot</span></div>
+        <div class="topbar-status">
+            <div class="status-dot" id="statusDot"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
+        <span id="channelBadge" class="connected-badge off" style="margin-left:4px"></span>
+        <div class="topbar-actions">
+            {% if user and user.display_name %}
+            <div style="display:flex;align-items:center;gap:8px;background:rgba(145,70,255,0.12);border:1px solid rgba(145,70,255,0.25);border-radius:20px;padding:4px 12px 4px 6px;">
+                {% if user.profile_image %}
+                <img src="{{ user.profile_image }}" style="width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(145,70,255,0.5);" alt="">
+                {% endif %}
+                <span style="font-size:13px;font-weight:600;color:#c084fc;font-family:'Poppins',sans-serif;letter-spacing:.01em;">{{ user.display_name }}</span>
+            </div>
+            {% endif %}
+            <button class="btn btn-ghost btn-sm" onclick="openTab('settings')">⚙ Settings</button>
+            <button class="btn btn-success btn-sm" id="startBtn" onclick="startBot()">▶ Start</button>
+            <button class="btn btn-danger  btn-sm" id="stopBtn"  onclick="stopBot()" style="display:none">■ Stop</button>
+            <a href="/cubassist/logout" class="btn btn-ghost btn-sm" style="text-decoration:none">Logout</a>
+        </div>
+    </div>
+
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <nav class="app-sidebar">
+            <div class="nav-item active" onclick="openTab('overview')" data-tab="overview">
+                <span class="ni">📊</span> Overview
+            </div>
+            <div class="nav-item" onclick="openTab('chat')" data-tab="chat">
+                <span class="ni">💬</span> Live Chat
+            </div>
+            <div class="nav-divider"></div>
+            <div class="nav-section-label">Bot Config</div>
+            <div class="nav-item" onclick="openTab('commands')" data-tab="commands">
+                <span class="ni">⚡</span> Commands
+            </div>
+            <div class="nav-item" onclick="openTab('timers')" data-tab="timers">
+                <span class="ni">⏱</span> Timers
+            </div>
+            <div class="nav-item" onclick="openTab('automod')" data-tab="automod">
+                <span class="ni">🛡</span> AutoMod
+            </div>
+            <div class="nav-divider"></div>
+            <div class="nav-item" onclick="openTab('settings')" data-tab="settings">
+                <span class="ni">⚙</span> Settings
+            </div>
+        </nav>
+
+        <!-- Main -->
+        <div class="app-main">
+
+            <!-- Overview tab -->
+            <div class="tab active" id="tab-overview">
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-val" id="stat-commands">—</div>
+                        <div class="stat-label">Commands</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="stat-timers">—</div>
+                        <div class="stat-label">Timers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="stat-uptime">—</div>
+                        <div class="stat-label">Bot Uptime</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-val" id="stat-msgs">0</div>
+                        <div class="stat-label">Messages Seen</div>
+                    </div>
+                </div>
+
+                <div class="card-row">
+                    <div class="card" style="flex:1.4">
+                        <div class="card-title">💬 Recent Chat</div>
+                        <div class="chat-log" id="overviewChat"></div>
+                    </div>
+                    <div class="card" style="flex:1">
+                        <div class="card-title">⚡ Quick Actions</div>
+                        <div style="display:flex;flex-direction:column;gap:10px">
+                            <div class="form-group">
+                                <label>Send Message as Bot</label>
+                                <div class="chat-input-row">
+                                    <input type="text" id="quickMsg" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendQuickMsg()">
+                                    <button class="btn btn-primary" onclick="sendQuickMsg()">Send</button>
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-top:8px">
+                                <label>Built-in Commands</label>
+                                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">
+                                    <span class="var-chip" onclick="copyCmd('!uptime')">!uptime</span>
+                                    <span class="var-chip" onclick="copyCmd('!game')">!game</span>
+                                    <span class="var-chip" onclick="copyCmd('!title')">!title</span>
+                                    <span class="var-chip" onclick="copyCmd('!commands')">!commands</span>
+                                    <span class="var-chip" onclick="copyCmd('!shoutout')">!so @user</span>
+                                    <span class="var-chip" onclick="copyCmd('!permit')">!permit @user</span>
+                                    <span class="var-chip" onclick="copyCmd('!addcom')">!addcom</span>
+                                    <span class="var-chip" onclick="copyCmd('!editcom')">!editcom</span>
+                                    <span class="var-chip" onclick="copyCmd('!delcom')">!delcom</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Chat tab -->
+            <div class="tab" id="tab-chat">
+                <div class="card" style="flex:1;display:flex;flex-direction:column">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>💬 Live Chat — <span id="chatChannel" style="color:var(--twitch)"></span></span>
+                        <button class="btn btn-ghost btn-sm" onclick="clearChatView()">Clear</button>
+                    </div>
+                    <div class="chat-log" id="mainChat" style="flex:1;height:auto;min-height:400px"></div>
+                    <div class="chat-input-row" style="margin-top:12px">
+                        <input type="text" id="chatMsgInput" placeholder="Send as CubAssist..." onkeydown="if(event.key==='Enter')sendChat()">
+                        <button class="btn btn-primary" onclick="sendChat()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commands tab -->
+            <div class="tab" id="tab-commands">
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>⚡ Custom Commands</span>
+                        <button class="btn btn-primary btn-sm" onclick="openCommandModal()">+ Add Command</button>
+                    </div>
+
+                    <div class="hint" style="margin-bottom:16px">
+                        Available variables:
+                        <div class="var-chips" style="margin-top:6px">
+                            <span class="var-chip" onclick="insertVar('$(user)')">$(user)</span>
+                            <span class="var-chip" onclick="insertVar('$(touser)')">$(touser)</span>
+                            <span class="var-chip" onclick="insertVar('$(query)')">$(query)</span>
+                            <span class="var-chip" onclick="insertVar('$(count)')">$(count)</span>
+                            <span class="var-chip" onclick="insertVar('$(random 1 100)')">$(random 1 100)</span>
+                            <span class="var-chip" onclick="insertVar('$(uptime)')">$(uptime)</span>
+                            <span class="var-chip" onclick="insertVar('$(game)')">$(game)</span>
+                            <span class="var-chip" onclick="insertVar('$(title)')">$(title)</span>
+                            <span class="var-chip" onclick="insertVar('$(channel)')">$(channel)</span>
+                            <span class="var-chip" onclick="insertVar('$(urlfetch https://)')">$(urlfetch)</span>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table id="commandsTable">
+                            <thead><tr>
+                                <th>Status</th><th>Command</th><th>Response</th>
+                                <th>Level</th><th>Cooldown</th><th>Uses</th><th>Actions</th>
+                            </tr></thead>
+                            <tbody id="commandsTbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timers tab -->
+            <div class="tab" id="tab-timers">
+                <div class="card">
+                    <div class="card-title" style="justify-content:space-between">
+                        <span>⏱ Timers</span>
+                        <button class="btn btn-primary btn-sm" onclick="openTimerModal()">+ Add Timer</button>
+                    </div>
+                    <p class="hint" style="margin-bottom:16px">Timers send messages automatically on an interval. Set Min Chat Lines to prevent messages firing in quiet chats.</p>
+                    <div id="timersList"></div>
+                </div>
+            </div>
+
+            <!-- AutoMod tab -->
+            <div class="tab" id="tab-automod">
+                <div class="card">
+                    <div class="card-title">🛡 AutoMod Filters</div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <strong>🔗 Link Filter</strong>
+                            <small>Delete messages containing URLs. Mods+ are exempt. Use <code>!permit @user</code> to allow temporarily.</small>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="am_links" onchange="saveAutomod()"><span class="toggle-slider"></span></label>
+                    </div>
+                    <div id="linksSubOptions" style="padding:12px 0 0 0;display:none">
+                        <div class="form-row" style="margin-bottom:12px">
+                            <div class="form-group">
+                                <label>Permit Duration (seconds)</label>
+                                <input type="number" id="am_permit_time" value="30" min="5" max="300" onchange="saveAutomod()">
+                            </div>
+                            <div class="form-group">
+                                <label>URL Whitelist (one per line)</label>
+                                <textarea id="am_whitelist" rows="3" placeholder="twitch.tv&#10;discord.gg" onchange="saveAutomod()"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <strong>🔠 Caps Filter</strong>
+                            <small>Remove messages with excessive capital letters.</small>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="am_caps" onchange="saveAutomod()"><span class="toggle-slider"></span></label>
+                    </div>
+                    <div id="capsSubOptions" style="padding:12px 0 0 0;display:none">
+                        <div class="form-row" style="margin-bottom:12px">
+                            <div class="form-group">
+                                <label>Max Caps % (0–100)</label>
+                                <input type="number" id="am_caps_pct" value="70" min="10" max="100" onchange="saveAutomod()">
+                            </div>
+                            <div class="form-group">
+                                <label>Min Message Length</label>
+                                <input type="number" id="am_caps_min" value="10" min="1" max="50" onchange="saveAutomod()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="toggle-row">
+                        <div class="toggle-info">
+                            <strong>🚫 Word Blacklist</strong>
+                            <small>Delete any message containing these words/phrases.</small>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="am_blacklist_enabled" onchange="saveAutomod()"><span class="toggle-slider"></span></label>
+                    </div>
+                    <div id="blacklistOptions" style="padding:12px 0 0;display:none">
+                        <div class="form-group" style="margin-bottom:12px">
+                            <label>Banned Words / Phrases (one per line)</label>
+                            <textarea id="am_blacklist" rows="5" placeholder="badword&#10;another phrase" onchange="saveAutomod()"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings tab -->
+            <div class="tab" id="tab-settings">
+                <div class="card">
+                    <div class="card-title">🤖 Bot Account</div>
+                    <p class="hint" style="margin-bottom:14px">CubAssist connects to Twitch using its own dedicated account. This is set up once by the CUB SOFTWARE team.</p>
+                    <div id="settingsAccountInfo" style="display:flex;align-items:center;gap:12px">
+                        <div id="settingsNick" style="font-size:15px;font-weight:600;color:var(--twitch)">Not connected</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⚙ Bot Settings</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Your Channel</label>
+                            <input type="text" id="cfg_channel" readonly
+                                style="opacity:.6;cursor:default;background:rgba(255,255,255,.04);">
+                        </div>
+                        <div class="form-group">
+                            <label>Command Prefix</label>
+                            <input type="text" id="cfg_prefix" placeholder="!" maxlength="3" style="width:80px" oninput="markDirty()">
+                        </div>
+                    </div>
+                    <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+                        <button class="btn btn-primary" id="saveSettingsBtn" onclick="saveSettings()" disabled>Save Settings</button>
+                        <span id="saveSettingsHint" class="hint"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /app-main -->
+    </div><!-- /app-layout -->
+
+</div><!-- /main-container -->
+
+<!-- Command modal -->
+<div class="modal-backdrop" id="cmdModal">
+    <div class="modal">
+        <div class="modal-title" id="cmdModalTitle">Add Command</div>
+        <input type="hidden" id="cmdEditName">
+        <div class="form-row" style="margin-bottom:14px">
+            <div class="form-group">
+                <label>Command Name</label>
+                <input type="text" id="cmdName" placeholder="hello" oninput="this.value=this.value.replace(/[^a-z0-9_]/gi,'').toLowerCase()">
+            </div>
+            <div class="form-group">
+                <label>User Level</label>
+                <select id="cmdLevel">
+                    <option value="everyone">Everyone</option>
+                    <option value="subscriber">Subscriber+</option>
+                    <option value="vip">VIP+</option>
+                    <option value="moderator">Moderator+</option>
+                    <option value="broadcaster">Broadcaster only</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+            <label>Response</label>
+            <textarea id="cmdResponse" rows="3" placeholder="Hello $(user)! This command has been used $(count) times."></textarea>
+            <div class="var-chips">
+                <span class="var-chip" onclick="insertModalVar('$(user)')">$(user)</span>
+                <span class="var-chip" onclick="insertModalVar('$(touser)')">$(touser)</span>
+                <span class="var-chip" onclick="insertModalVar('$(query)')">$(query)</span>
+                <span class="var-chip" onclick="insertModalVar('$(count)')">$(count)</span>
+                <span class="var-chip" onclick="insertModalVar('$(random 1 100)')">$(random 1 100)</span>
+                <span class="var-chip" onclick="insertModalVar('$(uptime)')">$(uptime)</span>
+                <span class="var-chip" onclick="insertModalVar('$(game)')">$(game)</span>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Global Cooldown (s)</label>
+                <input type="number" id="cmdCooldown" value="5" min="0">
+            </div>
+            <div class="form-group">
+                <label>User Cooldown (s)</label>
+                <input type="number" id="cmdUserCooldown" value="0" min="0">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('cmdModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveCommand()">Save Command</button>
+        </div>
+    </div>
+</div>
+
+<!-- Timer modal -->
+<div class="modal-backdrop" id="timerModal">
+    <div class="modal">
+        <div class="modal-title" id="timerModalTitle">Add Timer</div>
+        <input type="hidden" id="timerEditId">
+        <div class="form-group" style="margin-bottom:14px">
+            <label>Timer Name</label>
+            <input type="text" id="timerName" placeholder="Social Links">
+        </div>
+        <div class="form-group" style="margin-bottom:14px">
+            <label>Message</label>
+            <textarea id="timerMessage" rows="3" placeholder="Follow us on Twitter! 🐦"></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Interval (minutes)</label>
+                <input type="number" id="timerInterval" value="30" min="1" max="1440">
+            </div>
+            <div class="form-group">
+                <label>Min Chat Lines</label>
+                <input type="number" id="timerMinLines" value="0" min="0" max="1000">
+                <small class="hint" style="margin-top:4px">Won't fire unless at least this many lines were sent since last fire.</small>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('timerModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveTimer()">Save Timer</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let _status = {};
+let _cfg    = {};
+let _cmds   = [];
+let _timers = [];
+let _msgCount = 0;
+let _dirty  = false;
+let _pollInterval;
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+async function init() {
+    await Promise.all([loadStatus(), loadConfig(), loadCommands(), loadTimers(), loadAutomod()]);
+    pollLogs();
+    _pollInterval = setInterval(() => { loadStatus(); pollLogs(); }, 4000);
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────────────
+function openTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('tab-' + name)?.classList.add('active');
+    document.querySelector(`[data-tab="${name}"]`)?.classList.add('active');
+}
+
+// ── Status ─────────────────────────────────────────────────────────────────────
+async function loadStatus() {
+    try {
+        const r = await fetch('/cubassist/api/status');
+        _status = await r.json();
+        updateStatusUI();
+    } catch {}
+}
+
+function updateStatusUI() {
+    const dot  = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    const badge = document.getElementById('channelBadge');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn  = document.getElementById('stopBtn');
+
+    if (_status.connected) {
+        dot.className  = 'status-dot online';
+        text.textContent = `Connected as ${_status.bot_nick}`;
+        badge.textContent = `# ${_status.channel}`;
+        badge.className = 'connected-badge on';
+        startBtn.style.display = 'none';
+        stopBtn.style.display  = '';
+    } else if (_status.running) {
+        dot.className  = 'status-dot';
+        dot.style.background = 'var(--warn)';
+        text.textContent = 'Connecting...';
+        badge.textContent = '';
+        badge.className = 'connected-badge off';
+        startBtn.style.display = 'none';
+        stopBtn.style.display  = '';
+    } else {
+        dot.className  = 'status-dot offline';
+        text.textContent = 'Offline';
+        badge.textContent = '';
+        badge.className = 'connected-badge off';
+        startBtn.style.display = '';
+        stopBtn.style.display  = 'none';
+    }
+
+    // Stats
+    const up = _status.uptime_seconds || 0;
+    const h = Math.floor(up / 3600), m = Math.floor((up % 3600) / 60);
+    document.getElementById('stat-uptime').textContent = up ? (h + 'h ' + m + 'm') : '—';
+    document.getElementById('stat-commands').textContent = _cmds.length;
+    document.getElementById('stat-timers').textContent   = _timers.length;
+
+    // Chat channel label
+    const ch = _status.channel || _cfg.channel || '';
+    document.getElementById('chatChannel').textContent = ch ? '#' + ch : '';
+}
+
+// ── Bot control ────────────────────────────────────────────────────────────────
+async function startBot() {
+    await fetch('/cubassist/api/start', { method: 'POST' });
+    await loadStatus();
+}
+async function stopBot() {
+    if (!confirm('Stop CubAssist?')) return;
+    await fetch('/cubassist/api/stop', { method: 'POST' });
+    await loadStatus();
+}
+
+// ── Config ─────────────────────────────────────────────────────────────────────
+async function loadConfig() {
+    const r = await fetch('/cubassist/api/config');
+    _cfg = await r.json();
+    document.getElementById('cfg_channel').value = _cfg.channel || '';
+    document.getElementById('cfg_prefix').value  = _cfg.command_prefix || '!';
+    document.getElementById('cfg_enabled').checked = !!_cfg.enabled;
+
+    const nickEl = document.getElementById('settingsNick');
+    if (_cfg.bot_nick) {
+        nickEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px;background:rgba(145,70,255,0.12);border:1px solid rgba(145,70,255,0.25);border-radius:20px;padding:4px 14px 4px 10px;font-size:14px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#57f287;display:inline-block;flex-shrink:0"></span>
+            ${_cfg.bot_nick}
+        </span>`;
+    } else {
+        nickEl.textContent = 'Not connected';
+    }
+
+}
+
+function markDirty() {
+    _dirty = true;
+    document.getElementById('saveSettingsBtn').disabled = false;
+    document.getElementById('saveSettingsHint').textContent = 'Unsaved changes';
+}
+
+async function saveSettings() {
+    const body = {
+        command_prefix: document.getElementById('cfg_prefix').value.trim() || '!',
+    };
+    const r = await fetch('/cubassist/api/config', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (r.ok) {
+        _dirty = false;
+        document.getElementById('saveSettingsBtn').disabled = true;
+        document.getElementById('saveSettingsHint').textContent = 'Saved!';
+        await loadConfig();
+        showToast('Settings saved', 'success');
+    }
+}
+
+// ── Commands ───────────────────────────────────────────────────────────────────
+async function loadCommands() {
+    const r = await fetch('/cubassist/api/commands');
+    _cmds = await r.json();
+    renderCommands();
+    updateStatusUI();
+}
+
+function renderCommands() {
+    const tbody = document.getElementById('commandsTbody');
+    if (!_cmds.length) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty"><div class="icon">⚡</div><p>No commands yet. Click <strong>+ Add Command</strong> to create one.</p></div></td></tr>';
+        return;
+    }
+    tbody.innerHTML = _cmds.map(cmd => `
+        <tr>
+            <td><span class="${cmd.enabled ? 'dot-enabled' : 'dot-disabled'}"></span></td>
+            <td><strong>!${cmd.name}</strong></td>
+            <td><span class="cmd-response" title="${escHtml(cmd.response)}">${escHtml(cmd.response)}</span></td>
+            <td><span class="badge badge-${cmd.user_level}">${cmd.user_level}</span></td>
+            <td>${cmd.cooldown}s</td>
+            <td>${cmd.count || 0}</td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn btn-ghost btn-sm" onclick="editCommand('${escHtml(cmd.name)}')">Edit</button>
+                    <button class="btn btn-ghost btn-sm" onclick="toggleCommand('${escHtml(cmd.name)}')">${cmd.enabled ? 'Disable' : 'Enable'}</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteCommand('${escHtml(cmd.name)}')">Del</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openCommandModal(name) {
+    document.getElementById('cmdModal').classList.add('open');
+    if (name) {
+        const cmd = _cmds.find(c => c.name === name);
+        if (!cmd) return;
+        document.getElementById('cmdModalTitle').textContent = 'Edit Command';
+        document.getElementById('cmdEditName').value    = name;
+        document.getElementById('cmdName').value        = name;
+        document.getElementById('cmdName').disabled     = true;
+        document.getElementById('cmdResponse').value    = cmd.response;
+        document.getElementById('cmdLevel').value       = cmd.user_level;
+        document.getElementById('cmdCooldown').value    = cmd.cooldown;
+        document.getElementById('cmdUserCooldown').value = cmd.user_cooldown;
+    } else {
+        document.getElementById('cmdModalTitle').textContent = 'Add Command';
+        document.getElementById('cmdEditName').value = '';
+        document.getElementById('cmdName').value     = '';
+        document.getElementById('cmdName').disabled  = false;
+        document.getElementById('cmdResponse').value = '';
+        document.getElementById('cmdLevel').value    = 'everyone';
+        document.getElementById('cmdCooldown').value = '5';
+        document.getElementById('cmdUserCooldown').value = '0';
+    }
+}
+
+function editCommand(name) { openCommandModal(name); }
+
+async function saveCommand() {
+    const name = (document.getElementById('cmdEditName').value || document.getElementById('cmdName').value).toLowerCase().trim();
+    if (!name) { showToast('Command name required', 'error'); return; }
+    const body = {
+        name,
+        response:     document.getElementById('cmdResponse').value,
+        user_level:   document.getElementById('cmdLevel').value,
+        cooldown:     parseInt(document.getElementById('cmdCooldown').value) || 5,
+        user_cooldown: parseInt(document.getElementById('cmdUserCooldown').value) || 0,
+        enabled: true,
+    };
+    const r = await fetch('/cubassist/api/commands', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (r.ok) { closeModal('cmdModal'); await loadCommands(); showToast('Command saved', 'success'); }
+}
+
+async function deleteCommand(name) {
+    if (!confirm(`Delete !${name}?`)) return;
+    await fetch('/cubassist/api/commands/' + name, { method: 'DELETE' });
+    await loadCommands();
+    showToast('Command deleted');
+}
+
+async function toggleCommand(name) {
+    await fetch('/cubassist/api/commands/' + name + '/toggle', { method: 'POST' });
+    await loadCommands();
+}
+
+function insertVar(v) { navigator.clipboard?.writeText(v); showToast('Copied: ' + v); }
+function insertModalVar(v) {
+    const ta = document.getElementById('cmdResponse');
+    const pos = ta.selectionStart;
+    ta.value = ta.value.slice(0, pos) + v + ta.value.slice(ta.selectionEnd);
+    ta.selectionStart = ta.selectionEnd = pos + v.length;
+    ta.focus();
+}
+
+// ── Timers ─────────────────────────────────────────────────────────────────────
+async function loadTimers() {
+    const r = await fetch('/cubassist/api/timers');
+    _timers = await r.json();
+    renderTimers();
+    updateStatusUI();
+}
+
+function renderTimers() {
+    const el = document.getElementById('timersList');
+    if (!_timers.length) {
+        el.innerHTML = '<div class="empty"><div class="icon">⏱</div><p>No timers yet. Click <strong>+ Add Timer</strong> to create one.</p></div>';
+        return;
+    }
+    el.innerHTML = _timers.map(t => `
+        <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)">
+            <label class="toggle" style="flex-shrink:0">
+                <input type="checkbox" ${t.enabled ? 'checked' : ''} onchange="setTimerEnabled('${t.id}', this.checked)">
+                <span class="toggle-slider"></span>
+            </label>
+            <div style="flex:1">
+                <div style="font-weight:600;font-size:14px">${escHtml(t.name)}</div>
+                <div style="font-family:'Fira Code',monospace;font-size:12px;color:var(--text-sec);margin-top:2px">${escHtml(t.message)}</div>
+                <div style="font-size:11px;color:var(--text-sec);margin-top:4px">Every ${Math.round(t.interval/60)}m${t.min_lines ? ' · Min ' + t.min_lines + ' lines' : ''}</div>
+            </div>
+            <div class="action-btns">
+                <button class="btn btn-ghost btn-sm" onclick="editTimer('${t.id}')">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteTimer('${t.id}')">Del</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openTimerModal(id) {
+    document.getElementById('timerModal').classList.add('open');
+    if (id) {
+        const t = _timers.find(x => x.id === id);
+        if (!t) return;
+        document.getElementById('timerModalTitle').textContent = 'Edit Timer';
+        document.getElementById('timerEditId').value    = id;
+        document.getElementById('timerName').value      = t.name;
+        document.getElementById('timerMessage').value   = t.message;
+        document.getElementById('timerInterval').value  = Math.round(t.interval / 60);
+        document.getElementById('timerMinLines').value  = t.min_lines || 0;
+    } else {
+        document.getElementById('timerModalTitle').textContent = 'Add Timer';
+        document.getElementById('timerEditId').value = '';
+        document.getElementById('timerName').value   = '';
+        document.getElementById('timerMessage').value = '';
+        document.getElementById('timerInterval').value = '30';
+        document.getElementById('timerMinLines').value = '0';
+    }
+}
+
+function editTimer(id) { openTimerModal(id); }
+
+async function saveTimer() {
+    const id = document.getElementById('timerEditId').value;
+    const body = {
+        id: id || undefined,
+        name:      document.getElementById('timerName').value,
+        message:   document.getElementById('timerMessage').value,
+        interval:  parseInt(document.getElementById('timerInterval').value) * 60,
+        min_lines: parseInt(document.getElementById('timerMinLines').value) || 0,
+        enabled:   true,
+    };
+    const r = await fetch('/cubassist/api/timers', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    if (r.ok) { closeModal('timerModal'); await loadTimers(); showToast('Timer saved', 'success'); }
+}
+
+async function deleteTimer(id) {
+    if (!confirm('Delete timer?')) return;
+    await fetch('/cubassist/api/timers/' + id, { method: 'DELETE' });
+    await loadTimers();
+    showToast('Timer deleted');
+}
+
+async function setTimerEnabled(id, enabled) {
+    const t = _timers.find(x => x.id === id);
+    if (!t) return;
+    t.enabled = enabled;
+    await fetch('/cubassist/api/timers', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...t, enabled })
+    });
+}
+
+// ── AutoMod ────────────────────────────────────────────────────────────────────
+async function loadAutomod() {
+    const r = await fetch('/cubassist/api/automod');
+    const am = await r.json();
+
+    const links = am.links || {};
+    const caps  = am.caps  || {};
+
+    document.getElementById('am_links').checked    = !!links.enabled;
+    document.getElementById('am_permit_time').value = links.permit_time || 30;
+    document.getElementById('am_whitelist').value   = (links.whitelist || []).join('\n');
+    document.getElementById('linksSubOptions').style.display = links.enabled ? '' : 'none';
+
+    document.getElementById('am_caps').checked      = !!caps.enabled;
+    document.getElementById('am_caps_pct').value    = caps.max_percent || 70;
+    document.getElementById('am_caps_min').value    = caps.min_chars   || 10;
+    document.getElementById('capsSubOptions').style.display = caps.enabled ? '' : 'none';
+
+    const bl = am.blacklist || [];
+    document.getElementById('am_blacklist_enabled').checked = bl.length > 0;
+    document.getElementById('am_blacklist').value           = bl.join('\n');
+    document.getElementById('blacklistOptions').style.display = bl.length ? '' : 'none';
+}
+
+async function saveAutomod() {
+    const linksOn = document.getElementById('am_links').checked;
+    const capsOn  = document.getElementById('am_caps').checked;
+    const blOn    = document.getElementById('am_blacklist_enabled').checked;
+
+    document.getElementById('linksSubOptions').style.display = linksOn ? '' : 'none';
+    document.getElementById('capsSubOptions').style.display  = capsOn  ? '' : 'none';
+    document.getElementById('blacklistOptions').style.display = blOn   ? '' : 'none';
+
+    const body = {
+        links: {
+            enabled:     linksOn,
+            permit_time: parseInt(document.getElementById('am_permit_time').value) || 30,
+            whitelist:   document.getElementById('am_whitelist').value.split('\n').map(s=>s.trim()).filter(Boolean),
+        },
+        caps: {
+            enabled:     capsOn,
+            max_percent: parseInt(document.getElementById('am_caps_pct').value) || 70,
+            min_chars:   parseInt(document.getElementById('am_caps_min').value) || 10,
+        },
+        blacklist: blOn
+            ? document.getElementById('am_blacklist').value.split('\n').map(s=>s.trim()).filter(Boolean)
+            : [],
+    };
+    await fetch('/cubassist/api/automod', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    showToast('AutoMod saved', 'success');
+}
+
+// ── Chat log ───────────────────────────────────────────────────────────────────
+let _lastLogTs = 0;
+
+async function pollLogs() {
+    try {
+        const r = await fetch('/cubassist/api/logs');
+        const data = await r.json();
+        const logs = data.logs || [];
+        const newMsgs = logs.filter(m => m.ts > _lastLogTs);
+        if (newMsgs.length) {
+            _lastLogTs = newMsgs[newMsgs.length - 1].ts;
+            _msgCount += newMsgs.length;
+            document.getElementById('stat-msgs').textContent = _msgCount;
+            newMsgs.forEach(m => appendChatMsg(m));
+        }
+    } catch {}
+}
+
+function appendChatMsg(m) {
+    const time = new Date(m.ts * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const color = m.color || '#9146ff';
+    const html = `<div class="chat-msg">
+        <span class="chat-ts">${time}</span>
+        <span class="chat-nick" style="color:${color}">${escHtml(m.nick)}</span>
+        <span class="chat-text">: ${escHtml(m.text)}</span>
+    </div>`;
+
+    ['overviewChat', 'mainChat'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.insertAdjacentHTML('beforeend', html);
+        el.scrollTop = el.scrollHeight;
+        while (el.children.length > 100) el.removeChild(el.firstChild);
+    });
+}
+
+function clearChatView() {
+    document.getElementById('mainChat').innerHTML = '';
+    document.getElementById('overviewChat').innerHTML = '';
+}
+
+// ── Send chat ──────────────────────────────────────────────────────────────────
+async function sendChat() {
+    const input = document.getElementById('chatMsgInput');
+    const msg   = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    await fetch('/cubassist/api/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+    });
+}
+
+async function sendQuickMsg() {
+    const input = document.getElementById('quickMsg');
+    const msg   = input.value.trim();
+    if (!msg) return;
+    input.value = '';
+    await fetch('/cubassist/api/chat', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: msg })
+    });
+    showToast('Message sent', 'success');
+}
+
+function copyCmd(cmd) { navigator.clipboard?.writeText(cmd); showToast('Copied: ' + cmd); }
+
+// ── Modals ─────────────────────────────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+let _toastTimer;
+function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = 'show' + (type ? ' t-' + type : '');
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { t.className = ''; }, 2800);
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function escHtml(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── URL param check ────────────────────────────────────────────────────────────
+if (new URLSearchParams(location.search).get('connected') === '1') {
+    showToast('Twitch account connected!', 'success');
+    history.replaceState({}, '', '/cubassist/');
+}
+
+init();
+</script>
+</body>
+</html>

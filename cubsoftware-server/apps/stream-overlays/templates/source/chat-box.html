@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1920">
+<title>Chat Box</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+#overlay { width: 1920px; height: 1080px; position: relative; font-family: 'Poppins', sans-serif; }
+
+/* ── Box wrapper ─────────────────────────────────────────────── */
+#chatWrap {
+    position: absolute;
+    bottom: 20px; left: 20px;
+    width: 420px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+#chatHeader {
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 8px 14px;
+    background: #9146ff;
+    border-radius: 10px 10px 0 0;
+    font-size: 13px; font-weight: 700;
+    color: #fff; letter-spacing: 2px; text-transform: uppercase;
+}
+
+/* ── Messages area ───────────────────────────────────────────── */
+#chatBox {
+    display: flex; flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
+    max-height: 860px;
+}
+
+/* ── Message card (default / card style) ────────────────────── */
+.chat-msg {
+    display: flex; flex-direction: column;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(10,10,26,0.85);
+    border-left: 3px solid #9146ff;
+    word-break: break-word;
+    animation: msgSlide .25s ease forwards;
+    transition: opacity .4s, transform .4s;
+}
+/* Minimal style */
+.chat-msg.style-minimal {
+    background: transparent !important;
+    border: none !important;
+    padding: 4px 0 !important;
+}
+/* Compact style */
+.chat-msg.style-compact {
+    padding: 4px 10px !important;
+    border-radius: 6px !important;
+}
+/* Bubble style — username inside */
+.chat-msg.style-bubble {
+    border-left: none !important;
+    border-radius: 14px !important;
+}
+/* Inline style: name + message on one line */
+.chat-msg.style-inline {
+    flex-direction: row !important;
+    align-items: baseline !important;
+    gap: 6px;
+    background: transparent !important;
+    border: none !important;
+    padding: 2px 0 !important;
+}
+.chat-msg.style-inline .chat-name { flex-shrink: 0; }
+.chat-msg.style-inline .chat-text { flex: 1; }
+
+/* Animations */
+@keyframes msgSlide { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+@keyframes msgFade  { from { opacity: 0; transform: translateY(8px); }  to { opacity: 1; transform: none; } }
+@keyframes msgPop   { from { opacity: 0; transform: scale(.92); }       to { opacity: 1; transform: none; } }
+.anim-fade  { animation-name: msgFade  !important; }
+.anim-pop   { animation-name: msgPop   !important; }
+.anim-none  { animation: none !important; }
+.msg-remove { opacity: 0; transform: translateX(-20px); }
+
+/* ── Name & text ─────────────────────────────────────────────── */
+.chat-name {
+    font-size: 13px; font-weight: 700;
+    margin-bottom: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.chat-text {
+    font-size: 16px; color: #fff; line-height: 1.35;
+}
+.chat-emote { height: 22px; vertical-align: middle; margin: 0 1px; }
+
+/* Timestamp */
+.chat-ts {
+    font-size: 10px; color: rgba(255,255,255,.35);
+    float: right; margin-left: 8px; margin-top: 2px;
+}
+
+/* ── Sub / event notices ─────────────────────────────────────── */
+.chat-event {
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(255,102,0,.12);
+    border-left: 3px solid #ff6600;
+    font-size: 13px; color: #ffaa55;
+    animation: msgFade .3s ease forwards;
+}
+.chat-event.raid { border-left-color: #ff2020; color: #ff8080; background: rgba(255,32,32,.1); }
+.chat-event.follow { border-left-color: #00cc88; color: #66ffbb; background: rgba(0,204,136,.1); }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Bebas+Neue&family=Chakra+Petch:wght@400;600;700&family=Exo+2:wght@400;600;700&family=Montserrat:wght@400;600;700&family=Nunito:wght@400;600;700&family=Orbitron:wght@700;900&family=Outfit:wght@400;600;700&family=Poppins:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Share+Tech+Mono&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/overlays/static/css/overlays-effects.css?v={{ v }}">
+</head>
+<body>
+<div id="overlay">
+    <div id="chatWrap">
+        <div id="chatHeader"></div>
+        <div id="chatBox"></div>
+    </div>
+</div>
+<script src="/overlays/static/js/overlays-effects.js?v={{ v }}"></script>
+<script>
+const SCENE_ID = '{{ scene_id }}';
+let cfg = {};
+let ws = null;
+let reconnectTimer = null;
+const _removeTimers = new Map();
+
+function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = String(s || '');
+    return d.innerHTML;
+}
+
+function hexRgba(hex, alpha) {
+    try {
+        const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+        return `rgba(${r},${g},${b},${parseFloat(alpha).toFixed(2)})`;
+    } catch { return `rgba(10,10,26,${parseFloat(alpha).toFixed(2)})`; }
+}
+
+// ── Position the chat box ─────────────────────────────────────────────────────
+function positionBox() {
+    const wrap = document.getElementById('chatWrap');
+    const pos = cfg.chat_position || 'bottom-left';
+    const ox = parseInt(cfg.chat_offset_x) || 20;
+    const oy = parseInt(cfg.chat_offset_y) || 20;
+    wrap.style.width = (parseInt(cfg.chat_width) || 420) + 'px';
+    document.getElementById('chatBox').style.maxHeight = (parseInt(cfg.chat_max_height) || 860) + 'px';
+    // Clear all position styles first
+    ['top','bottom','left','right'].forEach(p => wrap.style[p] = '');
+    const posMap = {
+        'top-left':      { top: oy+'px', left: ox+'px' },
+        'top-right':     { top: oy+'px', right: ox+'px' },
+        'top-center':    { top: oy+'px', left: '50%' },
+        'bottom-left':   { bottom: oy+'px', left: ox+'px' },
+        'bottom-right':  { bottom: oy+'px', right: ox+'px' },
+        'bottom-center': { bottom: oy+'px', left: '50%' },
+        'center-left':   { top: '50%', left: ox+'px' },
+        'center-right':  { top: '50%', right: ox+'px' },
+    };
+    const p = posMap[pos] || posMap['bottom-left'];
+    Object.assign(wrap.style, p);
+    if (pos.includes('center')) {
+        wrap.style.transform = pos === 'top-center' || pos === 'bottom-center' ? 'translateX(-50%)' : 'translateY(-50%)';
+    } else {
+        wrap.style.transform = '';
+    }
+}
+
+// ── Apply config ──────────────────────────────────────────────────────────────
+function applyConfig(c) {
+    cfg = c;
+    positionBox();
+
+    // Header
+    const headerEl = document.getElementById('chatHeader');
+    const showHeader = c.show_header || false;
+    headerEl.style.display = showHeader ? 'flex' : 'none';
+    if (showHeader) {
+        headerEl.textContent = c.header_text || 'LIVE CHAT';
+        headerEl.style.background = c.header_bg || '#9146ff';
+        headerEl.style.borderRadius = (c.border_radius || 10) + 'px ' + (c.border_radius || 10) + 'px 0 0';
+    }
+
+    // Message gap
+    document.getElementById('chatBox').style.gap = (parseInt(c.chat_gap) || 6) + 'px';
+
+    // Font
+    const font = c.font || 'Poppins';
+    document.getElementById('chatBox').style.fontFamily = `'${font}', sans-serif`;
+
+    // Re-style existing messages
+    document.querySelectorAll('.chat-msg').forEach(m => styleMsg(m));
+
+    // Connect chat if channel changed
+    const ch = (c.twitch_channel || '').toLowerCase().trim();
+    if (ch) {
+        // Remove the setup hint if present
+        const hint = document.querySelector('.chat-setup-hint');
+        if (hint) hint.remove();
+        connectChat(ch);
+    } else {
+        // Show a placeholder message so the overlay isn't blank
+        const box = document.getElementById('chatBox');
+        if (box && !box.querySelector('.chat-setup-hint')) {
+            const hint = document.createElement('div');
+            hint.className = 'chat-setup-hint';
+            hint.style.cssText = 'font-family:Poppins,sans-serif;font-size:13px;color:rgba(255,255,255,.35);padding:12px;text-align:center;';
+            hint.textContent = 'Enter your Twitch channel name in the editor to connect';
+            box.appendChild(hint);
+        }
+    }
+}
+
+function getMsgBg()     { return hexRgba(cfg.chat_bg || '#0a0a1a', (cfg.bg_opacity ?? 70) / 100); }
+function getAccent()    { return cfg.accent_color || '#9146ff'; }
+function getBorderStyle() { return cfg.border_style || 'left'; }
+
+function styleMsg(div) {
+    const bg = getMsgBg();
+    const br = (cfg.border_radius ?? 10) + 'px';
+    const bw = (cfg.border_width ?? 3) + 'px';
+    const style = cfg.message_style || 'card';
+    div.style.background    = (style === 'minimal' || style === 'inline') ? 'transparent' : bg;
+    div.style.borderRadius  = br;
+    div.style.padding       = (style === 'compact') ? '4px 10px' : (style === 'minimal' || style === 'inline') ? '2px 0' : `${cfg.padding_y||8}px ${cfg.padding_x||12}px`;
+    div.style.boxShadow     = cfg.card_shadow ? '0 2px 12px rgba(0,0,0,.5)' : 'none';
+
+    const bs = getBorderStyle();
+    if (style === 'minimal' || style === 'inline' || bs === 'none') {
+        div.style.border = 'none';
+    } else if (bs === 'left') {
+        div.style.border = 'none';
+        const accent = div.dataset.accent || getAccent();
+        div.style.borderLeft = bw + ' solid ' + accent;
+    } else if (bs === 'all') {
+        const accent = div.dataset.accent || getAccent();
+        div.style.border = '1px solid ' + accent + '55';
+    }
+
+    const nameEl = div.querySelector('.chat-name');
+    const textEl = div.querySelector('.chat-text');
+    if (nameEl) nameEl.style.fontSize = (cfg.name_font_size || 13) + 'px';
+    if (textEl) {
+        textEl.style.fontSize   = (cfg.font_size || 16) + 'px';
+        textEl.style.lineHeight = (cfg.line_height || 1.35);
+    }
+}
+
+// ── Add a chat message ────────────────────────────────────────────────────────
+function addMessage(name, color, text, isSub, tags) {
+    const box = document.getElementById('chatBox');
+    const max = cfg.max_messages || 20;
+    const accent = isSub && cfg.highlight_subs ? (cfg.highlight_color || '#ff6600') : (cfg.accent_color || '#9146ff');
+    const style = cfg.message_style || 'card';
+    const animClass = { slide: 'anim-slide', fade: 'anim-fade', pop: 'anim-pop', none: 'anim-none' }[cfg.message_animation || 'slide'] || '';
+
+    const div = document.createElement('div');
+    div.className = `chat-msg style-${style} ${animClass}`;
+    div.dataset.accent = accent;
+    if (isSub && cfg.highlight_subs) div.classList.add('sub-msg');
+
+    // Timestamp
+    const ts = cfg.show_timestamps
+        ? `<span class="chat-ts">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`
+        : '';
+
+    // Render message text with emote images
+    let renderedText = esc(text);
+    if (cfg.show_emotes !== false && tags && tags['emotes']) {
+        const emoteMap = {};
+        tags['emotes'].split('/').forEach(part => {
+            const [id, positions] = part.split(':');
+            if (!positions) return;
+            const [start, end] = positions.split(',')[0].split('-').map(Number);
+            const word = text.slice(start, end + 1);
+            emoteMap[word] = `<img class="chat-emote" src="https://static-cdn.jtvnw.net/emoticons/v2/${id}/default/dark/2.0" alt="${esc(word)}">`;
+        });
+        // Rebuild with emotes
+        renderedText = text.split(' ').map(w => emoteMap[w] || esc(w)).join(' ');
+    }
+
+    div.innerHTML = `
+        <div class="chat-name" style="color:${color}">${esc(name)}${ts}</div>
+        <div class="chat-text" style="font-size:${cfg.font_size||16}px;line-height:${cfg.line_height||1.35}">${renderedText}</div>
+    `;
+
+    styleMsg(div);
+    box.appendChild(div);
+
+    // Cap messages
+    while (box.querySelectorAll('.chat-msg, .chat-event').length > max) {
+        box.removeChild(box.firstChild);
+    }
+
+    // Auto-remove
+    const dur = parseInt(cfg.auto_remove_delay) || 30;
+    if (cfg.auto_remove && dur > 0) {
+        const timer = setTimeout(() => {
+            div.classList.add('msg-remove');
+            setTimeout(() => { if (div.parentNode) div.parentNode.removeChild(div); }, 500);
+        }, dur * 1000);
+        _removeTimers.set(div, timer);
+    }
+}
+
+// ── Event notices (subs/raids/follows) ───────────────────────────────────────
+function addEvent(text, type) {
+    const box = document.getElementById('chatBox');
+    const max = cfg.max_messages || 20;
+    const div = document.createElement('div');
+    div.className = `chat-event ${type || ''}`;
+    div.textContent = text;
+    box.appendChild(div);
+    while (box.querySelectorAll('.chat-msg, .chat-event').length > max) box.removeChild(box.firstChild);
+}
+
+// ── IRC ───────────────────────────────────────────────────────────────────────
+function connectChat(channel) {
+    if (!channel) return;
+    if (ws && ws._channel === channel) return;
+    clearTimeout(reconnectTimer);
+    if (ws) { ws.onclose = null; ws.close(); ws = null; }
+    ws = new WebSocket('wss://irc-ws.chat.twitch.tv');
+    ws._channel = channel;
+    ws.onopen = () => {
+        ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+        ws.send('PASS SCHMOOPIIE');
+        ws.send('NICK justinfan' + Math.floor(Math.random() * 99999));
+        ws.send('JOIN #' + channel);
+    };
+    ws.onmessage = e => {
+        e.data.split('\r\n').forEach(line => {
+            if (line.startsWith('PING')) { ws.send('PONG :tmi.twitch.tv'); return; }
+            parseIRC(line);
+        });
+    };
+    ws.onclose = () => { reconnectTimer = setTimeout(() => connectChat(channel), 3000); };
+    ws.onerror  = () => { ws.close(); };
+}
+
+const KNOWN_BOTS = new Set(['nightbot','streamelements','streamlabs','moobot','fossabot','commanderroot','logviewer','creatisbot']);
+
+function parseIRC(line) {
+    let tags = {}, rest = line;
+    if (line.startsWith('@')) {
+        const sp = line.indexOf(' ');
+        line.slice(1, sp).split(';').forEach(t => { const [k,v] = t.split('='); tags[k] = v || ''; });
+        rest = line.slice(sp + 1);
+    }
+    // PRIVMSG
+    const pm = rest.match(/^:(\S+)!\S+@\S+ PRIVMSG #\S+ :(.*)$/);
+    if (pm) {
+        const username = pm[1], message = pm[2];
+        if (cfg.filter_commands && message.startsWith('!')) return;
+        if (cfg.filter_bots && KNOWN_BOTS.has(username.toLowerCase())) return;
+        const minLen = parseInt(cfg.min_message_length) || 0;
+        if (minLen > 0 && message.length < minLen) return;
+        const displayName = tags['display-name'] || username;
+        const rawColor = tags['color'];
+        const useColor = cfg.username_colors !== false && rawColor;
+        const color = useColor ? rawColor : (cfg.accent_color || '#9146ff');
+        const isSub = tags['subscriber'] === '1';
+        addMessage(displayName, color, message, isSub, tags);
+        return;
+    }
+    // USERNOTICE (subs, raids)
+    const un = rest.match(/^:tmi\.twitch\.tv USERNOTICE #\S+(?: :(.*))?$/);
+    if (un && tags['msg-id']) {
+        const msgId = tags['msg-id'];
+        const system = tags['system-msg'] ? tags['system-msg'].replace(/\\s/g,' ') : '';
+        if ((msgId === 'sub' || msgId === 'resub' || msgId === 'subgift' || msgId === 'submysterygift') && cfg.show_sub_events) {
+            addEvent('⭐ ' + (system || tags['display-name'] + ' just subscribed!'), 'sub');
+        } else if (msgId === 'raid' && cfg.show_raid_events) {
+            addEvent('🚀 Raid from ' + tags['display-name'] + '!', 'raid');
+        }
+    }
+}
+
+// ── SSE & load ────────────────────────────────────────────────────────────────
+function connectSSE() {
+    const es = new EventSource('/overlays/source/' + SCENE_ID + '/events');
+    es.onmessage = e => { const m = JSON.parse(e.data); if (m.type === 'update') applyConfig(m.config); };
+    es.onerror   = () => { es.close(); setTimeout(connectSSE, 3000); };
+}
+
+async function loadConfig() {
+    try {
+        const r = await fetch('/overlays/api/scenes/' + SCENE_ID + '/config');
+        if (r.ok) applyConfig(await r.json());
+    } catch(e) {}
+}
+
+loadConfig().then(connectSSE);
+window.addEventListener('message', e => {
+    if (e.data && e.data.type === 'preview-update') applyConfig(e.data.config);
+});
+</script>
+</body>
+</html>

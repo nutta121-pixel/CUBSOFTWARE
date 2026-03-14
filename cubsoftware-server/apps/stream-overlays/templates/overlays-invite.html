@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scene Invite | Stream Overlays | CUB SOFTWARE</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/overlays/static/css/overlays-dashboard.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="ov-login-page">
+            <div class="ov-login-card">
+                {% if error %}
+                <div class="ov-invite-icon">❌</div>
+                <h1>Invalid Invite</h1>
+                <p>{{ error }}</p>
+                <a href="/overlays" class="ov-btn-login" style="margin-top:24px">Go to Dashboard</a>
+                {% else %}
+                <div class="ov-invite-icon">🔗</div>
+                <h1>Scene Collaboration Invite</h1>
+                <p>You've been invited to collaborate on a scene overlay:</p>
+                <div class="ov-invite-scene-info">
+                    <div class="ov-invite-scene-name">{{ scene.name }}</div>
+                    <div class="ov-invite-scene-type">{{ scene.type | replace('-', ' ') | title }}</div>
+                </div>
+                <p style="margin-top:12px;font-size:14px;opacity:.7">As a collaborator, you can view and edit this scene's settings. You cannot delete it or manage collaborators.</p>
+                <form action="/overlays/invite/{{ token }}/accept" method="POST" style="margin-top:24px">
+                    <button type="submit" class="ov-btn-login">Accept &amp; Edit Scene</button>
+                </form>
+                <a href="/overlays" class="ov-btn-logout" style="margin-top:12px;display:block;text-align:center">No thanks</a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Unit Converter - Length, Weight, Temperature & More | Free Online</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Convert anything instantly. Length, weight, temperature, data sizes, speed, time - all units in one place. No ads, no limits, works offline.">
+    <meta name="keywords" content="unit converter, convert meters to feet, kg to lbs, celsius to fahrenheit, bytes to gb, free converter">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/unit-converter">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Unit Converter - Convert Any Unit Instantly | Free">
+    <meta property="og:description" content="The only unit converter you'll ever need. Length, weight, temp, data, speed, time - instant conversions, zero hassle.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/unit-converter">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/unit-converter.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="converter-container">
+            <div class="converter-header">
+                <h1>Unit Converter</h1>
+                <p>Convert between units of length, weight, temperature, data, speed, and more</p>
+            </div>
+
+            <!-- Category Tabs -->
+            <div class="category-tabs">
+                <button class="category-tab active" data-category="length">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 12h20M6 8l-4 4 4 4M18 8l4 4-4 4"/>
+                    </svg>
+                    Length
+                </button>
+                <button class="category-tab" data-category="weight">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                    Weight
+                </button>
+                <button class="category-tab" data-category="temperature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                    </svg>
+                    Temperature
+                </button>
+                <button class="category-tab" data-category="data">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="2" width="20" height="8" rx="2"/>
+                        <rect x="2" y="14" width="20" height="8" rx="2"/>
+                        <path d="M6 6h.01M6 18h.01"/>
+                    </svg>
+                    Data
+                </button>
+                <button class="category-tab" data-category="speed">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    </svg>
+                    Speed
+                </button>
+                <button class="category-tab" data-category="time">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Time
+                </button>
+                <button class="category-tab" data-category="area">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    </svg>
+                    Area
+                </button>
+                <button class="category-tab" data-category="volume">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    Volume
+                </button>
+            </div>
+
+            <!-- Converter Panel -->
+            <div class="converter-panel">
+                <div class="converter-inputs">
+                    <div class="input-group">
+                        <label>From</label>
+                        <div class="input-row">
+                            <input type="number" id="fromValue" placeholder="Enter value" value="1">
+                            <select id="fromUnit"></select>
+                        </div>
+                    </div>
+
+                    <button class="swap-btn" id="swapBtn" title="Swap units">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M7 16V4M7 4L3 8M7 4l4 4M17 8v12M17 20l4-4M17 20l-4-4"/>
+                        </svg>
+                    </button>
+
+                    <div class="input-group">
+                        <label>To</label>
+                        <div class="input-row">
+                            <input type="number" id="toValue" placeholder="Result" readonly>
+                            <select id="toUnit"></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="conversion-formula" id="conversionFormula">
+                    <!-- Formula will be shown here -->
+                </div>
+            </div>
+
+            <!-- Quick Reference -->
+            <div class="quick-reference">
+                <h3>Quick Reference</h3>
+                <div class="reference-grid" id="referenceGrid">
+                    <!-- Reference cards will be populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <script src="/static/js/unit-converter.js?v={{ v }}"></script>
+</body>
+</html>

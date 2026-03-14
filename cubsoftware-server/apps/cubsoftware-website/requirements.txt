@@ -1,0 +1,5 @@
+Flask==3.0.0
+Werkzeug==3.0.1
+yt-dlp==2025.12.8
+spotdl==4.4.3
+waitress==3.0.0

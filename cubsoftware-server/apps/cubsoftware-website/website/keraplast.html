@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Keraplast Digestion Calculator | CUB SOFTWARE</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Keraplast Digestion Calculator - Calculate timing for each step of the digestion process automatically.">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/keraplast.css?v={{ v }}">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="header-top">
+            <a href="/" class="logo">
+                <span class="logo-text">
+                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                </span>
+            </a>
+            <nav class="site-nav">
+                <a href="/">Home</a>
+                <a href="/#apps">Tools</a>
+                <a href="https://questcord.fun" target="_blank">QuestCord</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Password Screen -->
+    <div id="passwordScreen" class="password-screen">
+        <div class="password-box">
+            <h2>Access Required</h2>
+            <p>Enter password to continue</p>
+            <input type="password" id="passwordInput" placeholder="Password" onkeypress="if(event.key === 'Enter') checkPassword()">
+            <button class="action-btn" onclick="checkPassword()">Enter</button>
+            <p id="passwordError" class="password-error"></p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="keraplast-container">
+        <h1 class="page-title">Keraplast Digestion Calculator</h1>
+        <p class="page-subtitle">Enter your start time and all step times will be calculated automatically</p>
+
+        <!-- Tab Navigation -->
+        <div class="calc-tabs">
+            <button class="calc-tab active" data-tab="keraplast" onclick="switchTab('keraplast')">Digestion Calculator</button>
+            <button class="calc-tab" data-tab="okl" onclick="switchTab('okl')">OKL Digestion Calculator</button>
+        </div>
+
+        <!-- ========== DIGESTION CALCULATOR TAB ========== -->
+        <div class="tab-pane active" id="tab-keraplast">
+            <div class="calculator-card">
+                <div class="start-time-section">
+                    <label for="startTime">Recirculation Start Time</label>
+                    <input type="time" id="startTime" value="11:30">
+                </div>
+
+                <div class="start-time-section">
+                    <label for="finishTime">Finish Time <span class="optional-label">(optional)</span></label>
+                    <input type="time" id="finishTime">
+                </div>
+
+                <div class="batch-info-section">
+                    <div class="batch-field">
+                        <label for="batchNumber">Batch Number</label>
+                        <input type="text" id="batchNumber" placeholder="26A01B1">
+                    </div>
+                    <div class="batch-field">
+                        <label for="keraplast-operator">Operator</label>
+                        <input type="text" id="keraplast-operator" placeholder="Your initials">
+                    </div>
+                </div>
+
+                <div class="sound-selector">
+                    <label for="soundSelect">Alert Sound:</label>
+                    <select id="soundSelect" onchange="changeSound(this.value)">
+                        <option value="chime">Chime</option>
+                        <option value="alert">Alert</option>
+                        <option value="bell">Bell</option>
+                        <option value="alarm">Alarm</option>
+                        <option value="gentle">Gentle</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                    <button class="action-btn secondary test-btn" onclick="testSound()">Test</button>
+                </div>
+
+                <div class="timer-controls">
+                    <button class="action-btn timer-btn" id="startTimerBtn" onclick="startTimer('keraplast')">Start Timer</button>
+                    <button class="action-btn timer-btn stop-btn" id="stopTimerBtn" onclick="stopTimer('keraplast')" style="display: none;">Stop Timer</button>
+                    <button class="action-btn secondary reset-btn" onclick="resetTimer('keraplast')">Reset</button>
+                </div>
+
+                <div class="timer-status" id="timerStatus">
+                    <span class="status-inactive">Timer inactive</span>
+                </div>
+
+                <div class="steps-table">
+                    <div class="step-row header-row">
+                        <span class="step-name">Step</span>
+                        <span class="step-offset">Offset</span>
+                        <span class="step-time">Time</span>
+                    </div>
+
+                    <div class="step-row" data-offset="0">
+                        <span class="step-name">Recirculation Start Time</span>
+                        <span class="step-offset">-</span>
+                        <span class="step-time" id="time-start">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="5">
+                        <span class="step-name">PH Test</span>
+                        <span class="step-offset">+5</span>
+                        <span class="step-time" id="time-ph1">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="25">
+                        <span class="step-name">Mixer Consistently 25hz</span>
+                        <span class="step-offset">+20</span>
+                        <span class="step-time" id="time-25hz">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="30">
+                        <span class="step-name">PH Test</span>
+                        <span class="step-offset">+5</span>
+                        <span class="step-time" id="time-ph2">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="45">
+                        <span class="step-name">Mixer Consistently 30hz</span>
+                        <span class="step-offset">+15</span>
+                        <span class="step-time" id="time-30hz">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="80">
+                        <span class="step-name">Wool Test & PH Test</span>
+                        <span class="step-offset">+35</span>
+                        <span class="step-time" id="time-testph">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="120">
+                        <span class="step-name">Wool Test</span>
+                        <span class="step-offset">+40</span>
+                        <span class="step-time" id="time-test1">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="180">
+                        <span class="step-name">Wool Test</span>
+                        <span class="step-offset">+60</span>
+                        <span class="step-time" id="time-test2">--:--</span>
+                    </div>
+
+                    <div class="step-row finish-row" data-offset="210">
+                        <span class="step-name">Finish & Transfer Digestion Liquor</span>
+                        <span class="step-offset">+30</span>
+                        <span class="step-time" id="time-finish">--:--</span>
+                    </div>
+                </div>
+
+                <div class="finish-summary" id="keraplast-finishSummary">
+                    <div class="finish-summary-title">Early Finish</div>
+                    <div class="finish-summary-row">
+                        <span class="finish-label">Actual Duration</span>
+                        <span class="finish-value" id="keraplast-finishDuration">--</span>
+                    </div>
+                    <div class="finish-summary-row">
+                        <span class="finish-label">Finished During</span>
+                        <span class="finish-value" id="keraplast-finishStep">--</span>
+                    </div>
+                </div>
+
+                <div class="total-time" id="keraplast-totalTime">
+                    Total Duration: <strong>3 hours 30 minutes</strong>
+                    <div class="total-minutes">210 minutes</div>
+                </div>
+
+                <div class="save-section">
+                    <button class="action-btn save-btn" onclick="saveToHistory('keraplast')">Save to History</button>
+                    <a href="/keraplast/history" class="action-btn secondary history-link-btn">View History</a>
+                </div>
+
+                <!-- Admin Panel (visible to admins only) -->
+                <div class="admin-panel" id="keraplast-adminPanel" style="display:none"></div>
+            </div>
+        </div>
+
+        <!-- ========== OKL DIGESTION CALCULATOR TAB ========== -->
+        <div class="tab-pane" id="tab-okl">
+            <div class="calculator-card">
+                <div class="start-time-section">
+                    <label for="okl-startTime">Start Time</label>
+                    <input type="time" id="okl-startTime" value="09:37">
+                </div>
+
+                <div class="start-time-section">
+                    <label for="okl-finishTime">Finish Time <span class="optional-label">(optional)</span></label>
+                    <input type="time" id="okl-finishTime">
+                </div>
+
+                <div class="batch-info-section">
+                    <div class="batch-field">
+                        <label for="okl-batchNumber">Batch Number</label>
+                        <input type="text" id="okl-batchNumber" placeholder="26A01B1">
+                    </div>
+                    <div class="batch-field">
+                        <label for="okl-operator">Operator</label>
+                        <input type="text" id="okl-operator" placeholder="Your initials">
+                    </div>
+                </div>
+
+                <div class="sound-selector">
+                    <label for="okl-soundSelect">Alert Sound:</label>
+                    <select id="okl-soundSelect" onchange="changeSound(this.value)">
+                        <option value="chime">Chime</option>
+                        <option value="alert">Alert</option>
+                        <option value="bell">Bell</option>
+                        <option value="alarm">Alarm</option>
+                        <option value="gentle">Gentle</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                    <button class="action-btn secondary test-btn" onclick="testSound()">Test</button>
+                </div>
+
+                <div class="timer-controls">
+                    <button class="action-btn timer-btn" id="okl-startTimerBtn" onclick="startTimer('okl')">Start Timer</button>
+                    <button class="action-btn timer-btn stop-btn" id="okl-stopTimerBtn" onclick="stopTimer('okl')" style="display: none;">Stop Timer</button>
+                    <button class="action-btn secondary reset-btn" onclick="resetTimer('okl')">Reset</button>
+                </div>
+
+                <div class="timer-status" id="okl-timerStatus">
+                    <span class="status-inactive">Timer inactive</span>
+                </div>
+
+                <div class="steps-table">
+                    <div class="step-row header-row">
+                        <span class="step-name">Step</span>
+                        <span class="step-offset">Offset</span>
+                        <span class="step-time">Time</span>
+                    </div>
+
+                    <div class="step-row" data-offset="0">
+                        <span class="step-name">Start</span>
+                        <span class="step-offset">-</span>
+                        <span class="step-time" id="okl-time-start">--:--</span>
+                    </div>
+
+                    <div class="step-row anytime-row" data-offset="0">
+                        <span class="step-name">Rinse Lid &amp; Sparge <span class="anytime-badge">Any Time</span></span>
+                        <span class="step-offset">-</span>
+                        <span class="step-time" id="okl-time-rinse">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="15">
+                        <span class="step-name">Mixer 35 Hz</span>
+                        <span class="step-offset">+15</span>
+                        <span class="step-time" id="okl-time-35hz">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="30">
+                        <span class="step-name">Temperature Check</span>
+                        <span class="step-offset">+15</span>
+                        <span class="step-time" id="okl-time-temp">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="50">
+                        <span class="step-name">PH Test</span>
+                        <span class="step-offset">+20</span>
+                        <span class="step-time" id="okl-time-ph">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="80">
+                        <span class="step-name">80 Minute Wool Test 1</span>
+                        <span class="step-offset">+30</span>
+                        <span class="step-time" id="okl-time-80min">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="95">
+                        <span class="step-name">Wool Test 2</span>
+                        <span class="step-offset">+15</span>
+                        <span class="step-time" id="okl-time-test1">--:--</span>
+                    </div>
+
+                    <div class="step-row" data-offset="110">
+                        <span class="step-name">Wool Test 3</span>
+                        <span class="step-offset">+15</span>
+                        <span class="step-time" id="okl-time-test2">--:--</span>
+                    </div>
+
+                    <div class="step-row finish-row" data-offset="125">
+                        <span class="step-name">Wool Test 4</span>
+                        <span class="step-offset">+15</span>
+                        <span class="step-time" id="okl-time-test3">--:--</span>
+                    </div>
+                </div>
+
+                <div class="finish-summary" id="okl-finishSummary">
+                    <div class="finish-summary-title">Early Finish</div>
+                    <div class="finish-summary-row">
+                        <span class="finish-label">Actual Duration</span>
+                        <span class="finish-value" id="okl-finishDuration">--</span>
+                    </div>
+                    <div class="finish-summary-row">
+                        <span class="finish-label">Finished During</span>
+                        <span class="finish-value" id="okl-finishStep">--</span>
+                    </div>
+                </div>
+
+                <div class="total-time" id="okl-totalTime">
+                    Total Duration: <strong>2 hours 5 minutes</strong>
+                    <div class="total-minutes">125 minutes</div>
+                </div>
+
+                <div class="save-section">
+                    <button class="action-btn save-btn" onclick="saveToHistory('okl')">Save to History</button>
+                    <a href="/keraplast/history" class="action-btn secondary history-link-btn">View History</a>
+                </div>
+
+                <!-- Admin Panel (visible to admins only) -->
+                <div class="admin-panel" id="okl-adminPanel" style="display:none"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Acknowledge Modal -->
+    <div id="acknowledgeModal" class="acknowledge-modal">
+        <div class="acknowledge-content">
+            <div class="acknowledge-icon">🔔</div>
+            <h2 id="alertStepName">Step Name</h2>
+            <p class="acknowledge-time" id="alertStepTime">00:00</p>
+            <button class="action-btn acknowledge-btn" onclick="acknowledgeAlert()">Acknowledge</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-text">
+                &copy; 2026 CUB SOFTWARE. Made with love by
+                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/status">Status</a>
+                <a href="/terms">Terms</a>
+                <a href="/privacy">Privacy</a>
+                <a href="/copyright">Copyright</a>
+                <a href="/report">Report Issue</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/keraplast.js?v={{ v }}"></script>
+</body>
+</html>

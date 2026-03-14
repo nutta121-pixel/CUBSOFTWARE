@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>CleanMe - Server Template Sharing | Copy Discord Server Setups</title>
+
+    <meta name="description" content="Share and discover Discord server templates. Copy server setups instantly with CleanMe bot. Browse featured servers, vote for favorites.">
+    <meta name="keywords" content="discord, server template, server copy, cleanme bot, discord server setup">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/cleanme.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="site-header cleanme-header">
+            <div class="header-container">
+                <a href="/" class="logo">
+                    <span class="logo-text">
+                        <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                    </span>
+                </a>
+                <nav class="site-nav" id="siteNav">
+                    <a href="/cleanme" class="nav-link active">Home</a>
+                    <a href="/cleanme/browse" class="nav-link">Browse</a>
+                    <a href="/cleanme/submit" class="nav-link">Submit Server</a>
+                    <a href="/" class="nav-link">Back to Tools</a>
+                </nav>
+                <div class="auth-section">
+                    {% if cleanme_user %}
+                    <div class="user-menu">
+                        <img src="{{ cleanme_user.avatar }}" alt="Avatar" class="user-avatar">
+                        <span class="user-name">{{ cleanme_user.username }}</span>
+                        <div class="user-dropdown">
+                            <a href="/cleanme/dashboard">My Servers</a>
+                            <a href="/cleanme/logout">Logout</a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <a href="/cleanme/auth/discord" class="login-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/>
+                        </svg>
+                        Login with Discord
+                    </a>
+                    {% endif %}
+                </div>
+                <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span class="gradient-text">Share & Discover</span>
+                    <br>Discord Server Templates
+                </h1>
+                <p class="hero-description">
+                    Browse community-shared server setups, copy configurations instantly with CleanMe bot,
+                    and share your own server template with thousands of users.
+                </p>
+                <div class="hero-actions">
+                    <a href="/cleanme/browse" class="btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        Browse Servers
+                    </a>
+                    <a href="/cleanme/submit" class="btn-secondary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Submit Your Server
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="totalServers">{{ stats.total_servers }}</span>
+                        <span class="stat-label">Server Templates</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="totalCopies">{{ stats.total_copies }}</span>
+                        <span class="stat-label">Total Copies</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="totalVotes">{{ stats.total_votes }}</span>
+                        <span class="stat-label">Votes Cast</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="how-it-works">
+            <div class="container">
+                <h2 class="section-title">How It Works</h2>
+                <div class="steps-grid">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h3>Save Your Server</h3>
+                        <p>Use <code>/save</code> command with CleanMe bot in your Discord server to save your configuration.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h3>Share on Website</h3>
+                        <p>Login here and submit your server with a description so others can discover it.</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h3>Others Copy</h3>
+                        <p>Users browse, vote, and copy your server setup using <code>/copy [serverid]</code>.</p>
+                    </div>
+                </div>
+                <div class="bot-invite">
+                    <p>Don't have CleanMe bot yet?</p>
+                    <a href="https://discord.com/api/oauth2/authorize?client_id={{ bot_client_id }}&permissions=8&scope=bot%20applications.commands" target="_blank" class="invite-btn">
+                        Add CleanMe to Your Server
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Servers -->
+        {% if featured_servers %}
+        <section class="servers-section featured-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">⭐ Featured Servers</h2>
+                    <p class="section-subtitle">Hand-picked quality server templates</p>
+                </div>
+                <div class="servers-grid">
+                    {% for server in featured_servers %}
+                    <a href="/cleanme/server/{{ server.server_id }}" class="server-card featured">
+                        <div class="server-badge">Featured</div>
+                        <img src="{{ server.icon or '/static/images/default-server.png' }}" alt="{{ server.name }}" class="server-icon">
+                        <h3 class="server-name">{{ server.name }}</h3>
+                        <p class="server-description">{{ server.description[:100] }}{% if server.description|length > 100 %}...{% endif %}</p>
+                        <div class="server-stats">
+                            <span class="server-stat">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                </svg>
+                                {{ server.roles_count }} roles
+                            </span>
+                            <span class="server-stat">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                {{ server.channels_count }} channels
+                            </span>
+                            <span class="server-stat votes">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                {{ server.votes }}
+                            </span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Popular Servers -->
+        {% if popular_servers %}
+        <section class="servers-section popular-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">🔥 Popular Servers</h2>
+                    <p class="section-subtitle">Most voted server templates this month</p>
+                </div>
+                <div class="servers-grid">
+                    {% for server in popular_servers %}
+                    <a href="/cleanme/server/{{ server.server_id }}" class="server-card">
+                        <img src="{{ server.icon or '/static/images/default-server.png' }}" alt="{{ server.name }}" class="server-icon">
+                        <h3 class="server-name">{{ server.name }}</h3>
+                        <p class="server-description">{{ server.description[:100] }}{% if server.description|length > 100 %}...{% endif %}</p>
+                        <div class="server-stats">
+                            <span class="server-stat">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                </svg>
+                                {{ server.roles_count }} roles
+                            </span>
+                            <span class="server-stat">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                {{ server.channels_count }} channels
+                            </span>
+                            <span class="server-stat votes">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                {{ server.votes }}
+                            </span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Latest Servers -->
+        <section class="servers-section latest-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">🆕 Latest Added</h2>
+                    <p class="section-subtitle">Recently shared server templates</p>
+                    <a href="/cleanme/browse?sort=newest" class="view-all-link">View All →</a>
+                </div>
+                <div class="servers-grid">
+                    {% for server in latest_servers %}
+                    <a href="/cleanme/server/{{ server.server_id }}" class="server-card">
+                        <img src="{{ server.icon or '/static/images/default-server.png' }}" alt="{{ server.name }}" class="server-icon">
+                        <h3 class="server-name">{{ server.name }}</h3>
+                        <p class="server-description">{{ server.description[:100] }}{% if server.description|length > 100 %}...{% endif %}</p>
+                        <div class="server-stats">
+                            <span class="server-stat">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                </svg>
+                                {{ server.roles_count }} roles
+                            </span>
+                            <span class="server-stat">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                {{ server.channels_count }} channels
+                            </span>
+                            <span class="server-stat votes">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                {{ server.votes }}
+                            </span>
+                        </div>
+                        <div class="server-added">Added {{ server.added_ago }}</div>
+                    </a>
+                    {% else %}
+                    <div class="empty-state">
+                        <p>No servers shared yet. Be the first!</p>
+                        <a href="/cleanme/submit" class="btn-primary">Submit Your Server</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="about-section">
+            <div class="container">
+                <h2 class="section-title">About CleanMe</h2>
+                <div class="about-grid">
+                    <div class="about-card">
+                        <div class="about-icon">🧹</div>
+                        <h3>Server Management</h3>
+                        <p>Save, backup, and restore your Discord server configurations with simple slash commands.</p>
+                    </div>
+                    <div class="about-card">
+                        <div class="about-icon">📋</div>
+                        <h3>Easy Copying</h3>
+                        <p>Copy any saved server setup to your own server in seconds. Roles, channels, categories - everything.</p>
+                    </div>
+                    <div class="about-card">
+                        <div class="about-icon">🔒</div>
+                        <h3>Safe & Secure</h3>
+                        <p>Only server administrators can save or copy configurations. Your server data is protected.</p>
+                    </div>
+                    <div class="about-card">
+                        <div class="about-icon">🌐</div>
+                        <h3>Community Sharing</h3>
+                        <p>Share your server templates with the community and discover setups from others.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-inner">
+                <div class="footer-text">
+                    &copy; 2026 CUB SOFTWARE. Made with love by
+                    <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+                </div>
+                <div class="footer-links">
+                    <a href="/">Home</a>
+                    <a href="/status">Status</a>
+                    <a href="/terms">Terms</a>
+                    <a href="/privacy">Privacy</a>
+                    <a href="/copyright">Copyright</a>
+                    <a href="/report">Report Issue</a>
+                    <a href="/contact">Contact</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/static/js/cleanme.js?v={{ v }}"></script>
+    <script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const nav = document.getElementById('siteNav');
+        if (mobileBtn && nav) {
+            mobileBtn.addEventListener('click', function() {
+                nav.classList.toggle('active');
+                mobileBtn.classList.toggle('active');
+            });
+        }
+    });
+    </script>
+</body>
+</html>

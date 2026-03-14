@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>CubVault - Coming Soon | CUB SOFTWARE</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/cubvault.css?v={{ v }}">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <span class="logo-text">
+                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                </span>
+            </a>
+            <nav class="site-nav" id="siteNav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/#apps" class="nav-link">Tools</a>
+                <div class="nav-dropdown">
+                    <button class="nav-link dropdown-toggle">
+                        Our Bots
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="https://questcord.fun" target="_blank">QuestCord</a>
+                        <a href="/cleanme">CleanMe</a>
+                    </div>
+                </div>
+                <a href="/contact" class="nav-link">Contact</a>
+            </nav>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="container">
+            <h1 class="hero-title">CUBVAULT</h1>
+            <p class="hero-subtitle">Secure Password Manager</p>
+            <p class="hero-description">A secure, encrypted password manager. Your data stays on your device with optional encrypted cloud backup.</p>
+            <div class="hero-buttons">
+                <span class="btn btn-secondary" style="cursor: default;">Coming Soon</span>
+                <a href="/" class="btn btn-secondary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="about-section">
+        <div class="container">
+            <h2 class="section-title">Planned Features</h2>
+            <p class="section-description">CubVault is currently in development. Here's what's coming:</p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>End-to-End Encryption</h3>
+                    <p>Your passwords are encrypted locally before being stored. Only you can access them.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Your Data, Your Control</h3>
+                    <p>Your vault is stored on your device. Optionally enable encrypted cloud backup to sync across devices.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Cross-Platform</h3>
+                    <p>Desktop app for Windows, Mac, and Linux. Web interface for quick access.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Password Generator</h3>
+                    <p>Generate strong, unique passwords with customizable length and complexity.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-text">
+                &copy; 2026 CUB SOFTWARE. Made with love by
+                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/status">Status</a>
+                <a href="/terms">Terms</a>
+                <a href="/privacy">Privacy</a>
+                <a href="/copyright">Copyright</a>
+                <a href="/report">Report Issue</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </div>
+    </footer>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const nav = document.getElementById('siteNav');
+        if (mobileBtn && nav) {
+            mobileBtn.addEventListener('click', function() {
+                nav.classList.toggle('active');
+                mobileBtn.classList.toggle('active');
+            });
+        }
+        document.querySelectorAll('.dropdown-toggle').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    this.parentElement.classList.toggle('active');
+                }
+            });
+        });
+    });
+    </script>
+</body>
+</html>

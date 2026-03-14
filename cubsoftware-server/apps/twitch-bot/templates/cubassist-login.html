@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CubAssist — Login | CUB SOFTWARE</title>
+<link rel="icon" type="image/png" href="/static/images/company-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@700;900&display=swap">
+<link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+</head>
+<body>
+<div class="main-container">
+    {% include 'header.html' %}
+
+    <main style="flex:1;display:flex;flex-direction:column;align-items:center;padding:4rem 2rem 6rem;">
+
+        <!-- Hero -->
+        <div style="text-align:center;margin-bottom:3rem;max-width:700px;">
+            <h1 style="font-family:'Orbitron',sans-serif;font-size:3.5rem;font-weight:900;margin:0 0 0.5rem;background:linear-gradient(135deg,#9146ff 0%,#5865f2 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">CubAssist</h1>
+            <p style="font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;letter-spacing:3px;color:var(--text-secondary);text-transform:uppercase;margin:0 0 1.25rem;">Twitch Chat Bot</p>
+            <p style="font-family:'Poppins',sans-serif;font-size:1.1rem;color:var(--text-secondary);line-height:1.7;margin:0;">Custom commands, timers, AutoMod, and live chat — all managed from a simple web dashboard. Free forever.</p>
+        </div>
+
+        <!-- Login section -->
+        <div style="width:100%;max-width:800px;">
+
+            <!-- Login card -->
+            <div style="background:rgba(30,30,60,0.5);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:3rem;text-align:center;margin-bottom:3rem;">
+
+                <!-- Twitch icon -->
+                <div style="display:flex;justify-content:center;margin-bottom:1.5rem;">
+                    <div style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;background:rgba(145,70,255,0.12);border-radius:16px;">
+                        <svg viewBox="0 0 24 24" fill="#9146ff" width="36" height="36" aria-hidden="true">
+                            <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <h2 style="font-family:'Poppins',sans-serif;font-size:1.5rem;font-weight:600;color:var(--text-primary);margin:0 0 0.75rem;">Login to Get Started</h2>
+                <p style="font-family:'Poppins',sans-serif;font-size:0.95rem;color:var(--text-secondary);line-height:1.6;margin:0 0 2rem;">Connect your Twitch account to access the CubAssist dashboard and manage your channel bot.</p>
+
+                {% if error %}
+                <div style="background:rgba(237,66,69,.1);border:1px solid rgba(237,66,69,.3);border-radius:8px;padding:.75rem 1rem;margin-bottom:1.5rem;font-family:'Poppins',sans-serif;font-size:.875rem;color:#ed4245;">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <a href="/cubassist/login"
+                   style="display:inline-flex;align-items:center;gap:0.6rem;background:#9146ff;color:#fff;text-decoration:none;padding:1rem 2rem;border-radius:8px;font-family:'Poppins',sans-serif;font-weight:600;font-size:1.1rem;transition:transform .15s,box-shadow .15s;"
+                   onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(145,70,255,0.4)';"
+                   onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none';">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
+                        <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
+                    </svg>
+                    Login with Twitch
+                </a>
+            </div>
+
+            <!-- How It Works -->
+            <div>
+                <h2 style="font-family:'Poppins',sans-serif;font-size:1.4rem;font-weight:600;color:var(--text-primary);text-align:center;margin:0 0 1.75rem;">How It Works</h2>
+                <div style="display:flex;gap:1rem;flex-wrap:nowrap;">
+
+                    <div style="flex:1;background:rgba(30,30,60,0.4);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:1.5rem;text-align:center;">
+                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#9146ff,#5865f2);display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:0.9rem;color:#fff;margin:0 auto 1rem;">1</div>
+                        <h3 style="font-family:'Poppins',sans-serif;font-size:0.95rem;font-weight:600;color:var(--text-primary);margin:0 0 0.5rem;">Login with Twitch</h3>
+                        <p style="font-family:'Poppins',sans-serif;font-size:0.85rem;color:var(--text-secondary);line-height:1.6;margin:0;">Connect your Twitch account to access the dashboard.</p>
+                    </div>
+
+                    <div style="flex:1;background:rgba(30,30,60,0.4);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:1.5rem;text-align:center;">
+                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#9146ff,#5865f2);display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:0.9rem;color:#fff;margin:0 auto 1rem;">2</div>
+                        <h3 style="font-family:'Poppins',sans-serif;font-size:0.95rem;font-weight:600;color:var(--text-primary);margin:0 0 0.5rem;">Connect Your Bot</h3>
+                        <p style="font-family:'Poppins',sans-serif;font-size:0.85rem;color:var(--text-secondary);line-height:1.6;margin:0;">Authorise CubAssist to chat in your Twitch channel.</p>
+                    </div>
+
+                    <div style="flex:1;background:rgba(30,30,60,0.4);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:1.5rem;text-align:center;">
+                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#9146ff,#5865f2);display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:0.9rem;color:#fff;margin:0 auto 1rem;">3</div>
+                        <h3 style="font-family:'Poppins',sans-serif;font-size:0.95rem;font-weight:600;color:var(--text-primary);margin:0 0 0.5rem;">Set Your Channel</h3>
+                        <p style="font-family:'Poppins',sans-serif;font-size:0.85rem;color:var(--text-secondary);line-height:1.6;margin:0;">Tell CubAssist which channel to join and start the bot.</p>
+                    </div>
+
+                    <div style="flex:1;background:rgba(30,30,60,0.4);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:1.5rem;text-align:center;">
+                        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#9146ff,#5865f2);display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:700;font-size:0.9rem;color:#fff;margin:0 auto 1rem;">4</div>
+                        <h3 style="font-family:'Poppins',sans-serif;font-size:0.95rem;font-weight:600;color:var(--text-primary);margin:0 0 0.5rem;">Go Live!</h3>
+                        <p style="font-family:'Poppins',sans-serif;font-size:0.85rem;color:var(--text-secondary);line-height:1.6;margin:0;">Add commands, timers, and AutoMod — your bot is ready.</p>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CubDeck Overlay</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; height: 100%;
+            background: transparent !important;
+            overflow: hidden;
+        }
+        #fx-canvas {
+            position: fixed; inset: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        #shake-wrap {
+            position: fixed; inset: 0;
+            pointer-events: none;
+        }
+        #overlay-root {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+
+        /* Flash */
+        .ov-flash {
+            position: absolute; inset: 0;
+            opacity: 0;
+            transition: opacity var(--fd, 100ms) ease-in-out;
+        }
+
+        /* Center text */
+        .ov-text {
+            position: absolute;
+            text-align: center; max-width: 80%;
+            word-break: break-word;
+            border-radius: 12px; padding: 24px 48px;
+            box-shadow: 0 8px 40px rgba(0,0,0,.6);
+            opacity: 0; transform: scale(0.8);
+            transition: opacity 300ms ease, transform 300ms cubic-bezier(.34,1.56,.64,1);
+        }
+        .ov-text.show { opacity: 1; transform: scale(1); }
+
+        /* Slide banner */
+        .ov-banner {
+            position: absolute; left: 0; right: 0;
+            padding: 18px 40px; text-align: center; font-weight: 700;
+            box-shadow: 0 4px 20px rgba(0,0,0,.5);
+        }
+        .ov-banner.top    { top: 0;    transform: translateY(-110%); transition: transform 400ms cubic-bezier(.34,1.56,.64,1); }
+        .ov-banner.bottom { bottom: 0; transform: translateY(110%);  transition: transform 400ms cubic-bezier(.34,1.56,.64,1); }
+        .ov-banner.show   { transform: translateY(0); }
+
+        /* Countdown */
+        .ov-countdown {
+            position: absolute;
+            font-weight: 900; text-align: center; line-height: 1;
+            text-shadow: 0 0 40px rgba(255,255,255,.8), 0 4px 20px rgba(0,0,0,.9);
+            transition: opacity 200ms ease, transform 200ms ease;
+        }
+
+        /* Alert box (sub/follow style) */
+        .ov-alert {
+            position: absolute;
+            border-radius: 14px; padding: 20px 36px;
+            display: flex; align-items: center; gap: 18px;
+            box-shadow: 0 8px 40px rgba(0,0,0,.7);
+            transform: translateY(-120%);
+            transition: transform 450ms cubic-bezier(.34,1.56,.64,1), opacity 300ms;
+        }
+        .ov-alert.show { transform: translateY(0); }
+        .ov-alert .ov-alert-icon { font-size: 2.5em; line-height: 1; }
+        .ov-alert .ov-alert-body {}
+        .ov-alert .ov-alert-title { font-size: 1.1em; font-weight: 700; }
+        .ov-alert .ov-alert-sub   { font-size: 0.85em; opacity: 0.75; margin-top: 4px; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<canvas id="fx-canvas"></canvas>
+<div id="shake-wrap">
+    <div id="overlay-root"></div>
+</div>
+
+<script>
+const DISCORD_ID = {{ discord_id | tojson }};
+const DECK_NAME  = {{ deck_name  | tojson }};
+
+const canvas    = document.getElementById('fx-canvas');
+const c         = canvas.getContext('2d');
+const root      = document.getElementById('overlay-root');
+const shakeWrap = document.getElementById('shake-wrap');
+
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+// ─── Particle System ──────────────────────────────────────────────────────────
+let particles = [];
+
+(function loop() {
+    c.clearRect(0, 0, canvas.width, canvas.height);
+    const now = Date.now();
+    particles = particles.filter(p => {
+        const age = now - p.born;
+        if (age >= p.life) return false;
+        const t = age / p.life;
+
+        p.x += p.vx; p.y += p.vy;
+        if (p.gravity) p.vy += p.gravity;
+        if (p.drag)  { p.vx *= p.drag; p.vy *= p.drag; }
+        p.rot = (p.rot || 0) + (p.rotV || 0);
+
+        const alpha = p.fadeOut ? Math.max(0, 1 - t) : 1;
+        c.save();
+        c.globalAlpha = alpha;
+        c.translate(p.x, p.y);
+        if (p.rot) c.rotate(p.rot);
+
+        if (p.shape === 'text') {
+            c.font = `${p.size}px serif`;
+            c.fillText(p.glyph, -p.size * 0.5, p.size * 0.4);
+        } else if (p.shape === 'circle') {
+            c.beginPath(); c.arc(0, 0, p.size, 0, Math.PI * 2);
+            c.fillStyle = p.color; c.fill();
+        } else {
+            c.fillStyle = p.color;
+            c.fillRect(-p.w * 0.5, -p.h * 0.5, p.w, p.h);
+        }
+        c.restore();
+        return true;
+    });
+    requestAnimationFrame(loop);
+})();
+
+// ─── Effects ─────────────────────────────────────────────────────────────────
+const DEF_COLORS = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff922b','#cc5de8','#f06595','#74c0fc'];
+
+function fxConfetti({ count = 80, duration = 3000, colors } = {}) {
+    const pal = (colors && colors.length) ? colors : DEF_COLORS;
+    for (let i = 0; i < count; i++) {
+        const delay = Math.random() * duration * 0.4;
+        setTimeout(() => {
+            particles.push({
+                born: Date.now(),
+                life: duration * 0.55 + Math.random() * duration * 0.45,
+                x: Math.random() * canvas.width, y: -12,
+                vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 3,
+                gravity: 0.04,
+                color: pal[Math.floor(Math.random() * pal.length)],
+                w: 7 + Math.random() * 10, h: 3 + Math.random() * 8,
+                rot: Math.random() * Math.PI * 2, rotV: (Math.random() - 0.5) * 0.14,
+                shape: Math.random() > 0.4 ? 'rect' : 'circle',
+                size: 4 + Math.random() * 5,
+                fadeOut: true
+            });
+        }, delay);
+    }
+}
+
+function fxFireworks({ duration = 4000, colors } = {}) {
+    const pal = (colors && colors.length) ? colors : DEF_COLORS;
+    const end = Date.now() + duration;
+    function burst() {
+        if (Date.now() >= end) return;
+        const x = canvas.width  * (0.15 + Math.random() * 0.7);
+        const y = canvas.height * (0.1  + Math.random() * 0.5);
+        const col = pal[Math.floor(Math.random() * pal.length)];
+        // Sparks
+        for (let i = 0; i < 50; i++) {
+            const a = (i / 50) * Math.PI * 2;
+            const spd = 2 + Math.random() * 6;
+            particles.push({
+                born: Date.now(), life: 900 + Math.random() * 900,
+                x, y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd,
+                gravity: 0.12, drag: 0.97,
+                color: col, size: 2 + Math.random() * 3,
+                shape: 'circle', fadeOut: true
+            });
+        }
+        setTimeout(burst, 350 + Math.random() * 500);
+    }
+    burst();
+}
+
+function fxSnow({ duration = 8000, density = 80 } = {}) {
+    const count = Math.min(parseInt(density) || 80, 200);
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            particles.push({
+                born: Date.now(), life: duration,
+                x: Math.random() * canvas.width, y: -8,
+                vx: (Math.random() - 0.5) * 0.5, vy: 0.6 + Math.random() * 1.8,
+                color: `rgba(255,255,255,${0.6 + Math.random() * 0.4})`,
+                size: 2 + Math.random() * 5, shape: 'circle', fadeOut: true
+            });
+        }, Math.random() * duration * 0.6);
+    }
+}
+
+function fxEmoteRain({ emotes = ['🎉','🔥','⭐','💜','👏'], duration = 5000, count = 30 } = {}) {
+    const list = Array.isArray(emotes) ? emotes : ['🎉','🔥','⭐'];
+    for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+            const g = list[Math.floor(Math.random() * list.length)];
+            const sz = 28 + Math.random() * 24;
+            particles.push({
+                born: Date.now(), life: duration * 0.65 + Math.random() * duration * 0.35,
+                x: sz + Math.random() * (canvas.width - sz * 2), y: -sz,
+                vx: (Math.random() - 0.5) * 2, vy: 1.5 + Math.random() * 2,
+                gravity: 0.02, glyph: g, size: sz, shape: 'text', fadeOut: true
+            });
+        }, Math.random() * duration * 0.5);
+    }
+}
+
+function fxFlash({ color = '#ff0000', duration = 300 } = {}) {
+    const el = document.createElement('div');
+    el.className = 'ov-flash';
+    el.style.setProperty('--fd', Math.round(duration * 0.3) + 'ms');
+    el.style.background = color;
+    root.appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => { el.style.opacity = '0.72'; }));
+    setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), Math.round(duration * 0.3) + 60);
+    }, Math.round(duration * 0.5));
+}
+
+function fxText({ text = '', fontSize = 72, bgColor = 'rgba(0,0,0,0.82)', textColor = '#fff', duration = 3000, position = 'center' } = {}) {
+    const el = document.createElement('div');
+    el.className = 'ov-text';
+    el.style.cssText = `font-size:${parseInt(fontSize)||72}px;background:${bgColor};color:${textColor};font-family:Orbitron,sans-serif;`;
+    if (position === 'top')    { el.style.top = '60px'; el.style.alignSelf = 'flex-start'; }
+    if (position === 'bottom') { el.style.bottom = '60px'; el.style.alignSelf = 'flex-end'; }
+    el.textContent = text;
+    root.appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+    setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 380);
+    }, parseInt(duration) || 3000);
+}
+
+function fxBanner({ text = '', position = 'top', bgColor = '#9147ff', textColor = '#fff', fontSize = 38, duration = 4000 } = {}) {
+    const el = document.createElement('div');
+    el.className = `ov-banner ${position === 'bottom' ? 'bottom' : 'top'}`;
+    el.style.cssText = `background:${bgColor};color:${textColor};font-size:${parseInt(fontSize)||38}px;font-family:Poppins,sans-serif;`;
+    el.textContent = text;
+    root.appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+    setTimeout(() => {
+        el.classList.remove('show');
+        setTimeout(() => el.remove(), 480);
+    }, parseInt(duration) || 4000);
+}
+
+function fxAlert({ title = '', subtitle = '', icon = '🎉', bgColor = '#9147ff', textColor = '#fff', position = 'top', duration = 5000 } = {}) {
+    const el = document.createElement('div');
+    el.className = `ov-alert ${position === 'bottom' ? 'bottom' : 'top'}`;
+    if (position === 'bottom') { el.style.bottom = '60px'; el.style.transform = 'translateY(200%)'; }
+    else { el.style.top = '60px'; }
+    el.style.cssText += `;background:${bgColor};color:${textColor};font-family:Poppins,sans-serif;`;
+    el.innerHTML = `<div class="ov-alert-icon">${icon}</div><div class="ov-alert-body"><div class="ov-alert-title">${title}</div>${subtitle ? `<div class="ov-alert-sub">${subtitle}</div>` : ''}</div>`;
+    root.appendChild(el);
+    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+    setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 380);
+    }, parseInt(duration) || 5000);
+}
+
+function fxCountdown({ seconds = 5, finalText = 'GO!' } = {}) {
+    const el = document.createElement('div');
+    el.className = 'ov-countdown';
+    el.style.fontSize = '160px';
+    el.style.fontFamily = 'Orbitron,sans-serif';
+    root.appendChild(el);
+
+    let n = parseInt(seconds) || 5;
+    function show(v) {
+        el.style.opacity = '0'; el.style.transform = 'scale(1.4)';
+        el.textContent = String(v);
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            el.style.opacity = '1'; el.style.transform = 'scale(1)';
+        }));
+    }
+    show(n);
+    const t = setInterval(() => {
+        n--;
+        if (n > 0) {
+            show(n);
+        } else {
+            clearInterval(t);
+            el.style.opacity = '0'; el.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                el.style.fontSize = '90px'; el.style.color = '#ffd700';
+                el.textContent = finalText || 'GO!';
+                el.style.opacity = '1'; el.style.transform = 'scale(1)';
+                setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 350); }, 1800);
+            }, 280);
+        }
+    }, 1000);
+}
+
+function fxShake({ intensity = 10, duration = 500 } = {}) {
+    const s = document.createElement('style');
+    s.textContent = `@keyframes ov-sk{0%,100%{transform:translate(0,0)}10%{transform:translate(-${intensity}px,-${Math.round(intensity*.5)}px)}20%{transform:translate(${intensity}px,${Math.round(intensity*.5)}px)}30%{transform:translate(-${intensity}px,${Math.round(intensity*.5)}px)}40%{transform:translate(${intensity}px,-${Math.round(intensity*.5)}px)}50%{transform:translate(-${Math.round(intensity*.5)}px,${intensity}px)}60%{transform:translate(${Math.round(intensity*.5)}px,-${intensity}px)}70%{transform:translate(-${intensity}px,0)}80%{transform:translate(${Math.round(intensity*.5)}px,${Math.round(intensity*.5)}px)}90%{transform:translate(-${Math.round(intensity*.5)}px,-${Math.round(intensity*.5)}px)}}`;
+    document.head.appendChild(s);
+    shakeWrap.style.animation = `ov-sk ${parseInt(duration)||500}ms ease-in-out`;
+    setTimeout(() => { shakeWrap.style.animation = ''; s.remove(); }, (parseInt(duration)||500) + 60);
+}
+
+function fxHype({ text = 'HYPE TRAIN!', level = 1, duration = 5000 } = {}) {
+    fxConfetti({ count: 120, duration: parseInt(duration) || 5000 });
+    fxBanner({ text: `${text} Level ${level}`, bgColor: '#ff6b35', duration: parseInt(duration) || 5000, fontSize: 42 });
+}
+
+function fxClear() {
+    particles = [];
+    root.innerHTML = '';
+}
+
+// ─── Dispatcher ───────────────────────────────────────────────────────────────
+const FX = { confetti: fxConfetti, fireworks: fxFireworks, snow: fxSnow, emote_rain: fxEmoteRain,
+             flash: fxFlash, text: fxText, banner: fxBanner, alert: fxAlert,
+             countdown: fxCountdown, shake: fxShake, hype: fxHype, clear: fxClear };
+
+function dispatch(ev) {
+    const fn = FX[ev.type];
+    if (fn) fn(ev);
+    else console.warn('[Overlay] Unknown effect:', ev.type);
+}
+
+// ─── Poll ─────────────────────────────────────────────────────────────────────
+async function poll() {
+    try {
+        const r = await fetch(`/cubdeck/api/overlay/poll/${DISCORD_ID}/${DECK_NAME}`);
+        if (!r.ok) return;
+        const data = await r.json();
+        for (const ev of (data.events || [])) dispatch(ev);
+    } catch(e) {}
+}
+setInterval(poll, 250);
+</script>
+</body>
+</html>

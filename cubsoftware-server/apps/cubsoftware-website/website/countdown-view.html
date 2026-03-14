@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Countdown Timer - CUB SOFTWARE</title>
+
+    <meta name="description" content="View this countdown timer created with CUB SOFTWARE Countdown Maker">
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/countdown-maker.css?v={{ v }}">
+    <style>
+        .view-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: calc(100vh - 200px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .countdown-display {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .countdown-display.theme-dark {
+            background: #1a1b26;
+        }
+
+        .countdown-display.theme-gradient {
+            background: linear-gradient(135deg, #5865f2, #7c3aed);
+        }
+
+        .countdown-display.theme-light {
+            background: #f0f0f0;
+            color: #1a1a1a;
+        }
+
+        .countdown-display.theme-light .countdown-title,
+        .countdown-display.theme-light .time-value,
+        .countdown-display.theme-light .time-label {
+            color: #1a1a1a;
+        }
+
+        .countdown-display.theme-red {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        .countdown-display.theme-green {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+        }
+
+        .countdown-display.theme-blue {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .countdown-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            color: #ffffff;
+        }
+
+        .countdown-timer {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .time-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 110px;
+            min-width: 110px;
+            max-width: 110px;
+        }
+
+        .time-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 4rem;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1;
+        }
+
+        .time-label {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 0.5rem;
+        }
+
+        .countdown-end-message {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-top: 1rem;
+        }
+
+        .view-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .view-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 0.95rem;
+        }
+
+        .view-btn.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            color: white;
+        }
+
+        .view-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(88, 101, 242, 0.4);
+        }
+
+        .view-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .powered-by {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .powered-by a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .powered-by a:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .view-container {
+                padding: 1rem;
+            }
+
+            .countdown-display {
+                padding: 2rem 1rem;
+            }
+
+            .countdown-title {
+                font-size: 1.8rem;
+            }
+
+            .time-value {
+                font-size: 2.5rem;
+            }
+
+            .time-block {
+                width: 80px;
+                min-width: 80px;
+                max-width: 80px;
+            }
+
+            .countdown-timer {
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="view-container">
+            <div class="countdown-display" id="countdownDisplay">
+                <div class="loading">Loading countdown...</div>
+            </div>
+
+            <div class="view-actions">
+                <a href="/apps/countdown-maker" class="view-btn primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 5v14M5 12h14"></path>
+                    </svg>
+                    Create Your Own
+                </a>
+            </div>
+
+            <div class="powered-by">
+                Created with <a href="/apps/countdown-maker">CUB SOFTWARE Countdown Maker</a> - Free countdown timers
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <script>
+        const countdownId = '{{ countdown_id }}';
+        let countdownInterval = null;
+
+        async function loadCountdown() {
+            try {
+                const response = await fetch(`/api/countdown/${countdownId}`);
+                if (!response.ok) throw new Error('Countdown not found');
+
+                const data = await response.json();
+                renderCountdown(data);
+            } catch (error) {
+                document.getElementById('countdownDisplay').innerHTML = `
+                    <div class="loading" style="color: #ef4444;">
+                        Countdown not found or has been removed.
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function renderCountdown(data) {
+            const display = document.getElementById('countdownDisplay');
+            const theme = data.theme || 'dark';
+            const title = data.title || 'Countdown';
+            const targetDate = new Date(data.date);
+            const endMessage = data.endMessage || '';
+            const showDays = data.showDays !== false;
+            const showHours = data.showHours !== false;
+            const showMinutes = data.showMinutes !== false;
+            const showSeconds = data.showSeconds !== false;
+
+            // Update page title
+            document.title = `${title} - CUB SOFTWARE`;
+
+            // Apply theme
+            display.className = `countdown-display theme-${theme}`;
+
+            // Build timer HTML
+            let timerHtml = '';
+            if (showDays) {
+                timerHtml += `
+                    <div class="time-block" id="daysBlock">
+                        <span class="time-value" id="daysValue">00</span>
+                        <span class="time-label">Days</span>
+                    </div>
+                `;
+            }
+            if (showHours) {
+                timerHtml += `
+                    <div class="time-block" id="hoursBlock">
+                        <span class="time-value" id="hoursValue">00</span>
+                        <span class="time-label">Hours</span>
+                    </div>
+                `;
+            }
+            if (showMinutes) {
+                timerHtml += `
+                    <div class="time-block" id="minutesBlock">
+                        <span class="time-value" id="minutesValue">00</span>
+                        <span class="time-label">Minutes</span>
+                    </div>
+                `;
+            }
+            if (showSeconds) {
+                timerHtml += `
+                    <div class="time-block" id="secondsBlock">
+                        <span class="time-value" id="secondsValue">00</span>
+                        <span class="time-label">Seconds</span>
+                    </div>
+                `;
+            }
+
+            display.innerHTML = `
+                <div class="countdown-title">${escapeHtml(title)}</div>
+                <div class="countdown-timer" id="timerContainer">
+                    ${timerHtml}
+                </div>
+                <div class="countdown-end-message" id="endMessage" style="display: none;">${escapeHtml(endMessage)}</div>
+            `;
+
+            // Start the countdown
+            function updateTimer() {
+                const now = new Date();
+                const diff = targetDate - now;
+
+                if (diff <= 0) {
+                    // Countdown finished
+                    document.getElementById('timerContainer').style.display = 'none';
+                    if (endMessage) {
+                        document.getElementById('endMessage').style.display = 'block';
+                    } else {
+                        // Show zeros
+                        if (showDays) document.getElementById('daysValue').textContent = '00';
+                        if (showHours) document.getElementById('hoursValue').textContent = '00';
+                        if (showMinutes) document.getElementById('minutesValue').textContent = '00';
+                        if (showSeconds) document.getElementById('secondsValue').textContent = '00';
+                        document.getElementById('timerContainer').style.display = 'flex';
+                    }
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                    }
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                if (showDays) document.getElementById('daysValue').textContent = String(days).padStart(2, '0');
+                if (showHours) document.getElementById('hoursValue').textContent = String(hours).padStart(2, '0');
+                if (showMinutes) document.getElementById('minutesValue').textContent = String(minutes).padStart(2, '0');
+                if (showSeconds) document.getElementById('secondsValue').textContent = String(seconds).padStart(2, '0');
+            }
+
+            updateTimer();
+            countdownInterval = setInterval(updateTimer, 1000);
+        }
+
+        // Load the countdown on page load
+        loadCountdown();
+    </script>
+</body>
+</html>

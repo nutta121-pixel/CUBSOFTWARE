@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CubDeck — Free Browser Stream Deck | CUB SOFTWARE</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/cubdeck/static/css/cubdeck-landing.css?v={{ v }}">
+</head>
+<body>
+<div class="main-container">
+    {% include 'header.html' %}
+
+    <main class="cd-landing">
+
+        <!-- Hero -->
+        <section class="cd-hero">
+            <div class="cd-hero-glow"></div>
+            <div class="cd-hero-inner">
+                <h1 class="cd-hero-title"><span class="cd-gradient-title">CubDeck</span></h1>
+                <p class="cd-logo-tagline">Free Browser Stream Deck</p>
+                <h2 class="cd-hero-sub-title">Your Stream Deck. <span class="cd-hero-accent">In Any Browser.</span></h2>
+                <p class="cd-hero-sub">Control OBS, manage your stream, trigger alerts and more — from your phone, tablet, second monitor, or docked right inside OBS. No $250 hardware. No subscriptions.</p>
+                <div class="cd-hero-actions">
+                    {% if user %}
+                        <a href="/cubdeck/deck/{{ user.id }}/main" class="cd-btn cd-btn-primary">Open My Deck →</a>
+                    {% else %}
+                        <a href="/cubdeck/auth/discord" class="cd-btn cd-btn-primary">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.031.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                            Login with Discord
+                        </a>
+                        <a href="/cubdeck/auth/twitch" class="cd-btn cd-btn-secondary" style="border-color:rgba(145,71,255,.4);color:#c084fc">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+                            Login with Twitch
+                        </a>
+                    {% endif %}
+                    <a href="#features" class="cd-btn cd-btn-secondary">See Features</a>
+                </div>
+                <div class="cd-hero-devices">
+                    <div class="cd-device cd-device-phone">
+                        <div class="cd-device-screen">
+                            <div class="cd-mini-grid">
+                                <div class="cd-mini-btn" style="--c:#5865f2">🎬<span>Scene 1</span></div>
+                                <div class="cd-mini-btn" style="--c:#7c3aed">🎮<span>Gaming</span></div>
+                                <div class="cd-mini-btn" style="--c:#059669">▶<span>Stream</span></div>
+                                <div class="cd-mini-btn" style="--c:#dc2626">⏺<span>Record</span></div>
+                                <div class="cd-mini-btn cd-mini-btn-active" style="--c:#d97706">🔇<span>Mute</span></div>
+                                <div class="cd-mini-btn" style="--c:#0891b2">💬<span>!gg</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feature Grid -->
+        <section class="cd-features" id="features">
+            <div class="cd-section-inner">
+                <h2 class="cd-section-title">Everything you need. Nothing you don't.</h2>
+                <div class="cd-feature-grid">
+                    <div class="cd-feature-card">
+                        <div class="cd-feature-icon">🎬</div>
+                        <h3>Full OBS Control</h3>
+                        <p>Switch scenes, toggle sources, start/stop stream and recording, control replay buffer, mute audio sources, adjust volume — all from a button.</p>
+                    </div>
+                    <div class="cd-feature-card">
+                        <div class="cd-feature-icon">📱</div>
+                        <h3>Any Device</h3>
+                        <p>Use it on your phone as a wireless remote, add it to your iPad, open it on a second monitor, or dock it directly inside OBS as a custom panel.</p>
+                    </div>
+                    <div class="cd-feature-card">
+                        <div class="cd-feature-icon">🔌</div>
+                        <h3>Plugin System</h3>
+                        <p>Install only what you need. OBS Control, Twitch Chat, Timers, Counters, Soundboard, Media Control, and more — each as an optional plugin.</p>
+                    </div>
+                    <div class="cd-feature-card">
+                        <div class="cd-feature-icon">💬</div>
+                        <h3>Twitch Chat</h3>
+                        <p>Send preset messages with one tap. Toggle slow mode, sub-only, emote-only. Run bot commands. Clear chat. Stay focused without typing.</p>
+                    </div>
+                    <div class="cd-feature-card">
+                        <div class="cd-feature-icon">🔢</div>
+                        <h3>Counters & Timers</h3>
+                        <p>Death counters, hype counters, countdown timers, stopwatches — all as buttons on your deck. Values saved server-side across sessions.</p>
+                    </div>
+                    <div class="cd-feature-card">
+                        <div class="cd-feature-icon">🎨</div>
+                        <h3>Fully Customisable</h3>
+                        <p>Every button has its own icon, label, colour and action. Multiple pages. Drag and rearrange. Configure your grid size. Looks exactly how you want.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- OBS Dock Section -->
+        <section class="cd-dock-section">
+            <div class="cd-section-inner cd-dock-inner">
+                <div class="cd-dock-text">
+                    <h2>Use it inside OBS</h2>
+                    <p>OBS has a built-in Custom Browser Docks feature. Paste your CubDeck URL and it becomes a panel right inside OBS — no second screen needed.</p>
+                    <ol class="cd-dock-steps">
+                        <li>Open OBS → <strong>View → Docks → Custom Browser Docks</strong></li>
+                        <li>Add a new dock with your CubDeck URL</li>
+                        <li>Dock it wherever you like in OBS</li>
+                    </ol>
+                </div>
+                <div class="cd-dock-preview">
+                    <div class="cd-obs-window">
+                        <div class="cd-obs-titlebar"><span></span><span></span><span></span> OBS Studio</div>
+                        <div class="cd-obs-body">
+                            <div class="cd-obs-main"></div>
+                            <div class="cd-obs-dock">
+                                <div class="cd-mini-grid cd-mini-grid-dock">
+                                    <div class="cd-mini-btn" style="--c:#5865f2">🎬<span>Scene 1</span></div>
+                                    <div class="cd-mini-btn" style="--c:#7c3aed">🎮<span>Gaming</span></div>
+                                    <div class="cd-mini-btn" style="--c:#059669">▶<span>Stream</span></div>
+                                    <div class="cd-mini-btn" style="--c:#dc2626">⏺<span>Record</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cd-cta">
+            <div class="cd-section-inner cd-cta-inner">
+                <h2>Free forever. No catch.</h2>
+                <p>CubDeck is completely free — no subscription, no watermark, no limits on buttons or pages.</p>
+                {% if user %}
+                    <a href="/cubdeck/deck/{{ user.id }}/main" class="cd-btn cd-btn-primary cd-btn-lg">Open My Deck →</a>
+                {% else %}
+                    <a href="/cubdeck/auth/discord" class="cd-btn cd-btn-primary cd-btn-lg">Get Started Free</a>
+                {% endif %}
+            </div>
+        </section>
+
+    </main>
+
+    {% include 'footer.html' %}
+</div>
+</body>
+</html>

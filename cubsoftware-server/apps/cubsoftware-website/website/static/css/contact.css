@@ -1,0 +1,126 @@
+/* Contact Page Specific Styles */
+
+.contact-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.contact-content {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    color: #ffffff;
+}
+
+.contact-content h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 20px;
+}
+
+.contact-content p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    margin-bottom: 30px;
+    color: #b9bbbe;
+}
+
+.contact-methods {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.contact-card {
+    background: rgba(88, 101, 242, 0.1);
+    border: 1px solid rgba(88, 101, 242, 0.3);
+    border-radius: 12px;
+    padding: 25px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: block;
+}
+
+.contact-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(88, 101, 242, 0.6);
+    box-shadow: 0 10px 30px rgba(88, 101, 242, 0.2);
+}
+
+.contact-card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #5865f2;
+    margin-bottom: 8px;
+}
+
+.contact-card-info {
+    font-size: 1rem;
+    color: #ffffff;
+    word-break: break-all;
+}
+
+.contact-icon {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 12px;
+    background: rgba(88, 101, 242, 0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.contact-note {
+    margin-top: 30px;
+    font-size: 0.95rem;
+    color: #72767d;
+}
+
+.contact-note a {
+    color: #5865f2;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .contact-content {
+        padding: 30px 20px;
+    }
+
+    .contact-content h1 {
+        font-size: 2rem;
+    }
+
+    .contact-content p {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .contact-container {
+        padding: 20px 15px;
+    }
+
+    .contact-content h1 {
+        font-size: 1.75rem;
+    }
+
+    .contact-card {
+        padding: 20px;
+    }
+}

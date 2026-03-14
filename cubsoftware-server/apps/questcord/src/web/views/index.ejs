@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#5865f2">
+    <title>QuestCord - Quest Across Discord</title>
+    <meta name="description" content="Complete quests, defeat bosses, and climb the global leaderboard in this immersive Discord RPG experience">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css?v=<%= v %>">
+</head>
+<body class="<%= websiteEffects && websiteEffects.performanceMode ? 'performance-mode' : '' %> <%= websiteEffects && websiteEffects.effects && !websiteEffects.effects.backgroundAnimations ? 'no-bg-animations' : '' %> <%= websiteEffects && websiteEffects.effects && !websiteEffects.effects.cardHoverEffects ? 'no-card-effects' : '' %> <%= websiteEffects && websiteEffects.effects && !websiteEffects.effects.cosmicParticles ? 'no-particles' : '' %> <%= websiteEffects && websiteEffects.effects && !websiteEffects.effects.auroraEffect ? 'no-aurora' : '' %> <%= websiteEffects && websiteEffects.effects && !websiteEffects.effects.gradientAnimations ? 'no-gradients' : '' %>">
+    <!-- Cosmic Particles Effect -->
+    <% if (websiteEffects && websiteEffects.effects && websiteEffects.effects.cosmicParticles) { %>
+    <div class="cosmic-particles"></div>
+    <% } %>
+
+    <!-- Scroll Path Line (disabled) -->
+    <!-- <div class="scroll-path-container" id="scrollPathContainer"></div> -->
+
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="header-top">
+            <a href="https://cubsoftware.site" class="logo">
+                <span class="logo-text">
+                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                </span>
+            </a>
+            <nav class="site-nav" id="siteNav">
+                <a href="/" class="active">Home</a>
+                <a href="#about">About</a>
+                <a href="/auth/discord/login?returnTo=/dashboard">Dashboard</a>
+                <a href="https://cubsoftware.site" target="_blank">CubSoftware</a>
+            </nav>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const nav = document.getElementById('siteNav');
+        if (mobileBtn && nav) {
+            mobileBtn.addEventListener('click', function() {
+                nav.classList.toggle('active');
+                mobileBtn.classList.toggle('active');
+            });
+        }
+    });
+    </script>
+
+    <div class="hero">
+        <div class="container">
+            <div class="hero-title-container">
+                <h1 class="hero-title">QuestCord</h1>
+            </div>
+            <p class="hero-subtitle">Quest across the Discord universe</p>
+            <p class="hero-description">Complete quests, defeat bosses, and climb the global leaderboard in this immersive Discord RPG experience</p>
+            <div class="hero-buttons">
+                <a href="https://discord.com/oauth2/authorize?client_id=<%= process.env.DISCORD_CLIENT_ID %>&permissions=2048&scope=bot%20applications.commands" class="btn btn-primary" target="_blank">Add to Discord</a>
+                <a href="/auth/discord/login?returnTo=/dashboard" class="btn btn-secondary">Web Dashboard</a>
+                <a href="#about" class="btn btn-secondary">Learn More</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value"><%= stats.total_servers.toLocaleString() %></div>
+                    <div class="stat-label">Servers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"><%= stats.total_users.toLocaleString() %></div>
+                    <div class="stat-label">Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"><%= stats.total_currency_formatted %></div>
+                    <div class="stat-label">Dakari in Circulation</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value"><%= stats.total_gems_formatted %></div>
+                    <div class="stat-label">Gems in Circulation</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="about" class="about-section">
+        <div class="container">
+            <div class="content-with-image">
+                <div class="content-text">
+                    <h2 class="section-title">What is QuestCord?</h2>
+                    <p class="section-description">QuestCord transforms Discord servers into a virtual world where you can complete quests, battle bosses, and earn rewards. Each server becomes a unique location with daily rotating quests.</p>
+
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <h3>Daily Quests</h3>
+                            <p>Complete 5 unique quests per server each day. Travel between servers to continue your adventure.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>Boss Battles</h3>
+                            <p>Bosses randomly spawn across servers. Team up with other players to defeat them and earn massive rewards.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>Global Leaderboard</h3>
+                            <p>Compete with players worldwide. Top 3 players each month receive exclusive rewards.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>Economy System</h3>
+                            <p>Earn Dakari and gems from quests and bosses. Use them to purchase rare items and upgrades.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-image">
+                    <img src="/images/compass.png" alt="Quest Example" onerror="this.style.display='none'">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="activity-section">
+        <div class="container">
+            <div class="content-with-image reverse">
+                <div class="content-image">
+                    <img src="/images/notification.png" alt="Live Activity" onerror="this.src='https://via.placeholder.com/500x600/5865f2/ffffff?text=Live+Activity'">
+                </div>
+                <div class="content-text">
+                    <h2 class="section-title">Live Activity</h2>
+                    <p class="section-description">See what's happening across the QuestCord universe in real-time. Watch as players complete quests, defeat bosses, and climb the ranks!</p>
+                    <div class="activity-container" id="activity-feed">
+                        <div class="activity-item">Loading activity...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="leaderboard-section">
+        <div class="container">
+            <div class="content-with-image">
+                <div class="content-text">
+                    <h2 class="section-title">Global Leaderboard</h2>
+                    <p class="section-description">Compete with players from around the world! Top 3 players each month receive exclusive rewards and eternal glory.</p>
+                    <div class="leaderboard-container">
+                        <% if (topPlayers.length === 0) { %>
+                            <p class="empty-state">No rankings yet. Be the first to compete!</p>
+                        <% } else { %>
+                            <div class="leaderboard-top-three">
+                                <% topPlayers.slice(0, 3).forEach((player, index) => { %>
+                                    <div class="leaderboard-item rank-<%= index + 1 %>">
+                                        <div class="rank-badge">
+                                            <% if (index === 0) { %>🥇
+                                            <% } else if (index === 1) { %>🥈
+                                            <% } else if (index === 2) { %>🥉
+                                            <% } %>
+                                        </div>
+                                        <div class="player-info">
+                                            <div class="player-name"><%= player.username %></div>
+                                            <div class="player-score"><%= player.score.toLocaleString() %> pts</div>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+                <div class="content-image">
+                    <img src="/images/leaderboard.png" alt="Leaderboard" onerror="this.src='https://via.placeholder.com/500x600/fbbf24/000000?text=Leaderboard'">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="faq-section">
+        <div class="container">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h3>How do I get started?</h3>
+                    <p>Add QuestCord to your Discord server, then use /tutorial to learn the basics. Start with /quests to see available quests.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>When do quests reset?</h3>
+                    <p>Quests rotate daily at midnight NZ time. Each server gets 5 unique quests per day.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>How do boss spawns work?</h3>
+                    <p>Bosses spawn randomly in opted-in servers. Only one boss can be active at a time, and it stays for 60 minutes or until defeated.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>What are the leaderboard rewards?</h3>
+                    <p>Top 3 players each month receive Dakari and gems. The leaderboard resets on the 1st of each month.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Can I opt out of the quest system?</h3>
+                    <p>Yes, server owners can use /optout to disable quests in their server. You can re-enable it anytime with /optin.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>How do I earn Dakari and gems?</h3>
+                    <p>Complete quests and defeat bosses to earn rewards. Higher difficulty quests and bosses give better rewards.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <% if (staff.length > 0) { %>
+    <div class="staff-section">
+        <div class="container">
+            <h2 class="section-title">Team</h2>
+            <div class="staff-grid">
+                <% staff.forEach(member => { %>
+                    <div class="staff-card" data-user-id="<%= member.discord_id %>">
+                        <% if (member.avatar_url) { %>
+                            <img src="<%= member.avatar_url %>" alt="<%= member.username %>" class="staff-avatar">
+                        <% } %>
+                        <div class="staff-name"><%= member.username %></div>
+                        <div class="staff-role <%= member.role.toLowerCase() %>"><%= member.role %></div>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+    </div>
+    <% } %>
+
+    <% if (peasants && peasants.length > 0) { %>
+    <div class="staff-section">
+        <div class="container">
+            <h2 class="section-title">Peasants</h2>
+            <div class="staff-grid">
+                <% peasants.forEach(member => { %>
+                    <div class="staff-card <%= member.discord_id === '245784383506743296' ? 'npc-card' : '' %>" data-user-id="<%= member.discord_id %>">
+                        <% if (member.avatar_url) { %>
+                            <img src="<%= member.avatar_url %>" alt="<%= member.username %>" class="staff-avatar">
+                        <% } %>
+                        <div class="staff-name"><%= member.username %></div>
+                        <% if (member.discord_id === '245784383506743296') { %>
+                            <div class="staff-role npc-badge">preprogrammed npc</div>
+                        <% } else if (member.discord_id === '576244740199284779') { %>
+                            <div class="staff-role npc-badge-red">NEVER PERFECT A-</div>
+                        <% } %>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+    </div>
+    <% } %>
+
+    <%- include('partials/footer') %>
+
+    <script>
+        // Scroll to top on page load and remove hash - runs once
+        (function() {
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
+
+            // Remove hash from URL without triggering reload
+            if (window.location.hash) {
+                history.replaceState(null, null, window.location.pathname + window.location.search);
+            }
+
+            // Scroll to top smoothly
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        })();
+
+        // Interactive features setup
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Setting up interactive features...', <%- JSON.stringify(websiteEffects) %>);
+
+            // NPC Card explosion effect
+            <% if (websiteEffects && websiteEffects.interactiveFeatures && websiteEffects.interactiveFeatures.chaosMode) { %>
+            console.log('Chaos Mode enabled, setting up NPC card...');
+            const npcCard = document.querySelector('.npc-card[data-user-id="245784383506743296"]');
+
+            if (npcCard) {
+                npcCard.addEventListener('click', function(e) {
+                    // Prevent multiple clicks during animation
+                    if (this.classList.contains('exploding')) return;
+
+                    // Shake animation first
+                    this.classList.add('shaking');
+
+                    setTimeout(() => {
+                        this.classList.remove('shaking');
+
+                        // Create explosion particles
+                        const rect = this.getBoundingClientRect();
+                        const centerX = rect.left + rect.width / 2;
+                        const centerY = rect.top + rect.height / 2;
+
+                        // Create 20 particles
+                        for (let i = 0; i < 20; i++) {
+                            const particle = document.createElement('div');
+                            particle.className = 'explosion-particle';
+
+                            // Random direction
+                            const angle = (Math.PI * 2 * i) / 20;
+                            const velocity = 100 + Math.random() * 100;
+                            const tx = Math.cos(angle) * velocity;
+                            const ty = Math.sin(angle) * velocity;
+
+                            particle.style.left = rect.left + rect.width / 2 + 'px';
+                            particle.style.top = rect.top + rect.height / 2 + 'px';
+                            particle.style.setProperty('--tx', tx + 'px');
+                            particle.style.setProperty('--ty', ty + 'px');
+
+                            document.body.appendChild(particle);
+
+                            // Remove particle after animation
+                            setTimeout(() => particle.remove(), 800);
+                        }
+
+                        // Explode the card
+                        this.classList.add('exploding');
+
+                        // CHAOS MODE - Mess up the entire page!
+                        setTimeout(() => {
+                            document.body.classList.add('chaos-mode');
+
+                            // Get all major elements to throw around
+                            const chaosElements = document.querySelectorAll('.stat-card, .feature-card, .staff-card, .leaderboard-item, .faq-item, .btn, .hero-title, .section-title, .activity-item');
+
+                            chaosElements.forEach((element, index) => {
+                                // Random transformations
+                                const randomX = (Math.random() - 0.5) * 1000;
+                                const randomY = (Math.random() - 0.5) * 1000;
+                                const randomRotate = (Math.random() - 0.5) * 720;
+                                const randomScale = 0.5 + Math.random() * 1.5;
+
+                                element.style.transition = 'all 1s ease-out';
+                                element.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRotate}deg) scale(${randomScale})`;
+                                element.style.opacity = Math.random() * 0.5 + 0.5;
+                                element.style.zIndex = Math.floor(Math.random() * 1000);
+                            });
+
+                            // Mess up the hero section
+                            const hero = document.querySelector('.hero');
+                            if (hero) {
+                                hero.style.transition = 'all 1s ease-out';
+                                hero.style.transform = 'rotate(' + (Math.random() - 0.5) * 45 + 'deg) scale(0.8)';
+                            }
+
+                            // Spin some sections
+                            const sections = document.querySelectorAll('.stats-section, .about-section, .activity-section, .leaderboard-section');
+                            sections.forEach(section => {
+                                section.style.transition = 'all 1.5s ease-out';
+                                section.style.transform = 'rotate(' + (Math.random() - 0.5) * 360 + 'deg)';
+                            });
+
+                            // Reset everything after 10 seconds
+                            setTimeout(() => {
+                                // Reload the page for a clean reset
+                                location.reload();
+                            }, 10000);
+
+                        }, 600); // Start chaos right after card explosion
+
+                    }, 500); // Wait for shake to finish
+                });
+            }
+            <% } %>
+
+            // CRAZY PARTY MODE for user profile (576244740199284779)
+            <% if (websiteEffects && websiteEffects.interactiveFeatures && websiteEffects.interactiveFeatures.partyMode) { %>
+            console.log('Party Mode enabled, setting up user card...');
+            const userCard = document.querySelector('.staff-card[data-user-id="576244740199284779"]');
+            if (userCard) {
+                userCard.style.cursor = 'pointer';
+                userCard.addEventListener('click', function() {
+                    if (document.body.classList.contains('party-mode')) return;
+
+                    // ACTIVATE PARTY MODE!!!
+                    document.body.classList.add('party-mode');
+
+                    // Change background to rainbow disco
+                    document.body.style.animation = 'rainbow-bg 0.5s linear infinite';
+
+                    // Get ALL elements
+                    const allElements = document.querySelectorAll('*:not(script):not(style)');
+
+                    allElements.forEach((el, i) => {
+                        setTimeout(() => {
+                            el.style.animation = 'party-spin 1s ease-in-out infinite, party-bounce 0.5s ease-in-out infinite';
+                            el.style.filter = `hue-rotate(${Math.random() * 360}deg) saturate(3)`;
+                        }, i * 2);
+                    });
+
+                    // Spawn confetti everywhere
+                    for (let i = 0; i < 200; i++) {
+                        setTimeout(() => {
+                            const confetti = document.createElement('div');
+                            confetti.className = 'confetti';
+                            confetti.style.left = Math.random() * 100 + 'vw';
+                            confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                            confetti.style.animationDelay = Math.random() * 2 + 's';
+                            document.body.appendChild(confetti);
+                            setTimeout(() => confetti.remove(), 5000);
+                        }, i * 20);
+                    }
+
+                    // Make everything grow and shrink randomly
+                    const cards = document.querySelectorAll('.stat-card, .feature-card, .staff-card, .faq-item, .leaderboard-item');
+                    cards.forEach(card => {
+                        card.style.animation = 'mega-bounce 0.3s ease-in-out infinite, rainbow-border 1s linear infinite';
+                    });
+
+                    // Spin the entire page
+                    const sections = document.querySelectorAll('.hero, .stats-section, .about-section, .activity-section, .leaderboard-section, .faq-section, .staff-section');
+                    sections.forEach(section => {
+                        section.style.animation = 'party-wobble 0.5s ease-in-out infinite';
+                    });
+
+                    // Add party text
+                    const partyText = document.createElement('div');
+                    partyText.innerHTML = '🎉 PARTY MODE ACTIVATED! 🎊';
+                    partyText.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        font-size: 60px;
+                        font-weight: bold;
+                        z-index: 99999;
+                        color: white;
+                        text-shadow: 0 0 20px #ff00ff, 0 0 40px #00ffff;
+                        animation: party-pulse 0.5s ease-in-out infinite;
+                        pointer-events: none;
+                    `;
+                    document.body.appendChild(partyText);
+
+                    // Reset after 10 seconds
+                    setTimeout(() => {
+                        location.reload();
+                    }, 10000);
+                });
+            }
+            <% } %>
+
+            // INSULT DISPLAY for developer (works with staff section)
+            <% if (websiteEffects && websiteEffects.interactiveFeatures && websiteEffects.interactiveFeatures.insultDisplay) { %>
+            console.log('Insult Display enabled, setting up developer card...');
+            // Find the staff card by data-user-id attribute in the staff section
+            const developerCards = document.querySelectorAll('.staff-section .staff-card');
+            let isInsultLoading = false;
+            let lastInsultTime = 0;
+            const INSULT_COOLDOWN = 2500; // 2.5 second cooldown (stricter)
+
+            developerCards.forEach(card => {
+                const userId = card.getAttribute('data-user-id');
+                if (userId === '378501056008683530') {
+                    const originalCursor = card.style.cursor;
+                    card.style.cursor = 'pointer';
+
+                    card.addEventListener('click', async function(e) {
+                        // Strict cooldown check
+                        const now = Date.now();
+                        const timeSinceLastClick = now - lastInsultTime;
+
+                        if (timeSinceLastClick < INSULT_COOLDOWN) {
+                            console.log(`Cooldown active. Wait ${Math.ceil((INSULT_COOLDOWN - timeSinceLastClick) / 1000)}s`);
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return false;
+                        }
+
+                        // Prevent multiple simultaneous requests
+                        if (isInsultLoading) {
+                            console.log('Request already in progress. Please wait...');
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return false;
+                        }
+
+                        // Disable clicking during request
+                        isInsultLoading = true;
+                        lastInsultTime = now;
+                        card.style.cursor = 'not-allowed';
+                        card.style.opacity = '0.6';
+
+                        // Remove any existing insult display
+                        const existingInsult = document.querySelector('.insult-display');
+                        if (existingInsult) {
+                            existingInsult.remove();
+                        }
+
+                        try {
+                            // Fetch random insult from API
+                            const response = await fetch('/api/insult');
+                            if (!response.ok) {
+                                throw new Error('Failed to fetch insult');
+                            }
+
+                            const data = await response.json();
+
+                            // Check if we got a valid insult
+                            if (!data.insult) {
+                                throw new Error('No insult in response');
+                            }
+
+                            // Transform text: odd letters uppercase, even letters lowercase
+                            let letterIndex = 0;
+                            const transformedText = data.insult.split('').map(char => {
+                                if (/[a-zA-Z]/.test(char)) {
+                                    const result = letterIndex % 2 === 0 ? char.toUpperCase() : char.toLowerCase();
+                                    letterIndex++;
+                                    return result;
+                                }
+                                return char;
+                            }).join('');
+
+                            // Create insult display element
+                            const insultDisplay = document.createElement('div');
+                            insultDisplay.className = 'insult-display';
+                            insultDisplay.style.cssText = `
+                                position: fixed !important;
+                                top: 50% !important;
+                                left: 50% !important;
+                                transform: translate(-50%, -50%) !important;
+                                z-index: 99999 !important;
+                            `;
+                            insultDisplay.innerHTML = `
+                                <div class="insult-text">${transformedText}</div>
+                            `;
+                            document.body.appendChild(insultDisplay);
+
+                            // Fade in
+                            setTimeout(() => insultDisplay.classList.add('visible'), 100);
+
+                            // Remove after 10 seconds
+                            setTimeout(() => {
+                                insultDisplay.classList.remove('visible');
+                                setTimeout(() => insultDisplay.remove(), 500);
+                            }, 10000);
+                        } catch (error) {
+                            console.error('Error displaying insult:', error);
+
+                            // Show error message to user
+                            const errorDisplay = document.createElement('div');
+                            errorDisplay.className = 'insult-display';
+                            errorDisplay.style.cssText = `
+                                position: fixed !important;
+                                top: 50% !important;
+                                left: 50% !important;
+                                transform: translate(-50%, -50%) !important;
+                                z-index: 99999 !important;
+                            `;
+                            errorDisplay.innerHTML = `
+                                <div class="insult-text">Error: Could not load insult. Check console or add insults to config/insults.json</div>
+                            `;
+                            document.body.appendChild(errorDisplay);
+
+                            setTimeout(() => errorDisplay.classList.add('visible'), 100);
+                            setTimeout(() => {
+                                errorDisplay.classList.remove('visible');
+                                setTimeout(() => errorDisplay.remove(), 500);
+                            }, 5000);
+                        } finally {
+                            // Reset loading flag and visual state after cooldown
+                            setTimeout(() => {
+                                isInsultLoading = false;
+                                card.style.cursor = 'pointer';
+                                card.style.opacity = '1';
+                            }, 500);
+                        }
+                    });
+
+                    // Prevent default behavior on card
+                    card.addEventListener('mousedown', function(e) {
+                        if (isInsultLoading) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return false;
+                        }
+                    });
+                }
+            });
+            <% } %>
+
+            // CRAZY PARTY MODE for other CUB cards (excluding ID 378501056008683530)
+            <% if (websiteEffects && websiteEffects.interactiveFeatures && websiteEffects.interactiveFeatures.partyMode) { %>
+            const cubCards = document.querySelectorAll('.staff-card');
+            cubCards.forEach(card => {
+                const username = card.querySelector('.staff-name');
+                const userId = card.getAttribute('data-user-id');
+                // Skip if this is the main cub (ID 378501056008683530) - they get insults instead
+                if (username && username.textContent.trim().toLowerCase() === 'cub' && userId !== '378501056008683530') {
+                    card.style.cursor = 'pointer';
+                    card.addEventListener('click', function() {
+                        if (document.body.classList.contains('party-mode')) return;
+
+                        // ACTIVATE PARTY MODE!!!
+                        document.body.classList.add('party-mode');
+
+                        // Change background to rainbow disco
+                        document.body.style.animation = 'rainbow-bg 0.5s linear infinite';
+
+                        // Get ALL elements
+                        const allElements = document.querySelectorAll('*:not(script):not(style)');
+
+                        allElements.forEach((el, i) => {
+                            setTimeout(() => {
+                                el.style.animation = 'party-spin 1s ease-in-out infinite, party-bounce 0.5s ease-in-out infinite';
+                                el.style.filter = `hue-rotate(${Math.random() * 360}deg) saturate(3)`;
+                            }, i * 2);
+                        });
+
+                        // Spawn confetti everywhere
+                        for (let i = 0; i < 200; i++) {
+                            setTimeout(() => {
+                                const confetti = document.createElement('div');
+                                confetti.className = 'confetti';
+                                confetti.style.left = Math.random() * 100 + 'vw';
+                                confetti.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                                confetti.style.animationDelay = Math.random() * 2 + 's';
+                                document.body.appendChild(confetti);
+                                setTimeout(() => confetti.remove(), 5000);
+                            }, i * 20);
+                        }
+
+                        // Make everything grow and shrink randomly
+                        const cards = document.querySelectorAll('.stat-card, .feature-card, .staff-card, .faq-item, .leaderboard-item');
+                        cards.forEach(card => {
+                            card.style.animation = 'mega-bounce 0.3s ease-in-out infinite, rainbow-border 1s linear infinite';
+                        });
+
+                        // Spin the entire page
+                        const sections = document.querySelectorAll('.hero, .stats-section, .about-section, .activity-section, .leaderboard-section, .faq-section, .staff-section');
+                        sections.forEach(section => {
+                            section.style.animation = 'party-wobble 0.5s ease-in-out infinite';
+                        });
+
+                        // Add party text
+                        const partyText = document.createElement('div');
+                        partyText.innerHTML = '🎉 PARTY MODE ACTIVATED! 🎊';
+                        partyText.style.cssText = `
+                            position: fixed;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            font-size: 60px;
+                            font-weight: bold;
+                            z-index: 99999;
+                            color: white;
+                            text-shadow: 0 0 20px #ff00ff, 0 0 40px #00ffff;
+                            animation: party-pulse 0.5s ease-in-out infinite;
+                            pointer-events: none;
+                        `;
+                        document.body.appendChild(partyText);
+
+                        // Reset after 10 seconds
+                        setTimeout(() => {
+                            location.reload();
+                        }, 10000);
+                    });
+                }
+            });
+            <% } %>
+
+            // RANK BADGE CLICK EFFECTS (Always enabled by default)
+            <% if (websiteEffects && websiteEffects.interactiveFeatures && websiteEffects.interactiveFeatures.partyMode) { %>
+            const rankBadges = document.querySelectorAll('.rank-badge');
+            rankBadges.forEach((badge, badgeIndex) => {
+                badge.style.cursor = 'pointer';
+                badge.addEventListener('click', function(e) {
+                    e.stopPropagation();
+
+                    // Create explosion effect
+                    const rect = badge.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+
+                    // Spawn medal particles
+                    const colors = ['#FFD700', '#C0C0C0', '#CD7F32']; // Gold, Silver, Bronze
+                    const color = colors[badgeIndex] || '#FFD700';
+
+                    for (let i = 0; i < 30; i++) {
+                        setTimeout(() => {
+                            const particle = document.createElement('div');
+                            particle.textContent = badge.textContent;
+                            particle.style.cssText = `
+                                position: fixed;
+                                left: ${centerX}px;
+                                top: ${centerY}px;
+                                font-size: 24px;
+                                pointer-events: none;
+                                z-index: 9999;
+                                animation: medal-explode ${1 + Math.random()}s ease-out forwards;
+                            `;
+
+                            const angle = (Math.PI * 2 * i) / 30;
+                            const distance = 100 + Math.random() * 100;
+                            particle.style.setProperty('--tx', Math.cos(angle) * distance + 'px');
+                            particle.style.setProperty('--ty', Math.sin(angle) * distance + 'px');
+                            particle.style.setProperty('--rotation', Math.random() * 720 - 360 + 'deg');
+
+                            document.body.appendChild(particle);
+                            setTimeout(() => particle.remove(), 1500);
+                        }, i * 10);
+                    }
+
+                    // Badge bounce animation
+                    badge.style.animation = 'badge-bounce 0.5s ease-out';
+                    setTimeout(() => badge.style.animation = '', 500);
+
+                    // Add sparkle effect
+                    const sparkle = document.createElement('div');
+                    sparkle.innerHTML = '✨';
+                    sparkle.style.cssText = `
+                        position: fixed;
+                        left: ${centerX}px;
+                        top: ${centerY}px;
+                        font-size: 48px;
+                        pointer-events: none;
+                        z-index: 9999;
+                        animation: sparkle-fade 1s ease-out forwards;
+                        transform: translate(-50%, -50%);
+                    `;
+                    document.body.appendChild(sparkle);
+                    setTimeout(() => sparkle.remove(), 1000);
+                });
+            });
+            <% } %>
+
+            // Zigzag scroll path (disabled for better UX)
+            // The scroll path feature has been disabled to improve scrolling performance
+            // and remove the distracting X marker
+        });
+    </script>
+
+    <!-- Rank Badge Effects CSS -->
+    <style>
+        @keyframes medal-explode {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(
+                    calc(-50% + var(--tx)),
+                    calc(-50% + var(--ty))
+                ) scale(0.5) rotate(var(--rotation));
+            }
+        }
+
+        @keyframes badge-bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.5) rotate(10deg); }
+        }
+
+        @keyframes sparkle-fade {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(3);
+            }
+        }
+    </style>
+
+    <!-- Party Mode CSS -->
+    <style>
+        @keyframes rainbow-bg {
+            0% { background: #ff0000; }
+            16.67% { background: #ff7f00; }
+            33.33% { background: #ffff00; }
+            50% { background: #00ff00; }
+            66.67% { background: #0000ff; }
+            83.33% { background: #8b00ff; }
+            100% { background: #ff0000; }
+        }
+
+        @keyframes party-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes party-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes mega-bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        @keyframes rainbow-border {
+            0% { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
+            16.67% { border-color: #ff7f00; box-shadow: 0 0 20px #ff7f00; }
+            33.33% { border-color: #ffff00; box-shadow: 0 0 20px #ffff00; }
+            50% { border-color: #00ff00; box-shadow: 0 0 20px #00ff00; }
+            66.67% { border-color: #0000ff; box-shadow: 0 0 20px #0000ff; }
+            83.33% { border-color: #8b00ff; box-shadow: 0 0 20px #8b00ff; }
+            100% { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
+        }
+
+        @keyframes party-wobble {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(5deg); }
+            75% { transform: rotate(-5deg); }
+        }
+
+        @keyframes party-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            top: -10px;
+            z-index: 9999;
+            animation: confetti-fall 5s linear;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+            }
+        }
+    </style>
+
+    <script src="/js/activity.js?v=<%= v %>"></script>
+</body>
+</html>

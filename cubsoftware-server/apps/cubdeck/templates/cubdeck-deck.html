@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0f">
+    <title>CubDeck</title>
+    <link rel="stylesheet" href="/cubdeck/static/css/cubdeck.css?v={{ v }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body class="cd-deck-body">
+
+<!-- Top Bar -->
+<header class="cd-topbar">
+    <div class="cd-topbar-left">
+        <span class="cd-topbar-logo">CubDeck</span>
+        <div class="cd-obs-status" id="obsStatus" title="OBS Connection">
+            <span class="cd-obs-dot" id="obsDot"></span>
+            <span class="cd-obs-label" id="obsLabel">OBS</span>
+        </div>
+    </div>
+    <div class="cd-page-tabs" id="pageTabs"></div>
+    <div class="cd-topbar-right">
+        <button class="cd-icon-btn" id="addPageBtn" title="Add Page"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+        <button class="cd-icon-btn" id="pluginsBtn" title="Plugins"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="9" height="9" rx="1"/><rect x="13" y="2" width="9" height="9" rx="1"/><rect x="13" y="13" width="9" height="9" rx="1"/><rect x="2" y="13" width="9" height="9" rx="1"/></svg></button>
+        <button class="cd-icon-btn" id="settingsBtn" title="Settings"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+        <button class="cd-icon-btn" id="editModeBtn" title="Edit Mode"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        <a href="/cubdeck" class="cd-icon-btn" title="Back to CubDeck home"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></a>
+        <a href="/cubdeck/auth/logout" class="cd-icon-btn" title="Logout"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+    </div>
+</header>
+
+<!-- Main Grid -->
+<main class="cd-main">
+    <div class="cd-grid" id="cdGrid"></div>
+</main>
+
+<!-- Bottom bar (mobile page nav) -->
+<nav class="cd-bottombar" id="cdBottombar"></nav>
+
+<!-- ===================== MODALS ===================== -->
+
+<!-- Button Editor Modal -->
+<div class="cd-modal" id="editorModal">
+    <div class="cd-modal-box cd-editor-box">
+        <div class="cd-modal-header">
+            <h2 id="editorTitle">Edit Button</h2>
+            <button class="cd-modal-close" id="editorClose">✕</button>
+        </div>
+        <div class="cd-editor-tabs">
+            <button class="cd-editor-tab active" data-tab="appearance">Appearance</button>
+            <button class="cd-editor-tab" data-tab="action">Action</button>
+        </div>
+        <div class="cd-editor-body">
+            <!-- Appearance Tab -->
+            <div class="cd-editor-panel active" id="tab-appearance">
+                <div class="cd-editor-preview-wrap">
+                    <div class="cd-btn-preview" id="btnPreview">
+                        <span class="cd-btn-preview-icon" id="previewIcon">⭐</span>
+                        <span class="cd-btn-preview-label" id="previewLabel">Button</span>
+                    </div>
+                </div>
+                <div class="cd-form-row">
+                    <label>Icon</label>
+                    <div class="cd-icon-field-row">
+                        <input type="text" id="btnIcon" placeholder="Paste emoji or click pick" maxlength="8" class="cd-input">
+                        <button type="button" id="emojiPickerBtn" class="cd-icon-btn cd-emoji-trigger" title="Pick emoji" style="width:36px;height:36px;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9" stroke-width="3"/><line x1="15" y1="9" x2="15.01" y2="9" stroke-width="3"/></svg></button>
+                    </div>
+                    <div id="emojiPickerPanel" class="cd-emoji-picker" style="display:none"></div>
+                </div>
+                <div class="cd-form-row">
+                    <label>Label</label>
+                    <input type="text" id="btnLabel" placeholder="My Button" maxlength="30" class="cd-input">
+                </div>
+                <div class="cd-form-row">
+                    <label>Background Color</label>
+                    <div class="cd-color-row">
+                        <input type="color" id="btnColor" value="#5865f2" class="cd-color-pick">
+                        <div class="cd-color-presets" id="colorPresets"></div>
+                    </div>
+                </div>
+                <div class="cd-form-row">
+                    <label>Text Color</label>
+                    <div class="cd-color-row">
+                        <input type="color" id="btnTextColor" value="#ffffff" class="cd-color-pick">
+                    </div>
+                </div>
+                <div class="cd-form-row">
+                    <label>Keyboard Shortcut <span style="color:rgba(255,255,255,.3);font-weight:400">(optional)</span></label>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <input type="text" id="btnHotkey" placeholder="Click Capture then press keys..." class="cd-input" readonly style="flex:1;cursor:default;font-family:monospace;font-size:12px">
+                        <button type="button" id="hotkeyCapture" class="cd-btn-secondary" style="padding:8px 12px;white-space:nowrap;flex-shrink:0">Capture</button>
+                        <button type="button" id="hotkeyClear" class="cd-btn-secondary" style="padding:8px 10px;flex-shrink:0;color:var(--danger);border-color:rgba(239,68,68,.3)">&#x2715;</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Action Tab -->
+            <div class="cd-editor-panel" id="tab-action">
+                <div id="actionsList"></div>
+                <button type="button" id="addActionBtn" class="cd-btn-secondary" style="width:100%;margin-top:4px">+ Add Action</button>
+            </div>
+        </div>
+        <div class="cd-modal-footer">
+            <button class="cd-btn-danger" id="btnDelete">Delete</button>
+            <button class="cd-btn-secondary" id="btnCancel">Cancel</button>
+            <button class="cd-btn-primary" id="btnSave">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="cd-modal" id="settingsModal">
+    <div class="cd-modal-box">
+        <div class="cd-modal-header">
+            <h2>Settings</h2>
+            <button class="cd-modal-close" id="settingsClose">✕</button>
+        </div>
+        <div class="cd-settings-body">
+            <div class="cd-settings-section">
+                <h3>OBS Connection</h3>
+                <div style="background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:#a5b4fc;margin-bottom:12px;line-height:1.6">
+                    📋 <strong>OBS Browser Dock URL</strong><br>
+                    In OBS: <em>View → Docks → Custom Browser Docks</em><br>
+                    <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
+                        <input id="obsDockUrl" type="text" readonly class="cd-input" style="font-size:11px;flex:1" value="">
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('obsDockUrl').value).then(()=>this.textContent='✓').catch(()=>{}); setTimeout(()=>this.textContent='Copy',1500)" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(88,101,242,.4);background:rgba(88,101,242,.15);color:#a5b4fc;font-size:12px;cursor:pointer;white-space:nowrap">Copy</button>
+                    </div>
+                </div>
+                <div style="background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:#a5b4fc;margin-bottom:12px;line-height:1.6">
+                    🎬 <strong>OBS Overlay URL</strong><br>
+                    In OBS: <em>Sources → Browser Source</em> — set width <strong>1920</strong>, height <strong>1080</strong>, check <strong>Transparent background</strong><br>
+                    <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
+                        <input id="obsOverlayUrl" type="text" readonly class="cd-input" style="font-size:11px;flex:1" value="">
+                        <button onclick="navigator.clipboard.writeText(document.getElementById('obsOverlayUrl').value).then(()=>this.textContent='✓').catch(()=>{}); setTimeout(()=>this.textContent='Copy',1500)" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(88,101,242,.4);background:rgba(88,101,242,.15);color:#a5b4fc;font-size:12px;cursor:pointer;white-space:nowrap">Copy</button>
+                    </div>
+                </div>
+                <div id="obsHttpsWarning" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);border-radius:8px;padding:10px 12px;font-size:12px;color:#f59e0b;margin-bottom:12px;line-height:1.6">
+                    ⚠️ <strong>Using via OBS Browser Dock?</strong> Set protocol to <strong>ws://</strong> and host to <strong>localhost</strong> — browsers allow localhost WebSocket connections even from HTTPS.<br>
+                    <strong>Using from a phone/tablet?</strong> OBS WebSocket cannot connect from an external HTTPS page without WSS configured in OBS. Use the OBS dock instead.
+                </div>
+                <div class="cd-form-row">
+                    <label>Protocol</label>
+                    <select id="obsProtocol" class="cd-select">
+                        <option value="ws">ws:// (default)</option>
+                        <option value="wss">wss:// (TLS)</option>
+                    </select>
+                </div>
+                <div class="cd-form-row">
+                    <label>Host</label>
+                    <input type="text" id="obsHost" placeholder="localhost" class="cd-input">
+                </div>
+                <div class="cd-form-row">
+                    <label>Port</label>
+                    <input type="number" id="obsPort" placeholder="4455" class="cd-input">
+                </div>
+                <div class="cd-form-row">
+                    <label>Password</label>
+                    <input type="password" id="obsPassword" placeholder="(leave blank if none)" class="cd-input">
+                </div>
+                <div class="cd-form-row cd-form-row-inline">
+                    <button class="cd-btn-secondary" id="obsConnectBtn">Connect</button>
+                    <button class="cd-btn-danger" id="obsDisconnectBtn">Disconnect</button>
+                    <span class="cd-settings-status" id="obsConnectStatus"></span>
+                </div>
+            </div>
+            <div class="cd-settings-section">
+                <h3>Twitch Chat (for Chat plugin)</h3>
+                <div class="cd-form-row">
+                    <label>Channel</label>
+                    <input type="text" id="twitchChannel" placeholder="your_channel" class="cd-input">
+                </div>
+                <div class="cd-form-row">
+                    <label>OAuth Token</label>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <input type="password" id="twitchOauth" placeholder="oauth:xxxxxxxxxx" class="cd-input" style="flex:1">
+                        <button id="twitchConnectBtn" type="button" style="padding:8px 14px;border-radius:8px;border:1px solid rgba(145,71,255,.4);background:rgba(145,71,255,.15);color:#c084fc;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">
+                            Connect Twitch
+                        </button>
+                    </div>
+                    <small id="twitchConnectStatus" style="color:#888;font-size:11px;margin-top:4px;display:block"></small>
+                </div>
+            </div>
+            <div class="cd-settings-section">
+                <h3>Grid</h3>
+                <div class="cd-form-row cd-form-row-inline">
+                    <label>Rows</label>
+                    <input type="number" id="gridRows" min="1" max="8" class="cd-input cd-input-sm">
+                    <label>Cols</label>
+                    <input type="number" id="gridCols" min="1" max="10" class="cd-input cd-input-sm">
+                </div>
+            </div>
+        </div>
+        <div class="cd-modal-footer">
+            <button class="cd-btn-secondary" id="settingsCancel">Cancel</button>
+            <button class="cd-btn-primary" id="settingsSave">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Plugin Manager Modal -->
+<div class="cd-modal" id="pluginsModal">
+    <div class="cd-modal-box">
+        <div class="cd-modal-header">
+            <h2>Plugin Manager</h2>
+            <button class="cd-modal-close" id="pluginsClose">✕</button>
+        </div>
+        <div class="cd-plugins-body" id="pluginsBody"></div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="cd-toast" id="cdToast"></div>
+
+<!-- Debug Panel (Ctrl+Shift+D) -->
+<div id="cdDebugOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:99999;overflow:auto;padding:20px;box-sizing:border-box;font-family:monospace;">
+    <div style="max-width:900px;margin:0 auto;background:#0d0d1a;border:1px solid #5865f2;border-radius:12px;overflow:hidden;">
+        <div style="background:#1a1a2e;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #2a2a4a;">
+            <span style="color:#9146ff;font-weight:700;font-size:14px;letter-spacing:1px;">CubDeck Debugger</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button id="dbgRunTests" style="background:#5865f2;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;">Run Tests</button>
+                <button id="dbgCopy" style="background:#2a2a4a;color:#aaa;border:1px solid #3a3a5a;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;">Copy</button>
+                <button id="dbgClose" style="background:none;color:#888;border:none;font-size:18px;cursor:pointer;line-height:1;">✕</button>
+            </div>
+        </div>
+        <div id="dbgContent" style="padding:16px;font-size:12px;color:#ccc;line-height:1.7;"></div>
+    </div>
+</div>
+
+<!-- Config passed from server -->
+<script>
+    const CUBDECK_CONFIG = {{ config | tojson }};
+    const CUBDECK_USER = {{ user | tojson }};
+    const CUBDECK_DECK_NAME = {{ deck_name | tojson }};
+    const CUBDECK_ALL_DECKS = {{ all_decks | tojson }};
+</script>
+
+<!-- OBS WebSocket + Engine -->
+<script src="/cubdeck/static/js/cubdeck-obs.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/cubdeck-engine.js?v={{ v }}"></script>
+
+<!-- Plugins -->
+<script src="/cubdeck/static/js/plugins/plugin-obs.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-obs-display.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-obs-advanced.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-twitch-chat.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-timer.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-counter.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-soundboard.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-media.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-utility.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-webhooks.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-multi.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-display-info.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-obs-filters.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-stream-manager.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-alerts.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-focus.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-notes.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-ambience.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-spotify.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-hotkeys.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-twitch-eventsub.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-twitch-extra.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-voice.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-scheduler.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-youtube.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-streamelements.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-obs-sources.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-social.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-notifications.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-lastfm.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-vtube-studio.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-github.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-kick.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-home-assistant.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-streamlabs.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-livesplit.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-twitch-rewards.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-discord.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-random.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-streamerbot.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-openai.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-obs-stats.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-clipboard.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-obs-profile.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-voicemeeter.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-elgato-light.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-hue.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-wled.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-nanoleaf.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-nightbot.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-vlc.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-soundpad.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-midi.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-steam.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-govee.js?v={{ v }}"></script>
+<script src="/cubdeck/static/js/plugins/plugin-cub-overlays.js?v={{ v }}"></script>
+
+<!-- Boot -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => CubDeck.init(CUBDECK_CONFIG));
+</script>
+
+<!-- Debugger Panel -->
+<script>
+(function() {
+    'use strict';
+
+    // ── Log capture ──────────────────────────────────────────────────────────
+    const _logs = [];
+    const _origConsole = {};
+    ['log','warn','error','info'].forEach(level => {
+        _origConsole[level] = console[level].bind(console);
+        console[level] = function(...args) {
+            _origConsole[level](...args);
+            const msg = args.map(a => {
+                try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+                catch { return '[unserializable]'; }
+            }).join(' ');
+            _logs.push({ t: Date.now(), level, msg });
+            if (_logs.length > 200) _logs.shift();
+        };
+    });
+
+    // ── Fetch error capture ───────────────────────────────────────────────────
+    const _fetchErrors = [];
+    const _origFetch = window.fetch;
+    window.fetch = async function(url, opts) {
+        const start = Date.now();
+        try {
+            const res = await _origFetch.apply(this, arguments);
+            if (!res.ok) {
+                _fetchErrors.push({ t: Date.now(), url: String(url), status: res.status, ms: Date.now()-start });
+                if (_fetchErrors.length > 50) _fetchErrors.shift();
+            }
+            return res;
+        } catch(e) {
+            _fetchErrors.push({ t: Date.now(), url: String(url), status: 'NETWORK_ERR', err: e.message, ms: Date.now()-start });
+            if (_fetchErrors.length > 50) _fetchErrors.shift();
+            throw e;
+        }
+    };
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function section(title, html) {
+        return `<div style="margin-bottom:16px">
+            <div style="color:#9146ff;font-weight:700;margin-bottom:6px;border-bottom:1px solid #2a2a4a;padding-bottom:4px">${esc(title)}</div>
+            ${html}
+        </div>`;
+    }
+    function row(label, value, color) {
+        return `<div style="display:flex;gap:8px;margin-bottom:2px">
+            <span style="color:#888;min-width:200px;flex-shrink:0">${esc(label)}:</span>
+            <span style="color:${color||'#e0e0e0'}">${esc(String(value))}</span>
+        </div>`;
+    }
+    function badge(ok, label) {
+        return `<span style="background:${ok?'#1a4a2a':'#4a1a1a'};color:${ok?'#4cff88':'#ff6b6b'};padding:1px 8px;border-radius:4px;font-size:11px">${esc(label)}</span>`;
+    }
+    function badgeWarn(label) {
+        return `<span style="background:#4a3a1a;color:#ffd666;padding:1px 8px;border-radius:4px;font-size:11px">${esc(label)}</span>`;
+    }
+
+    // ── WebSocket port probe ──────────────────────────────────────────────────
+    function probeWS(port, timeout) {
+        return new Promise(resolve => {
+            const t0 = Date.now();
+            let done = false;
+            let ws;
+            const finish = (open, reason) => {
+                if (done) return;
+                done = true;
+                try { if (ws && ws.readyState < 2) ws.close(); } catch {}
+                resolve({ open, ms: Date.now() - t0, reason });
+            };
+            const timer = setTimeout(() => finish(false, 'timeout'), timeout || 1500);
+            try {
+                ws = new WebSocket(`ws://127.0.0.1:${port}`);
+                ws.onopen  = () => { clearTimeout(timer); finish(true, 'open'); };
+                ws.onerror = () => { clearTimeout(timer); finish(false, 'refused'); };
+                ws.onclose = (e) => { clearTimeout(timer); finish(e.code === 1000 || e.wasClean, 'closed:'+e.code); };
+            } catch(e) {
+                clearTimeout(timer);
+                finish(false, e.message);
+            }
+        });
+    }
+
+    // ── Run all tests ─────────────────────────────────────────────────────────
+    async function runTests() {
+        const out = { fetch: {}, ports: {} };
+
+        // HTTP fetch tests
+        const testFetch = async (label, url) => {
+            try {
+                const t0 = Date.now();
+                const r = await _origFetch(url, { mode: 'cors' });
+                out.fetch[label] = { ok: r.ok || r.status === 204, status: r.status, ms: Date.now()-t0 };
+            } catch(e) {
+                out.fetch[label] = { ok: false, err: e.message };
+            }
+        };
+
+        // Port probe
+        const testPort = async (label, port) => {
+            const res = await probeWS(port, 1500);
+            out.ports[label] = { port, ...res };
+        };
+
+        // Get currently configured OBS port
+        let obsPort = 4455;
+        try { obsPort = window.obsClient ? window.obsClient._obsPort : 4455; } catch {}
+        const obsPorts = [...new Set([obsPort, 4455, 4456])];
+
+        await Promise.all([
+            // HTTP
+            testFetch('Discord REST API', 'https://discord.com/api/v10/gateway'),
+            testFetch('HTTPS connectivity', 'https://www.google.com/generate_204'),
+            // Discord RPC local ports (6463–6472)
+            ...[6463,6464,6465,6466,6467,6468,6469,6470,6471,6472].map(p =>
+                testPort(`Discord RPC :${p}`, p)
+            ),
+            // OBS WebSocket ports
+            ...obsPorts.map(p => testPort(`OBS WebSocket :${p}`, p)),
+        ]);
+
+        return out;
+    }
+
+    // ── Build panel HTML ──────────────────────────────────────────────────────
+    function buildHTML(tests) {
+        let html = '';
+
+        // Version + system
+        let sysHtml = '';
+        try { sysHtml += row('CubDeck Version', typeof CUBDECK_VERSION !== 'undefined' ? CUBDECK_VERSION : '—', '#9146ff'); } catch {}
+        sysHtml += row('Platform', navigator.platform);
+        sysHtml += row('User Agent', navigator.userAgent);
+        sysHtml += row('Online', navigator.onLine ? 'Yes' : 'No', navigator.onLine ? '#4cff88' : '#ff6b6b');
+        sysHtml += row('Protocol', location.protocol, location.protocol === 'https:' ? '#ffd666' : '#e0e0e0');
+        sysHtml += row('Hostname', location.hostname);
+        sysHtml += row('Time', new Date().toISOString());
+        html += section('System', sysHtml);
+
+        // OBS config
+        try {
+            if (window.obsClient) {
+                const obs = window.obsClient;
+                let obsHtml = '';
+                obsHtml += row('Host', obs._obsHost || '—');
+                obsHtml += row('Port (configured)', obs._obsPort || '—', '#ffd666');
+                obsHtml += row('Protocol', obs._obsProto || '—');
+                obsHtml += row('Connected', obs.connected ? 'Yes' : 'No', obs.connected ? '#4cff88' : '#ff6b6b');
+                obsHtml += row('Authenticated', obs.authenticated ? 'Yes' : 'No', obs.authenticated ? '#4cff88' : '#ff6b6b');
+                obsHtml += `<div style="margin-top:6px;color:#666;font-size:11px">Tip: If port fails, CubDeck auto-tries 4455↔4456. On Linux, OBS may grab 4456 if 4455 is in use.</div>`;
+                html += section('OBS WebSocket', obsHtml);
+            }
+        } catch {}
+
+        if (!tests) {
+            html += section('Port Scan', '<div style="color:#888;font-style:italic">Click "Run Tests" to scan ports…</div>');
+            html += section('Network Tests', '<div style="color:#888;font-style:italic">Click "Run Tests" to test connectivity…</div>');
+        } else {
+            // Port scan results
+            let portHtml = '';
+
+            // Discord RPC ports
+            portHtml += `<div style="color:#888;font-size:11px;margin-bottom:6px">Discord desktop client exposes RPC on ports 6463–6472. CubPresence needs at least one open.</div>`;
+            const discordPorts = Object.entries(tests.ports).filter(([k]) => k.startsWith('Discord RPC'));
+            const discordOpen = discordPorts.filter(([,v]) => v.open);
+            discordPorts.forEach(([label, r]) => {
+                const isOpen = r.open;
+                portHtml += `<div style="margin-bottom:3px;display:flex;align-items:center;gap:8px">`;
+                portHtml += badge(isOpen, isOpen ? 'OPEN' : 'CLOSED');
+                portHtml += ` <span style="color:#ccc;min-width:200px">${esc(label)}</span>`;
+                portHtml += ` <span style="color:#555;font-size:11px">${esc(r.reason||'')} · ${r.ms}ms</span>`;
+                portHtml += `</div>`;
+            });
+            if (discordOpen.length === 0) {
+                portHtml += `<div style="color:#ff6b6b;font-size:11px;margin-top:4px">⚠ No Discord RPC ports open — is Discord running? CubPresence cannot connect.</div>`;
+            } else {
+                portHtml += `<div style="color:#4cff88;font-size:11px;margin-top:4px">✓ Discord RPC found on port ${discordOpen.map(([,v])=>v.port).join(', ')} — CubPresence should connect here.</div>`;
+            }
+
+            portHtml += `<div style="margin-top:12px;color:#888;font-size:11px;margin-bottom:6px">OBS WebSocket (default 4455). If 4455 fails, CubDeck auto-retries on 4456.</div>`;
+            const obsPorts2 = Object.entries(tests.ports).filter(([k]) => k.startsWith('OBS WebSocket'));
+            let configuredPort = 4455;
+            try { configuredPort = window.obsClient ? window.obsClient._obsPort : 4455; } catch {}
+            obsPorts2.forEach(([label, r]) => {
+                const isOpen = r.open;
+                const isCurrent = r.port === configuredPort;
+                portHtml += `<div style="margin-bottom:3px;display:flex;align-items:center;gap:8px">`;
+                portHtml += badge(isOpen, isOpen ? 'OPEN' : 'CLOSED');
+                if (isCurrent) portHtml += badgeWarn('configured');
+                portHtml += ` <span style="color:#ccc;min-width:200px">${esc(label)}</span>`;
+                portHtml += ` <span style="color:#555;font-size:11px">${esc(r.reason||'')} · ${r.ms}ms</span>`;
+                portHtml += `</div>`;
+            });
+            const obsOpen = obsPorts2.filter(([,v]) => v.open);
+            if (obsOpen.length === 0) {
+                portHtml += `<div style="color:#ff6b6b;font-size:11px;margin-top:4px">⚠ OBS WebSocket not found on any port — is OBS running with WebSocket enabled?</div>`;
+            } else {
+                const openPort = obsOpen[0][1].port;
+                if (openPort !== configuredPort) {
+                    portHtml += `<div style="color:#ffd666;font-size:11px;margin-top:4px">⚠ OBS is on port ${openPort} but CubDeck is configured for ${configuredPort}. CubDeck will auto-switch, or update Settings manually.</div>`;
+                } else {
+                    portHtml += `<div style="color:#4cff88;font-size:11px;margin-top:4px">✓ OBS WebSocket found on configured port ${openPort}.</div>`;
+                }
+            }
+
+            html += section('Port Scan', portHtml);
+
+            // HTTP fetch results
+            let netHtml = '';
+            for (const [label, r] of Object.entries(tests.fetch)) {
+                const detail = r.err ? `ERR: ${r.err}` : `HTTP ${r.status}${r.ms ? ' · '+r.ms+'ms' : ''}`;
+                netHtml += `<div style="margin-bottom:4px">${badge(r.ok, r.ok ? 'OK' : 'FAIL')} <span style="color:#ccc;margin-left:8px">${esc(label)}</span> <span style="color:#666;font-size:11px;margin-left:8px">${esc(detail)}</span></div>`;
+            }
+            html += section('Network Tests', netHtml);
+        }
+
+        // Fetch errors
+        const errs = _fetchErrors.slice(-20);
+        if (errs.length) {
+            let errHtml = '';
+            errs.forEach(e => {
+                const t = new Date(e.t).toISOString().slice(11,23);
+                errHtml += `<div style="margin-bottom:3px"><span style="color:#666">${esc(t)}</span> <span style="color:#ff6b6b;margin:0 6px">${esc(e.status)}</span><span style="color:#ccc;word-break:break-all">${esc(e.url)}</span>${e.err?` <span style="color:#888"> — ${esc(e.err)}</span>`:''}</div>`;
+            });
+            html += section(`Fetch Errors (last ${errs.length})`, errHtml);
+        } else {
+            html += section('Fetch Errors', '<div style="color:#4cff88">None captured</div>');
+        }
+
+        // Console logs
+        const recent = _logs.slice(-40);
+        if (recent.length) {
+            let logHtml = '<div style="max-height:200px;overflow-y:auto">';
+            recent.forEach(l => {
+                const colors = { error: '#ff6b6b', warn: '#ffd666', info: '#66ccff', log: '#ccc' };
+                const t = new Date(l.t).toISOString().slice(11,23);
+                logHtml += `<div style="margin-bottom:1px"><span style="color:#555">${esc(t)}</span> <span style="color:${colors[l.level]||'#ccc'};min-width:44px;display:inline-block;margin:0 6px">[${esc(l.level)}]</span><span style="color:#ccc;word-break:break-all">${esc(l.msg)}</span></div>`;
+            });
+            logHtml += '</div>';
+            html += section(`Console (last ${recent.length})`, logHtml);
+        } else {
+            html += section('Console', '<div style="color:#888;font-style:italic">No logs captured yet</div>');
+        }
+
+        // Plugin registry
+        try {
+            if (window.CubDeck && CubDeck._plugins) {
+                const ids = Object.keys(CubDeck._plugins);
+                html += section(`Plugins (${ids.length})`, ids.map(id => row(id, 'registered', '#4cff88')).join('') || '<span style="color:#888">None</span>');
+            }
+        } catch {}
+
+        return html;
+    }
+
+    // ── Panel open/close ──────────────────────────────────────────────────────
+    let _lastTests = null;
+
+    function openPanel() {
+        const overlay = document.getElementById('cdDebugOverlay');
+        const content = document.getElementById('dbgContent');
+        if (!overlay || !content) return;
+        content.innerHTML = buildHTML(_lastTests);
+        overlay.style.display = 'block';
+    }
+
+    function closePanel() {
+        const overlay = document.getElementById('cdDebugOverlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+
+    // ── Keyboard shortcut ─────────────────────────────────────────────────────
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+            e.preventDefault();
+            const overlay = document.getElementById('cdDebugOverlay');
+            if (overlay && overlay.style.display !== 'none') {
+                closePanel();
+            } else {
+                openPanel();
+            }
+        }
+        if (e.key === 'Escape') closePanel();
+    });
+
+    // ── Button listeners ──────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('dbgClose')?.addEventListener('click', closePanel);
+
+        document.getElementById('dbgRunTests')?.addEventListener('click', async function() {
+            const content = document.getElementById('dbgContent');
+            if (content) content.innerHTML = '<div style="color:#9146ff;padding:8px">Scanning ports and testing connectivity…</div>';
+            _lastTests = await runTests();
+            if (content) content.innerHTML = buildHTML(_lastTests);
+        });
+
+        document.getElementById('dbgCopy')?.addEventListener('click', function() {
+            const content = document.getElementById('dbgContent');
+            if (!content) return;
+            const btn = document.getElementById('dbgCopy');
+            navigator.clipboard.writeText(content.innerText).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+            }).catch(() => prompt('Copy this:', content.innerText));
+        });
+
+        document.getElementById('cdDebugOverlay')?.addEventListener('click', function(e) {
+            if (e.target === this) closePanel();
+        });
+    });
+})();
+</script>
+</body>
+</html>

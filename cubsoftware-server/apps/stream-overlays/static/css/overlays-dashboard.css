@@ -1,0 +1,331 @@
+/* Stream Overlays — Dashboard & Login Styles */
+
+/* ─── Login Page ─── */
+.ov-login-page {
+    min-height: 80vh; display: flex; align-items: center; justify-content: center;
+    padding: 60px 20px;
+}
+.ov-login-card {
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 20px; padding: 56px 48px; max-width: 520px; width: 100%;
+    text-align: center;
+}
+.ov-login-icon { font-size: 56px; margin-bottom: 20px; }
+.ov-login-card h1 { font-family: Orbitron, sans-serif; font-size: 32px; color: #fff; margin-bottom: 14px; }
+.ov-login-card p { color: #b0b0c0; font-family: Poppins, sans-serif; font-size: 16px; line-height: 1.6; }
+.ov-features { display: flex; flex-direction: column; gap: 12px; margin: 28px 0; text-align: left; }
+.ov-feature-item { display: flex; align-items: center; gap: 12px; color: #c0c0d8; font-family: Poppins, sans-serif; font-size: 15px; }
+.ov-feature-icon { font-size: 20px; flex-shrink: 0; }
+.ov-btn-login {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: #5865f2; color: #fff; font-family: Orbitron, sans-serif;
+    font-size: 15px; font-weight: 700; padding: 14px 28px; border-radius: 10px;
+    border: none; cursor: pointer; text-decoration: none; letter-spacing: 1px;
+    transition: background .2s, transform .2s; margin-top: 8px;
+}
+.ov-btn-login:hover { background: #4752c4; transform: translateY(-2px); }
+.ov-btn-login-twitch { background: #9146ff; }
+.ov-btn-login-twitch:hover { background: #772ce8; }
+.ov-login-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 14px 0 6px; color: #444; font-family: Poppins, sans-serif; font-size: 13px;
+}
+.ov-login-divider::before, .ov-login-divider::after {
+    content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.08);
+}
+.ov-login-note { font-size: 13px; color: #666; margin-top: 12px; font-family: Poppins, sans-serif; }
+
+/* ─── Dashboard Layout ─── */
+.ov-dashboard {
+    padding: 28px 40px 80px;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+/* ─── Top Bar ─── */
+.ov-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+}
+.ov-topbar-left { display: flex; align-items: center; gap: 14px; }
+.ov-user-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2px solid rgba(124,58,237,.5);
+    flex-shrink: 0;
+}
+.ov-user-name { font-family: Orbitron, sans-serif; font-size: 15px; color: #fff; font-weight: 700; }
+.ov-user-label { font-size: 11px; color: #7c3aed; font-family: Poppins, sans-serif; letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
+.ov-topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+.ov-btn-twitch {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(145,70,255,.12); color: #aa88ff;
+    border: 1px solid rgba(145,70,255,.25); padding: 8px 14px;
+    border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none;
+    font-family: Poppins, sans-serif; font-weight: 500; transition: background .2s, border-color .2s;
+}
+.ov-btn-twitch:hover { background: rgba(145,70,255,.2); border-color: rgba(145,70,255,.5); }
+.ov-twitch-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(145,70,255,.1); border: 1px solid rgba(145,70,255,.25);
+    color: #aa88ff; padding: 8px 14px; border-radius: 8px; font-size: 13px;
+    font-family: Poppins, sans-serif;
+}
+.ov-twitch-disconnect {
+    background: none; border: none; color: #aa88ff; cursor: pointer;
+    font-size: 16px; padding: 0 0 0 4px; line-height: 1; transition: color .2s;
+}
+.ov-twitch-disconnect:hover { color: #ff6666; }
+.ov-btn-logout {
+    background: transparent; color: #666; border: 1px solid rgba(255,255,255,.1);
+    padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer;
+    text-decoration: none; transition: border-color .2s, color .2s; font-family: Poppins, sans-serif;
+}
+.ov-btn-logout:hover { border-color: rgba(255,255,255,.25); color: #ccc; }
+
+/* ─── Alerts ─── */
+.ov-alert {
+    padding: 12px 18px; border-radius: 8px; margin-bottom: 18px;
+    font-family: Poppins, sans-serif; font-size: 14px;
+}
+.ov-alert.error { background: rgba(255,68,68,.08); border: 1px solid rgba(255,68,68,.2); color: #ff8888; }
+.ov-alert.success { background: rgba(0,204,102,.08); border: 1px solid rgba(0,204,102,.2); color: #66cc99; }
+
+/* ─── Twitch Alerts Banner ─── */
+.ov-alerts-banner {
+    display: flex; align-items: flex-start; gap: 14px;
+    background: rgba(145,70,255,.06); border: 1px solid rgba(145,70,255,.18);
+    border-radius: 10px; padding: 16px 20px; margin-bottom: 24px;
+}
+.ov-alerts-banner-icon {
+    color: #9146ff; flex-shrink: 0; margin-top: 2px;
+}
+.ov-alerts-banner-body { flex: 1; min-width: 0; }
+.ov-alerts-banner-title { font-family: Orbitron, sans-serif; font-size: 12px; color: #aa88ff; font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; }
+.ov-alerts-banner-hint { font-size: 11px; color: #555; font-family: Poppins, sans-serif; margin-top: 6px; }
+
+/* ─── Scenes Header / Tabs ─── */
+.ov-scenes-header {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    margin-bottom: 24px;
+}
+.ov-tabs { display: flex; }
+.ov-tab {
+    background: none; border: none; color: #555;
+    font-family: Poppins, sans-serif; font-size: 14px; font-weight: 500;
+    padding: 10px 20px; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: color .2s, border-color .2s; letter-spacing: .3px;
+}
+.ov-tab.active { color: #fff; border-bottom-color: #7c3aed; }
+.ov-tab:hover:not(.active) { color: #999; }
+.ov-scenes-count { font-size: 12px; color: #444; font-family: Poppins, sans-serif; padding-bottom: 10px; }
+
+/* ─── Scenes Grid ─── */
+.ov-scenes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 18px;
+}
+
+/* ─── Scene Card ─── */
+.ov-scene-card {
+    background: #111120;
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+.ov-scene-card:hover {
+    border-color: rgba(124,58,237,.45);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 40px rgba(124,58,237,.12);
+}
+
+/* ─── Scene Preview — 16:9 with diagonal accents ─── */
+.ov-scene-preview {
+    aspect-ratio: 16/9;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+}
+/* Large diagonal stripe */
+.ov-scene-preview::before {
+    content: '';
+    position: absolute; top: -15%; right: -8%;
+    width: 52%; height: 130%;
+    background: rgba(255,255,255,.055);
+    transform: skewX(-12deg);
+    pointer-events: none; z-index: 1;
+}
+/* Thin diagonal stripe */
+.ov-scene-preview::after {
+    content: '';
+    position: absolute; top: -15%; right: 26%;
+    width: 14%; height: 130%;
+    background: rgba(255,255,255,.03);
+    transform: skewX(-12deg);
+    pointer-events: none; z-index: 1;
+}
+.ov-scene-preview-label {
+    position: relative; z-index: 2;
+    width: 100%; padding: 8px 12px;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase;
+    background: linear-gradient(transparent, rgba(0,0,0,.55));
+    text-shadow: 0 1px 6px rgba(0,0,0,.8);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ─── Card Body ─── */
+.ov-scene-card-body { padding: 14px 16px 16px; }
+.ov-scene-name {
+    font-family: Poppins, sans-serif; font-size: 15px; font-weight: 600;
+    color: #fff; margin-bottom: 7px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ov-scene-meta {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 12px;
+}
+.ov-scene-type-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.ov-scene-type-text {
+    font-size: 12px; color: #888; font-family: Poppins, sans-serif;
+}
+.ov-scene-template-text {
+    font-size: 12px; color: #555; font-family: Poppins, sans-serif;
+}
+
+/* ─── URL Row ─── */
+.ov-scene-url-row, .ov-alerts-url-row {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 6px; padding: 7px 10px;
+    margin-bottom: 12px;
+}
+.ov-alerts-url-row { margin-bottom: 0; }
+.ov-url-label {
+    font-size: 11px; color: #555; font-family: Poppins, sans-serif;
+    white-space: nowrap; flex-shrink: 0;
+}
+.ov-url-code {
+    font-size: 11px; color: #666; font-family: monospace;
+    flex: 1; min-width: 0; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+    background: none; padding: 0; border-radius: 0;
+}
+.ov-url-copy-icon {
+    background: none; border: none; color: #555; cursor: pointer;
+    padding: 2px; display: flex; align-items: center;
+    transition: color .2s; flex-shrink: 0;
+}
+.ov-url-copy-icon:hover { color: #7c3aed; }
+
+/* ─── Scene Actions ─── */
+.ov-scene-actions { display: flex; gap: 7px; align-items: center; }
+.ov-btn-edit {
+    flex: 1; background: #7c3aed; color: #fff; border: none;
+    padding: 8px 12px; border-radius: 7px; font-size: 13px;
+    font-family: Poppins, sans-serif; font-weight: 600;
+    cursor: pointer; text-decoration: none; text-align: center;
+    transition: background .2s; white-space: nowrap;
+}
+.ov-btn-edit:hover { background: #6d28d9; }
+.ov-btn-copy-url {
+    flex: 1; background: transparent; color: #999;
+    border: 1px solid rgba(255,255,255,.1);
+    padding: 8px 12px; border-radius: 7px; font-size: 13px;
+    font-family: Poppins, sans-serif; font-weight: 500;
+    cursor: pointer; transition: border-color .2s, color .2s; white-space: nowrap;
+}
+.ov-btn-copy-url:hover { border-color: rgba(124,58,237,.45); color: #fff; }
+.ov-btn-delete-icon {
+    background: transparent; border: 1px solid rgba(255,255,255,.08);
+    color: #555; padding: 8px 9px; border-radius: 7px;
+    cursor: pointer; transition: border-color .2s, color .2s;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ov-btn-delete-icon:hover { border-color: rgba(255,68,68,.4); color: #ff5555; }
+.ov-btn-duplicate-icon {
+    background: transparent; border: 1px solid rgba(255,255,255,.08);
+    color: #555; padding: 8px 9px; border-radius: 7px;
+    cursor: pointer; transition: border-color .2s, color .2s;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.ov-btn-duplicate-icon:hover { border-color: rgba(124,58,237,.45); color: #a78bfa; }
+
+/* ─── Create New Scene Card ─── */
+.ov-create-card {
+    background: rgba(124,58,237,.05);
+    border: 1px dashed rgba(124,58,237,.4);
+    border-radius: 12px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 40px 24px;
+    text-decoration: none; cursor: pointer;
+    transition: background .2s, border-color .2s, transform .2s;
+    min-height: 220px;
+}
+.ov-create-card:hover {
+    background: rgba(124,58,237,.1);
+    border-color: rgba(124,58,237,.7);
+    transform: translateY(-3px);
+}
+.ov-create-plus {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: rgba(124,58,237,.15); border: 1px solid rgba(124,58,237,.35);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: #7c3aed; font-family: sans-serif;
+    line-height: 1; margin-bottom: 14px;
+    transition: background .2s, border-color .2s;
+}
+.ov-create-card:hover .ov-create-plus {
+    background: rgba(124,58,237,.28); border-color: rgba(124,58,237,.6);
+}
+.ov-create-title {
+    font-family: Poppins, sans-serif; font-size: 15px; font-weight: 600;
+    color: #fff; margin-bottom: 8px;
+}
+.ov-create-desc {
+    font-family: Poppins, sans-serif; font-size: 13px; color: #555; line-height: 1.55;
+}
+
+/* ─── Toast ─── */
+.ov-toast {
+    position: fixed; bottom: 32px; right: 32px;
+    background: rgba(18,18,32,.97); color: #fff;
+    padding: 13px 20px; border-radius: 9px; font-size: 14px;
+    font-family: Poppins, sans-serif; border: 1px solid rgba(124,58,237,.3);
+    transform: translateY(80px); opacity: 0; transition: all .3s; z-index: 9999;
+    pointer-events: none;
+}
+.ov-toast.show { transform: translateY(0); opacity: 1; }
+
+/* ─── Invite card ─── */
+.ov-invite-icon { font-size: 56px; margin-bottom: 20px; }
+.ov-invite-scene-info {
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 10px; padding: 16px; margin: 16px 0;
+}
+.ov-invite-scene-name { font-family: Orbitron, sans-serif; font-size: 18px; color: #fff; font-weight: 700; }
+.ov-invite-scene-type { font-size: 13px; color: #7c3aed; font-family: Poppins, sans-serif; margin-top: 4px; text-transform: capitalize; }
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+    .ov-dashboard { padding: 20px 24px 60px; }
+    .ov-scenes-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+}
+@media (max-width: 600px) {
+    .ov-dashboard { padding: 16px 14px 60px; }
+    .ov-topbar { flex-direction: column; align-items: flex-start; }
+    .ov-topbar-right { width: 100%; }
+    .ov-scenes-grid { grid-template-columns: 1fr; gap: 12px; }
+    .ov-login-card { padding: 36px 24px; }
+    .ov-alerts-banner { flex-direction: column; }
+    .ov-create-card { min-height: 160px; padding: 28px 20px; }
+}

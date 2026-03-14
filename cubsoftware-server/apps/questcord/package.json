@@ -1,0 +1,51 @@
+{
+  "name": "questcord",
+  "version": "3.0.0",
+  "description": "Discord quest bot with virtual server exploration",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node start.js",
+    "start:direct": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "deploy": "node src/bot/deploy-commands.js",
+    "pm2:start": "pm2 start ecosystem.config.js --env production",
+    "pm2:stop": "pm2 stop questcord",
+    "pm2:restart": "pm2 restart questcord",
+    "pm2:delete": "pm2 delete questcord",
+    "pm2:logs": "pm2 logs questcord",
+    "pm2:monit": "pm2 monit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "quests",
+    "game"
+  ],
+  "author": "CUB and Scarlett",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.5",
+    "better-sqlite3": "^12.4.6",
+    "cors": "^2.8.5",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-session": "^1.18.2",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "moment-timezone": "^0.5.45",
+    "node-cron": "^3.0.3",
+    "passport": "^0.7.0",
+    "passport-discord": "^0.1.4",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Overlay Pack | Stream Overlays | CUB SOFTWARE</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/overlays/static/css/overlays-new.css?v={{ v }}">
+    <style>
+        .pack-page { padding: 40px 48px 80px; max-width: 1200px; margin: 0 auto; }
+        .pack-header { margin-bottom: 36px; }
+        .pack-header h1 { font-family: Orbitron, sans-serif; font-size: 36px; color: #fff; font-weight: 900; margin-bottom: 10px; }
+        .pack-header p { color: #888; font-family: Poppins, sans-serif; font-size: 16px; }
+        .pack-back { display: inline-flex; align-items: center; color: #7c3aed; font-family: Poppins, sans-serif; font-size: 14px; text-decoration: none; margin-bottom: 16px; }
+        .pack-back:hover { color: #a78bfa; }
+        .pack-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 40px; }
+        .pack-section { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 16px; padding: 28px; }
+        .pack-section-title { font-family: Orbitron, sans-serif; font-size: 16px; color: #fff; font-weight: 700; margin-bottom: 20px; letter-spacing: 1px; }
+        .pack-color-row { display: flex; gap: 16px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+        .pack-color-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 100px; }
+        .pack-color-group label { font-size: 11px; color: #888; font-family: Poppins, sans-serif; letter-spacing: 1px; text-transform: uppercase; }
+        .pack-color-swatch { width: 100%; height: 36px; border-radius: 8px; border: 1px solid rgba(255,255,255,.15); cursor: pointer; padding: 2px; background: none; }
+        .pack-input { width: 100%; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 14px; font-family: Poppins, sans-serif; outline: none; transition: border-color .2s; }
+        .pack-input:focus { border-color: rgba(124,58,237,.5); }
+        .pack-select { width: 100%; background: #16161e; border: 1px solid rgba(255,255,255,.12); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 14px; font-family: Poppins, sans-serif; outline: none; cursor: pointer; }
+        .pack-scenes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .pack-scene-check { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; cursor: pointer; transition: border-color .2s, background .2s; }
+        .pack-scene-check:has(input:checked) { border-color: rgba(124,58,237,.4); background: rgba(124,58,237,.06); }
+        .pack-scene-check input { width: 16px; height: 16px; accent-color: #7c3aed; cursor: pointer; flex-shrink: 0; }
+        .pack-scene-check span { font-family: Poppins, sans-serif; font-size: 13px; color: #ccc; }
+        .pack-preview { background: #050508; border-radius: 12px; height: 180px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; border: 1px solid rgba(255,255,255,.06); transition: background .3s; overflow: hidden; position: relative; }
+        .pack-preview-label { font-family: Orbitron, sans-serif; font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 4px; position: relative; z-index: 1; }
+        .pack-name-row { display: flex; gap: 12px; align-items: center; }
+        .pack-btn-create { background: #7c3aed; color: #fff; border: none; padding: 14px 32px; border-radius: 12px; font-family: Orbitron, sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 1px; transition: background .2s, transform .2s; white-space: nowrap; }
+        .pack-btn-create:hover:not(:disabled) { background: #6d28d9; transform: translateY(-2px); }
+        .pack-btn-create:disabled { opacity: .4; cursor: not-allowed; }
+        .pack-hint { font-size: 12px; color: #666; font-family: Poppins, sans-serif; margin-top: 8px; }
+        @media (max-width: 900px) { .pack-grid { grid-template-columns: 1fr; } .pack-page { padding: 24px 20px 60px; } }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    {% include 'header.html' %}
+    <div class="pack-page">
+        <div class="pack-header">
+            <a href="/overlays" class="pack-back">← Back to Dashboard</a>
+            <h1>⚡ Create an Overlay Pack</h1>
+            <p>Generate all your scenes at once — Starting Soon, BRB, Ending, Offline and Live — with one matching visual theme.</p>
+        </div>
+
+        <div class="pack-grid">
+            <!-- Left: Style & Colours -->
+            <div>
+                <div class="pack-section">
+                    <div class="pack-section-title">Visual Style</div>
+                    <div id="packPreview" class="pack-preview" style="background: linear-gradient(135deg, #0a0a1a, #1a0a2e)">
+                        <div class="pack-preview-label" id="packPreviewLabel">Pack Preview</div>
+                    </div>
+                    <div style="margin-bottom:16px">
+                        <label style="font-size:11px;color:#888;font-family:Poppins,sans-serif;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px">Theme</label>
+                        <select id="packTemplate" class="pack-select">
+                            {% for key, label in template_labels.items() %}
+                            <option value="{{ key }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="pack-color-row">
+                        <div class="pack-color-group">
+                            <label>Background</label>
+                            <input type="color" id="packBgFrom" class="pack-color-swatch" value="#0a0a1a">
+                        </div>
+                        <div class="pack-color-group">
+                            <label>Bg Gradient</label>
+                            <input type="color" id="packBgTo" class="pack-color-swatch" value="#1a0a2e">
+                        </div>
+                        <div class="pack-color-group">
+                            <label>Accent</label>
+                            <input type="color" id="packAccent" class="pack-color-swatch" value="#7c3aed">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:16px">
+                        <label style="font-size:11px;color:#888;font-family:Poppins,sans-serif;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px">Font</label>
+                        <select id="packFont" class="pack-select">
+                            {% for f in ['Orbitron','Poppins','Montserrat','Rajdhani','Exo 2','Outfit','Space Grotesk','Nunito','Bebas Neue','Audiowide','Chakra Petch','Share Tech Mono'] %}
+                            <option value="{{ f }}">{{ f }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Scenes & Name -->
+            <div style="display:flex;flex-direction:column;gap:20px">
+                <div class="pack-section">
+                    <div class="pack-section-title">Included Scenes</div>
+                    <div class="pack-scenes-grid">
+                        <label class="pack-scene-check"><input type="checkbox" id="ps-starting-soon" value="starting-soon" checked><span>Starting Soon</span></label>
+                        <label class="pack-scene-check"><input type="checkbox" id="ps-brb" value="brb" checked><span>Be Right Back</span></label>
+                        <label class="pack-scene-check"><input type="checkbox" id="ps-ending" value="ending" checked><span>Ending Screen</span></label>
+                        <label class="pack-scene-check"><input type="checkbox" id="ps-offline" value="offline" checked><span>Offline Screen</span></label>
+                        <label class="pack-scene-check"><input type="checkbox" id="ps-live" value="live"><span>Just Chatting / Live</span></label>
+                        <label class="pack-scene-check"><input type="checkbox" id="ps-intermission" value="intermission"><span>Intermission</span></label>
+                        <label class="pack-scene-check"><input type="checkbox" id="ps-credits-roll" value="credits-roll"><span>Credits Roll</span></label>
+                    </div>
+                </div>
+                <div class="pack-section">
+                    <div class="pack-section-title">Pack Name</div>
+                    <div class="pack-name-row">
+                        <input type="text" id="packName" class="pack-input" placeholder="e.g. Gaming Night Pack" maxlength="60" value="" style="flex:1">
+                    </div>
+                    <p class="pack-hint">All scene names will be prefixed with this name (e.g. "Gaming Night Pack — Starting Soon")</p>
+                    <button id="packCreateBtn" class="pack-btn-create" style="margin-top:20px;width:100%" disabled>Create Pack ⚡</button>
+                    <div id="packStatus" style="margin-top:12px;font-family:Poppins,sans-serif;font-size:13px;color:#888;text-align:center;min-height:20px"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% include 'footer.html' %}
+</div>
+<script src="/overlays/static/js/overlays-new-pack.js?v={{ v }}"></script>
+</body>
+</html>

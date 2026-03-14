@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Media Downloader - TikTok, Instagram, Twitter/X, Facebook | Free</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Save that TikTok. Download that Reel. Grab that tweet. Works with Instagram, TikTok, Twitter/X, Facebook - paste the link, get the video. No watermarks, no BS.">
+    <meta name="keywords" content="TikTok downloader no watermark, Instagram video download, Twitter video saver, Facebook video downloader, save reels, download social media videos free">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/social-media-saver">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Social Media Downloader - Save Videos From Anywhere | Free">
+    <meta property="og:description" content="Paste link, get video. TikTok, Instagram Reels, Twitter, Facebook - all supported. No watermarks, no signup, just the content you want.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/social-media-saver">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+    <meta property="og:image" content="https://cubsoftware.site/static/images/company-logo.png">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Social Media Downloader - TikTok, Instagram, Twitter | Free">
+    <meta name="twitter:description" content="The downloader that actually works. Save TikToks, Reels, Tweets - paste the URL, download instantly. No watermarks, completely free.">
+    <meta name="twitter:image" content="https://cubsoftware.site/static/images/company-logo.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="stylesheet" href="/static/css/shared.css">
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="page-content">
+            <div class="app-header">
+                <h1>Social Media Saver</h1>
+                <p class="subtitle">Download photos and videos from Instagram, TikTok, Twitter/X, and Facebook</p>
+            </div>
+
+            <div class="download-section">
+                <div class="input-group">
+                    <input
+                        type="text"
+                        id="urlInput"
+                        placeholder="Paste Instagram, TikTok, Twitter/X, or Facebook URL here..."
+                        autocomplete="off"
+                    >
+                    <button id="downloadBtn" onclick="startDownload()">
+                        <span id="btnText">Download</span>
+                        <span id="btnLoader" class="loader" style="display: none;"></span>
+                    </button>
+                </div>
+                <div id="errorMessage" class="error-message"></div>
+            </div>
+
+
+            <div id="activeDownloads" class="downloads-container">
+                <!-- Active downloads will appear here -->
+            </div>
+
+            <div class="info-section">
+                <h3>How it works:</h3>
+                <ul>
+                    <li>Paste a URL from Instagram, TikTok, Twitter/X, or Facebook</li>
+                    <li>Click Download and watch real-time progress</li>
+                    <li>Files automatically download when ready</li>
+                </ul>
+                <h3 style="margin-top: 20px;">Supported:</h3>
+                <ul>
+                    <li>✅ Instagram Photos & Videos</li>
+                    <li>✅ Instagram Reels & Stories</li>
+                    <li>✅ TikTok Videos</li>
+                    <li>✅ Twitter/X Photos & Videos</li>
+                    <li>✅ Facebook Photos & Videos</li>
+                </ul>
+                <p class="note">All downloads are for personal use only. Respect copyright and platform terms.</p>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <script src="static/script.js"></script>
+</body>
+</html>

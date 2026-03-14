@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#009dff">
+    <title>Apply — Affiliate Program | CUB SOFTWARE</title>
+    <meta name="description" content="Apply to become a CUB SOFTWARE affiliate. Fill out the form and we'll review your application.">
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        * { box-sizing: border-box; }
+
+        .apply-page {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 6rem;
+        }
+
+        /* ── Back link ── */
+        .apply-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 2.5rem;
+            transition: color 0.2s;
+        }
+        .apply-back:hover { color: #009dff; }
+
+        /* ── Header ── */
+        .apply-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        .apply-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #009dff;
+            background: rgba(0,157,255,0.1);
+            border: 1px solid rgba(0,157,255,0.25);
+            padding: 0.35rem 1rem;
+            border-radius: 20px;
+            margin-bottom: 1.25rem;
+        }
+        .apply-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 900;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #009dff 0%, #8a2be2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.75rem;
+        }
+        .apply-subtitle {
+            font-size: 1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* ── Form card ── */
+        .apply-card {
+            background: var(--card-bg, rgba(255,255,255,0.03));
+            border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        .apply-section-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #009dff;
+            margin: 1.75rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(0,157,255,0.2);
+        }
+        .apply-section-title:first-child { margin-top: 0; }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+            margin-bottom: 1.1rem;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-light, #ccc);
+        }
+        label .req {
+            color: #009dff;
+            margin-left: 2px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="url"],
+        select,
+        textarea {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: var(--text-light, #fff);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            padding: 0.65rem 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="url"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #009dff;
+            box-shadow: 0 0 0 3px rgba(0,157,255,0.1);
+        }
+        select option { background: #1a1a2e; color: #fff; }
+        textarea { resize: vertical; min-height: 100px; }
+
+        .field-hint {
+            font-size: 0.78rem;
+            color: var(--text-muted, #888);
+            line-height: 1.4;
+        }
+
+        /* ── Submit ── */
+        .apply-submit-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        .btn-apply {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.9rem 2.5rem;
+            background: linear-gradient(135deg, #009dff, #7c3aed);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            text-decoration: none;
+        }
+        .btn-apply:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,157,255,0.35); opacity: 0.95; }
+        .btn-apply:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .apply-terms {
+            font-size: 0.78rem;
+            color: var(--text-muted, #888);
+            line-height: 1.5;
+        }
+
+        /* ── Alert messages ── */
+        .apply-alert {
+            border-radius: 10px;
+            padding: 0.9rem 1.1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .apply-alert.error {
+            background: rgba(255,80,80,0.1);
+            border: 1px solid rgba(255,80,80,0.3);
+            color: #ff9090;
+        }
+
+        /* ── Success state ── */
+        .apply-success {
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+        .apply-success-icon {
+            width: 72px;
+            height: 72px;
+            background: rgba(0,204,102,0.12);
+            border: 2px solid rgba(0,204,102,0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+        }
+        .apply-success h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: #00cc66;
+            margin-bottom: 0.75rem;
+        }
+        .apply-success p {
+            color: var(--text-muted);
+            max-width: 420px;
+            margin: 0 auto 2rem;
+            line-height: 1.7;
+        }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; }
+            .apply-card { padding: 1.5rem 1rem; }
+            .apply-submit-row { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+{% include 'header.html' %}
+
+<div class="apply-page">
+    <a href="/affiliate" class="apply-back">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Affiliate Program
+    </a>
+
+    <div class="apply-header">
+        <div class="apply-eyebrow">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Affiliate Application
+        </div>
+        <h1 class="apply-title">Join Our Affiliate Program</h1>
+        <p class="apply-subtitle">Tell us about yourself. We review every application personally and reply within 3 business days.</p>
+    </div>
+
+    {% if success %}
+    <div class="apply-card">
+        <div class="apply-success">
+            <div class="apply-success-icon">✓</div>
+            <h2>Application Received!</h2>
+            <p>Thanks for applying to the CUB SOFTWARE affiliate program. We'll review your application and get back to you within 3 business days.</p>
+            <a href="/affiliate" class="btn-apply">Back to Affiliate Page</a>
+        </div>
+    </div>
+    {% else %}
+    {% if error %}
+    <div class="apply-alert error">{{ error }}</div>
+    {% endif %}
+
+    <div class="apply-card">
+        <form method="POST" action="/affiliate/apply" id="applyForm">
+
+            <div class="apply-section-title">Your Details</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">Full Name <span class="req">*</span></label>
+                    <input type="text" id="name" name="name" placeholder="Your full name" required maxlength="100" value="{{ request.form.get('name','') }}">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address <span class="req">*</span></label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required maxlength="120" value="{{ request.form.get('email','') }}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="discord">Discord Username</label>
+                    <input type="text" id="discord" name="discord" placeholder="username" maxlength="80" value="{{ request.form.get('discord','') }}">
+                    <span class="field-hint">e.g. cubsoftware or cubsoftware#0001</span>
+                </div>
+                <div class="form-group">
+                    <label for="country">Country / Region</label>
+                    <input type="text" id="country" name="country" placeholder="e.g. United Kingdom" maxlength="80" value="{{ request.form.get('country','') }}">
+                </div>
+            </div>
+
+            <div class="apply-section-title">Your Platform</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="platform">Primary Platform <span class="req">*</span></label>
+                    <select id="platform" name="platform" required>
+                        <option value="" disabled {% if not request.form.get('platform') %}selected{% endif %}>Select a platform</option>
+                        {% for p in ['YouTube','TikTok','Twitch','Twitter / X','Instagram','Facebook','Blog / Website','Discord Server','Other'] %}
+                        <option value="{{ p }}" {% if request.form.get('platform')==p %}selected{% endif %}>{{ p }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="monthly_reach">Monthly Reach</label>
+                    <input type="text" id="monthly_reach" name="monthly_reach" placeholder="e.g. 5,000 followers" maxlength="60" value="{{ request.form.get('monthly_reach','') }}">
+                    <span class="field-hint">Approximate followers / views / subscribers</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="channel_url">Channel / Profile URL <span class="req">*</span></label>
+                <input type="url" id="channel_url" name="channel_url" placeholder="https://..." required maxlength="300" value="{{ request.form.get('channel_url','') }}">
+            </div>
+
+            <div class="form-group">
+                <label for="found_via">How did you find out about CUB SOFTWARE?</label>
+                <select id="found_via" name="found_via">
+                    <option value="" selected>Select one</option>
+                    {% for s in ['Google / Search Engine','YouTube','TikTok','Twitter / X','Discord','Another Creator / Affiliate','Friend / Word of mouth','Other'] %}
+                    <option value="{{ s }}" {% if request.form.get('found_via')==s %}selected{% endif %}>{{ s }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="apply-section-title">Your Application</div>
+
+            <div class="form-group">
+                <label for="why_affiliate">Why do you want to be a CUB SOFTWARE affiliate? <span class="req">*</span></label>
+                <textarea id="why_affiliate" name="why_affiliate" placeholder="Tell us why you're a good fit and what you enjoy about our tools..." rows="4" maxlength="800" required>{{ request.form.get('why_affiliate','') }}</textarea>
+                <span class="field-hint">Max 800 characters</span>
+            </div>
+
+            <div class="form-group">
+                <label for="promotion_plan">How do you plan to promote CUB SOFTWARE?</label>
+                <textarea id="promotion_plan" name="promotion_plan" placeholder="Mention content types you create, your audience, any creative ideas..." rows="4" maxlength="800">{{ request.form.get('promotion_plan','') }}</textarea>
+                <span class="field-hint">Max 800 characters</span>
+            </div>
+
+            <div class="apply-submit-row">
+                <button type="submit" class="btn-apply" id="submitBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Submit Application
+                </button>
+                <span class="apply-terms">By submitting you agree to our <a href="/terms" style="color:#009dff">Terms of Service</a>. We never share your info.</span>
+            </div>
+
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+{% include 'footer.html' %}
+</div>
+
+<script>
+document.getElementById('applyForm')?.addEventListener('submit', function() {
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+});
+</script>
+</body>
+</html>

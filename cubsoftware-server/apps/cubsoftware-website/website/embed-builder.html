@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Discord Embed Builder | CUB SOFTWARE</title>
+    <meta name="description" content="Build Discord embeds visually with a live preview. Export JSON or copy discord.js and discord.py code instantly.">
+    <meta name="keywords" content="discord embed builder, discord embed, embed generator, discord.js embed, discord embed preview">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/embed-builder">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Discord Embed Builder | CUB SOFTWARE">
+    <meta property="og:description" content="Build Discord embeds visually with live preview. Export JSON or copy discord.js / discord.py code.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/embed-builder">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/embed-builder.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="eb-container">
+            <div class="eb-header">
+                <h1>Discord Embed Builder</h1>
+                <p>Build Discord embeds visually with a live preview. Export as JSON or copy ready-to-use code for discord.js or discord.py.</p>
+            </div>
+
+            <div class="eb-workspace">
+                <!-- ===== Left: Form ===== -->
+                <div class="eb-form">
+
+                    <!-- Author -->
+                    <div class="eb-section">
+                        <div class="eb-section-title">Author</div>
+                        <div class="eb-row">
+                            <div class="eb-field">
+                                <label>Name</label>
+                                <input type="text" id="authorName" placeholder="Author name" maxlength="256" oninput="update()">
+                            </div>
+                        </div>
+                        <div class="eb-row two-col">
+                            <div class="eb-field">
+                                <label>Icon URL</label>
+                                <input type="text" id="authorIcon" placeholder="https://..." oninput="update()">
+                            </div>
+                            <div class="eb-field">
+                                <label>Author URL</label>
+                                <input type="text" id="authorUrl" placeholder="https://..." oninput="update()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Title & Color -->
+                    <div class="eb-section">
+                        <div class="eb-section-title">Title &amp; Color</div>
+                        <div class="eb-row two-col">
+                            <div class="eb-field" style="flex:2">
+                                <label>Title</label>
+                                <input type="text" id="embedTitle" placeholder="Embed title" maxlength="256" oninput="update()">
+                            </div>
+                            <div class="eb-field">
+                                <label>Title URL</label>
+                                <input type="text" id="titleUrl" placeholder="https://..." oninput="update()">
+                            </div>
+                        </div>
+                        <div class="eb-row">
+                            <div class="eb-field eb-color-field">
+                                <label>Color</label>
+                                <div class="eb-color-row">
+                                    <input type="color" id="embedColor" value="#5865f2" oninput="syncColorHex()">
+                                    <input type="text" id="embedColorHex" value="#5865f2" maxlength="7" placeholder="#5865f2" oninput="syncColorPicker()">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="eb-section">
+                        <div class="eb-section-title">Description</div>
+                        <div class="eb-field">
+                            <textarea id="embedDesc" rows="5" maxlength="4096" placeholder="Embed description..." oninput="update(); countChars(this, 'descCount', 4096)"></textarea>
+                            <div class="char-counter"><span id="descCount">0</span>/4096</div>
+                        </div>
+                    </div>
+
+                    <!-- Thumbnail & Image -->
+                    <div class="eb-section">
+                        <div class="eb-section-title">Images</div>
+                        <div class="eb-row two-col">
+                            <div class="eb-field">
+                                <label>Thumbnail URL <span class="field-note">(top-right)</span></label>
+                                <input type="text" id="embedThumb" placeholder="https://..." oninput="update()">
+                            </div>
+                            <div class="eb-field">
+                                <label>Image URL <span class="field-note">(bottom)</span></label>
+                                <input type="text" id="embedImage" placeholder="https://..." oninput="update()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fields -->
+                    <div class="eb-section">
+                        <div class="eb-section-title">Fields <span class="field-note" id="fieldCount">(0/25)</span></div>
+                        <div id="fieldsContainer"></div>
+                        <button class="action-btn secondary eb-add-field-btn" onclick="addField()">+ Add Field</button>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="eb-section">
+                        <div class="eb-section-title">Footer</div>
+                        <div class="eb-row two-col">
+                            <div class="eb-field" style="flex:2">
+                                <label>Footer Text</label>
+                                <input type="text" id="footerText" placeholder="Footer text" maxlength="2048" oninput="update()">
+                            </div>
+                            <div class="eb-field">
+                                <label>Footer Icon URL</label>
+                                <input type="text" id="footerIcon" placeholder="https://..." oninput="update()">
+                            </div>
+                        </div>
+                        <div class="eb-row">
+                            <label class="eb-checkbox-label">
+                                <input type="checkbox" id="embedTimestamp" onchange="update()">
+                                Include timestamp
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="eb-actions">
+                        <button class="action-btn secondary" onclick="copyJSON()">Copy JSON</button>
+                        <button class="action-btn secondary" onclick="copyDJS()">Copy discord.js</button>
+                        <button class="action-btn secondary" onclick="copyDPY()">Copy discord.py</button>
+                        <button class="action-btn secondary" onclick="resetAll()">Reset</button>
+                        <a id="webhookLink" href="/apps/webhook-sender" class="action-btn">Send via Webhook →</a>
+                    </div>
+                </div>
+
+                <!-- ===== Right: Preview ===== -->
+                <div class="eb-preview-panel">
+                    <div class="eb-preview-label">Live Preview</div>
+                    <div class="discord-mock">
+                        <div class="discord-message">
+                            <div class="discord-avatar"></div>
+                            <div class="discord-msg-body">
+                                <span class="discord-username">Webhook Bot</span>
+                                <div id="embedPreview" class="discord-embed">
+                                    <div class="embed-placeholder">Your embed will appear here</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="eb-preview-note">Preview is approximate — actual Discord rendering may vary slightly.</div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div id="toast" class="toast"></div>
+    <script src="/static/js/embed-builder.js?v={{ v }}"></script>
+</body>
+</html>

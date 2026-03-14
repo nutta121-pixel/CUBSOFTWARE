@@ -1,0 +1,70 @@
+{
+  "port": 3003,
+  "productionPort": 3003,
+  "supportServer": {
+    "id": "1404523107544469545",
+    "roles": {
+      "developer": "1404561244555448381",
+      "staff": "1404563334354960494"
+    }
+  },
+  "quest": {
+    "questsPerServer": 6,
+    "rotationTime": "0 0 * * *",
+    "cooldownTime": 300000
+  },
+  "boss": {
+    "maxConcurrent": 1,
+    "spawnDuration": 3600000,
+    "cooldownDuration": 600000,
+    "minSpawnDelay": 1800000,
+    "maxSpawnDelay": 7200000
+  },
+  "economy": {
+    "defaultCurrency": 0,
+    "defaultGems": 0
+  },
+  "leaderboard": {
+    "resetDay": 1,
+    "topRewards": {
+      "1": {
+        "currency": 10000,
+        "gems": 100
+      },
+      "2": {
+        "currency": 5000,
+        "gems": 50
+      },
+      "3": {
+        "currency": 2500,
+        "gems": 25
+      }
+    }
+  },
+  "activity": {
+    "maxDisplayItems": 50
+  },
+  "travel": {
+    "minTravelTime": 300000,
+    "maxTravelTime": 1800000,
+    "cooldown": 60000
+  },
+  "theme": {
+    "colors": {
+      "primary": "#5865f2",
+      "primaryDark": "#4752c4",
+      "secondary": "#7c3aed",
+      "darkBg": "#0f0f23",
+      "lightBg": "#1a1a2e",
+      "textLight": "#ffffff",
+      "textMuted": "#b9bbbe",
+      "success": "#10b981",
+      "error": "#ef4444",
+      "warning": "#f59e0b"
+    }
+  },
+  "webDashboard": {
+    "testingMode": false,
+    "whitelist": []
+  }
+}

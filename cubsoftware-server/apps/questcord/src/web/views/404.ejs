@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | QuestCord</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #5865f2;
+            --warning: #faa61a;
+            --danger: #ed4245;
+            --dark-bg: #0f0f23;
+            --light-bg: #1a1a2e;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--dark-bg) 0%, var(--light-bg) 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            font-size: 2rem;
+            opacity: 0.1;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-100px) rotate(360deg); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 40px;
+            max-width: 800px;
+        }
+
+        .error-icon {
+            font-size: 100px;
+            animation: bounce 2s infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .error-code {
+            font-size: 8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            line-height: 1;
+        }
+
+        .error-title {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            font-size: 1.1rem;
+            color: #b9bbbe;
+            margin-bottom: 10px;
+        }
+
+        .error-path {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            color: #7c3aed;
+            word-break: break-all;
+        }
+
+        .security-warning {
+            background: rgba(237, 66, 69, 0.1);
+            border: 2px solid var(--danger);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .security-warning h3 {
+            color: var(--danger);
+            margin-bottom: 10px;
+        }
+
+        .threat-level {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+
+        .threat-low { background: rgba(87, 242, 135, 0.2); color: #57f287; }
+        .threat-medium { background: rgba(250, 166, 26, 0.2); color: var(--warning); }
+        .threat-high { background: rgba(237, 66, 69, 0.2); color: var(--danger); }
+        .threat-critical { background: rgba(237, 66, 69, 0.3); color: var(--danger); animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #4752c4 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(88, 101, 242, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            color: #72767d;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 640px) {
+            .error-code { font-size: 5rem; }
+            .error-title { font-size: 1.5rem; }
+            .error-icon { font-size: 60px; }
+            .buttons { flex-direction: column; }
+            .btn { width: 100%; max-width: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles">
+        <div class="particle" style="top: 10%; left: 10%;">🎮</div>
+        <div class="particle" style="top: 20%; left: 80%; animation-delay: 2s;">⚔️</div>
+        <div class="particle" style="top: 40%; left: 15%; animation-delay: 4s;">🛡️</div>
+        <div class="particle" style="top: 60%; left: 75%; animation-delay: 1s;">💎</div>
+        <div class="particle" style="top: 80%; left: 20%; animation-delay: 3s;">🏆</div>
+        <div class="particle" style="top: 30%; left: 90%; animation-delay: 5s;">🗡️</div>
+        <div class="particle" style="top: 70%; left: 5%; animation-delay: 2.5s;">🎯</div>
+        <div class="particle" style="top: 50%; left: 50%; animation-delay: 1.5s;">⭐</div>
+        <div class="particle" style="top: 15%; left: 60%; animation-delay: 3.5s;">🔮</div>
+        <div class="particle" style="top: 85%; left: 70%; animation-delay: 4.5s;">🎲</div>
+        <div class="particle" style="top: 25%; left: 30%; animation-delay: 0.5s;">🏅</div>
+        <div class="particle" style="top: 55%; left: 85%; animation-delay: 2.8s;">💰</div>
+    </div>
+
+    <div class="container">
+        <div class="error-icon">🗺️</div>
+        <div class="error-code">404</div>
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-message">The quest you're looking for doesn't exist in our realm.</p>
+
+        <% if (typeof path !== 'undefined') { %>
+            <div class="error-path">Attempted path: <%= path %></div>
+        <% } %>
+
+        <% if (typeof threatLevel !== 'undefined' && threatLevel !== 'none') { %>
+            <div class="security-warning">
+                <h3>🔒 Security Notice</h3>
+                <p>Suspicious activity detected on this request.</p>
+                <div class="threat-level threat-<%= threatLevel.toLowerCase() %>">
+                    Threat Level: <%= threatLevel.toUpperCase() %>
+                </div>
+                <p style="margin-top: 10px; font-size: 0.9rem;">
+                    Repeated suspicious requests may result in automatic IP ban.
+                </p>
+            </div>
+        <% } %>
+
+        <div class="buttons">
+            <a href="/" class="btn btn-primary">Return Home</a>
+            <a href="https://discord.gg/ACGKvKkZ5Z" class="btn btn-secondary">Join Community</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <% if (typeof ip !== 'undefined') { %>
+            Your IP: <%= ip %>
+        <% } %>
+    </div>
+
+    <script>
+        const path = '<%= typeof path !== "undefined" ? path : "" %>';
+
+        function calculateThreatLevel(path) {
+            let score = 0;
+
+            const patterns = {
+                admin: 3,
+                '.env': 5,
+                'config': 3,
+                'database': 4,
+                'wp-admin': 4,
+                'phpmyadmin': 5,
+                '../': 5,
+                '..\\': 5,
+                'SELECT': 5,
+                'UNION': 5,
+                'DROP': 5,
+                'exec': 4,
+                'script': 3,
+                'passwd': 5,
+                'shadow': 5
+            };
+
+            const lowerPath = path.toLowerCase();
+
+            for (const [pattern, points] of Object.entries(patterns)) {
+                if (lowerPath.includes(pattern.toLowerCase())) {
+                    score += points;
+                }
+            }
+
+            if (score === 0) return 'none';
+            if (score <= 3) return 'low';
+            if (score <= 7) return 'medium';
+            if (score <= 10) return 'high';
+            return 'critical';
+        }
+    </script>
+</body>
+</html>

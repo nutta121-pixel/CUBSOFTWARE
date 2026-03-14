@@ -1,0 +1,69 @@
+{
+  "name": "cubpresence",
+  "version": "1.3.15",
+  "description": "Discord Custom Rich Presence - Set your Discord activity from a simple app",
+  "main": "main.js",
+  "author": {
+    "name": "CUB SOFTWARE",
+    "email": "ellmersthorton@gmail.com"
+  },
+  "homepage": "https://cubsoftware.com/cubpresence",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "publish": "electron-builder --win --linux --publish always"
+  },
+  "dependencies": {
+    "discord-rpc": "^4.0.1",
+    "electron-updater": "^6.1.7"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.cubsoftware.cubpresence",
+    "productName": "CubPresence",
+    "icon": "assets/icon.png",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": ["nsis"],
+      "icon": "assets/icon.png",
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Utility",
+      "executableArgs": ["--no-sandbox"],
+      "artifactName": "${productName}-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "include": "installer.nsh",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerSidebar": "assets/installer-sidebar.bmp",
+      "installerHeader": "assets/installer-header.bmp",
+      "installerHeaderIcon": "assets/icon.ico"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "HexEchoTV",
+      "repo": "CUBSOFTWARE",
+      "releaseType": "release",
+      "vPrefixedTagName": true
+    }
+  }
+}

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Keraplast History | CUB SOFTWARE</title>
+
+    <meta name="description" content="Keraplast Digestion Calculator History - View saved digestion records.">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/keraplast.css?v={{ v }}">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="header-top">
+            <a href="/" class="logo">
+                <span class="logo-text">
+                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                </span>
+            </a>
+            <nav class="site-nav">
+                <a href="/">Home</a>
+                <a href="/#apps">Tools</a>
+                <a href="https://questcord.fun" target="_blank">QuestCord</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Password Screen -->
+    <div id="passwordScreen" class="password-screen">
+        <div class="password-box">
+            <h2>Access Required</h2>
+            <p>Enter password to continue</p>
+            <input type="password" id="passwordInput" placeholder="Password" onkeypress="if(event.key === 'Enter') checkPassword()">
+            <button class="action-btn" onclick="checkPassword()">Enter</button>
+            <p id="passwordError" class="password-error"></p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="history-main">
+        <div class="history-header">
+            <div>
+                <h1 class="page-title">Keraplast History</h1>
+                <p class="page-subtitle">Saved digestion records</p>
+            </div>
+        </div>
+
+        <!-- Tab Navigation (2 tabs: History + Back to Calculator) -->
+        <div class="calc-tabs history-tabs">
+            <button class="calc-tab" onclick="window.location.href='/keraplast'">← Back to Calculator</button>
+            <button class="calc-tab active" data-tab="history-link">History</button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="history-search-bar">
+            <input type="text" id="historySearch" placeholder="Search by date, batch number or operator..." oninput="filterHistory()">
+        </div>
+
+        <div class="history-card">
+            <div class="history-table-wrap">
+                <table class="history-table" id="historyTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Batch Number</th>
+                            <th>Results</th>
+                            <th>Operator</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                    </tbody>
+                </table>
+                <div class="history-empty" id="historyEmpty" style="display:none;">
+                    <div class="history-empty-inner">
+                        <div class="history-empty-icon">📋</div>
+                        <div class="history-empty-text">No history records found.</div>
+                    </div>
+                </div>
+                <div class="history-loading" id="historyLoading">
+                    Loading...
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-text">
+                &copy; 2026 CUB SOFTWARE. Made with love by
+                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/status">Status</a>
+                <a href="/terms">Terms</a>
+                <a href="/privacy">Privacy</a>
+                <a href="/copyright">Copyright</a>
+                <a href="/report">Report Issue</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // All fetched records stored in memory for client-side filtering
+        let allRecords = [];
+
+        function isAdmin() {
+            return sessionStorage.getItem('keraplast-is-admin') === '1';
+        }
+
+        async function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+            if (!input.value.trim()) { error.textContent = 'Please enter a password'; return; }
+            try {
+                const response = await fetch('/api/keraplast/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: input.value.trim() })
+                });
+                const data = await response.json();
+                if (data.valid) {
+                    document.body.classList.add('authenticated');
+                    sessionStorage.setItem('keraplast-auth', input.value.trim());
+                    sessionStorage.setItem('keraplast-is-admin', data.is_admin ? '1' : '0');
+                    error.textContent = '';
+                    fetchHistory();
+                } else {
+                    error.textContent = 'Incorrect password';
+                    input.value = '';
+                    input.focus();
+                }
+            } catch (err) {
+                error.textContent = 'Failed to verify password';
+            }
+        }
+
+        async function fetchHistory() {
+            const password = sessionStorage.getItem('keraplast-auth');
+            const loading = document.getElementById('historyLoading');
+            const empty = document.getElementById('historyEmpty');
+            const tbody = document.getElementById('historyBody');
+            loading.style.display = 'block';
+            empty.style.display = 'none';
+            tbody.innerHTML = '';
+            try {
+                const response = await fetch('/api/keraplast/history', {
+                    headers: { 'X-Keraplast-Password': password }
+                });
+                const data = await response.json();
+                loading.style.display = 'none';
+                allRecords = data.records || [];
+                renderTable(allRecords);
+            } catch (err) {
+                loading.style.display = 'none';
+                showToast('Failed to load history', true);
+            }
+        }
+
+        function renderTable(records) {
+            const tbody = document.getElementById('historyBody');
+            const empty = document.getElementById('historyEmpty');
+            tbody.innerHTML = '';
+            if (!records || records.length === 0) {
+                empty.style.display = 'flex';
+                return;
+            }
+            empty.style.display = 'none';
+            records.forEach(record => renderRow(tbody, record));
+        }
+
+        function filterHistory() {
+            const query = document.getElementById('historySearch').value.trim().toLowerCase();
+            if (!query) {
+                renderTable(allRecords);
+                return;
+            }
+            const filtered = allRecords.filter(r => {
+                const date = (r.date || '').toLowerCase();
+                const batch = (r.batch_number || '').toLowerCase();
+                const operator = (r.operator || '').toLowerCase();
+                return date.includes(query) || batch.includes(query) || operator.includes(query);
+            });
+            renderTable(filtered);
+        }
+
+        function renderRow(tbody, record) {
+            const admin = isAdmin();
+            const tr = document.createElement('tr');
+            tr.dataset.id = record.id;
+            tr.innerHTML = `
+                <td class="col-date">${escapeHtml(normaliseDateStr(record.date) || '—')}</td>
+                <td class="col-batch"><span class="batch-badge">${escapeHtml(record.batch_number)}</span></td>
+                <td class="col-results"><a href="/keraplast/history/${escapeHtml(record.id)}" class="view-link">View Here</a></td>
+                <td class="col-operator">${escapeHtml(record.operator)}</td>
+                <td class="col-actions">
+                    ${admin ? `<button class="edit-btn" onclick="startEdit(this)">Edit</button>
+                    <button class="delete-btn" onclick="deleteRecord('${escapeHtml(record.id)}', this)">Delete</button>` : ''}
+                </td>`;
+            tbody.appendChild(tr);
+        }
+
+        function startEdit(btn) {
+            const tr = btn.closest('tr');
+            const cells = tr.querySelectorAll('td');
+            const id = tr.dataset.id;
+            const orig = {
+                date: cells[0].textContent.trim(),
+                batch: cells[1].querySelector('.batch-badge').textContent.trim(),
+                operator: cells[3].textContent.trim()
+            };
+            cells[0].innerHTML = `<input class="history-edit-input" value="${escapeAttr(orig.date === '—' ? '' : orig.date)}">`;
+            cells[1].innerHTML = `<input class="history-edit-input" value="${escapeAttr(orig.batch)}">`;
+            // cells[2] (Results) stays as View Here link — not editable in table
+            cells[3].innerHTML = `<input class="history-edit-input" value="${escapeAttr(orig.operator)}">`;
+            cells[4].innerHTML = `
+                <button class="edit-btn save-edit-btn" onclick="saveEdit('${id}', this)">Save</button>
+                <button class="delete-btn" onclick="cancelEdit(this, ${JSON.stringify(orig)}, '${escapeAttr(id)}')">Cancel</button>`;
+        }
+
+        async function saveEdit(id, btn) {
+            const password = sessionStorage.getItem('keraplast-auth');
+            const tr = btn.closest('tr');
+            const inputs = tr.querySelectorAll('.history-edit-input');
+            // inputs[0]=date, inputs[1]=batch, inputs[2]=operator (Results cell is not an input)
+            const payload = {
+                password,
+                date: inputs[0].value.trim(),
+                batch_number: inputs[1].value.trim(),
+                operator: inputs[2].value.trim()
+            };
+            try {
+                const response = await fetch(`/api/keraplast/history/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Record updated');
+                    fetchHistory();
+                } else {
+                    showToast(data.error || 'Failed to save', true);
+                }
+            } catch (e) {
+                showToast('Failed to save', true);
+            }
+        }
+
+        function cancelEdit(btn, orig, id) {
+            const tr = btn.closest('tr');
+            const cells = tr.querySelectorAll('td');
+            cells[0].textContent = orig.date || '—';
+            cells[1].innerHTML = `<span class="batch-badge">${escapeHtml(orig.batch)}</span>`;
+            // cells[2] is already the View Here link (untouched during edit)
+            cells[3].textContent = orig.operator;
+            cells[4].innerHTML = `
+                <button class="edit-btn" onclick="startEdit(this)">Edit</button>
+                <button class="delete-btn" onclick="deleteRecord('${escapeHtml(id)}', this)">Delete</button>`;
+        }
+
+        async function deleteRecord(id, btn) {
+            if (!confirm('Delete this record?')) return;
+            const password = sessionStorage.getItem('keraplast-auth');
+            try {
+                const response = await fetch(`/api/keraplast/history/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Keraplast-Password': password }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    // Remove from allRecords too
+                    allRecords = allRecords.filter(r => r.id !== id);
+                    const row = btn.closest('tr');
+                    row.style.opacity = '0';
+                    row.style.transition = 'opacity 0.3s';
+                    setTimeout(() => {
+                        row.remove();
+                        if (!document.getElementById('historyBody').children.length)
+                            document.getElementById('historyEmpty').style.display = 'flex';
+                    }, 300);
+                } else {
+                    showToast(data.error || 'Failed to delete', true);
+                }
+            } catch (err) {
+                showToast('Failed to delete record', true);
+            }
+        }
+
+        const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+        function normaliseDateStr(str) {
+            if (!str || str === '—') return str;
+            const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (m) {
+                const monthIdx = parseInt(m[2], 10) - 1;
+                if (monthIdx >= 0 && monthIdx < 12)
+                    return `${m[1].padStart(2,'0')}/${MONTH_NAMES[monthIdx]}/${m[3]}`;
+            }
+            return str;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+        function escapeAttr(str) {
+            if (!str) return '';
+            return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.toggle('toast-error', isError);
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), isError ? 4000 : 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('passwordInput').focus();
+            const saved = sessionStorage.getItem('keraplast-auth');
+            if (saved) {
+                document.body.classList.add('authenticated');
+                fetchHistory();
+            }
+        });
+    </script>
+</body>
+</html>

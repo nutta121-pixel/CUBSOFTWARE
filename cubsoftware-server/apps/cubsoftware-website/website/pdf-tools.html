@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>PDF Tools - Merge, Split, Compress PDFs Instantly | Free Online</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Merge 50 PDFs in seconds. Split pages, compress files, convert images to PDF. Your files never leave your browser - completely private and free.">
+    <meta name="keywords" content="merge pdf free, split pdf online, compress pdf, images to pdf converter, pdf tools no upload, private pdf editor">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/pdf-tools">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="PDF Tools - Merge, Split & Compress PDFs | Free & Private">
+    <meta property="og:description" content="The PDF toolkit that respects your privacy. All processing happens in your browser - files never uploaded. Merge, split, compress - unlimited, free.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/pdf-tools">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/pdf-tools.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="pdf-container">
+            <div class="pdf-header">
+                <h1>PDF Tools</h1>
+                <p>Merge, split, compress PDFs and convert images to PDF - all in your browser</p>
+            </div>
+
+            <!-- Tool Selection -->
+            <div class="tool-selection">
+                <button class="tool-tab active" data-tool="merge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 16v6H8v-6"></path>
+                        <path d="M12 16V2"></path>
+                        <path d="M20 10H4"></path>
+                        <path d="M20 6l-4 4 4 4"></path>
+                        <path d="M4 6l4 4-4 4"></path>
+                    </svg>
+                    Merge PDFs
+                </button>
+                <button class="tool-tab" data-tool="split">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 2v6H8V2"></path>
+                        <path d="M12 8v14"></path>
+                        <path d="M20 14H4"></path>
+                        <path d="M4 18l4-4-4-4"></path>
+                        <path d="M20 18l-4-4 4-4"></path>
+                    </svg>
+                    Split PDF
+                </button>
+                <button class="tool-tab" data-tool="images">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                    Images to PDF
+                </button>
+                <button class="tool-tab" data-tool="compress">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="4 14 10 14 10 20"></polyline>
+                        <polyline points="20 10 14 10 14 4"></polyline>
+                        <line x1="14" y1="10" x2="21" y2="3"></line>
+                        <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                    Compress PDF
+                </button>
+            </div>
+
+            <!-- Merge PDFs Tool -->
+            <div class="tool-panel active" id="merge-panel">
+                <div class="upload-zone" id="mergeUploadZone">
+                    <input type="file" id="mergeFileInput" accept=".pdf" multiple hidden>
+                    <div class="upload-content">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="12" y1="18" x2="12" y2="12"></line>
+                            <line x1="9" y1="15" x2="15" y2="15"></line>
+                        </svg>
+                        <h3>Drop PDF files here or click to upload</h3>
+                        <p>Select multiple PDFs to merge into one</p>
+                    </div>
+                </div>
+
+                <div class="files-section" id="mergeFilesSection">
+                    <div class="files-header">
+                        <h3>PDF Files (<span id="mergeFileCount">0</span>)</h3>
+                        <p class="drag-hint">Drag to reorder</p>
+                    </div>
+                    <div class="files-list sortable" id="mergeFilesList"></div>
+                    <div class="action-bar">
+                        <button class="clear-btn" id="mergeClearBtn">Clear All</button>
+                        <button class="process-btn" id="mergeBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 16v6H8v-6"></path>
+                                <path d="M12 16V2"></path>
+                            </svg>
+                            Merge PDFs
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Split PDF Tool -->
+            <div class="tool-panel" id="split-panel">
+                <div class="upload-zone" id="splitUploadZone">
+                    <input type="file" id="splitFileInput" accept=".pdf" hidden>
+                    <div class="upload-content">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        <h3>Drop a PDF file here or click to upload</h3>
+                        <p>Select a PDF to split into separate pages</p>
+                    </div>
+                </div>
+
+                <div class="split-options" id="splitOptions">
+                    <div class="pdf-info">
+                        <span class="pdf-name" id="splitPdfName"></span>
+                        <span class="pdf-pages" id="splitPdfPages"></span>
+                    </div>
+                    <div class="split-mode">
+                        <h4>Split Mode</h4>
+                        <div class="mode-options">
+                            <label class="radio-label">
+                                <input type="radio" name="splitMode" value="all" checked>
+                                <span class="radio-custom"></span>
+                                Extract all pages (one PDF per page)
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="splitMode" value="range">
+                                <span class="radio-custom"></span>
+                                Extract page range
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="splitMode" value="custom">
+                                <span class="radio-custom"></span>
+                                Custom pages (e.g., 1,3,5-8)
+                            </label>
+                        </div>
+                        <div class="range-inputs" id="rangeInputs" style="display: none;">
+                            <input type="number" id="rangeStart" placeholder="From" min="1">
+                            <span>to</span>
+                            <input type="number" id="rangeEnd" placeholder="To" min="1">
+                        </div>
+                        <div class="custom-input" id="customInput" style="display: none;">
+                            <input type="text" id="customPages" placeholder="e.g., 1,3,5-8,12">
+                        </div>
+                    </div>
+                    <div class="action-bar">
+                        <button class="clear-btn" id="splitClearBtn">Clear</button>
+                        <button class="process-btn" id="splitBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M16 2v6H8V2"></path>
+                                <path d="M12 8v14"></path>
+                            </svg>
+                            Split PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Images to PDF Tool -->
+            <div class="tool-panel" id="images-panel">
+                <div class="upload-zone" id="imagesUploadZone">
+                    <input type="file" id="imagesFileInput" accept="image/*" multiple hidden>
+                    <div class="upload-content">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <h3>Drop images here or click to upload</h3>
+                        <p>Supports PNG, JPG, WebP, GIF</p>
+                    </div>
+                </div>
+
+                <div class="files-section" id="imagesFilesSection">
+                    <div class="files-header">
+                        <h3>Images (<span id="imagesFileCount">0</span>)</h3>
+                        <p class="drag-hint">Drag to reorder</p>
+                    </div>
+                    <div class="files-list sortable" id="imagesFilesList"></div>
+                    <div class="images-options">
+                        <div class="option-group">
+                            <label for="pageSize">Page Size</label>
+                            <select id="pageSize">
+                                <option value="a4">A4</option>
+                                <option value="letter">Letter</option>
+                                <option value="fit">Fit to Image</option>
+                            </select>
+                        </div>
+                        <div class="option-group">
+                            <label for="orientation">Orientation</label>
+                            <select id="orientation">
+                                <option value="portrait">Portrait</option>
+                                <option value="landscape">Landscape</option>
+                                <option value="auto">Auto (based on image)</option>
+                            </select>
+                        </div>
+                        <div class="option-group">
+                            <label for="margin">Margin</label>
+                            <select id="margin">
+                                <option value="0">No margin</option>
+                                <option value="10">Small (10px)</option>
+                                <option value="20" selected>Medium (20px)</option>
+                                <option value="40">Large (40px)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="action-bar">
+                        <button class="clear-btn" id="imagesClearBtn">Clear All</button>
+                        <button class="process-btn" id="imagesToPdfBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                            Create PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Compress PDF Tool -->
+            <div class="tool-panel" id="compress-panel">
+                <div class="upload-zone" id="compressUploadZone">
+                    <input type="file" id="compressFileInput" accept=".pdf" hidden>
+                    <div class="upload-content">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        <h3>Drop a PDF file here or click to upload</h3>
+                        <p>Reduce PDF file size while maintaining quality</p>
+                    </div>
+                </div>
+
+                <div class="compress-options" id="compressOptions">
+                    <div class="pdf-info">
+                        <span class="pdf-name" id="compressPdfName"></span>
+                        <span class="pdf-size" id="compressPdfSize"></span>
+                    </div>
+                    <div class="quality-options">
+                        <h4>Compression Level</h4>
+                        <div class="quality-buttons">
+                            <button class="quality-btn" data-quality="low">
+                                <span class="quality-level">Low</span>
+                                <span class="quality-desc">Smallest file size</span>
+                            </button>
+                            <button class="quality-btn active" data-quality="medium">
+                                <span class="quality-level">Medium</span>
+                                <span class="quality-desc">Balanced</span>
+                            </button>
+                            <button class="quality-btn" data-quality="high">
+                                <span class="quality-level">High</span>
+                                <span class="quality-desc">Best quality</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="action-bar">
+                        <button class="clear-btn" id="compressClearBtn">Clear</button>
+                        <button class="process-btn" id="compressBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="4 14 10 14 10 20"></polyline>
+                                <polyline points="20 10 14 10 14 4"></polyline>
+                            </svg>
+                            Compress PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Section -->
+            <div class="result-section" id="resultSection">
+                <div class="result-info">
+                    <svg class="result-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <h3 id="resultTitle">Processing Complete!</h3>
+                    <p id="resultMessage"></p>
+                </div>
+                <div class="result-files" id="resultFiles"></div>
+                <button class="download-all-btn" id="downloadResultBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Download
+                </button>
+            </div>
+
+            <!-- Progress Overlay -->
+            <div class="progress-overlay" id="progressOverlay">
+                <div class="progress-content">
+                    <div class="spinner"></div>
+                    <h3>Processing...</h3>
+                    <p id="progressMessage">Please wait</p>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Success!</div>
+
+    <!-- PDF-lib for PDF manipulation -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <!-- JSZip for multiple file downloads -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- Sortable.js for drag and drop reordering -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="/static/js/pdf-tools.js?v={{ v }}"></script>
+</body>
+</html>

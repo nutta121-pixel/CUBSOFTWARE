@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Edit {{ server.name or 'Server' }} - CleanMe</title>
+
+    <link rel="icon" type="image/png" href="/static/images/cleanme-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/cleanme.css?v={{ v }}">
+</head>
+<body data-page="edit">
+    <!-- Header -->
+    <header class="site-header cleanme-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <span class="logo-text">
+                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                </span>
+            </a>
+            <nav class="site-nav" id="siteNav">
+                <a href="/cleanme" class="nav-link">Home</a>
+                <a href="/cleanme/browse" class="nav-link">Browse</a>
+                <a href="/cleanme/dashboard" class="nav-link">Dashboard</a>
+                <a href="/" class="nav-link">Back to Tools</a>
+            </nav>
+            <div class="header-actions">
+                <div class="user-menu" style="display: flex;">
+                    <button class="user-menu-btn">
+                        <img src="{{ server.owner.avatar or '/static/images/default-avatar.png' }}" alt="Avatar" class="user-avatar">
+                        <span class="user-name">{{ server.owner.username or 'User' }}</span>
+                    </button>
+                    <div class="user-dropdown">
+                        <a href="/cleanme/dashboard">My Servers</a>
+                        <button class="logout-btn">Logout</button>
+                    </div>
+                </div>
+            </div>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="submit-main">
+        <div class="submit-container">
+            <div class="submit-header">
+                <h1>Edit Server Template</h1>
+                <p>Update your listing for <strong>{{ server.name or server_id }}</strong></p>
+            </div>
+
+            <!-- Server info preview -->
+            <div class="server-preview" style="display: block;">
+                <div class="server-preview-header">
+                    <img src="{{ server.icon or '/static/images/default-server.png' }}" alt="{{ server.name }}" class="server-preview-icon">
+                    <div class="server-preview-info">
+                        <h3>{{ server.name or 'Unknown Server' }}</h3>
+                        <div class="server-preview-stats">
+                            <span class="preview-stat">📺 {{ server.channel_count or 0 }} channels</span>
+                            <span class="preview-stat">🎭 {{ server.role_count or 0 }} roles</span>
+                            <span class="preview-stat">📁 {{ server.category_count or 0 }} categories</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form class="server-submit-form" id="edit-form">
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" required maxlength="500">{{ server.description or '' }}</textarea>
+                    <span class="form-hint">Max 500 characters</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select a category</option>
+                        {% for cat in [('gaming','Gaming'),('community','Community'),('education','Education'),('art','Art & Creative'),('music','Music'),('technology','Technology'),('business','Business'),('18plus','18+'),('other','Other')] %}
+                        <option value="{{ cat[0] }}" {% if server.category == cat[0] %}selected{% endif %}>{{ cat[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="tags">Tags</label>
+                    <input type="text" id="tags" name="tags" placeholder="gaming, fps, chill" value="{{ server.tags | join(', ') if server.tags else '' }}">
+                    <span class="form-hint">Comma-separated, max 5 tags</span>
+                </div>
+
+                <div class="form-actions" style="display:flex;gap:1rem;">
+                    <button type="submit" class="submit-btn" id="save-btn">Save Changes</button>
+                    <a href="/cleanme/dashboard" class="submit-btn" style="background:var(--surface-color);border:1px solid var(--border-color);color:var(--text-light);text-align:center;text-decoration:none;">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-text">
+                &copy; 2026 CUB SOFTWARE. Made with love by
+                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a><a href="/status">Status</a>
+                <a href="/terms">Terms</a><a href="/privacy">Privacy</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/cleanme.js?v={{ v }}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const nav = document.getElementById('siteNav');
+        if (mobileBtn && nav) {
+            mobileBtn.addEventListener('click', function() {
+                nav.classList.toggle('active');
+                mobileBtn.classList.toggle('active');
+            });
+        }
+
+        document.getElementById('edit-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('save-btn');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+
+            const data = {
+                description: document.getElementById('description').value,
+                category: document.getElementById('category').value,
+                tags: document.getElementById('tags').value
+            };
+
+            try {
+                const res = await fetch('/cleanme/api/servers/{{ server_id }}', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    window.location.href = '/cleanme/server/{{ server_id }}';
+                } else {
+                    alert(result.error || 'Failed to save');
+                    btn.disabled = false;
+                    btn.textContent = 'Save Changes';
+                }
+            } catch (err) {
+                alert('Failed to save changes');
+                btn.disabled = false;
+                btn.textContent = 'Save Changes';
+            }
+        });
+    });
+    </script>
+</body>
+</html>

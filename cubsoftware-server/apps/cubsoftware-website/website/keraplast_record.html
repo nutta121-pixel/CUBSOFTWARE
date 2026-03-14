@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Digestion Record | CUB SOFTWARE</title>
+
+    <meta name="description" content="Keraplast Digestion Record Details.">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/keraplast.css?v={{ v }}">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="header-top">
+            <a href="/" class="logo">
+                <span class="logo-text">
+                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                </span>
+            </a>
+            <nav class="site-nav">
+                <a href="/">Home</a>
+                <a href="/#apps">Tools</a>
+                <a href="https://questcord.fun" target="_blank">QuestCord</a>
+                <a href="/contact">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Password Screen -->
+    <div id="passwordScreen" class="password-screen">
+        <div class="password-box">
+            <h2>Access Required</h2>
+            <p>Enter password to continue</p>
+            <input type="password" id="passwordInput" placeholder="Password" onkeypress="if(event.key === 'Enter') checkPassword()">
+            <button class="action-btn" onclick="checkPassword()">Enter</button>
+            <p id="passwordError" class="password-error"></p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="history-main">
+        <div class="history-header">
+            <div>
+                <h1 class="page-title" id="recordTitle">Digestion Record</h1>
+                <p class="page-subtitle" id="recordSubtitle">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="calc-tabs history-tabs">
+            <button class="calc-tab" onclick="window.location.href='/keraplast'">← Back to Calculator</button>
+            <button class="calc-tab" onclick="window.location.href='/keraplast/history'">History</button>
+            <button class="calc-tab active">Record Details</button>
+        </div>
+
+        <!-- Record Details -->
+        <div id="recordContent" style="display:none;">
+
+            <!-- Summary Card -->
+            <div class="calculator-card record-summary-card">
+                <div class="record-meta-grid">
+                    <div class="record-meta-item">
+                        <span class="record-meta-label">Date</span>
+                        <span class="record-meta-value" id="metaDate">—</span>
+                    </div>
+                    <div class="record-meta-item">
+                        <span class="record-meta-label">Batch Number</span>
+                        <span class="record-meta-value" id="metaBatch">—</span>
+                    </div>
+                    <div class="record-meta-item">
+                        <span class="record-meta-label">Operator</span>
+                        <span class="record-meta-value" id="metaOperator">—</span>
+                    </div>
+                    <div class="record-meta-item">
+                        <span class="record-meta-label">Calculator</span>
+                        <span class="record-meta-value" id="metaCalcType">—</span>
+                    </div>
+                    <div class="record-meta-item">
+                        <span class="record-meta-label">Start Time</span>
+                        <span class="record-meta-value time-value" id="metaStartTime">—</span>
+                    </div>
+                    <div class="record-meta-item">
+                        <span class="record-meta-label">Finish Time</span>
+                        <span class="record-meta-value time-value" id="metaFinishTime">—</span>
+                    </div>
+                </div>
+
+                <!-- Admin actions (shown after load if admin) -->
+                <div id="recordAdminActions" class="record-admin-actions" style="display:none;">
+                    <button class="edit-btn" onclick="enterEditMode()">Edit Record</button>
+                    <button class="delete-btn" onclick="deleteRecord()">Delete Record</button>
+                </div>
+
+                <!-- Edit form (hidden until Edit is clicked) -->
+                <div id="recordEditForm" class="record-edit-form" style="display:none;">
+                    <div class="record-edit-fields">
+                        <div class="record-edit-field">
+                            <label>Date</label>
+                            <input type="text" id="editDate" class="history-edit-input" placeholder="05/March/2026">
+                        </div>
+                        <div class="record-edit-field">
+                            <label>Batch Number</label>
+                            <input type="text" id="editBatch" class="history-edit-input" placeholder="26A01B1">
+                        </div>
+                        <div class="record-edit-field">
+                            <label>Operator</label>
+                            <input type="text" id="editOperator" class="history-edit-input" placeholder="Your initials">
+                        </div>
+                    </div>
+                    <div class="record-edit-actions">
+                        <button class="edit-btn save-edit-btn" onclick="saveRecordEdit()">Save</button>
+                        <button class="delete-btn" onclick="cancelEditMode()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step Times Card -->
+            <div class="calculator-card" id="stepTimesCard" style="display:none;">
+                <h3 class="card-section-title">Step Times</h3>
+                <div class="record-steps-list" id="stepTimesList"></div>
+            </div>
+
+            <!-- No step times fallback -->
+            <div class="calculator-card" id="noStepsCard" style="display:none;">
+                <p style="color:var(--text-secondary); font-family:'Poppins',sans-serif; font-size:0.95rem; text-align:center; padding:20px 0;">
+                    Step times are not available for records saved before this feature was added.
+                </p>
+            </div>
+        </div>
+
+        <!-- Loading state -->
+        <div id="recordLoading" class="history-loading">Loading...</div>
+
+        <!-- Error state -->
+        <div id="recordError" class="history-empty" style="display:none;">
+            <div class="history-empty-inner">
+                <div class="history-empty-icon">⚠️</div>
+                <div class="history-empty-text" id="recordErrorText">Record not found.</div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-text">
+                &copy; 2026 CUB SOFTWARE. Made with love by
+                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/status">Status</a>
+                <a href="/terms">Terms</a>
+                <a href="/privacy">Privacy</a>
+                <a href="/copyright">Copyright</a>
+                <a href="/report">Report Issue</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const RECORD_ID = '{{ record_id }}';
+        let currentRecord = null;
+
+        const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+        function normaliseDateStr(str) {
+            if (!str || str === '—') return str;
+            const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (m) {
+                const monthIdx = parseInt(m[2], 10) - 1;
+                if (monthIdx >= 0 && monthIdx < 12)
+                    return `${m[1].padStart(2,'0')}/${MONTH_NAMES[monthIdx]}/${m[3]}`;
+            }
+            return str;
+        }
+
+        async function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+            if (!input.value.trim()) { error.textContent = 'Please enter a password'; return; }
+            try {
+                const response = await fetch('/api/keraplast/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: input.value.trim() })
+                });
+                const data = await response.json();
+                if (data.valid) {
+                    document.body.classList.add('authenticated');
+                    sessionStorage.setItem('keraplast-auth', input.value.trim());
+                    sessionStorage.setItem('keraplast-is-admin', data.is_admin ? '1' : '0');
+                    error.textContent = '';
+                    fetchRecord();
+                } else {
+                    error.textContent = 'Incorrect password';
+                    input.value = '';
+                    input.focus();
+                }
+            } catch (err) {
+                error.textContent = 'Failed to verify password';
+            }
+        }
+
+        async function fetchRecord() {
+            const password = sessionStorage.getItem('keraplast-auth');
+            const loading = document.getElementById('recordLoading');
+            const error = document.getElementById('recordError');
+            const content = document.getElementById('recordContent');
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            content.style.display = 'none';
+            try {
+                const response = await fetch(`/api/keraplast/history/${RECORD_ID}`, {
+                    headers: { 'X-Keraplast-Password': password }
+                });
+                const data = await response.json();
+                loading.style.display = 'none';
+                if (data.record) {
+                    renderRecord(data.record);
+                } else {
+                    document.getElementById('recordErrorText').textContent = data.error || 'Record not found.';
+                    error.style.display = 'flex';
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                document.getElementById('recordErrorText').textContent = 'Failed to load record.';
+                error.style.display = 'flex';
+            }
+        }
+
+        function renderRecord(record) {
+            currentRecord = record;
+            const content = document.getElementById('recordContent');
+            const calcLabel = record.calc_type === 'okl' ? 'OKL Digestion' : 'Keraplast Digestion';
+
+            // Update page title
+            document.title = `${record.batch_number} | CUB SOFTWARE`;
+            document.getElementById('recordTitle').textContent = record.batch_number || 'Digestion Record';
+            const displayDate = normaliseDateStr(record.date) || '';
+            document.getElementById('recordSubtitle').textContent = `${calcLabel} — ${displayDate}`;
+
+            // Meta fields
+            document.getElementById('metaDate').textContent = displayDate || '—';
+            document.getElementById('metaBatch').textContent = record.batch_number || '—';
+            document.getElementById('metaOperator').textContent = record.operator || '—';
+            document.getElementById('metaCalcType').textContent = calcLabel;
+            document.getElementById('metaStartTime').textContent = record.start_time || '—';
+            document.getElementById('metaFinishTime').textContent = record.finish_time || '—';
+
+            // Step times
+            const steps = record.step_times || [];
+            if (steps.length > 0) {
+                const list = document.getElementById('stepTimesList');
+                list.innerHTML = '';
+                steps.forEach((step, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'record-step-item';
+                    item.innerHTML = `
+                        <div class="record-step-number">${index + 1}</div>
+                        <div class="record-step-info">
+                            <div class="record-step-name">${escapeHtml(step.name)}</div>
+                            <div class="record-step-offset">${step.offset > 0 ? `+${step.offset} min from start` : 'Start'}</div>
+                        </div>
+                        <div class="record-step-time">${escapeHtml(step.time)}</div>`;
+                    list.appendChild(item);
+                });
+                document.getElementById('stepTimesCard').style.display = 'block';
+            } else {
+                document.getElementById('noStepsCard').style.display = 'block';
+            }
+
+            // Show admin actions if admin
+            if (sessionStorage.getItem('keraplast-is-admin') === '1') {
+                document.getElementById('recordAdminActions').style.display = 'flex';
+            }
+
+            content.style.display = 'block';
+        }
+
+        function addMinutes(time, minutes) {
+            if (!time) return '';
+            const [h, m] = time.split(':').map(Number);
+            const total = h * 60 + m + minutes;
+            return `${String(Math.floor(total / 60) % 24).padStart(2,'0')}:${String(total % 60).padStart(2,'0')}`;
+        }
+
+        function recalcFromStart() {
+            const startInput = document.querySelector('.step-time-edit-input[data-step-index="0"]');
+            if (!startInput || !startInput.value) return;
+            const steps = currentRecord.step_times || [];
+            steps.forEach((step, i) => {
+                if (i === 0) return;
+                const input = document.querySelector(`.step-time-edit-input[data-step-index="${i}"]`);
+                if (input && step.offset !== undefined) {
+                    input.value = addMinutes(startInput.value, step.offset);
+                }
+            });
+        }
+
+        function enterEditMode() {
+            document.getElementById('editDate').value = currentRecord.date || '';
+            document.getElementById('editBatch').value = currentRecord.batch_number || '';
+            document.getElementById('editOperator').value = currentRecord.operator || '';
+            document.getElementById('recordAdminActions').style.display = 'none';
+            document.getElementById('recordEditForm').style.display = 'block';
+
+            // Turn step time values into time inputs
+            const steps = currentRecord.step_times || [];
+            if (steps.length > 0) {
+                const list = document.getElementById('stepTimesList');
+                list.querySelectorAll('.record-step-time').forEach((span, i) => {
+                    const timeVal = steps[i] ? steps[i].time : '';
+                    // Start time (index 0) triggers recalc of all other steps
+                    const onInput = i === 0 ? ' oninput="recalcFromStart()"' : '';
+                    span.innerHTML = `<input type="time" class="step-time-edit-input" data-step-index="${i}" value="${escapeHtml(timeVal)}"${onInput}>`;
+                });
+            }
+        }
+
+        function cancelEditMode() {
+            document.getElementById('recordEditForm').style.display = 'none';
+            document.getElementById('recordAdminActions').style.display = 'flex';
+
+            // Restore step time display from currentRecord
+            const steps = currentRecord.step_times || [];
+            const list = document.getElementById('stepTimesList');
+            list.querySelectorAll('.record-step-time').forEach((span, i) => {
+                span.innerHTML = escapeHtml(steps[i] ? steps[i].time : '—');
+            });
+        }
+
+        async function saveRecordEdit() {
+            const password = sessionStorage.getItem('keraplast-auth');
+
+            // Collect updated step times
+            const steps = (currentRecord.step_times || []).map((step, i) => {
+                const input = document.querySelector(`.step-time-edit-input[data-step-index="${i}"]`);
+                return { ...step, time: input ? input.value : step.time };
+            });
+
+            const payload = {
+                password,
+                date: document.getElementById('editDate').value.trim(),
+                batch_number: document.getElementById('editBatch').value.trim(),
+                operator: document.getElementById('editOperator').value.trim(),
+                step_times: steps
+            };
+            try {
+                const response = await fetch(`/api/keraplast/history/${RECORD_ID}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Record updated');
+                    document.getElementById('recordEditForm').style.display = 'none';
+                    fetchRecord();
+                } else {
+                    showToast(data.error || 'Failed to save', true);
+                }
+            } catch (e) {
+                showToast('Failed to save', true);
+            }
+        }
+
+        async function deleteRecord() {
+            if (!confirm('Delete this record? This cannot be undone.')) return;
+            const password = sessionStorage.getItem('keraplast-auth');
+            try {
+                const response = await fetch(`/api/keraplast/history/${RECORD_ID}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Keraplast-Password': password }
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Record deleted');
+                    setTimeout(() => { window.location.href = '/keraplast/history'; }, 1200);
+                } else {
+                    showToast(data.error || 'Failed to delete', true);
+                }
+            } catch (e) {
+                showToast('Failed to delete', true);
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.toggle('toast-error', isError);
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), isError ? 4000 : 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('passwordInput').focus();
+            const saved = sessionStorage.getItem('keraplast-auth');
+            if (saved) {
+                document.body.classList.add('authenticated');
+                fetchRecord();
+            }
+        });
+    </script>
+</body>
+</html>

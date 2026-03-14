@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Don't Click</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .warning {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            animation: pulse 2s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+            50% { opacity: 0.7; transform: translateX(-50%) scale(1.05); }
+        }
+
+        .button-container {
+            position: absolute;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .evil-button {
+            padding: 20px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #ff0000 0%, #ff6b6b 100%);
+            border: 3px solid white;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .evil-button:hover {
+            transform: scale(1.05);
+        }
+
+        .evil-button:active {
+            transform: scale(0.95);
+        }
+
+        .click-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 18px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="warning">⚠️ WARNING: DO NOT PROCEED ⚠️</div>
+
+    <div class="button-container" id="buttonContainer">
+        <button class="evil-button" id="evilButton">Don't Click Me</button>
+    </div>
+
+    <div class="click-counter">Attempts: <span id="attempts">0</span></div>
+
+    <script>
+        const button = document.getElementById('evilButton');
+        const container = document.getElementById('buttonContainer');
+        const attemptsSpan = document.getElementById('attempts');
+        let attempts = 0;
+        let lastMoveTime = 0;
+        const moveThreshold = 300; // pixels from button to trigger move
+        const moveDebounce = 100; // minimum ms between moves
+
+        // Taunting messages that appear on the button
+        const taunts = [
+            "DONT TOUCH ME",
+            "YOU CANT GET ME",
+            "TOO SLOW!",
+            "NICE TRY!",
+            "NOPE!",
+            "CANT CATCH ME!",
+            "TRY HARDER!",
+            "SO CLOSE!",
+            "ALMOST!",
+            "KEEP TRYING!"
+        ];
+
+        // Center the button initially
+        function centerButton() {
+            const buttonRect = button.getBoundingClientRect();
+            container.style.left = (window.innerWidth / 2 - buttonRect.width / 2) + 'px';
+            container.style.top = (window.innerHeight / 2 - buttonRect.height / 2) + 'px';
+        }
+
+        // Move button to random position (away from cursor)
+        function moveButton(mouseX, mouseY) {
+            const now = Date.now();
+            if (now - lastMoveTime < moveDebounce) return;
+            lastMoveTime = now;
+
+            const maxX = window.innerWidth - button.offsetWidth - 50;
+            const maxY = window.innerHeight - button.offsetHeight - 50;
+            const minDistance = Math.min(window.innerWidth, window.innerHeight) * 0.5; // At least half screen away
+
+            let randomX, randomY, newCenterX, newCenterY, distance;
+            let maxAttempts = 100;
+            let attemptCount = 0;
+
+            // Keep trying until we find a position far enough from the cursor
+            do {
+                // Determine which quadrant the mouse is in and move to opposite areas
+                const mouseInLeftHalf = mouseX < window.innerWidth / 2;
+                const mouseInTopHalf = mouseY < window.innerHeight / 2;
+
+                // Move to opposite side of screen with some randomness
+                if (mouseInLeftHalf) {
+                    // Mouse on left, move button to right half
+                    randomX = (window.innerWidth / 2) + (Math.random() * (maxX - window.innerWidth / 2));
+                } else {
+                    // Mouse on right, move button to left half
+                    randomX = Math.random() * (window.innerWidth / 2);
+                }
+
+                if (mouseInTopHalf) {
+                    // Mouse on top, move button to bottom half
+                    randomY = (window.innerHeight / 2) + (Math.random() * (maxY - window.innerHeight / 2));
+                } else {
+                    // Mouse on bottom, move button to top half
+                    randomY = Math.random() * (window.innerHeight / 2);
+                }
+
+                // Calculate the center of the button at the new position
+                newCenterX = randomX + button.offsetWidth / 2;
+                newCenterY = randomY + button.offsetHeight / 2;
+
+                // Calculate distance from cursor to new button position
+                distance = Math.sqrt(
+                    Math.pow(mouseX - newCenterX, 2) +
+                    Math.pow(mouseY - newCenterY, 2)
+                );
+
+                attemptCount++;
+            } while (distance < minDistance && attemptCount < maxAttempts);
+
+            container.style.left = randomX + 'px';
+            container.style.top = randomY + 'px';
+
+            // Change button text to a random taunt
+            const randomTaunt = taunts[Math.floor(Math.random() * taunts.length)];
+            button.textContent = randomTaunt;
+
+            attempts++;
+            attemptsSpan.textContent = attempts;
+        }
+
+        // Track mouse position
+        document.addEventListener('mousemove', (e) => {
+            const buttonRect = button.getBoundingClientRect();
+            const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+            const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+
+            const distance = Math.sqrt(
+                Math.pow(e.clientX - buttonCenterX, 2) +
+                Math.pow(e.clientY - buttonCenterY, 2)
+            );
+
+            if (distance < moveThreshold) {
+                moveButton(e.clientX, e.clientY);
+            }
+        });
+
+        // Track touch position for mobile
+        document.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const buttonRect = button.getBoundingClientRect();
+            const buttonCenterX = buttonRect.left + buttonRect.width / 2;
+            const buttonCenterY = buttonRect.top + buttonRect.height / 2;
+
+            const distance = Math.sqrt(
+                Math.pow(touch.clientX - buttonCenterX, 2) +
+                Math.pow(touch.clientY - buttonCenterY, 2)
+            );
+
+            if (distance < moveThreshold) {
+                moveButton(touch.clientX, touch.clientY);
+            }
+        });
+
+        // If they actually click it (somehow)
+        button.addEventListener('click', async () => {
+            // Detect device type
+            function getDeviceType() {
+                const ua = navigator.userAgent.toLowerCase();
+                const isTablet = /(ipad|tablet|playbook|silk)|(android(?!.*mobile))/i.test(ua);
+                const isMobile = /mobile|iphone|ipod|android|blackberry|opera mini|iemobile/i.test(ua);
+
+                if (isTablet) return 'tablet';
+                if (isMobile) return 'mobile';
+                return 'PC';
+            }
+
+            const deviceType = getDeviceType();
+
+            // Request fullscreen
+            try {
+                if (document.documentElement.requestFullscreen) {
+                    await document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    await document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) {
+                    await document.documentElement.msRequestFullscreen();
+                }
+            } catch (err) {
+                console.log('Fullscreen request failed:', err);
+            }
+
+            // Create fake Windows update screen
+            document.body.style.background = '#0078d4';
+            document.body.innerHTML = `
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                </style>
+                <div style="
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    color: white;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    text-align: center;
+                ">
+                    <div style="
+                        width: 80px;
+                        height: 80px;
+                        margin: 0 auto 40px auto;
+                    ">
+                        <svg viewBox="0 0 88 88" style="width: 100%; height: 100%;">
+                            <circle cx="44" cy="44" r="40" fill="none" stroke="white" stroke-width="4" opacity="0.3"/>
+                            <circle cx="44" cy="44" r="40" fill="none" stroke="white" stroke-width="4"
+                                stroke-dasharray="251.2" stroke-dashoffset="0"
+                                style="animation: spin 1s linear infinite; transform-origin: center;"
+                                stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h1 style="
+                        font-size: 32px;
+                        font-weight: 300;
+                        margin: 0 0 20px 0;
+                    ">Working on updates</h1>
+                    <p style="
+                        font-size: 24px;
+                        font-weight: 300;
+                        margin: 0 0 40px 0;
+                    "><span id="updatePercent">0</span>% complete</p>
+                    <p style="
+                        font-size: 18px;
+                        font-weight: 300;
+                        margin: 0;
+                    ">Don't turn off your ${deviceType}. This will take a while.</p>
+                    <p style="
+                        font-size: 16px;
+                        font-weight: 300;
+                        margin: 20px 0 0 0;
+                        opacity: 0.8;
+                    ">Your ${deviceType} will restart several times.</p>
+                </div>
+            `;
+
+            // Animate percentage from 0 to 100 over 30 seconds
+            let percent = 0;
+            const percentEl = document.getElementById('updatePercent');
+            const interval = setInterval(() => {
+                percent += 1;
+                if (percentEl) {
+                    percentEl.textContent = percent;
+                }
+                if (percent >= 100) {
+                    clearInterval(interval);
+                }
+            }, 300); // 300ms * 100 = 30 seconds
+
+            // Redirect to homepage after 30 seconds
+            setTimeout(async () => {
+                // Exit fullscreen before redirecting
+                try {
+                    if (document.exitFullscreen) {
+                        await document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        await document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        await document.msExitFullscreen();
+                    }
+                } catch (err) {
+                    console.log('Exit fullscreen failed:', err);
+                }
+
+                // Small delay to ensure fullscreen exits before redirect
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 100);
+            }, 30000);
+        });
+
+        // Initialize
+        centerButton();
+
+        // Recenter on window resize
+        window.addEventListener('resize', centerButton);
+    </script>
+</body>
+</html>

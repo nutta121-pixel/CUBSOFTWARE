@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Admin Dashboard - CUB SOFTWARE</title>
+
+    <meta name="description" content="Admin Dashboard - CUB SOFTWARE">
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/admin-dashboard.css?v={{ v }}">
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- Sidebar Overlay (mobile) -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                </a>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <span class="nav-section-title">Monitoring</span>
+                    <a href="#processes" class="nav-item active" data-section="processes">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        <span>Processes</span>
+                    </a>
+                    <a href="#logs" class="nav-item" data-section="logs">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                        <span>Logs</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-title">Management</span>
+                    <a href="#reports" class="nav-item" data-section="reports">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                            <line x1="4" y1="22" x2="4" y2="15"></line>
+                        </svg>
+                        <span>Reports</span>
+                        <span class="nav-badge" id="reportsBadge" style="display: none;">0</span>
+                    </a>
+                    <a href="#links" class="nav-item" data-section="links">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
+                        <span>Links</span>
+                    </a>
+                    <a href="#features" class="nav-item" data-section="features">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                            <polyline points="2 17 12 22 22 17"></polyline>
+                            <polyline points="2 12 12 17 22 12"></polyline>
+                        </svg>
+                        <span>Features</span>
+                    </a>
+                    <a href="#passwords" class="nav-item" data-section="passwords">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span>Passwords</span>
+                    </a>
+                    <a href="#affiliates" class="nav-item" data-section="affiliates">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                        </svg>
+                        <span>Affiliates</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-title">System</span>
+                    <a href="#custom-bots" class="nav-item" data-section="custom-bots">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><circle cx="15" cy="9" r="2"/><path d="M9 15s1 1 3 1 3-1 3-1"/>
+                        </svg>
+                        <span>Custom Bots</span>
+                        <span class="nav-badge" id="customBotsBadge" style="display:none;">0</span>
+                    </a>
+                    <a href="#api-status" class="nav-item" data-section="api-status">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                        </svg>
+                        <span>API Status</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <span class="nav-section-title">Security</span>
+                    <a href="#whitelist" class="nav-item" data-section="whitelist">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span>Whitelist</span>
+                    </a>
+                    <a href="#ipbans" class="nav-item" data-section="ipbans">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                        </svg>
+                        <span>IP Bans</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <img src="{{ user.avatar_url }}" alt="Avatar" class="user-avatar">
+                    <div class="user-details">
+                        <span class="user-name">{{ user.username }}</span>
+                        <span class="user-role">Administrator</span>
+                    </div>
+                </div>
+                <a href="/dashboard/logout" class="logout-btn" title="Logout">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Mobile Header -->
+        <header class="mobile-header" id="mobileHeader">
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <span class="mobile-title">Admin Dashboard</span>
+            <img src="{{ user.avatar_url }}" alt="Avatar" class="mobile-avatar">
+        </header>
+
+        <!-- Main Content -->
+        <main class="admin-content">
+            <!-- Processes Section -->
+            <section class="content-section active" id="processesSection" data-section="processes">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>Process Monitor</h1>
+                        <p>Manage and monitor PM2 processes</p>
+                    </div>
+                    <div class="section-actions">
+                        <div class="status-indicator">
+                            <span class="status-dot" id="statusDot"></span>
+                            <span id="lastUpdate">Last updated: --</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="controls-bar">
+                    <div class="control-group">
+                        <button id="refreshBtn" class="control-btn primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                        <label class="auto-refresh">
+                            <input type="checkbox" id="autoRefresh" checked>
+                            <span class="checkbox-custom"></span>
+                            Auto-refresh
+                        </label>
+                        <div class="refresh-rate">
+                            <span>Rate:</span>
+                            <select id="refreshRate">
+                                <option value="1000">1s</option>
+                                <option value="2000">2s</option>
+                                <option value="5000" selected>5s</option>
+                                <option value="10000">10s</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="processes-grid" id="processesGrid">
+                    <div class="loading">Loading processes...</div>
+                </div>
+            </section>
+
+            <!-- Logs Section -->
+            <section class="content-section" id="logsSection" data-section="logs">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>Process Logs</h1>
+                        <p>View real-time logs from PM2 processes</p>
+                    </div>
+                    <div class="section-actions">
+                        <select id="processSelect" class="filter-select">
+                            <option value="">Select a process...</option>
+                        </select>
+                        <select id="logType" class="filter-select">
+                            <option value="out">stdout</option>
+                            <option value="err">stderr</option>
+                        </select>
+                        <label class="auto-refresh">
+                            <input type="checkbox" id="autoScrollLogs" checked>
+                            <span class="checkbox-custom"></span>
+                            Auto-scroll
+                        </label>
+                        <button id="clearLogsBtn" class="control-btn">Clear</button>
+                    </div>
+                </div>
+
+                <div class="logs-container" id="logsContainer">
+                    <div class="logs-placeholder">Select a process to view logs</div>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section class="content-section" id="reportsSection" data-section="reports">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>User Reports</h1>
+                        <p>Review and manage user-submitted reports</p>
+                    </div>
+                    <div class="section-actions">
+                        <select id="reportStatusFilter" class="filter-select">
+                            <option value="all">All Reports</option>
+                            <option value="pending" selected>Pending</option>
+                            <option value="investigating">Investigating</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                        <button id="refreshReportsBtn" class="control-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="reports-stats" id="reportsStats">
+                    <div class="stat-card pending">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="pendingCount">0</span>
+                            <span class="stat-label">Pending</span>
+                        </div>
+                    </div>
+                    <div class="stat-card investigating">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="investigatingCount">0</span>
+                            <span class="stat-label">Investigating</span>
+                        </div>
+                    </div>
+                    <div class="stat-card resolved">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="resolvedCount">0</span>
+                            <span class="stat-label">Resolved</span>
+                        </div>
+                    </div>
+                    <div class="stat-card closed">
+                        <div class="stat-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="closedCount">0</span>
+                            <span class="stat-label">Closed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reports-list" id="reportsList">
+                    <div class="loading">Loading reports...</div>
+                </div>
+            </section>
+
+            <!-- Links Section -->
+            <section class="content-section" id="linksSection" data-section="links">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>Link Management</h1>
+                        <p>View and manage shortened links</p>
+                    </div>
+                    <div class="section-actions">
+                        <input type="text" id="linkSearch" class="filter-select" placeholder="Search by code or URL..." style="min-width: 200px;">
+                        <button id="refreshLinksBtn" class="control-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="links-stats" id="linksStats">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(88, 101, 242, 0.15); color: #5865f2;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalLinksCount">0</span>
+                            <span class="stat-label">Total Links</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: rgba(34, 197, 94, 0.15); color: #22c55e;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalClicksCount">0</span>
+                            <span class="stat-label">Total Clicks</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="links-list" id="linksList">
+                    <div class="loading">Loading links...</div>
+                </div>
+            </section>
+
+            <!-- Features Section -->
+            <section class="content-section" id="featuresSection" data-section="features">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>Feature Management</h1>
+                        <p>Enable or disable website features</p>
+                    </div>
+                    <div class="section-actions">
+                        <button id="refreshFeaturesBtn" class="control-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="features-grid" id="featuresGrid">
+                    <div class="loading">Loading features...</div>
+                </div>
+            </section>
+
+            <!-- Whitelist Section -->
+            <section class="content-section" id="whitelistSection" data-section="whitelist">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>Whitelist Management</h1>
+                        <p>Manage users who can access this dashboard</p>
+                    </div>
+                </div>
+
+                <div class="whitelist-container">
+                    <div class="whitelist-add-card">
+                        <h3>Add User to Whitelist</h3>
+                        <p class="help-text">To get a Discord User ID: Enable Developer Mode in Discord settings, then right-click on a user and select "Copy ID".</p>
+                        <div class="add-user-form">
+                            <input type="text" id="newUserId" placeholder="Discord User ID" class="input-field">
+                            <button class="control-btn primary" onclick="addToWhitelist()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                Add User
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="whitelist-users-card">
+                        <h3>Whitelisted Users</h3>
+                        <div class="whitelist-list" id="whitelistList">
+                            <div class="loading">Loading whitelist...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- IP Bans Section -->
+            <section class="content-section" id="ipbansSection" data-section="ipbans">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>IP Ban Management</h1>
+                        <p>Manage banned IP addresses</p>
+                    </div>
+                    <div class="section-actions">
+                        <button id="refreshIpBansBtn" class="control-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="ipbans-container">
+                    <div class="ipban-add-card">
+                        <h3>Ban IP Address</h3>
+                        <div class="ipban-form">
+                            <input type="text" id="banIpAddress" placeholder="IP Address" class="input-field">
+                            <select id="banType" class="filter-select">
+                                <option value="global">Global (Entire Website)</option>
+                                <option value="links">Link Shortener</option>
+                                <option value="social">Social Media Saver</option>
+                                <option value="reports">Reports</option>
+                            </select>
+                            <input type="text" id="banReason" placeholder="Reason (optional)" class="input-field">
+                            <button class="control-btn primary" onclick="banIpAddress()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                                </svg>
+                                Ban IP
+                            </button>
+                        </div>
+                        <div class="temp-ban-section">
+                            <h4>Temporary Ban</h4>
+                            <div class="ipban-form">
+                                <input type="text" id="tempBanIp" placeholder="IP Address" class="input-field">
+                                <input type="text" id="tempBanDuration" placeholder="Duration (e.g., 1h, 7d)" class="input-field">
+                                <input type="text" id="tempBanReason" placeholder="Reason (optional)" class="input-field">
+                                <button class="control-btn" onclick="tempBanIp()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    Temp Ban
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ipbans-list-card">
+                        <h3>Active IP Bans</h3>
+                        <div class="ipbans-tabs">
+                            <button class="tab-btn active" data-tab="global">Global</button>
+                            <button class="tab-btn" data-tab="feature">Feature</button>
+                            <button class="tab-btn" data-tab="temp">Temporary</button>
+                        </div>
+                        <div class="ipbans-list" id="ipbansList">
+                            <div class="loading">Loading IP bans...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Passwords Section -->
+            <section class="content-section" id="passwordsSection" data-section="passwords">
+                <div class="section-header">
+                    <h2>Keraplast Passwords</h2>
+                    <button class="refresh-btn" onclick="loadPasswords()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+
+                <div class="passwords-create">
+                    <h3>Create Password</h3>
+                    <div class="password-form">
+                        <div class="form-row">
+                            <input type="text" id="newPassword" placeholder="Password" class="form-input">
+                            <input type="text" id="newPasswordLabel" placeholder="Label (e.g. person's name)" class="form-input">
+                            <label class="admin-role-label">
+                                <input type="checkbox" id="newPasswordAdmin"> Admin
+                            </label>
+                            <button class="control-btn start" onclick="createPassword()">Create</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="passwords-list-container">
+                    <h3>Active Passwords</h3>
+                    <div class="passwords-list" id="passwordsList">
+                        <div class="loading">Loading passwords...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Custom Bots Section -->
+            <section class="content-section" id="customBotsSection" data-section="custom-bots">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>Custom Bots</h1>
+                        <p>User-created bots running via CUB PROTECTOR</p>
+                    </div>
+                    <div class="section-actions">
+                        <button class="control-btn secondary" onclick="launchAllCustomBots()" id="launchAllBotsBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                            Launch All
+                        </button>
+                        <button class="control-btn primary" onclick="loadCustomBots()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                <div id="customBotsGrid" class="processes-grid">
+                    <div class="loading">Loading custom bots...</div>
+                </div>
+            </section>
+
+            <!-- API Status Section -->
+            <section class="content-section" id="apiStatusSection" data-section="api-status">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>API Endpoint Status</h1>
+                        <p>Monitor all API endpoints and their uptime</p>
+                    </div>
+                    <div class="section-actions">
+                        <div class="status-indicator">
+                            <span id="apiOnlineCount" style="color:#57F287;font-weight:600;">0</span>
+                            <span style="color:var(--text-muted);">/</span>
+                            <span id="apiTotalCount" style="color:var(--text-secondary);font-weight:600;">0</span>
+                            <span style="color:var(--text-muted);margin-left:4px;">online</span>
+                        </div>
+                        <input type="text" id="apiSearchInput" class="filter-select" placeholder="Search endpoints..." style="width:200px;">
+                        <button id="refreshApiStatusBtn" class="control-btn primary" onclick="loadApiStatus()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="api-uptime-bar" id="apiUptimeBar" style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+                    <div style="color:var(--text-muted);font-size:0.85rem;">Server uptime: <span id="serverUptime" style="color:#57F287;font-weight:600;">--</span></div>
+                    <div style="display:flex;gap:16px;font-size:0.85rem;">
+                        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#57F287;margin-right:4px;box-shadow:0 0 6px rgba(87,242,135,0.4);"></span> Online: <span id="apiOnlineStat" style="color:#57F287;font-weight:600;">0</span></span>
+                        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ed4245;margin-right:4px;box-shadow:0 0 6px rgba(237,66,69,0.4);"></span> Error: <span id="apiErrorStat" style="color:#ed4245;font-weight:600;">0</span></span>
+                    </div>
+                </div>
+
+                <div id="apiStatusGrid" style="display:flex;flex-direction:column;gap:4px;">
+                    <div class="loading">Loading API endpoints...</div>
+                </div>
+            </section>
+
+            <!-- Affiliates Section -->
+            <section class="content-section" id="affiliatesSection" data-section="affiliates">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>Affiliate Program</h1>
+                        <p>Manage streamer affiliates and track referrals</p>
+                    </div>
+                    <div class="section-actions">
+                        <button class="control-btn primary" onclick="loadAffiliates()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary stats -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.5rem;">
+                    <div class="stat-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1rem;">
+                        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Total Affiliates</div>
+                        <div style="font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:700;color:var(--text-light);" id="affSumTotal">—</div>
+                    </div>
+                    <div class="stat-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1rem;">
+                        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Active</div>
+                        <div style="font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:700;color:#57F287;" id="affSumActive">—</div>
+                    </div>
+                    <div class="stat-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1rem;">
+                        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Total Unique Clicks</div>
+                        <div style="font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:700;color:#009dff;" id="affSumClicks">—</div>
+                    </div>
+                    <div class="stat-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1rem;">
+                        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Total Pending Payout</div>
+                        <div style="font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:700;color:#57F287;" id="affSumEarnings">—</div>
+                    </div>
+                </div>
+
+                <!-- Create form -->
+                <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:1.25rem;margin-bottom:1.5rem;">
+                    <h3 style="font-size:0.875rem;font-weight:600;color:var(--text-light);margin-bottom:1rem;">Add New Affiliate</h3>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin-bottom:.6rem;">
+                        <div>
+                            <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem;">Discord User ID</label>
+                            <input type="text" id="affInId" placeholder="e.g. 523949187663585310" class="form-input" style="width:100%;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem;">Discord Username</label>
+                            <input type="text" id="affInUser" placeholder="e.g. HexEchoTV" class="form-input" style="width:100%;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem;">Vanity Code</label>
+                            <input type="text" id="affInCode" placeholder="e.g. hexechotv" maxlength="30" class="form-input" style="width:100%;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem;">$ per unique click</label>
+                            <input type="number" id="affInRate" placeholder="0.00" step="0.01" min="0" value="0" class="form-input" style="width:100%;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:.75rem;">
+                        <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem;">Notes (internal)</label>
+                        <input type="text" id="affInNotes" placeholder="Optional notes" class="form-input" style="width:100%;max-width:500px;">
+                    </div>
+                    <div id="affCreateError" style="display:none;color:#ef4444;font-size:.8rem;margin-bottom:.5rem;"></div>
+                    <button class="control-btn start" id="affCreateBtn" onclick="createAffiliateAdmin()">Add Affiliate</button>
+                </div>
+
+                <!-- Affiliates table -->
+                <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);flex-wrap:wrap;gap:.5rem;">
+                        <span style="font-size:.875rem;font-weight:600;color:var(--text-light);">All Affiliates</span>
+                        <input type="text" id="affSearch" placeholder="Search..." class="form-input" style="width:180px;padding:.4rem .65rem;font-size:.8rem;" oninput="filterAffiliatesTable()">
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;" id="affTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Affiliate</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Link</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Status</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Unique</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Total</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Rate</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Pending Payout</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="affTbody"></tbody>
+                        </table>
+                        <div id="affEmpty" style="text-align:center;padding:2.5rem;color:var(--text-muted);display:none;">No affiliates yet.</div>
+                    </div>
+                </div>
+
+                <!-- Withdrawal Requests -->
+                <div style="margin-top:1.5rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);flex-wrap:wrap;gap:.5rem;">
+                        <span style="font-size:.875rem;font-weight:600;color:var(--text-light);">Withdrawal Requests</span>
+                        <span id="wdPendingBadge" style="display:none;font-size:.72rem;font-weight:700;background:rgba(255,196,0,0.12);color:#ffc400;border:1px solid rgba(255,196,0,0.25);padding:3px 10px;border-radius:20px;"></span>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;" id="wdTable">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Affiliate</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Amount</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">PayPal Email</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Requested</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Status</th>
+                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="wdTbody"></tbody>
+                        </table>
+                        <div id="wdEmpty" style="text-align:center;padding:2rem;color:var(--text-muted);font-size:.85rem;">No withdrawal requests yet.</div>
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Affiliate Edit Modal -->
+    <div class="modal-overlay" id="affEditModal" style="display:none;">
+        <div class="modal-content" style="max-width:420px;">
+            <div class="modal-header">
+                <h3>Edit Affiliate</h3>
+                <button class="modal-close" onclick="closeAffModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="affEditId">
+                <div style="margin-bottom:.75rem;">
+                    <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem;">Vanity Code</label>
+                    <input type="text" id="affEditCode" class="form-input" style="width:100%;" maxlength="30">
+                </div>
+                <div style="margin-bottom:.75rem;">
+                    <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem;">$ per unique click</label>
+                    <input type="number" id="affEditRate" class="form-input" style="width:100%;" step="0.01" min="0">
+                </div>
+                <div style="margin-bottom:.75rem;">
+                    <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem;">Notes (internal)</label>
+                    <input type="text" id="affEditNotes" class="form-input" style="width:100%;">
+                </div>
+                <div id="affEditError" style="display:none;color:#ef4444;font-size:.8rem;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="control-btn" onclick="closeAffModal()">Cancel</button>
+                <button class="control-btn start" onclick="saveAffEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Detail Modal -->
+    <div class="modal-overlay" id="reportModal" style="display: none;">
+        <div class="modal-content report-modal">
+            <div class="modal-header">
+                <h3>Report Details</h3>
+                <button class="modal-close" onclick="closeReportModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="reportModalBody">
+                <!-- Report details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <div class="status-buttons">
+                    <button class="status-btn pending" onclick="updateReportStatus('pending')">Pending</button>
+                    <button class="status-btn investigating" onclick="updateReportStatus('investigating')">Investigating</button>
+                    <button class="status-btn resolved" onclick="updateReportStatus('resolved')">Resolved</button>
+                    <button class="status-btn closed" onclick="updateReportStatus('closed')">Close</button>
+                </div>
+                <button class="delete-btn" onclick="deleteReport()">Delete Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link Detail Modal -->
+    <div class="modal-overlay" id="linkModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Link Details</h3>
+                <button class="modal-close" onclick="closeLinkModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="linkModalBody">
+                <!-- Link details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button class="delete-btn" onclick="deleteLink()">Delete Link</button>
+                <button class="control-btn" onclick="banLinkCreator()">Ban Creator IP</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="/static/js/admin-dashboard.js?v={{ v }}"></script>
+</body>
+</html>

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Shared Resume - CUB SOFTWARE</title>
+
+    <meta name="description" content="View this professional resume created with CUB SOFTWARE Resume Builder">
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=Georgia&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/resume-builder.css?v={{ v }}">
+    <style>
+        .view-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .view-intro {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .intro-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .intro-icon svg {
+            width: 40px;
+            height: 40px;
+            color: var(--primary);
+        }
+
+        .view-intro h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .intro-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .doc-type-badge {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+            border: 1px solid var(--primary);
+            border-radius: 20px;
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .view-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .view-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .view-btn.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            color: white;
+        }
+
+        .view-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(88, 101, 242, 0.4);
+        }
+
+        .view-btn.secondary {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .view-btn.secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .view-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .resume-container {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        .resume-frame {
+            background: white;
+            border-radius: 8px;
+            min-height: 600px;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 400px;
+            color: var(--text-muted);
+        }
+
+        .powered-by {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .powered-by a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .powered-by a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .view-container {
+                padding: 1rem;
+            }
+
+            .view-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .view-actions {
+                flex-direction: column;
+            }
+
+            .view-btn {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="view-container">
+            <div class="view-intro" id="viewIntro">
+                <div class="intro-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <h1 id="resumeTitle">Loading...</h1>
+                <p class="intro-subtitle">Click below to view and download the resume</p>
+            </div>
+
+            <div class="view-header">
+                <div class="header-left">
+                    <span class="doc-type-badge" id="docTypeBadge">Resume</span>
+                </div>
+                <div class="view-actions">
+                    <button class="view-btn primary" id="downloadBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download PDF
+                    </button>
+                    <a href="/apps/resume-builder" class="view-btn secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"></path>
+                        </svg>
+                        Create Your Own
+                    </a>
+                </div>
+            </div>
+
+            <div class="resume-container">
+                <div class="resume-frame" id="resumeFrame">
+                    <div class="loading">Loading resume...</div>
+                </div>
+            </div>
+
+            <div class="powered-by">
+                Created with <a href="/apps/resume-builder">CUB SOFTWARE Resume Builder</a> - Free professional resumes
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        const resumeId = '{{ resume_id }}';
+
+        async function loadResume() {
+            try {
+                const response = await fetch(`/api/resume/${resumeId}`);
+                if (!response.ok) throw new Error('Resume not found');
+
+                const data = await response.json();
+                renderResume(data);
+            } catch (error) {
+                document.getElementById('resumeFrame').innerHTML = `
+                    <div class="loading" style="color: #ef4444;">
+                        Resume not found or has been removed.
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function renderResume(resumeData) {
+            const data = resumeData.formData || resumeData;
+            const template = resumeData.template || 'modern';
+            const background = resumeData.background || 'clean';
+            const font = resumeData.font || 'georgia';
+            const color = resumeData.color || 'blue';
+            const name = resumeData.name || data.fullName || data.clName || 'Professional';
+
+            // Update the page title and intro
+            const docType = resumeData.type === 'cover-letter' ? 'Cover Letter' : (resumeData.type === 'cv' ? 'CV' : 'Resume');
+            document.title = `${name}'s ${docType} - CUB SOFTWARE`;
+            document.getElementById('resumeTitle').textContent = `${name}'s ${docType}`;
+            document.getElementById('docTypeBadge').textContent = docType;
+
+            const frame = document.getElementById('resumeFrame');
+
+            if (resumeData.type === 'cover-letter') {
+                renderCoverLetter(data, frame, background, font, color);
+            } else {
+                renderResumeContent(data, frame, template, background, font, color);
+            }
+        }
+
+        function renderResumeContent(data, frame, template, background, font, color) {
+            let contactHtml = '';
+            if (data.email) contactHtml += `<span>${escapeHtml(data.email)}</span>`;
+            if (data.phone) contactHtml += `<span>${escapeHtml(data.phone)}</span>`;
+            if (data.location) contactHtml += `<span>${escapeHtml(data.location)}</span>`;
+            if (data.website) contactHtml += `<span>${escapeHtml(data.website)}</span>`;
+
+            let html = `
+                <div class="preview-name">${escapeHtml(data.fullName || 'Name')}</div>
+                ${data.jobTitle ? `<div class="preview-title">${escapeHtml(data.jobTitle)}</div>` : ''}
+                <div class="preview-contact">${contactHtml}</div>
+            `;
+
+            if (data.summary) {
+                html += `
+                    <div class="section-title">Professional Summary</div>
+                    <div class="preview-summary">${escapeHtml(data.summary)}</div>
+                `;
+            }
+
+            if (data.experiences && data.experiences.length > 0) {
+                html += `<div class="section-title">Experience</div>`;
+                data.experiences.forEach(exp => {
+                    if (exp.title || exp.company) {
+                        html += `
+                            <div class="preview-item">
+                                <div class="preview-item-header">
+                                    <span class="preview-item-title">${escapeHtml(exp.title)}</span>
+                                    <span class="preview-item-date">${escapeHtml(exp.startDate)}${exp.endDate ? ' - ' + escapeHtml(exp.endDate) : ''}</span>
+                                </div>
+                                <div class="preview-item-subtitle">${escapeHtml(exp.company)}</div>
+                                ${exp.description ? `<div class="preview-item-description">${escapeHtml(exp.description)}</div>` : ''}
+                            </div>
+                        `;
+                    }
+                });
+            }
+
+            if (data.education && data.education.length > 0) {
+                html += `<div class="section-title">Education</div>`;
+                data.education.forEach(edu => {
+                    if (edu.degree || edu.school) {
+                        html += `
+                            <div class="preview-item">
+                                <div class="preview-item-header">
+                                    <span class="preview-item-title">${escapeHtml(edu.degree)}</span>
+                                    <span class="preview-item-date">${escapeHtml(edu.graduationDate)}</span>
+                                </div>
+                                <div class="preview-item-subtitle">${escapeHtml(edu.school)}${edu.location ? ', ' + escapeHtml(edu.location) : ''}</div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+
+            if (data.skills && data.skills.length > 0) {
+                html += `
+                    <div class="section-title">Skills</div>
+                    <div class="preview-skills">
+                        ${data.skills.map(skill => `<span class="preview-skill">${escapeHtml(skill)}</span>`).join('')}
+                    </div>
+                `;
+            }
+
+            if (data.certifications && data.certifications.length > 0) {
+                html += `<div class="section-title">Certifications</div>`;
+                data.certifications.forEach(cert => {
+                    if (cert.name) {
+                        html += `
+                            <div class="preview-item">
+                                <div class="preview-item-header">
+                                    <span class="preview-item-title">${escapeHtml(cert.name)}</span>
+                                    <span class="preview-item-date">${escapeHtml(cert.date)}</span>
+                                </div>
+                                <div class="preview-item-subtitle">${escapeHtml(cert.issuer)}</div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+
+            if (data.projects && data.projects.length > 0) {
+                html += `<div class="section-title">Projects</div>`;
+                data.projects.forEach(proj => {
+                    if (proj.name) {
+                        html += `
+                            <div class="preview-item">
+                                <div class="preview-item-header">
+                                    <span class="preview-item-title">${escapeHtml(proj.name)}</span>
+                                    ${proj.technologies ? `<span class="preview-item-date">${escapeHtml(proj.technologies)}</span>` : ''}
+                                </div>
+                                ${proj.description ? `<div class="preview-item-description">${escapeHtml(proj.description)}</div>` : ''}
+                            </div>
+                        `;
+                    }
+                });
+            }
+
+            if (data.languages && data.languages.length > 0) {
+                html += `
+                    <div class="section-title">Languages</div>
+                    <div class="preview-languages">
+                        ${data.languages.map(lang => lang.language ? `<span class="preview-language">${escapeHtml(lang.language)} <em>(${escapeHtml(lang.proficiency)})</em></span>` : '').join('')}
+                    </div>
+                `;
+            }
+
+            if (data.awards && data.awards.length > 0) {
+                html += `<div class="section-title">Awards & Achievements</div>`;
+                data.awards.forEach(award => {
+                    if (award.title) {
+                        html += `
+                            <div class="preview-item">
+                                <div class="preview-item-header">
+                                    <span class="preview-item-title">${escapeHtml(award.title)}</span>
+                                    <span class="preview-item-date">${escapeHtml(award.date)}</span>
+                                </div>
+                                <div class="preview-item-subtitle">${escapeHtml(award.issuer)}</div>
+                            </div>
+                        `;
+                    }
+                });
+            }
+
+            frame.innerHTML = `<div class="resume-preview template-${template} bg-${background} font-${font} color-${color}">${html}</div>`;
+        }
+
+        function renderCoverLetter(data, frame, background, font, color) {
+            const formattedDate = data.clDate ? new Date(data.clDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+
+            let html = `
+                <div class="cover-letter-preview">
+                    <div class="letter-header">
+                        <div>${escapeHtml(data.clName || 'Name')}</div>
+                        ${data.clEmail ? `<div>${escapeHtml(data.clEmail)}</div>` : ''}
+                        ${data.clPhone ? `<div>${escapeHtml(data.clPhone)}</div>` : ''}
+                    </div>
+
+                    ${formattedDate ? `<div class="letter-date">${formattedDate}</div>` : ''}
+
+                    <div class="letter-recipient">
+                        ${data.clRecipient ? `<div>${escapeHtml(data.clRecipient)}</div>` : ''}
+                        ${data.clCompany ? `<div>${escapeHtml(data.clCompany)}</div>` : ''}
+                        ${data.clAddress ? `<div>${escapeHtml(data.clAddress)}</div>` : ''}
+                    </div>
+
+                    <div class="letter-greeting">Dear ${data.clRecipient ? escapeHtml(data.clRecipient) : 'Hiring Manager'},</div>
+
+                    <div class="letter-body">
+                        ${data.clOpening ? `<p>${escapeHtml(data.clOpening)}</p>` : ''}
+                        ${data.clBody ? `<p>${escapeHtml(data.clBody)}</p>` : ''}
+                        ${data.clClosing ? `<p>${escapeHtml(data.clClosing)}</p>` : ''}
+                    </div>
+
+                    <div class="letter-closing">Sincerely,</div>
+                    <div class="letter-signature">${escapeHtml(data.clName || 'Name')}</div>
+                </div>
+            `;
+
+            frame.innerHTML = `<div class="resume-preview bg-${background} font-${font} color-${color}">${html}</div>`;
+        }
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const element = document.querySelector('.resume-preview');
+            if (!element) return;
+
+            const opt = {
+                margin: 0.5,
+                filename: 'resume.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        });
+
+        // Load the resume on page load
+        loadResume();
+    </script>
+</body>
+</html>

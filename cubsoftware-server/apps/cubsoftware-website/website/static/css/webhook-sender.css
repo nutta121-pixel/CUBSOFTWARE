@@ -1,0 +1,432 @@
+/* Discord Webhook Sender */
+
+.ws-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 100px 20px 60px;
+}
+
+.ws-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.ws-header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+}
+
+.ws-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    max-width: 580px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Security Notice */
+.ws-security-notice {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 0.82rem;
+    color: #f59e0b;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+/* Webhook URL Section */
+.ws-url-section {
+    margin-bottom: 24px;
+}
+
+.ws-url-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.ws-url-input {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 0;
+}
+
+.ws-url-input:focus {
+    border-color: var(--primary-color);
+}
+
+.ws-webhook-info {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
+}
+
+.ws-webhook-info.show {
+    display: flex;
+}
+
+.ws-webhook-info.valid {
+    background: rgba(34, 197, 94, 0.08);
+    border-color: rgba(34, 197, 94, 0.25);
+    color: #22c55e;
+}
+
+.ws-webhook-info.invalid {
+    background: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.25);
+    color: #ef4444;
+}
+
+.ws-webhook-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* Workspace */
+.ws-workspace {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* Form */
+.ws-form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+/* Sections */
+.ws-section {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px 18px;
+}
+
+.ws-section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    border-left: 3px solid var(--primary-color);
+    padding-left: 8px;
+    display: block;
+}
+
+.ws-field-group {
+    margin-bottom: 12px;
+}
+
+.ws-field-group:last-child {
+    margin-bottom: 0;
+}
+
+.ws-field-group label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.ws-field-group input[type="text"],
+.ws-field-group textarea {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    padding: 9px 12px;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.2s;
+}
+
+.ws-field-group textarea {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+}
+
+.ws-field-group input:focus,
+.ws-field-group textarea:focus {
+    border-color: var(--primary-color);
+}
+
+.char-counter {
+    text-align: right;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    margin-top: 3px;
+}
+
+.optional-label {
+    font-weight: 400;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    opacity: 0.7;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* Embed toolbar */
+.ws-embed-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.ws-small-btn {
+    font-size: 0.78rem !important;
+    padding: 6px 12px !important;
+}
+
+/* JSON status */
+.ws-json-status {
+    font-size: 0.75rem;
+    margin-top: 4px;
+    padding: 2px 0;
+}
+
+.ws-json-status.valid {
+    color: #22c55e;
+}
+
+.ws-json-status.invalid {
+    color: #ef4444;
+}
+
+/* Advanced */
+.ws-advanced-title {
+    cursor: pointer;
+    margin-bottom: 0;
+    list-style: none;
+}
+
+.ws-advanced-title::-webkit-details-marker { display: none; }
+
+.ws-advanced-body {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ws-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.ws-toggle-label input[type="checkbox"] {
+    accent-color: var(--primary-color);
+    width: 15px;
+    height: 15px;
+}
+
+/* Send Button */
+.ws-send-btn {
+    width: 100%;
+    padding: 14px !important;
+    font-size: 1rem !important;
+    justify-content: center;
+    text-align: center;
+}
+
+/* Right panel */
+.ws-right {
+    width: 380px;
+    min-width: 340px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: sticky;
+    top: 90px;
+}
+
+/* Empty state */
+.ws-empty-state {
+    text-align: center;
+    padding: 24px 0;
+}
+
+.ws-empty-icon {
+    font-size: 2rem;
+    margin-bottom: 8px;
+}
+
+.ws-empty-state p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Response */
+.ws-response-content {
+    border-radius: 8px;
+    padding: 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    border: 1px solid transparent;
+}
+
+.ws-response-content.success {
+    background: rgba(34, 197, 94, 0.07);
+    border-color: rgba(34, 197, 94, 0.2);
+    color: #dcddde;
+}
+
+.ws-response-content.error {
+    background: rgba(239, 68, 68, 0.07);
+    border-color: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.ws-response-status {
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+}
+
+.ws-response-status.ok {
+    color: #22c55e;
+}
+
+.ws-response-status.err {
+    color: #ef4444;
+}
+
+/* History */
+.ws-history {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.ws-history-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.78rem;
+}
+
+.ws-history-badge {
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+    font-size: 0.7rem;
+}
+
+.ws-history-badge.ok {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+}
+
+.ws-history-badge.err {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+.ws-history-preview {
+    flex: 1;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ws-history-time {
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    white-space: nowrap;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--primary-color);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .ws-workspace {
+        flex-direction: column;
+    }
+
+    .ws-right {
+        width: 100%;
+        min-width: unset;
+        position: static;
+    }
+}
+
+@media (max-width: 600px) {
+    .ws-container {
+        padding: 80px 14px 40px;
+    }
+
+    .ws-url-row {
+        flex-direction: column;
+    }
+
+    .ws-url-input {
+        min-width: unset;
+    }
+}

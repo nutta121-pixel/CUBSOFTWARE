@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Text Tools - Word Counter, Case Converter & More | Free Online</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Count words in seconds. Convert text case instantly. Generate lorem ipsum on demand. 15+ text tools in one place - completely free, works offline.">
+    <meta name="keywords" content="word counter online, character counter, uppercase converter, lowercase converter, lorem ipsum generator, text tools free">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/text-tools">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Text Tools - Word Counter, Case Converter & More | Free">
+    <meta property="og:description" content="15+ text tools in one place. Count words, convert case, encode/decode text - all free, no signup needed.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/text-tools">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/text-tools.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="text-tools-container">
+            <div class="text-tools-header">
+                <h1>Text Tools</h1>
+                <p>Word counter, case converter, lorem ipsum generator, and text formatting utilities</p>
+            </div>
+
+            <div class="text-tools-main">
+                <!-- Left Column: Text Input -->
+                <div class="text-column input-column">
+                    <div class="column-header">
+                        <h3>Input Text</h3>
+                        <div class="input-actions">
+                            <button class="action-btn" id="pasteBtn" title="Paste from clipboard">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                                </svg>
+                            </button>
+                            <button class="action-btn" id="clearBtn" title="Clear text">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="inputText" placeholder="Type or paste your text here..."></textarea>
+
+                    <!-- Stats -->
+                    <div class="text-stats">
+                        <div class="stat-item">
+                            <span class="stat-value" id="charCount">0</span>
+                            <span class="stat-label">Characters</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="charNoSpaceCount">0</span>
+                            <span class="stat-label">No Spaces</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="wordCount">0</span>
+                            <span class="stat-label">Words</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="sentenceCount">0</span>
+                            <span class="stat-label">Sentences</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="paragraphCount">0</span>
+                            <span class="stat-label">Paragraphs</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="lineCount">0</span>
+                            <span class="stat-label">Lines</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Output -->
+                <div class="text-column output-column">
+                    <div class="column-header">
+                        <h3>Output Text</h3>
+                        <div class="output-actions">
+                            <button class="action-btn" id="copyBtn" title="Copy to clipboard">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                            </button>
+                            <button class="action-btn" id="downloadBtn" title="Download as text file">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="outputText" placeholder="Transformed text will appear here..." readonly></textarea>
+                </div>
+            </div>
+
+            <!-- Tools Section -->
+            <div class="tools-section">
+                <!-- Case Conversion -->
+                <div class="tool-group">
+                    <h3>Case Conversion</h3>
+                    <div class="tool-buttons">
+                        <button class="tool-btn" data-action="uppercase">UPPERCASE</button>
+                        <button class="tool-btn" data-action="lowercase">lowercase</button>
+                        <button class="tool-btn" data-action="titlecase">Title Case</button>
+                        <button class="tool-btn" data-action="sentencecase">Sentence case</button>
+                        <button class="tool-btn" data-action="togglecase">tOGGLE cASE</button>
+                        <button class="tool-btn" data-action="capitalizewords">Capitalize Words</button>
+                    </div>
+                </div>
+
+                <!-- Text Formatting -->
+                <div class="tool-group">
+                    <h3>Text Formatting</h3>
+                    <div class="tool-buttons">
+                        <button class="tool-btn" data-action="removeextraspaces">Remove Extra Spaces</button>
+                        <button class="tool-btn" data-action="removelinebreaks">Remove Line Breaks</button>
+                        <button class="tool-btn" data-action="addlinenumbers">Add Line Numbers</button>
+                        <button class="tool-btn" data-action="removelinenumbers">Remove Line Numbers</button>
+                        <button class="tool-btn" data-action="trimlines">Trim Lines</button>
+                        <button class="tool-btn" data-action="removeemptylines">Remove Empty Lines</button>
+                    </div>
+                </div>
+
+                <!-- Text Manipulation -->
+                <div class="tool-group">
+                    <h3>Text Manipulation</h3>
+                    <div class="tool-buttons">
+                        <button class="tool-btn" data-action="reversetext">Reverse Text</button>
+                        <button class="tool-btn" data-action="reverselines">Reverse Lines</button>
+                        <button class="tool-btn" data-action="sortlines">Sort Lines A-Z</button>
+                        <button class="tool-btn" data-action="sortlinesdesc">Sort Lines Z-A</button>
+                        <button class="tool-btn" data-action="shufflelines">Shuffle Lines</button>
+                        <button class="tool-btn" data-action="removeduplicates">Remove Duplicates</button>
+                    </div>
+                </div>
+
+                <!-- Encode/Decode -->
+                <div class="tool-group">
+                    <h3>Encode / Decode</h3>
+                    <div class="tool-buttons">
+                        <button class="tool-btn" data-action="encodeurl">URL Encode</button>
+                        <button class="tool-btn" data-action="decodeurl">URL Decode</button>
+                        <button class="tool-btn" data-action="encodebase64">Base64 Encode</button>
+                        <button class="tool-btn" data-action="decodebase64">Base64 Decode</button>
+                        <button class="tool-btn" data-action="encodehtmlentities">HTML Encode</button>
+                        <button class="tool-btn" data-action="decodehtmlentities">HTML Decode</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Find & Replace -->
+            <div class="find-replace-section">
+                <h3>Find & Replace</h3>
+                <div class="find-replace-controls">
+                    <div class="find-replace-inputs">
+                        <input type="text" id="findText" placeholder="Find...">
+                        <input type="text" id="replaceText" placeholder="Replace with...">
+                    </div>
+                    <div class="find-replace-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="caseSensitive">
+                            <span class="checkbox-custom">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </span>
+                            Case Sensitive
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="useRegex">
+                            <span class="checkbox-custom">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </span>
+                            Use Regex
+                        </label>
+                    </div>
+                    <button class="replace-btn" id="replaceAllBtn">Replace All</button>
+                </div>
+            </div>
+
+            <!-- Lorem Ipsum Generator -->
+            <div class="lorem-section">
+                <h3>Lorem Ipsum Generator</h3>
+                <div class="lorem-controls">
+                    <div class="lorem-input-group">
+                        <label for="loremCount">Generate</label>
+                        <input type="number" id="loremCount" value="3" min="1" max="100">
+                        <select id="loremType">
+                            <option value="paragraphs">Paragraphs</option>
+                            <option value="sentences">Sentences</option>
+                            <option value="words">Words</option>
+                        </select>
+                    </div>
+                    <button class="generate-btn" id="generateLorem">Generate Lorem Ipsum</button>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <script src="/static/js/text-tools.js?v={{ v }}"></script>
+</body>
+</html>

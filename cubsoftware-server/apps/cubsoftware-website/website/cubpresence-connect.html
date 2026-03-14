@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>CubPresence - Connected | CUB SOFTWARE</title>
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/cubpresence.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        <main class="connect-main">
+            <div class="connect-card">
+                <div class="connect-status-icon connecting" id="statusIcon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="40" height="40">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                </div>
+
+                <h2 class="connect-status-text" id="statusText">Connecting...</h2>
+                <p class="connect-status-detail" id="statusDetail">Looking for Discord on your machine.</p>
+
+                <div class="connect-presence-info" id="presenceInfo" style="display:none;">
+                    <div class="label">Details</div>
+                    <div class="value" id="infoDetails">—</div>
+                    <div class="label">State</div>
+                    <div class="value" id="infoState">—</div>
+                </div>
+
+                <div id="actionButtons">
+                    <button class="btn-disconnect" id="disconnectBtn" onclick="disconnect()" style="display:none;">Disconnect</button>
+                    <button class="btn-reconnect" id="reconnectBtn" onclick="reconnect()" style="display:none;">Reconnect</button>
+                </div>
+
+                <div class="connect-log">
+                    <h4>Connection Log</h4>
+                    <div class="connect-log-entries" id="logEntries"></div>
+                </div>
+
+                <p style="margin-top:1.5rem;"><a href="/apps/cubpresence?config={{ config_id }}" style="color:var(--accent-blue);">&larr; Back to Editor</a></p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const CONFIG_ID = {{ config_id | tojson }};
+        const CONFIG = {{ config | tojson }};
+    </script>
+    <script src="/static/js/cubpresence-connect.js?v={{ v }}"></script>
+</body>
+</html>

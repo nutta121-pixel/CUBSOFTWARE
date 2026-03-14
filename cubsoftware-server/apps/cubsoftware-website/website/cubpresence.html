@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>CubPresence - Discord Custom Rich Presence | CUB SOFTWARE</title>
+    <meta name="description" content="Set your Discord Rich Presence from the browser. Custom activity, images, buttons — no software download needed.">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/cubpresence.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <main class="cubpresence-main">
+            <div class="container">
+                <!-- Hero Section -->
+                <div class="cubpresence-hero">
+                    <h1><span class="gradient-text">CubPresence</span></h1>
+                    <p class="hero-subtitle">Discord Custom Rich Presence</p>
+                    <p class="hero-description">Set your Discord activity status from the browser. Custom images, buttons, timestamps — no software download needed. Just keep the tab open.</p>
+                </div>
+
+                <div id="statusMessage" class="status-message"></div>
+
+                {% if not config %}
+                <!-- Setup Section (no config loaded) -->
+                <div class="setup-section" id="setupSection">
+                    <div class="setup-card">
+                        <h2>Getting Started</h2>
+                        <ol class="setup-steps">
+                            <li>
+                                <span class="step-num">1</span>
+                                <span>Go to the <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a> and create a new Application. The application name will be displayed as your activity name.</span>
+                            </li>
+                            <li>
+                                <span class="step-num">2</span>
+                                <span>Copy your <strong>Application ID</strong> from the General Information page.</span>
+                            </li>
+                            <li>
+                                <span class="step-num">3</span>
+                                <span>(Optional) Go to <strong>Rich Presence &gt; Art Assets</strong> in the developer portal and upload images you want to use.</span>
+                            </li>
+                            <li>
+                                <span class="step-num">4</span>
+                                <span>Paste your Application ID below and click Create Presence.</span>
+                            </li>
+                        </ol>
+
+                        <div class="app-id-form">
+                            <div class="input-group">
+                                <label for="appIdInput">Discord Application ID</label>
+                                <input type="text" id="appIdInput" placeholder="e.g. 1234567890123456789" autocomplete="off" spellcheck="false">
+                            </div>
+                            <button class="btn-create" id="createBtn" onclick="createConfig()">Create Presence</button>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Config Editor -->
+                <div class="config-layout" id="configEditor">
+                    <div class="config-panel">
+                        <h2>Configure Presence</h2>
+
+                        <!-- Application ID -->
+                        <div class="config-section">
+                            <h3>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                                Application
+                            </h3>
+                            <div class="field-group">
+                                <label for="clientIdField">Application ID</label>
+                                <input type="text" id="clientIdField" value="{{ config.client_id }}" placeholder="Discord Application ID">
+                                <p class="field-hint">The application name on Discord becomes your activity title.</p>
+                            </div>
+                        </div>
+
+                        <!-- Details & State -->
+                        <div class="config-section">
+                            <h3>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                Activity Text
+                            </h3>
+                            <div class="field-group">
+                                <label for="detailsField">Details (Line 1)</label>
+                                <input type="text" id="detailsField" value="{{ config.presence.details }}" placeholder="e.g. Playing a custom game" maxlength="128">
+                            </div>
+                            <div class="field-group">
+                                <label for="stateField">State (Line 2)</label>
+                                <input type="text" id="stateField" value="{{ config.presence.state }}" placeholder="e.g. In the main menu" maxlength="128">
+                            </div>
+                        </div>
+
+                        <!-- Timestamps -->
+                        <div class="config-section">
+                            <h3>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Timestamps
+                            </h3>
+                            <div class="timestamp-options">
+                                <label class="timestamp-option {% if config.presence.timestamps_type == 'none' %}active{% endif %}">
+                                    <input type="radio" name="timestampType" value="none" {% if config.presence.timestamps_type == 'none' %}checked{% endif %}> None
+                                </label>
+                                <label class="timestamp-option {% if config.presence.timestamps_type == 'elapsed' %}active{% endif %}">
+                                    <input type="radio" name="timestampType" value="elapsed" {% if config.presence.timestamps_type == 'elapsed' %}checked{% endif %}> Elapsed
+                                </label>
+                                <label class="timestamp-option {% if config.presence.timestamps_type == 'countdown' %}active{% endif %}">
+                                    <input type="radio" name="timestampType" value="countdown" {% if config.presence.timestamps_type == 'countdown' %}checked{% endif %}> Countdown
+                                </label>
+                                <label class="timestamp-option {% if config.presence.timestamps_type == 'custom' %}active{% endif %}">
+                                    <input type="radio" name="timestampType" value="custom" {% if config.presence.timestamps_type == 'custom' %}checked{% endif %}> Custom
+                                </label>
+                            </div>
+                            <div class="timestamp-fields" id="timestampCustomFields">
+                                <div class="field-row">
+                                    <div class="field-group">
+                                        <label for="startTimestamp">Start (Unix epoch)</label>
+                                        <input type="number" id="startTimestamp" value="{{ config.presence.start_timestamp or '' }}" placeholder="e.g. 1700000000">
+                                    </div>
+                                    <div class="field-group">
+                                        <label for="endTimestamp">End (Unix epoch)</label>
+                                        <input type="number" id="endTimestamp" value="{{ config.presence.end_timestamp or '' }}" placeholder="e.g. 1700003600">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Images -->
+                        <div class="config-section">
+                            <h3>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                Images
+                            </h3>
+                            <p class="field-hint" style="margin-bottom: 1rem;">Image keys must match assets uploaded to your Discord Application's Rich Presence Art Assets. You can also use a full URL to an image.</p>
+                            <div class="field-row">
+                                <div class="field-group">
+                                    <label for="largeImageKey">Large Image Key</label>
+                                    <input type="text" id="largeImageKey" value="{{ config.presence.large_image_key }}" placeholder="Asset key or URL">
+                                </div>
+                                <div class="field-group">
+                                    <label for="largeImageText">Large Image Tooltip</label>
+                                    <input type="text" id="largeImageText" value="{{ config.presence.large_image_text }}" placeholder="Hover text" maxlength="128">
+                                </div>
+                            </div>
+                            <div class="field-row">
+                                <div class="field-group">
+                                    <label for="smallImageKey">Small Image Key</label>
+                                    <input type="text" id="smallImageKey" value="{{ config.presence.small_image_key }}" placeholder="Asset key or URL">
+                                </div>
+                                <div class="field-group">
+                                    <label for="smallImageText">Small Image Tooltip</label>
+                                    <input type="text" id="smallImageText" value="{{ config.presence.small_image_text }}" placeholder="Hover text" maxlength="128">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="config-section">
+                            <h3>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12h6"/></svg>
+                                Buttons
+                            </h3>
+                            <p class="field-hint" style="margin-bottom: 1rem;">Up to 2 buttons. You cannot click your own buttons — they only appear to other users viewing your profile.</p>
+                            <div class="button-pair">
+                                <div class="field-group">
+                                    <label for="btn1Label">Button 1 Label</label>
+                                    <input type="text" id="btn1Label" value="{{ config.presence.button1_label }}" placeholder="e.g. Join Game" maxlength="32">
+                                </div>
+                                <div class="field-group">
+                                    <label for="btn1Url">Button 1 URL</label>
+                                    <input type="url" id="btn1Url" value="{{ config.presence.button1_url }}" placeholder="https://...">
+                                </div>
+                            </div>
+                            <div class="button-pair">
+                                <div class="field-group">
+                                    <label for="btn2Label">Button 2 Label</label>
+                                    <input type="text" id="btn2Label" value="{{ config.presence.button2_label }}" placeholder="e.g. Website" maxlength="32">
+                                </div>
+                                <div class="field-group">
+                                    <label for="btn2Url">Button 2 URL</label>
+                                    <input type="url" id="btn2Url" value="{{ config.presence.button2_url }}" placeholder="https://...">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Party (optional) -->
+                        <div class="config-section">
+                            <h3>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                Party (Optional)
+                            </h3>
+                            <div class="field-row">
+                                <div class="field-group">
+                                    <label for="partySize">Party Size</label>
+                                    <input type="number" id="partySize" value="{{ config.presence.party_size or '' }}" placeholder="e.g. 2" min="0">
+                                </div>
+                                <div class="field-group">
+                                    <label for="partyMax">Party Max</label>
+                                    <input type="number" id="partyMax" value="{{ config.presence.party_max or '' }}" placeholder="e.g. 5" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="config-actions">
+                            <button class="btn-save" id="saveBtn" onclick="saveConfig()">Save Changes</button>
+                            <button class="btn-connect" id="connectBtn" onclick="connectViaExtension()">
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z"/></svg>
+                                Connect to Discord
+                            </button>
+                            <button class="btn-disconnect" id="disconnectBtn" onclick="disconnectViaExtension()" style="display: none;">Disconnect</button>
+                            <button class="btn-delete" onclick="deleteConfig()">Delete Config</button>
+                        </div>
+
+                        <!-- Extension Status -->
+                        <div class="extension-status" id="extensionStatus">
+                            <div class="extension-status-dot" id="extStatusDot"></div>
+                            <span id="extStatusText">Checking for extension...</span>
+                        </div>
+
+                        <!-- App Install Prompt -->
+                        <div class="extension-install" id="extensionInstall" style="display: none;">
+                            <div class="extension-install-content">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                                <div>
+                                    <strong>Desktop App Required</strong>
+                                    <p>Download the CubPresence app to connect to Discord.</p>
+                                </div>
+                                <a href="/apps/cubpresence/download" class="btn-install-ext">Download App</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Preview Panel -->
+                    <div class="preview-panel">
+                        <div class="preview-card">
+                            <h3>Live Preview</h3>
+                            <div class="discord-preview" id="discordPreview">
+                                <div class="preview-header">Playing a game</div>
+                                <div class="preview-body">
+                                    <div class="preview-images" id="previewImages">
+                                        <div class="preview-large-image" id="previewLargeImg">
+                                            <span class="placeholder-icon">
+                                                <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><polyline points="21 15 16 10 5 21" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                                            </span>
+                                        </div>
+                                        <div class="preview-small-image" id="previewSmallImg" style="display:none;"></div>
+                                    </div>
+                                    <div class="preview-info">
+                                        <div class="preview-app-name" id="previewAppName">Your App Name</div>
+                                        <div class="preview-details" id="previewDetails"></div>
+                                        <div class="preview-state" id="previewState"></div>
+                                        <div class="preview-timestamp" id="previewTimestamp"></div>
+                                    </div>
+                                </div>
+                                <div class="preview-buttons" id="previewButtons" style="display:none;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Share Link -->
+                        <div class="share-section">
+                            <h3>Quick Access Link</h3>
+                            <p class="field-hint" style="margin-bottom: 0.75rem;">Bookmark this link to quickly access and reconnect your presence.</p>
+                            <div class="share-url">
+                                <input type="text" id="shareUrl" value="" readonly>
+                                <button class="btn-copy" onclick="copyShareUrl()">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </main>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <script>
+        const CONFIG_ID = {{ config_id | tojson if config_id else 'null' }};
+        const CONFIG = {{ config | tojson if config else 'null' }};
+    </script>
+    <script src="/static/js/cubpresence.js?v={{ v }}"></script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Wheel Spinner - Free Customizable Spinning Wheel | CUB SOFTWARE</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Free spinning wheel for giveaways, decisions, and games. Custom colors, themes, sounds, shareable links. No signup required.">
+    <meta name="keywords" content="wheel spinner, spinning wheel, random picker, giveaway wheel, name picker, decision wheel, free wheel spinner">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/wheel-spinner">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Wheel Spinner - Free Customizable Spinning Wheel | CUB SOFTWARE">
+    <meta property="og:description" content="Free spinning wheel for giveaways, decisions, and games. Custom themes, sounds, and shareable links.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/wheel-spinner">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+    <meta property="og:image" content="https://cubsoftware.site/static/images/company-logo.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/wheel-spinner.css?v={{ v }}">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <span class="logo-text">
+                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                </span>
+            </a>
+            <nav class="site-nav" id="siteNav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/#apps" class="nav-link">Tools</a>
+                <div class="nav-dropdown">
+                    <button class="nav-link dropdown-toggle">
+                        Our Bots
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="https://questcord.fun" target="_blank">QuestCord</a>
+                        <a href="/cleanme">CleanMe</a>
+                    </div>
+                </div>
+                <a href="/contact" class="nav-link">Contact</a>
+            </nav>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="wheel-container">
+        <!-- Left Panel - Entries -->
+        <aside class="entries-panel">
+            <div class="panel-header">
+                <h2>Entries</h2>
+                <span class="entry-count">0 entries</span>
+            </div>
+
+            <div class="entries-input-section">
+                <textarea id="entriesInput" placeholder="Enter names/items (one per line)&#10;&#10;Example:&#10;Pizza&#10;Burger&#10;Tacos&#10;Sushi"></textarea>
+                <div class="entries-actions">
+                    <button id="addEntriesBtn" class="btn btn-primary">Add Entries</button>
+                    <button id="clearEntriesBtn" class="btn btn-secondary">Clear All</button>
+                </div>
+            </div>
+
+            <div class="entries-list" id="entriesList">
+                <!-- Entries will be added here -->
+            </div>
+
+            <div class="import-export">
+                <button id="importBtn" class="btn btn-small">Import CSV</button>
+                <button id="exportBtn" class="btn btn-small">Export</button>
+                <input type="file" id="csvInput" accept=".csv,.txt" style="display:none">
+            </div>
+        </aside>
+
+        <!-- Center - Wheel -->
+        <section class="wheel-section">
+            <div class="wheel-wrapper">
+                <div class="wheel-pointer"></div>
+                <canvas id="wheelCanvas" width="800" height="800"></canvas>
+            </div>
+
+            <button id="spinBtn" class="spin-button">SPIN</button>
+
+            <div class="wheel-controls">
+                <button id="fullscreenBtn" class="btn btn-icon" title="Fullscreen">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+                    </svg>
+                </button>
+                <button id="soundBtn" class="btn btn-icon active" title="Sound">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                </button>
+            </div>
+        </section>
+
+        <!-- Right Panel - Settings & Results -->
+        <aside class="settings-panel">
+            <div class="panel-section">
+                <h3>Winner</h3>
+                <div id="winnerDisplay" class="winner-display">
+                    <span class="winner-placeholder">Spin the wheel!</span>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>Settings</h3>
+
+                <div class="setting-group">
+                    <label>Theme (50 options)</label>
+                    <select id="themeSelect">
+                        <option value="default">Default</option>
+                        <option value="neon">Neon</option>
+                        <option value="pastel">Pastel</option>
+                        <option value="rainbow">Rainbow</option>
+                        <option value="monochrome">Monochrome</option>
+                        <option value="sunset">Sunset</option>
+                        <option value="ocean">Ocean</option>
+                        <option value="forest">Forest</option>
+                        <option value="candy">Candy</option>
+                        <option value="retro">Retro</option>
+                        <option value="cyberpunk">Cyberpunk</option>
+                        <option value="autumn">Autumn</option>
+                        <option value="winter">Winter</option>
+                        <option value="spring">Spring</option>
+                        <option value="halloween">Halloween</option>
+                        <option value="christmas">Christmas</option>
+                        <option value="galaxy">Galaxy</option>
+                        <option value="fire">Fire</option>
+                        <option value="ice">Ice</option>
+                        <option value="earth">Earth</option>
+                        <option value="berry">Berry</option>
+                        <option value="tropical">Tropical</option>
+                        <option value="lavender">Lavender</option>
+                        <option value="gold">Gold</option>
+                        <option value="midnight">Midnight</option>
+                        <option value="bubblegum">Bubblegum</option>
+                        <option value="mint">Mint</option>
+                        <option value="coffee">Coffee</option>
+                        <option value="wine">Wine</option>
+                        <option value="slate">Slate</option>
+                        <option value="royal">Royal</option>
+                        <option value="coral">Coral</option>
+                        <option value="jungle">Jungle</option>
+                        <option value="desert">Desert</option>
+                        <option value="aurora">Aurora</option>
+                        <option value="vintage">Vintage</option>
+                        <option value="electric">Electric</option>
+                        <option value="peach">Peach</option>
+                        <option value="moss">Moss</option>
+                        <option value="plum">Plum</option>
+                        <option value="sahara">Sahara</option>
+                        <option value="arctic">Arctic</option>
+                        <option value="volcanic">Volcanic</option>
+                        <option value="meadow">Meadow</option>
+                        <option value="dusk">Dusk</option>
+                        <option value="cherry">Cherry</option>
+                        <option value="steel">Steel</option>
+                        <option value="tangerine">Tangerine</option>
+                        <option value="sapphire">Sapphire</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label>Spin Duration</label>
+                    <select id="durationSelect">
+                        <option value="3">Fast (3s)</option>
+                        <option value="5" selected>Normal (5s)</option>
+                        <option value="8">Slow (8s)</option>
+                        <option value="12">Very Slow (12s)</option>
+                    </select>
+                </div>
+
+                <div class="toggle-buttons">
+                    <button type="button" id="eliminateWinner" class="toggle-btn">
+                        Remove Winner
+                    </button>
+                    <button type="button" id="confettiEnabled" class="toggle-btn active">
+                        Confetti
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>History</h3>
+                <div id="historyList" class="history-list">
+                    <span class="history-placeholder">No spins yet</span>
+                </div>
+                <button id="clearHistoryBtn" class="btn btn-small btn-secondary">Clear History</button>
+            </div>
+
+            <div class="panel-section">
+                <h3>Share</h3>
+                <div class="share-actions">
+                    <button id="copyLinkBtn" class="btn btn-primary">Copy Link</button>
+                    <button id="embedBtn" class="btn btn-secondary">Get Embed Code</button>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Confetti Canvas -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Winner Modal -->
+    <div id="winnerModal" class="modal">
+        <div class="modal-content winner-modal">
+            <button class="modal-close" onclick="closeWinnerModal()">&times;</button>
+            <div class="winner-celebration">
+                <h2>Winner!</h2>
+                <div id="modalWinnerName" class="modal-winner-name"></div>
+                <button class="btn btn-primary" onclick="closeWinnerModal()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Embed Modal -->
+    <div id="embedModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeEmbedModal()">&times;</button>
+            <h2>Embed Code</h2>
+            <p>Copy this code to embed the wheel on your website:</p>
+            <textarea id="embedCode" readonly></textarea>
+            <button class="btn btn-primary" onclick="copyEmbedCode()">Copy Code</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-text">
+                &copy; 2026 CUB SOFTWARE. Made with love by
+                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/status">Status</a>
+                <a href="/terms">Terms</a>
+                <a href="/privacy">Privacy</a>
+                <a href="/copyright">Copyright</a>
+                <a href="/report">Report Issue</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/wheel-spinner.js?v={{ v }}"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const nav = document.getElementById('siteNav');
+        if (mobileBtn && nav) {
+            mobileBtn.addEventListener('click', function() {
+                nav.classList.toggle('active');
+                mobileBtn.classList.toggle('active');
+            });
+        }
+        document.querySelectorAll('.dropdown-toggle').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    this.parentElement.classList.toggle('active');
+                }
+            });
+        });
+    });
+    </script>
+</body>
+</html>

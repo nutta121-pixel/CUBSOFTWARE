@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#9147ff">
+    <title>Multi-Twitch - Watch Multiple Streams | CUB SOFTWARE</title>
+    <meta name="description" content="Watch up to 4 Twitch streams at once with live chat. Free multi-stream viewer with no signup required.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/multi-twitch">
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/multi-twitch.css?v={{ v }}">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main class="twitch-main">
+        <!-- Top bar -->
+        <div class="twitch-topbar">
+
+            <!-- Row 1: Centered title -->
+            <div class="topbar-title-row">
+                <h1 class="topbar-hero-title"><span class="topbar-gradient-text">Multi Twitch Player</span></h1>
+            </div>
+
+            <!-- Row 2: Controls — channel left | hide chats center | auth right -->
+            <div class="topbar-controls">
+
+                <!-- Left: Channel input + tags -->
+                <div class="topbar-channel-section">
+                    <div class="add-channel-form">
+                        <svg class="twitch-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
+                        </svg>
+                        <input type="text" id="channelInput" placeholder="Enter Twitch username..." maxlength="25" autocomplete="off" spellcheck="false">
+                        <button id="addChannelBtn" class="btn-add">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Add Stream
+                        </button>
+                    </div>
+                    <div class="channel-tags" id="channelTags"></div>
+                </div>
+
+                <!-- Center: Hide Chats injected here by JS -->
+                <div class="topbar-center"></div>
+
+                <!-- Right: Auth -->
+                <div class="twitch-auth-area" id="twitchAuthArea">
+                    <div class="auth-logged-out" id="authLoggedOut">
+                        <svg class="auth-twitch-icon" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
+                        </svg>
+                        <div class="auth-text">
+                            <span class="auth-title">Not logged in</span>
+                            <span class="auth-hint">Login to send messages</span>
+                        </div>
+                        <button class="btn-twitch-login" id="twitchLoginBtn">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+                            Login with Twitch
+                        </button>
+                    </div>
+                    <div class="auth-logged-in" id="authLoggedIn" style="display:none">
+                        <img class="auth-avatar" id="authAvatar" src="" alt="">
+                        <div class="auth-text">
+                            <span class="auth-title">Chatting as</span>
+                            <span class="auth-username" id="authUsername"></span>
+                        </div>
+                        <button class="btn-logout" id="twitchLogoutBtn">Logout</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Streams grid -->
+        <div class="streams-grid" id="streamsGrid">
+            <div class="empty-state" id="emptyState">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                <h2>No streams added yet</h2>
+                <p>Enter a Twitch username above to start watching</p>
+            </div>
+        </div>
+    </main>
+
+    {% include 'footer.html' %}
+
+    <script src="https://player.twitch.tv/js/embed/v1.js"></script>
+    <script>
+        window.TWITCH_CLIENT_ID = "{{ twitch_client_id }}";
+        window.TWITCH_REDIRECT_URI = "{{ twitch_redirect_uri }}";
+    </script>
+    <script src="/static/js/multi-twitch.js?v={{ v }}"></script>
+</body>
+</html>

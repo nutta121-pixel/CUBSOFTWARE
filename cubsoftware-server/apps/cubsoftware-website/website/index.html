@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>CUB SOFTWARE - Free Online Tools That Actually Work</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Stop paying for tools that should be free. Download from TikTok, Instagram, Twitter in seconds. Convert files, edit PDFs, generate QR codes - all 100% free, no signup required.">
+    <meta name="keywords" content="free online tools, TikTok downloader, Instagram downloader, PDF tools, image converter, QR generator, no signup, no ads">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Free Online Tools That Actually Work | CUB SOFTWARE">
+    <meta property="og:description" content="No signup. No ads. No BS. Download social media content, convert files, edit PDFs - all free. Your data never leaves your browser.">
+    <meta property="og:url" content="https://cubsoftware.site">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+    <meta property="og:image" content="https://cubsoftware.site/static/images/company-logo.png">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Free Online Tools That Actually Work | CUB SOFTWARE">
+    <meta name="twitter:description" content="No signup. No ads. No BS. Download social media, convert files, edit PDFs - 100% free.">
+    <meta name="twitter:image" content="https://cubsoftware.site/static/images/company-logo.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/index.css?v={{ v }}">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="header-container">
+            <a href="/" class="logo">
+                <span class="logo-text">
+                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                </span>
+            </a>
+            <nav class="site-nav" id="siteNav">
+                <a href="/" class="nav-link active">Home</a>
+                <a href="#apps" class="nav-link">Tools</a>
+                <div class="nav-dropdown">
+                    <button class="nav-link dropdown-toggle">
+                        Our Bots
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a href="https://questcord.fun" target="_blank">QuestCord</a>
+                        <a href="/cleanme">CleanMe</a>
+                        <a href="/cub-protector">CUB PROTECTOR</a>
+                    </div>
+                </div>
+                <a href="/contact" class="nav-link">Contact</a>
+            </nav>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Buy Me a Coffee Banner -->
+    <div class="bmac-banner" id="bmacBanner">
+        <div class="bmac-banner-content">
+            <span class="bmac-emoji">☕</span>
+            <p>Enjoying CUB SOFTWARE? <a href="https://buymeacoffee.com/cubsoftware" target="_blank" rel="noopener">Buy us a coffee</a> — it keeps everything free and directly supports the developers!</p>
+            <button class="bmac-banner-close" id="bmacBannerClose" aria-label="Dismiss">&times;</button>
+        </div>
+    </div>
+
+    <!-- Beta Banner -->
+    <div class="beta-banner" id="betaBanner">
+        <div class="beta-banner-content">
+            <svg class="beta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <p><strong>BETA:</strong> Some features may not work as intended. <a href="/report">Report issues here</a>.</p>
+            <button class="beta-banner-close" id="betaBannerClose" aria-label="Dismiss">&times;</button>
+        </div>
+    </div>
+
+    <script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        const nav = document.getElementById('siteNav');
+        if (mobileBtn && nav) {
+            mobileBtn.addEventListener('click', function() {
+                nav.classList.toggle('active');
+                mobileBtn.classList.toggle('active');
+            });
+        }
+        document.querySelectorAll('.dropdown-toggle').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    e.preventDefault();
+                    this.parentElement.classList.toggle('active');
+                }
+            });
+        });
+
+        // Beta banner dismiss (uses sessionStorage so it reappears on new sessions)
+        const betaBanner = document.getElementById('betaBanner');
+        const betaCloseBtn = document.getElementById('betaBannerClose');
+        if (betaBanner && betaCloseBtn) {
+            if (sessionStorage.getItem('betaBannerDismissed') === 'true') {
+                betaBanner.style.display = 'none';
+            }
+            betaCloseBtn.addEventListener('click', function() {
+                betaBanner.style.display = 'none';
+                sessionStorage.setItem('betaBannerDismissed', 'true');
+            });
+        }
+
+        // BMaC banner dismiss (sessionStorage — reappears on new tab/session)
+        const bmacBanner = document.getElementById('bmacBanner');
+        const bmacCloseBtn = document.getElementById('bmacBannerClose');
+        if (bmacBanner && bmacCloseBtn) {
+            if (sessionStorage.getItem('bmacBannerDismissed') === 'true') {
+                bmacBanner.style.display = 'none';
+            }
+            bmacCloseBtn.addEventListener('click', function() {
+                bmacBanner.style.display = 'none';
+                sessionStorage.setItem('bmacBannerDismissed', 'true');
+            });
+        }
+
+        // Supporter stickers — fetch last 5 donors and float them around the hero
+        (function loadSupporterStickers() {
+            const container = document.getElementById('supporterStickers');
+            if (!container) return;
+
+            // Preset positions (avoid center where text lives)
+            const POSITIONS = [
+                { top: '12%',  left: '4%',   tilt: '-3deg', dur: '4.2s', delay: '0s'   },
+                { top: '10%',  right: '4%',  tilt: '2deg',  dur: '3.8s', delay: '0.7s' },
+                { bottom: '18%', left: '4%', tilt: '3deg',  dur: '4.5s', delay: '1.4s' },
+                { bottom: '16%', right: '4%',tilt: '-2deg', dur: '3.6s', delay: '0.3s' },
+                { top: '50%',  left: '2%',   tilt: '-1deg', dur: '5s',   delay: '1s'   },
+            ];
+
+            fetch('/api/bmac/supporters')
+                .then(function(r) { return r.ok ? r.json() : []; })
+                .then(function(supporters) {
+                    if (!supporters || supporters.length === 0) return;
+                    supporters.slice(0, POSITIONS.length).forEach(function(s, i) {
+                        const pos = POSITIONS[i];
+                        const el = document.createElement('div');
+                        el.className = 'supporter-sticker';
+                        el.title = s.note ? s.note : 'Thank you!';
+                        el.style.setProperty('--float-duration', pos.dur);
+                        el.style.setProperty('--float-delay', pos.delay);
+                        el.style.setProperty('--float-tilt', pos.tilt);
+                        if (pos.top)    el.style.top    = pos.top;
+                        if (pos.bottom) el.style.bottom = pos.bottom;
+                        if (pos.left)   el.style.left   = pos.left;
+                        if (pos.right)  el.style.right  = pos.right;
+
+                        const coffeeCount = s.coffees > 1 ? ' ×' + s.coffees : '';
+                        el.innerHTML =
+                            '<span class="sticker-coffee">☕</span>' +
+                            '<span class="sticker-name">' + escapeHtml(s.name) + '</span>' +
+                            (coffeeCount ? '<span class="sticker-count">' + coffeeCount + '</span>' : '');
+                        container.appendChild(el);
+                        // Fade in with slight stagger
+                        setTimeout(function() { el.classList.add('visible'); }, 200 + i * 150);
+                    });
+                })
+                .catch(function() { /* silently ignore if API unavailable */ });
+
+            function escapeHtml(str) {
+                return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            }
+        })();
+    });
+    </script>
+
+    <!-- Hero Section -->
+    <div class="hero">
+        <!-- Supporter stickers — float around the hero, not below text -->
+        <div class="supporter-stickers" id="supporterStickers" aria-hidden="true"></div>
+        <div class="container">
+            <h1 class="hero-tagline">No Signup. No Ads. No Limits.</h1>
+            <p class="hero-description">CUB PROTECTOR protects your server. CleanMe keeps it clean. QuestCord makes it an adventure. Built by CUB SOFTWARE, free forever — no accounts, no ads, no catches.</p>
+        </div>
+    </div>
+
+    <!-- Apps Section -->
+    <div id="apps" class="about-section">
+        <div class="container">
+            <h2 class="section-title">Our Software</h2>
+            <p class="section-description">Discord bots and free tools built to make your server and workflow better — no subscriptions, no paywalls, just software that works.</p>
+
+            <!-- Our Bots -->
+            <div class="category-section">
+                <h3 class="category-title">Our Bots</h3>
+                <div class="features-grid">
+                    <a href="/cub-protector" class="feature-card feature-card-link">
+                        <h3>CUB PROTECTOR</h3>
+                        <p>All-in-one Discord moderation bot. Auto-mod, logging, leveling, economy, welcome messages, and more.</p>
+                        <span class="feature-badge">Add to Discord</span>
+                    </a>
+                    <a href="/cleanme" class="feature-card feature-card-link">
+                        <h3>CleanMe</h3>
+                        <p>Keep your Discord server clean. Bulk delete messages, auto-purge old content, and manage channels effortlessly.</p>
+                        <span class="feature-badge">Add to Discord</span>
+                    </a>
+                    <a href="https://questcord.fun" target="_blank" class="feature-card feature-card-link">
+                        <h3>QuestCord</h3>
+                        <p>A Discord RPG bot where you complete quests, defeat bosses, and climb the leaderboard.</p>
+                        <span class="feature-badge">Play Now</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Streaming Tools -->
+            <div class="category-section">
+                <h3 class="category-title">Streaming Tools</h3>
+                <div class="features-grid features-grid-4col">
+                    <a href="/affiliate" class="feature-card feature-card-link">
+                        <h3>Affiliate Program</h3>
+                        <p>Streamers &mdash; share your unique link and earn commissions for every unique visitor you refer to CUB SOFTWARE.</p>
+                        <span class="feature-badge">Early Access</span>
+                    </a>
+                    <a href="/overlays" class="feature-card feature-card-link">
+                        <h3>Stream Overlay Builder</h3>
+                        <p>Free animated OBS overlays &mdash; Starting Soon, BRB, Ending screens and more. Live Twitch alerts built in. Updates in OBS the moment you save.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/multi-twitch" class="feature-card feature-card-link">
+                        <h3>Multi-Twitch</h3>
+                        <p>Watch up to 6 Twitch streams at once with live chat. No account needed to watch &mdash; login only to chat.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/streamerbot-commands" class="feature-card feature-card-link">
+                        <h3>StreamerBot Commands</h3>
+                        <p>Professional C# command collection for Twitch & YouTube streamers. 38+ commands included.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/cubreactive" class="feature-card feature-card-link">
+                        <h3>CubReactive</h3>
+                        <p>Discord reactive images for streamers. Custom avatars that react to your voice in real-time via OBS.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/cubpresence" class="feature-card feature-card-link">
+                        <h3>CubPresence</h3>
+                        <p>Custom Discord Rich Presence from your browser. Set your activity, images, buttons &mdash; no software needed.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/cubdeck" class="feature-card feature-card-link">
+                        <h3>CubDeck</h3>
+                        <p>A free Stream Deck in your browser. Control OBS scenes, send chat messages, trigger alerts and more &mdash; from any phone, tablet, second screen, or docked directly inside OBS as a custom panel. No hardware needed.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/cubassist/" class="feature-card feature-card-link">
+                        <h3>CubAssist</h3>
+                        <p>A free Twitch chat bot with custom commands, timers, polls, giveaways and counters &mdash; all managed from a simple web dashboard.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Media Tools -->
+            <div class="category-section">
+                <h3 class="category-title">Media Tools</h3>
+                <div class="features-grid">
+                    <a href="/apps/social-media-saver" class="feature-card feature-card-link">
+                        <h3>Social Media Saver</h3>
+                        <p>Download photos and videos from Instagram, TikTok, Twitter/X, and Facebook.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/file-converter" class="feature-card feature-card-link">
+                        <h3>File Converter</h3>
+                        <p>Convert images between PNG, JPG, WebP, GIF, and BMP. Resize and optimize in seconds.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/image-editor" class="feature-card feature-card-link">
+                        <h3>Image Editor</h3>
+                        <p>Crop, resize, rotate, adjust brightness and contrast, and apply filters to your images.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/video-compressor" class="feature-card feature-card-link">
+                        <h3>Video Compressor</h3>
+                        <p>Compress videos directly in your browser. Reduce file size while maintaining quality.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/audio-trimmer" class="feature-card feature-card-link">
+                        <h3>Audio Trimmer</h3>
+                        <p>Trim, cut, and edit audio files. Extract audio from videos, adjust volume, and export.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/wheel-spinner" class="feature-card feature-card-link">
+                        <h3>Wheel Spinner</h3>
+                        <p>Customizable spinning wheel for giveaways, decisions, and games. Themes, sounds, and shareable links.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/random-picker" class="feature-card feature-card-link">
+                        <h3>Random Picker</h3>
+                        <p>Quick decision tools: pick from a list, flip a coin, roll dice, generate random numbers.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Document Tools -->
+            <div class="category-section">
+                <h3 class="category-title">Document Tools</h3>
+                <div class="features-grid">
+                    <a href="/apps/pdf-tools" class="feature-card feature-card-link">
+                        <h3>PDF Tools</h3>
+                        <p>Merge, split, compress PDFs and convert images to PDF. All in your browser!</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/text-tools" class="feature-card feature-card-link">
+                        <h3>Text Tools</h3>
+                        <p>Word counter, case converter, lorem ipsum generator, and text formatting utilities.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/resume-builder" class="feature-card feature-card-link">
+                        <h3>Resume Builder</h3>
+                        <p>Create professional resumes, CVs, and cover letters. Multiple templates, export to PDF.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/invoice-generator" class="feature-card feature-card-link">
+                        <h3>Invoice Generator</h3>
+                        <p>Create professional invoices in seconds. Add items, taxes, discounts, and export to PDF.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/markdown-editor" class="feature-card feature-card-link">
+                        <h3>Markdown Editor</h3>
+                        <p>Write and preview Markdown in real-time. Export to HTML, PDF, or copy rendered output.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/notepad" class="feature-card feature-card-link">
+                        <h3>Note Pad</h3>
+                        <p>Simple, distraction-free note taking. Auto-save to browser, export notes anytime.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/sticky-board" class="feature-card feature-card-link">
+                        <h3>Sticky Board</h3>
+                        <p>Virtual whiteboard with customizable sticky notes. Drag, resize, and share with anyone.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Design & Utility -->
+            <div class="category-section">
+                <h3 class="category-title">Design & Utility</h3>
+                <div class="features-grid">
+                    <a href="/apps/qr-generator" class="feature-card feature-card-link">
+                        <h3>QR Code Generator</h3>
+                        <p>Create custom QR codes for links, text, contacts, and WiFi networks.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/color-picker" class="feature-card feature-card-link">
+                        <h3>Color Picker</h3>
+                        <p>Pick colors, generate palettes, and convert between color formats.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/unit-converter" class="feature-card feature-card-link">
+                        <h3>Unit Converter</h3>
+                        <p>Convert between units of length, weight, temperature, data, speed, and more.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/countdown-maker" class="feature-card feature-card-link">
+                        <h3>Countdown Maker</h3>
+                        <p>Create beautiful countdown timers for events. Save, share, and embed anywhere.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/link-shortener" class="feature-card feature-card-link">
+                        <h3>Link Shortener</h3>
+                        <p>Create short, memorable URLs. Custom aliases available, with click tracking.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/cubvault" class="feature-card feature-card-link">
+                        <h3>CubVault</h3>
+                        <p>Secure password manager with end-to-end encryption and optional cloud sync.</p>
+                        <span class="feature-badge coming-soon">Coming Soon</span>
+                    </a>
+                    <a href="/apps/calculator-suite" class="feature-card feature-card-link">
+                        <h3>Calculator Suite</h3>
+                        <p>All-in-one calculator: basic, scientific, mortgage, finance, fuel, BMI, age, date/time, percentage, and unit conversions.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/password-generator" class="feature-card feature-card-link">
+                        <h3>Password Generator</h3>
+                        <p>Generate strong, secure passwords. Customize length, characters, and complexity.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/timer-tools" class="feature-card feature-card-link">
+                        <h3>Timer Tools</h3>
+                        <p>Stopwatch with lap times, countdown timer, and Pomodoro focus sessions.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/world-clock" class="feature-card feature-card-link">
+                        <h3>World Clock</h3>
+                        <p>View current time across multiple time zones. Plan meetings across the globe.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/currency-converter" class="feature-card feature-card-link">
+                        <h3>Currency Converter</h3>
+                        <p>Convert between world currencies with live exchange rates updated daily.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Discord Tools -->
+            <div class="category-section">
+                <h3 class="category-title">Discord Tools</h3>
+                <div class="features-grid">
+                    <a href="/apps/permission-calculator" class="feature-card feature-card-link">
+                        <h3>Permission Calculator</h3>
+                        <p>Calculate Discord permission integers. Toggle permissions visually, use presets, and generate bot invite links.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/embed-builder" class="feature-card feature-card-link">
+                        <h3>Embed Builder</h3>
+                        <p>Build Discord embeds visually with a live preview. Export as JSON or copy discord.js / discord.py code.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/webhook-sender" class="feature-card feature-card-link">
+                        <h3>Webhook Sender</h3>
+                        <p>Send messages and rich embeds to any Discord channel via webhook. Override username and avatar too.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/timestamp-generator" class="feature-card feature-card-link">
+                        <h3>Timestamp Generator</h3>
+                        <p>Pick any date and time, instantly get all Discord &lt;t:unix:format&gt; codes. Supports every timezone.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Developer Tools -->
+            <div class="category-section">
+                <h3 class="category-title">Developer Tools</h3>
+                <div class="features-grid">
+                    <a href="/apps/json-formatter" class="feature-card feature-card-link">
+                        <h3>JSON Formatter</h3>
+                        <p>Beautify, minify, and validate JSON. Syntax highlighting and tree view included.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/timestamp-converter" class="feature-card feature-card-link">
+                        <h3>Timestamp Converter</h3>
+                        <p>Convert between Unix timestamps and human-readable dates. Live current time display.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/encoding-tools" class="feature-card feature-card-link">
+                        <h3>Encoding Tools</h3>
+                        <p>Hash generator (MD5, SHA), Base64 encoder/decoder, and AES-256 encryption.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/diff-checker" class="feature-card feature-card-link">
+                        <h3>Diff Checker</h3>
+                        <p>Compare two texts side by side. Highlight additions, deletions, and changes.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/regex-tester" class="feature-card feature-card-link">
+                        <h3>Regex Tester</h3>
+                        <p>Test regular expressions in real-time. Match highlighting and explanation included.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                    <a href="/apps/code-minifier" class="feature-card feature-card-link">
+                        <h3>Code Minifier</h3>
+                        <p>Minify HTML, CSS, and JavaScript. Reduce file sizes for faster page loads.</p>
+                        <span class="feature-badge">Available Now</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- About Section -->
+    <div class="about-section">
+        <div class="container">
+            <h2 class="section-title">Why CUB SOFTWARE?</h2>
+            <p class="section-description">We build software because we love it — not to sell it. Everything here is free, open to use, and built to actually be useful.</p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Always Free</h3>
+                    <p>No subscriptions, no premium tiers, no paywalls. Every feature, every bot, every tool — free for everyone.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>No Accounts Needed</h3>
+                    <p>Most of our tools require nothing from you. No sign-up, no email, no tracking. Just open and use.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Community First</h3>
+                    <p>Built for Discord communities of all sizes. Whether you're running a small friend group or a large public server, our bots scale with you.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>No Ads. Ever.</h3>
+                    <p>We don't run ads, sell your data, or monetise your attention. Clean software, full stop.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-text">
+                &copy; 2026 CUB SOFTWARE. Made with love by
+                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+            </div>
+            <div class="footer-links">
+                <a href="/">Home</a>
+                <a href="/status">Status</a>
+                <a href="/terms">Terms</a>
+                <a href="/privacy">Privacy</a>
+                <a href="/copyright">Copyright</a>
+                <a href="/report">Report Issue</a>
+                <a href="/contact">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Check for disabled features and update badges
+        fetch('/api/features/status')
+            .then(r => r.json())
+            .then(data => {
+                const disabled = data.disabled || [];
+                disabled.forEach(feature => {
+                    // Find cards that link to this feature
+                    const cards = document.querySelectorAll(`a[href*="${feature}"]`);
+                    cards.forEach(card => {
+                        const badge = card.querySelector('.feature-badge');
+                        if (badge && !badge.classList.contains('coming-soon')) {
+                            badge.textContent = 'Temporarily Disabled';
+                            badge.classList.add('disabled');
+                        }
+                        card.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            alert('This feature is temporarily disabled. Please check back later.');
+                        });
+                    });
+                });
+            })
+            .catch(() => {});
+
+        // Smart grid layout — even rows, max 5 cols per category
+        // Runs after window.load so CSS @imports (Google Fonts) are resolved and
+        // box-sizing:border-box is guaranteed to be applied before we measure cards.
+        (function() {
+            const GAP = 20; // must match .features-grid gap in CSS
+
+            function bestCols(count) {
+                if (count <= 5) return count; // always 1 row for small sets
+                let best = 5, bestScore = -1;
+                for (let n = 2; n <= 5; n++) {
+                    const rem = count % n;
+                    // prefer exact division; among non-divisors prefer largest remainder
+                    const score = rem === 0 ? 1000 + n : rem;
+                    if (score > bestScore) { bestScore = score; best = n; }
+                }
+                return best;
+            }
+
+            function layoutGrids() {
+                document.querySelectorAll('.category-section .features-grid').forEach(grid => {
+                    const cards = Array.from(grid.querySelectorAll(':scope > .feature-card'));
+                    const count = cards.length;
+                    if (count === 0) return;
+
+                    // Clear any prior inline maxWidth so getBoundingClientRect reflects true available width
+                    grid.style.maxWidth = '';
+                    const cardEl = cards.find(c => c.getBoundingClientRect().width > 0);
+                    if (!cardEl) return;
+                    const cardW = cardEl.getBoundingClientRect().width;
+
+                    const cols = Math.min(5, bestCols(count));
+                    // 8px buffer handles subpixel rounding across browsers
+                    grid.style.maxWidth = (cols * cardW + (cols - 1) * GAP + 8) + 'px';
+                });
+            }
+
+            if (document.readyState === 'complete') {
+                requestAnimationFrame(layoutGrids);
+            } else {
+                window.addEventListener('load', function() { requestAnimationFrame(layoutGrids); });
+            }
+        })();
+    </script>
+</body>
+</html>

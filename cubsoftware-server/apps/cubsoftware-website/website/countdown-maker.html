@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Countdown Maker - Create Shareable Countdown Timers | Free Online</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Create beautiful countdown timers for events, launches, holidays. Share via link, embed on your site. Custom colors, multiple styles. Free, no signup.">
+    <meta name="keywords" content="countdown timer, countdown maker, event countdown, shareable timer, countdown generator, free countdown">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/countdown-maker">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Countdown Maker - Beautiful Event Timers | Free">
+    <meta property="og:description" content="Create stunning countdown timers in seconds. Perfect for product launches, weddings, holidays. Share anywhere, embed on any site.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/countdown-maker">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/countdown-maker.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="countdown-container">
+            <div class="countdown-header">
+                <h1>Countdown Maker</h1>
+                <p>Create beautiful, shareable countdown timers for any event</p>
+            </div>
+
+            <div class="countdown-main">
+                <!-- Settings Panel -->
+                <div class="settings-panel">
+                    <h3>Settings</h3>
+
+                    <div class="input-group">
+                        <label for="eventTitle">Event Title</label>
+                        <input type="text" id="eventTitle" placeholder="e.g., Product Launch" maxlength="50">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="eventDate">Date & Time</label>
+                        <input type="datetime-local" id="eventDate">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="endMessage">Message When Done</label>
+                        <input type="text" id="endMessage" placeholder="e.g., It's time!" maxlength="50">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Theme</label>
+                        <div class="theme-options">
+                            <button class="theme-btn active" data-theme="dark" style="background: #1a1b26;">
+                                <span class="theme-check">✓</span>
+                            </button>
+                            <button class="theme-btn" data-theme="gradient" style="background: linear-gradient(135deg, #5865f2, #7c3aed);">
+                                <span class="theme-check">✓</span>
+                            </button>
+                            <button class="theme-btn" data-theme="light" style="background: #f0f0f0;">
+                                <span class="theme-check">✓</span>
+                            </button>
+                            <button class="theme-btn" data-theme="red" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                                <span class="theme-check">✓</span>
+                            </button>
+                            <button class="theme-btn" data-theme="green" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                                <span class="theme-check">✓</span>
+                            </button>
+                            <button class="theme-btn" data-theme="blue" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                                <span class="theme-check">✓</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Display Options</label>
+                        <div class="checkbox-options">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showDays" checked>
+                                <span class="checkbox-custom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                                Days
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showHours" checked>
+                                <span class="checkbox-custom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                                Hours
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showMinutes" checked>
+                                <span class="checkbox-custom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                                Minutes
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="showSeconds" checked>
+                                <span class="checkbox-custom"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                                Seconds
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Panel -->
+                <div class="preview-panel">
+                    <h3>Preview</h3>
+                    <div class="countdown-preview" id="countdownPreview">
+                        <div class="preview-title" id="previewTitle">Your Event</div>
+                        <div class="preview-timer">
+                            <div class="time-block" id="daysBlock">
+                                <span class="time-value" id="previewDays">00</span>
+                                <span class="time-label">Days</span>
+                            </div>
+                            <div class="time-block" id="hoursBlock">
+                                <span class="time-value" id="previewHours">00</span>
+                                <span class="time-label">Hours</span>
+                            </div>
+                            <div class="time-block" id="minutesBlock">
+                                <span class="time-value" id="previewMinutes">00</span>
+                                <span class="time-label">Minutes</span>
+                            </div>
+                            <div class="time-block" id="secondsBlock">
+                                <span class="time-value" id="previewSeconds">00</span>
+                                <span class="time-label">Seconds</span>
+                            </div>
+                        </div>
+                        <div class="preview-end-message" id="previewEndMessage" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Share Section -->
+            <div class="share-section">
+                <h3>Share Your Countdown</h3>
+                <div class="share-options">
+                    <div class="share-input-group">
+                        <label>Create a unique shareable link that viewers can only see the timer (not edit)</label>
+                        <div class="share-actions">
+                            <button class="create-link-btn" id="createShareBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                                Create Shareable Link
+                            </button>
+                        </div>
+                        <div class="copy-input" id="shareLinkContainer" style="display: none;">
+                            <input type="text" id="shareLink" readonly placeholder="Your shareable link will appear here">
+                            <button class="copy-btn" id="copyLinkBtn">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saved Countdowns -->
+            <div class="saved-section">
+                <div class="saved-header">
+                    <h3>Saved Countdowns</h3>
+                    <button class="save-btn" id="saveCountdownBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        Save Current
+                    </button>
+                </div>
+                <div class="saved-list" id="savedList">
+                    <div class="empty-state">No saved countdowns yet</div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <script src="/static/js/countdown-maker.js?v={{ v }}"></script>
+</body>
+</html>

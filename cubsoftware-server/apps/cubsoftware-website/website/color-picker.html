@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Color Picker - HEX, RGB, HSL Converter & Palette Generator | Free</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Pick any color, get HEX/RGB/HSL instantly. Generate stunning palettes, extract colors from images. Designers love this tool - and it's completely free.">
+    <meta name="keywords" content="color picker online, hex to rgb, color palette generator, image color extractor, complementary colors, free design tool">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/color-picker">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Color Picker - Find Your Perfect Color Palette | Free">
+    <meta property="og:description" content="The color tool designers actually want. Pick colors, convert formats, generate palettes, extract from images - all free, no account needed.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/color-picker">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/color-picker.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="picker-container">
+            <div class="picker-header">
+                <h1>Color Picker</h1>
+                <p>Pick colors, generate palettes, and extract colors from images</p>
+            </div>
+
+            <div class="picker-main">
+                <!-- Left Column: Image Picker -->
+                <div class="picker-column">
+                    <div class="image-picker-section">
+                        <h3>Pick from Image</h3>
+                        <div class="image-upload-area" id="imageUploadArea">
+                            <input type="file" id="imageInput" accept="image/*" hidden>
+                            <div class="upload-placeholder" id="uploadPlaceholder">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                                <p>Click to upload or drag & drop</p>
+                                <span>PNG, JPG, GIF</span>
+                            </div>
+                            <div class="image-container" id="imageContainer" style="display: none;">
+                                <canvas id="imageCanvas"></canvas>
+                                <div class="color-magnifier" id="colorMagnifier"></div>
+                            </div>
+                        </div>
+                        <div class="image-actions" id="imageActions" style="display: none;">
+                            <button class="btn-secondary" id="clearImage">Clear Image</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle Column: Color Picker -->
+                <div class="picker-column">
+                    <div class="color-picker-section">
+                        <div class="picker-wrapper">
+                            <div class="color-area" id="colorArea">
+                                <div class="color-cursor" id="colorCursor"></div>
+                            </div>
+                            <div class="hue-slider-wrapper">
+                                <input type="range" id="hueSlider" class="hue-slider" min="0" max="360" value="0">
+                            </div>
+                        </div>
+                        <div class="color-preview-box">
+                            <div class="color-preview" id="colorPreview"></div>
+                            <div class="preview-label">Current Color</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Color Values -->
+                <div class="picker-column">
+                    <div class="color-values-section">
+                        <h3>Color Values</h3>
+
+                        <div class="color-input-group">
+                            <label>HEX</label>
+                            <div class="input-with-copy">
+                                <input type="text" id="hexInput" value="#ff0000" maxlength="7">
+                                <button class="copy-btn" data-target="hexInput" title="Copy HEX">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="color-input-group">
+                            <label>RGB</label>
+                            <div class="input-with-copy">
+                                <input type="text" id="rgbInput" value="rgb(255, 0, 0)" readonly>
+                                <button class="copy-btn" data-target="rgbInput" title="Copy RGB">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="color-input-group">
+                            <label>HSL</label>
+                            <div class="input-with-copy">
+                                <input type="text" id="hslInput" value="hsl(0, 100%, 50%)" readonly>
+                                <button class="copy-btn" data-target="hslInput" title="Copy HSL">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="rgb-sliders">
+                            <div class="slider-group">
+                                <label>R</label>
+                                <input type="range" id="redSlider" min="0" max="255" value="255">
+                                <span id="redValue">255</span>
+                            </div>
+                            <div class="slider-group">
+                                <label>G</label>
+                                <input type="range" id="greenSlider" min="0" max="255" value="0">
+                                <span id="greenValue">0</span>
+                            </div>
+                            <div class="slider-group">
+                                <label>B</label>
+                                <input type="range" id="blueSlider" min="0" max="255" value="0">
+                                <span id="blueValue">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Palette Generator -->
+            <div class="palette-section">
+                <h3>Color Palettes</h3>
+                <div class="palette-tabs">
+                    <button class="palette-tab active" data-palette="complementary">Complementary</button>
+                    <button class="palette-tab" data-palette="analogous">Analogous</button>
+                    <button class="palette-tab" data-palette="triadic">Triadic</button>
+                    <button class="palette-tab" data-palette="tetradic">Tetradic</button>
+                    <button class="palette-tab" data-palette="split">Split-Complementary</button>
+                    <button class="palette-tab" data-palette="monochromatic">Monochromatic</button>
+                    <button class="palette-tab" data-palette="shades">Shades</button>
+                    <button class="palette-tab" data-palette="tints">Tints</button>
+                </div>
+                <div class="palette-colors" id="paletteColors">
+                    <!-- Generated palette colors will appear here -->
+                </div>
+            </div>
+
+            <!-- Recent Colors -->
+            <div class="recent-colors-section">
+                <div class="recent-header">
+                    <h3>Recent Colors</h3>
+                    <button class="clear-recent" id="clearRecent">Clear All</button>
+                </div>
+                <div class="recent-colors" id="recentColors">
+                    <!-- Recent colors will appear here -->
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <script src="/static/js/color-picker.js?v={{ v }}"></script>
+</body>
+</html>

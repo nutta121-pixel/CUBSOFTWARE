@@ -1,0 +1,325 @@
+/* World Clock Styles */
+
+.clock-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.clock-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.clock-header h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.clock-header p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+/* Local Time Card */
+.local-time-card {
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
+    border: 1px solid var(--primary);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.local-label {
+    color: var(--primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.local-time {
+    font-family: 'Orbitron', monospace;
+    font-size: 4rem;
+    font-weight: 700;
+    color: var(--text-light);
+    letter-spacing: 2px;
+}
+
+.local-date {
+    color: var(--text-light);
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}
+
+.local-timezone {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+/* Add Clock Section */
+.add-clock-section {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.add-clock-section select {
+    flex: 1;
+    padding: 0.875rem;
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-light);
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+}
+
+.add-clock-section select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.add-btn {
+    padding: 0.875rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Poppins', sans-serif;
+    white-space: nowrap;
+}
+
+.add-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+}
+
+/* Clocks Grid */
+.clocks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.clock-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    position: relative;
+}
+
+.clock-card .remove-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.clock-card .remove-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+}
+
+.clock-city {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 0.25rem;
+}
+
+.clock-timezone {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.clock-time {
+    font-family: 'Orbitron', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-light);
+}
+
+.clock-date {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+.clock-diff {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--dark-bg);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: var(--primary);
+}
+
+.clock-diff.behind {
+    color: var(--error);
+}
+
+/* Day/Night indicator */
+.clock-card.night {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%);
+}
+
+.clock-card.night .clock-city {
+    color: #94a3b8;
+}
+
+/* Meeting Planner */
+.meeting-planner {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+}
+
+.meeting-planner h2 {
+    color: var(--text-light);
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.planner-desc {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.planner-inputs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.planner-inputs input,
+.planner-inputs select {
+    padding: 0.75rem;
+    background: var(--dark-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-light);
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+.planner-inputs input:focus,
+.planner-inputs select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.planner-inputs input[type="date"],
+.planner-inputs input[type="time"] {
+    min-width: 140px;
+}
+
+.planner-inputs select {
+    flex: 1;
+    min-width: 200px;
+}
+
+.planner-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+}
+
+.planner-result {
+    background: var(--dark-bg);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+}
+
+.planner-result .city {
+    font-weight: 500;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.planner-result .time {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    color: var(--primary);
+    margin-top: 0.25rem;
+}
+
+.planner-result .date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.planner-result.different-day {
+    border-left: 3px solid var(--warning);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .clock-container {
+        padding: 1rem;
+    }
+
+    .clock-header h1 {
+        font-size: 2rem;
+    }
+
+    .local-time {
+        font-size: 3rem;
+    }
+
+    .add-clock-section {
+        flex-direction: column;
+    }
+
+    .clocks-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .planner-inputs {
+        flex-direction: column;
+    }
+
+    .planner-inputs input,
+    .planner-inputs select {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .local-time {
+        font-size: 2.5rem;
+    }
+
+    .clock-time {
+        font-size: 1.75rem;
+    }
+}

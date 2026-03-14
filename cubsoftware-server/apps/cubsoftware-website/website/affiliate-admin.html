@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Affiliate Management - CUB SOFTWARE Admin</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        * { box-sizing: border-box; }
+
+        .admin-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        .admin-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--text-light); }
+
+        .page-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #009dff, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.25rem;
+        }
+        .page-sub {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 2rem;
+        }
+
+        /* ── Summary cards ── */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.25rem;
+        }
+
+        .summary-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+        }
+
+        .summary-val {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text-light);
+        }
+
+        /* ── Create form ── */
+        .create-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .create-card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 1.25rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        input[type="text"], input[type="number"] {
+            background: var(--bg-secondary, rgba(255,255,255,0.04));
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            padding: 0.55rem 0.75rem;
+            font-size: 0.875rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            width: 100%;
+        }
+        input:focus { outline: none; border-color: var(--primary); }
+
+        .btn-primary {
+            padding: 0.65rem 1.5rem;
+            background: linear-gradient(135deg, #009dff, #8a2be2);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            align-self: flex-end;
+        }
+        .btn-primary:hover { opacity: 0.85; }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .form-error {
+            color: #ef4444;
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+            background: rgba(239,68,68,0.08);
+            border-radius: 6px;
+            display: none;
+        }
+
+        /* ── Affiliates table ── */
+        .affiliates-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .affiliates-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .affiliates-header-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .search-input {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.8rem;
+            font-family: inherit;
+            width: 200px;
+        }
+        .search-input:focus { outline: none; border-color: var(--primary); }
+
+        .aff-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .aff-table th {
+            text-align: left;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        .aff-table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.875rem;
+            color: var(--text-light);
+            vertical-align: middle;
+        }
+
+        .aff-table tr:last-child td { border-bottom: none; }
+
+        .aff-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .aff-user {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        .aff-user img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid var(--border-color);
+        }
+        .aff-user-name { font-weight: 500; }
+        .aff-user-id { font-size: 0.7rem; color: var(--text-muted); font-family: monospace; }
+
+        .code-badge {
+            font-family: monospace;
+            font-size: 0.8rem;
+            background: rgba(0,157,255,0.1);
+            color: #009dff;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,157,255,0.2);
+            white-space: nowrap;
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+        .status-badge.active {
+            background: rgba(87,242,135,0.12);
+            color: #57F287;
+            border: 1px solid rgba(87,242,135,0.3);
+        }
+        .status-badge.disabled {
+            background: rgba(239,68,68,0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.25);
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.75rem;
+            border-radius: 7px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid;
+            transition: all 0.2s;
+            background: transparent;
+        }
+        .btn-sm.edit { border-color: rgba(0,157,255,0.4); color: #009dff; }
+        .btn-sm.edit:hover { background: rgba(0,157,255,0.1); }
+        .btn-sm.disable { border-color: rgba(239,68,68,0.4); color: #ef4444; }
+        .btn-sm.disable:hover { background: rgba(239,68,68,0.1); }
+        .btn-sm.enable { border-color: rgba(87,242,135,0.4); color: #57F287; }
+        .btn-sm.enable:hover { background: rgba(87,242,135,0.1); }
+        .btn-sm.delete { border-color: rgba(239,68,68,0.3); color: #ef4444; }
+        .btn-sm.delete:hover { background: rgba(239,68,68,0.12); }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        /* ── Edit modal ── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 1rem;
+        }
+        .modal-overlay.open { display: flex; }
+
+        .modal {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 440px;
+        }
+
+        .modal-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        .btn-cancel {
+            padding: 0.6rem 1.25rem;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 9px;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-cancel:hover { border-color: var(--text-muted); color: var(--text-light); }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.875rem;
+            color: var(--text-light);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 2000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: rgba(87,242,135,0.4); color: #57F287; }
+        .toast.error { border-color: rgba(239,68,68,0.4); color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="admin-wrap">
+            <div class="admin-topbar">
+                <a href="/dashboard" class="back-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+                    Back to Admin
+                </a>
+                <div style="font-size:0.8rem; color:var(--text-muted)">Logged in as <strong style="color:var(--text-light)">{{ user.username }}</strong></div>
+            </div>
+
+            <h1 class="page-title">Affiliate Management</h1>
+            <p class="page-sub">Create and manage affiliate accounts for streamers.</p>
+
+            <!-- Summary -->
+            <div class="summary-grid" id="summaryGrid">
+                <div class="summary-card">
+                    <div class="summary-label">Total Affiliates</div>
+                    <div class="summary-val" id="sumTotal">—</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Active</div>
+                    <div class="summary-val" id="sumActive" style="color:#57F287">—</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Total Unique Clicks</div>
+                    <div class="summary-val" id="sumClicks" style="color:#009dff">—</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Total Earnings Owed</div>
+                    <div class="summary-val" id="sumEarnings" style="color:#57F287">—</div>
+                </div>
+            </div>
+
+            <!-- Create affiliate -->
+            <div class="create-card">
+                <div class="create-card-title">Add New Affiliate</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Discord User ID</label>
+                        <input type="text" id="inDiscordId" placeholder="e.g. 523949187663585310">
+                    </div>
+                    <div class="form-group">
+                        <label>Discord Username (for display)</label>
+                        <input type="text" id="inDiscordUser" placeholder="e.g. HexEchoTV">
+                    </div>
+                    <div class="form-group">
+                        <label>Vanity Code</label>
+                        <input type="text" id="inCode" placeholder="e.g. hexechotv" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label>Commission ($ per unique click)</label>
+                        <input type="number" id="inRate" placeholder="0.00" step="0.01" min="0" value="0">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom:0.75rem">
+                    <label>Notes (internal)</label>
+                    <input type="text" id="inNotes" placeholder="Optional notes">
+                </div>
+                <div class="form-error" id="createError"></div>
+                <div style="margin-top:0.75rem">
+                    <button class="btn-primary" id="createBtn" onclick="createAffiliate()">Add Affiliate</button>
+                </div>
+            </div>
+
+            <!-- Withdrawal Requests -->
+            <div class="affiliates-card" id="withdrawalsCard">
+                <div class="affiliates-header">
+                    <div class="affiliates-header-title">Withdrawal Requests</div>
+                    <span id="withdrawalBadge" style="font-size:0.75rem;font-weight:700;background:rgba(255,196,0,0.12);color:#ffc400;border:1px solid rgba(255,196,0,0.25);padding:3px 10px;border-radius:20px;display:none;">0 pending</span>
+                </div>
+                <div id="withdrawalsWrap">
+                    <div id="withdrawalsEmpty" style="padding:1.5rem 0;font-size:0.85rem;color:var(--text-muted);">No withdrawal requests yet.</div>
+                    <table class="aff-table" id="withdrawalsTable" style="display:none;">
+                        <thead>
+                            <tr>
+                                <th>Affiliate</th>
+                                <th>Amount</th>
+                                <th>PayPal Email</th>
+                                <th>Requested</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="withdrawalsTbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Affiliates list -->
+            <div class="affiliates-card">
+                <div class="affiliates-header">
+                    <div class="affiliates-header-title">All Affiliates</div>
+                    <input type="text" class="search-input" placeholder="Search..." id="searchInput" oninput="filterTable()">
+                </div>
+                <div id="tableWrap">
+                    <table class="aff-table">
+                        <thead>
+                            <tr>
+                                <th>Affiliate</th>
+                                <th>Code / Link</th>
+                                <th>Status</th>
+                                <th>Unique Clicks</th>
+                                <th>Total Clicks</th>
+                                <th>Commission Rate</th>
+                                <th>Earnings Owed</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="afftbody"></tbody>
+                    </table>
+                    <div class="empty-state" id="emptyState" style="display:none">No affiliates yet. Add one above.</div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <!-- Edit modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-title">Edit Affiliate</div>
+            <input type="hidden" id="editId">
+            <div class="form-group" style="margin-bottom:0.75rem">
+                <label>Vanity Code</label>
+                <input type="text" id="editCode" maxlength="30">
+            </div>
+            <div class="form-group" style="margin-bottom:0.75rem">
+                <label>Commission ($ per unique click)</label>
+                <input type="number" id="editRate" step="0.01" min="0">
+            </div>
+            <div class="form-group" style="margin-bottom:0.75rem">
+                <label>Notes (internal)</label>
+                <input type="text" id="editNotes">
+            </div>
+            <div class="form-error" id="editError"></div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-primary" onclick="saveEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let affiliates = [];
+
+        async function loadAffiliates() {
+            try {
+                const res = await fetch('/api/admin/affiliates');
+                const data = await res.json();
+                affiliates = data.affiliates || [];
+                renderTable(affiliates);
+                updateSummary(affiliates);
+            } catch (e) {
+                showToast('Failed to load affiliates', 'error');
+            }
+        }
+
+        function updateSummary(affs) {
+            document.getElementById('sumTotal').textContent = affs.length;
+            document.getElementById('sumActive').textContent = affs.filter(a => a.enabled).length;
+            document.getElementById('sumClicks').textContent = affs.reduce((s, a) => s + a.unique_clicks, 0);
+            const totalEarnings = affs.reduce((s, a) => s + a.earnings, 0);
+            document.getElementById('sumEarnings').textContent = '$' + totalEarnings.toFixed(2);
+        }
+
+        function renderTable(affs) {
+            const tbody = document.getElementById('afftbody');
+            const empty = document.getElementById('emptyState');
+            tbody.innerHTML = '';
+            if (affs.length === 0) {
+                empty.style.display = 'block';
+                return;
+            }
+            empty.style.display = 'none';
+            affs.forEach(aff => {
+                const tr = document.createElement('tr');
+                tr.dataset.id = aff.id;
+                const avatarSrc = aff.discord_avatar || `https://cdn.discordapp.com/embed/avatars/0.png`;
+                tr.innerHTML = `
+                    <td>
+                        <div class="aff-user">
+                            <img src="${avatarSrc}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'" alt="">
+                            <div>
+                                <div class="aff-user-name">${escHtml(aff.discord_username || 'Unknown')}</div>
+                                <div class="aff-user-id">${escHtml(aff.discord_id)}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="code-badge">/r/${escHtml(aff.code)}</span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${aff.enabled ? 'active' : 'disabled'}">${aff.enabled ? 'Active' : 'Disabled'}</span>
+                    </td>
+                    <td>${aff.unique_clicks}</td>
+                    <td>${aff.total_clicks}</td>
+                    <td>$${Number(aff.commission_rate).toFixed(2)}</td>
+                    <td style="color:#57F287">$${Number(aff.earnings).toFixed(2)}</td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn-sm edit" onclick="openEdit('${aff.id}')">Edit</button>
+                            <button class="btn-sm ${aff.enabled ? 'disable' : 'enable'}" onclick="toggleAffiliate('${aff.id}', ${!aff.enabled})">
+                                ${aff.enabled ? 'Disable' : 'Enable'}
+                            </button>
+                            <button class="btn-sm delete" onclick="deleteAffiliate('${aff.id}')">Delete</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTable() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = affiliates.filter(a =>
+                (a.discord_username || '').toLowerCase().includes(q) ||
+                a.discord_id.includes(q) ||
+                a.code.includes(q)
+            );
+            renderTable(filtered);
+        }
+
+        async function createAffiliate() {
+            const btn = document.getElementById('createBtn');
+            const errEl = document.getElementById('createError');
+            errEl.style.display = 'none';
+
+            const discord_id = document.getElementById('inDiscordId').value.trim();
+            const discord_username = document.getElementById('inDiscordUser').value.trim();
+            const code = document.getElementById('inCode').value.trim().toLowerCase();
+            const commission_rate = parseFloat(document.getElementById('inRate').value) || 0;
+            const notes = document.getElementById('inNotes').value.trim();
+
+            if (!discord_id || !code) {
+                showError(errEl, 'Discord ID and vanity code are required.');
+                return;
+            }
+
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/admin/affiliates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ discord_id, discord_username, code, commission_rate, notes })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    showError(errEl, data.error || 'Failed to create affiliate.');
+                } else {
+                    showToast('Affiliate created!', 'success');
+                    document.getElementById('inDiscordId').value = '';
+                    document.getElementById('inDiscordUser').value = '';
+                    document.getElementById('inCode').value = '';
+                    document.getElementById('inRate').value = '0';
+                    document.getElementById('inNotes').value = '';
+                    await loadAffiliates();
+                }
+            } catch (e) {
+                showError(errEl, 'Network error.');
+            }
+            btn.disabled = false;
+        }
+
+        function openEdit(id) {
+            const aff = affiliates.find(a => a.id === id);
+            if (!aff) return;
+            document.getElementById('editId').value = id;
+            document.getElementById('editCode').value = aff.code;
+            document.getElementById('editRate').value = aff.commission_rate;
+            document.getElementById('editNotes').value = aff.notes || '';
+            document.getElementById('editError').style.display = 'none';
+            document.getElementById('editModal').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('open');
+        }
+
+        async function saveEdit() {
+            const id = document.getElementById('editId').value;
+            const code = document.getElementById('editCode').value.trim().toLowerCase();
+            const commission_rate = parseFloat(document.getElementById('editRate').value) || 0;
+            const notes = document.getElementById('editNotes').value.trim();
+            const errEl = document.getElementById('editError');
+            errEl.style.display = 'none';
+
+            try {
+                const res = await fetch(`/api/admin/affiliates/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, commission_rate, notes })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    showError(errEl, data.error || 'Failed to update.');
+                } else {
+                    closeModal();
+                    showToast('Affiliate updated!', 'success');
+                    await loadAffiliates();
+                }
+            } catch (e) {
+                showError(errEl, 'Network error.');
+            }
+        }
+
+        async function toggleAffiliate(id, enabled) {
+            try {
+                const res = await fetch(`/api/admin/affiliates/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled })
+                });
+                if (res.ok) {
+                    showToast(enabled ? 'Affiliate enabled.' : 'Affiliate disabled.', 'success');
+                    await loadAffiliates();
+                }
+            } catch (e) {
+                showToast('Failed to update.', 'error');
+            }
+        }
+
+        async function deleteAffiliate(id) {
+            const aff = affiliates.find(a => a.id === id);
+            if (!confirm(`Delete affiliate "${aff?.discord_username || id}"? This cannot be undone.`)) return;
+            try {
+                const res = await fetch(`/api/admin/affiliates/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast('Affiliate deleted.', 'success');
+                    await loadAffiliates();
+                }
+            } catch (e) {
+                showToast('Failed to delete.', 'error');
+            }
+        }
+
+        function showError(el, msg) {
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+
+        let toastTimer;
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = `toast ${type} show`;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        function escHtml(str) {
+            return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // Close modal on overlay click
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        loadAffiliates();
+        loadWithdrawals();
+
+        async function loadWithdrawals() {
+            try {
+                const res = await fetch('/api/admin/affiliates/withdrawals');
+                const data = await res.json();
+                renderWithdrawals(data.withdrawals || []);
+            } catch (e) {
+                showToast('Failed to load withdrawals', 'error');
+            }
+        }
+
+        function renderWithdrawals(withdrawals) {
+            const tbody = document.getElementById('withdrawalsTbody');
+            const table = document.getElementById('withdrawalsTable');
+            const empty = document.getElementById('withdrawalsEmpty');
+            const badge = document.getElementById('withdrawalBadge');
+
+            const pending = withdrawals.filter(w => w.status === 'pending');
+            if (pending.length > 0) {
+                badge.textContent = `${pending.length} pending`;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+
+            if (!withdrawals.length) {
+                table.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            table.style.display = 'table';
+            empty.style.display = 'none';
+
+            tbody.innerHTML = withdrawals.map(w => {
+                const date = new Date(w.created_at * 1000).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' });
+                let statusHtml;
+                if (w.status === 'pending') {
+                    statusHtml = `<span style="background:rgba(255,196,0,0.12);color:#ffc400;border:1px solid rgba(255,196,0,0.25);padding:2px 9px;border-radius:20px;font-size:0.72rem;font-weight:700;">Pending</span>`;
+                } else if (w.status === 'paid') {
+                    statusHtml = `<span style="background:rgba(87,242,135,0.1);color:#57F287;border:1px solid rgba(87,242,135,0.25);padding:2px 9px;border-radius:20px;font-size:0.72rem;font-weight:700;">Paid ${w.invoice_id ? '· ' + escHtml(w.invoice_id) : ''}</span>`;
+                } else {
+                    statusHtml = `<span style="background:rgba(237,66,69,0.1);color:#ed4245;border:1px solid rgba(237,66,69,0.25);padding:2px 9px;border-radius:20px;font-size:0.72rem;font-weight:700;">Rejected</span>`;
+                }
+
+                const actions = w.status === 'pending'
+                    ? `<button onclick="payWithdrawal('${w.id}')" style="background:rgba(87,242,135,0.12);color:#57F287;border:1px solid rgba(87,242,135,0.3);border-radius:7px;padding:4px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;margin-right:6px;" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">Mark Paid</button><button onclick="rejectWithdrawal('${w.id}')" style="background:rgba(237,66,69,0.1);color:#ed4245;border:1px solid rgba(237,66,69,0.25);border-radius:7px;padding:4px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;" onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">Reject</button>`
+                    : '—';
+
+                return `<tr>
+                    <td><strong>${escHtml(w.discord_username || 'Unknown')}</strong></td>
+                    <td><strong style="color:#57F287;">NZ$${parseFloat(w.amount).toFixed(2)}</strong></td>
+                    <td>${escHtml(w.paypal_email)}</td>
+                    <td>${date}</td>
+                    <td>${statusHtml}</td>
+                    <td>${actions}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function payWithdrawal(wdId) {
+            if (!confirm('Confirm you have sent the PayPal payment and want to mark this as paid?')) return;
+            try {
+                const res = await fetch(`/api/admin/affiliates/withdrawals/${wdId}/pay`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(`Marked as paid — Invoice ${data.invoice_id}`, 'success');
+                    loadWithdrawals();
+                } else {
+                    showToast(data.error || 'Failed', 'error');
+                }
+            } catch (e) {
+                showToast('Network error', 'error');
+            }
+        }
+
+        async function rejectWithdrawal(wdId) {
+            const note = prompt('Reason for rejection (optional):') ?? '';
+            if (note === null) return;
+            try {
+                const res = await fetch(`/api/admin/affiliates/withdrawals/${wdId}/reject`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ note }) });
+                const data = await res.json();
+                if (res.ok) {
+                    showToast('Withdrawal rejected.', 'success');
+                    loadWithdrawals();
+                } else {
+                    showToast(data.error || 'Failed', 'error');
+                }
+            } catch (e) {
+                showToast('Network error', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-dark-900 text-white;
+  }
+}
+
+@layer components {
+  /* Button styles matching main page */
+  .btn {
+    padding: 15px 40px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.3s ease;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #5865f2 0%, #4752c4 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(88, 101, 242, 0.6);
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .btn-success {
+    @apply btn bg-success hover:bg-opacity-80 text-white;
+  }
+
+  .btn-danger {
+    @apply btn bg-danger hover:bg-opacity-80 text-white;
+  }
+
+  .card {
+    @apply bg-dark-800 rounded-lg p-6 shadow-lg border border-dark-700;
+  }
+
+  .card-hover {
+    @apply card transition-transform hover:scale-105 hover:shadow-xl;
+  }
+
+  .input {
+    @apply bg-dark-700 border border-dark-600 rounded-lg px-4 py-2 focus:outline-none focus:border-primary transition-colors;
+  }
+
+  .badge {
+    @apply inline-block px-3 py-1 rounded-full text-sm font-semibold;
+  }
+
+  .badge-primary {
+    @apply badge bg-primary bg-opacity-20 text-primary border border-primary;
+  }
+
+  .badge-success {
+    @apply badge bg-success bg-opacity-20 text-success border border-success;
+  }
+
+  .badge-warning {
+    @apply badge bg-warning bg-opacity-20 text-warning border border-warning;
+  }
+
+  .badge-danger {
+    @apply badge bg-danger bg-opacity-20 text-danger border border-danger;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a2e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #5865f2;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4752c4;
+}
+
+/* Footer styles */
+.footer {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 40px 20px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: auto;
+}
+
+.footer-content {
+  color: #b9bbbe;
+}
+
+.footer-text {
+  font-size: 0.95rem;
+}
+
+.footer-link {
+  color: #5865f2;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #7c3aed;
+}
+
+.footer-legal-links {
+  margin-top: 15px;
+  font-size: 0.9rem;
+}
+
+.footer-legal-link {
+  color: #ffffff !important;
+  text-decoration: none !important;
+  transition: opacity 0.3s ease;
+}
+
+.footer-legal-link:hover {
+  opacity: 0.8;
+  text-decoration: none !important;
+}
+
+.footer-legal-link:visited {
+  color: #ffffff !important;
+}
+
+.footer-separator {
+  margin: 0 10px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}

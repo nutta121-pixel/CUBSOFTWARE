@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#5865f2">
+    <title>Encoding Tools - Hash, Base64, Encryption | Free</title>
+
+    <meta name="description" content="Generate MD5, SHA hashes, encode/decode Base64, URL encode, and encrypt text with AES-256. Free developer tools.">
+    <meta name="keywords" content="hash generator, MD5, SHA256, Base64 encoder, URL encoder, AES encryption, developer tools">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/encoding-tools.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="encoding-container">
+            <div class="encoding-header">
+                <h1>Encoding Tools</h1>
+                <p>Hash, encode, decode, and encrypt text</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" data-tab="hash">Hash Generator</button>
+                <button class="tab" data-tab="base64">Base64</button>
+                <button class="tab" data-tab="url">URL Encode</button>
+                <button class="tab" data-tab="html">HTML Entities</button>
+                <button class="tab" data-tab="encrypt">Encryption</button>
+            </div>
+
+            <!-- Hash Generator -->
+            <div class="panel active" id="hash-panel">
+                <div class="input-section">
+                    <label>Input Text</label>
+                    <textarea id="hashInput" placeholder="Enter text to hash..." rows="4"></textarea>
+                </div>
+                <div class="hash-results">
+                    <div class="hash-result">
+                        <label>MD5</label>
+                        <div class="hash-value-row">
+                            <input type="text" id="md5Result" readonly>
+                            <button class="copy-btn" data-target="md5Result">Copy</button>
+                        </div>
+                    </div>
+                    <div class="hash-result">
+                        <label>SHA-1</label>
+                        <div class="hash-value-row">
+                            <input type="text" id="sha1Result" readonly>
+                            <button class="copy-btn" data-target="sha1Result">Copy</button>
+                        </div>
+                    </div>
+                    <div class="hash-result">
+                        <label>SHA-256</label>
+                        <div class="hash-value-row">
+                            <input type="text" id="sha256Result" readonly>
+                            <button class="copy-btn" data-target="sha256Result">Copy</button>
+                        </div>
+                    </div>
+                    <div class="hash-result">
+                        <label>SHA-384</label>
+                        <div class="hash-value-row">
+                            <input type="text" id="sha384Result" readonly>
+                            <button class="copy-btn" data-target="sha384Result">Copy</button>
+                        </div>
+                    </div>
+                    <div class="hash-result">
+                        <label>SHA-512</label>
+                        <div class="hash-value-row">
+                            <input type="text" id="sha512Result" readonly>
+                            <button class="copy-btn" data-target="sha512Result">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Base64 -->
+            <div class="panel" id="base64-panel">
+                <div class="dual-panel">
+                    <div class="panel-section">
+                        <label>Plain Text</label>
+                        <textarea id="base64Plain" placeholder="Enter text to encode..." rows="6"></textarea>
+                        <button class="action-btn" id="base64EncodeBtn">Encode →</button>
+                    </div>
+                    <div class="panel-section">
+                        <label>Base64 Encoded</label>
+                        <textarea id="base64Encoded" placeholder="Enter Base64 to decode..." rows="6"></textarea>
+                        <button class="action-btn" id="base64DecodeBtn">← Decode</button>
+                    </div>
+                </div>
+                <div class="options-row">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="base64UrlSafe">
+                        <span>URL-safe Base64</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- URL Encode -->
+            <div class="panel" id="url-panel">
+                <div class="dual-panel">
+                    <div class="panel-section">
+                        <label>Plain Text</label>
+                        <textarea id="urlPlain" placeholder="Enter text or URL to encode..." rows="6"></textarea>
+                        <button class="action-btn" id="urlEncodeBtn">Encode →</button>
+                    </div>
+                    <div class="panel-section">
+                        <label>URL Encoded</label>
+                        <textarea id="urlEncoded" placeholder="Enter URL encoded text to decode..." rows="6"></textarea>
+                        <button class="action-btn" id="urlDecodeBtn">← Decode</button>
+                    </div>
+                </div>
+                <div class="options-row">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="urlEncodeAll">
+                        <span>Encode all characters (including safe ones)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- HTML Entities -->
+            <div class="panel" id="html-panel">
+                <div class="dual-panel">
+                    <div class="panel-section">
+                        <label>Plain Text</label>
+                        <textarea id="htmlPlain" placeholder="Enter text with special characters..." rows="6"></textarea>
+                        <button class="action-btn" id="htmlEncodeBtn">Encode →</button>
+                    </div>
+                    <div class="panel-section">
+                        <label>HTML Entities</label>
+                        <textarea id="htmlEncoded" placeholder="Enter HTML entities to decode..." rows="6"></textarea>
+                        <button class="action-btn" id="htmlDecodeBtn">← Decode</button>
+                    </div>
+                </div>
+                <div class="options-row">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="htmlNumeric">
+                        <span>Use numeric entities (&#60; instead of &lt;)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Encryption -->
+            <div class="panel" id="encrypt-panel">
+                <div class="encrypt-warning">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <span>All encryption/decryption happens in your browser. Your data never leaves your device.</span>
+                </div>
+                <div class="input-section">
+                    <label>Secret Key (Password)</label>
+                    <div class="key-input-row">
+                        <input type="password" id="encryptKey" placeholder="Enter encryption key...">
+                        <button class="toggle-btn" id="toggleKeyBtn">Show</button>
+                    </div>
+                </div>
+                <div class="dual-panel">
+                    <div class="panel-section">
+                        <label>Plain Text</label>
+                        <textarea id="encryptPlain" placeholder="Enter text to encrypt..." rows="6"></textarea>
+                        <button class="action-btn encrypt" id="encryptBtn">Encrypt →</button>
+                    </div>
+                    <div class="panel-section">
+                        <label>Encrypted (AES-256-GCM)</label>
+                        <textarea id="encryptEncoded" placeholder="Enter encrypted text to decrypt..." rows="6"></textarea>
+                        <button class="action-btn decrypt" id="decryptBtn">← Decrypt</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/js/encoding-tools.js?v={{ v }}"></script>
+</body>
+</html>

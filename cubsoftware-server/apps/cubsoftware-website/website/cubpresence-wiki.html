@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CubPresence Wiki - Setup Guide & Documentation</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Complete guide to CubPresence - Discord Rich Presence customization tool. Learn how to set up custom activity, images, buttons, timestamps, and more.">
+    <meta name="keywords" content="cubpresence, discord rich presence, custom presence, discord rpc, setup guide, tutorial">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/cubpresence-wiki">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="CubPresence Wiki - Setup Guide">
+    <meta property="og:description" content="Complete guide to customizing your Discord Rich Presence with CubPresence.">
+    <meta property="og:url" content="https://cubsoftware.site/cubpresence-wiki">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+    <meta property="og:image" content="https://cubsoftware.site/static/images/company-logo.png">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="CubPresence Wiki">
+    <meta name="twitter:description" content="Learn how to customize your Discord Rich Presence with CubPresence.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        .wiki-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .wiki-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .wiki-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #5865f2, #eb459e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .wiki-header p {
+            color: #b9bbbe;
+            font-size: 1.1rem;
+        }
+
+        .wiki-nav {
+            background: rgba(30, 30, 50, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 40px;
+            border: 1px solid rgba(88, 101, 242, 0.2);
+        }
+
+        .wiki-nav h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #72767d;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .wiki-nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .wiki-nav-links a {
+            padding: 8px 16px;
+            background: rgba(88, 101, 242, 0.1);
+            border: 1px solid rgba(88, 101, 242, 0.3);
+            border-radius: 20px;
+            color: #b9bbbe;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .wiki-nav-links a:hover {
+            background: rgba(88, 101, 242, 0.2);
+            color: #fff;
+            border-color: #5865f2;
+        }
+
+        .wiki-section {
+            background: rgba(20, 20, 40, 0.6);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .wiki-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .wiki-section h2 .emoji {
+            font-size: 1.3rem;
+        }
+
+        .wiki-section h3 {
+            font-size: 1.1rem;
+            margin: 25px 0 15px 0;
+            color: #5865f2;
+        }
+
+        .wiki-section p {
+            color: #b9bbbe;
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        .wiki-section ul, .wiki-section ol {
+            color: #b9bbbe;
+            padding-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        .wiki-section li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .wiki-section strong {
+            color: #fff;
+        }
+
+        .wiki-section code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            color: #57f287;
+            font-size: 0.9em;
+        }
+
+        .tip-box {
+            background: rgba(87, 242, 135, 0.1);
+            border-left: 4px solid #57f287;
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+        }
+
+        .tip-box strong {
+            color: #57f287;
+        }
+
+        .warning-box {
+            background: rgba(250, 166, 26, 0.1);
+            border-left: 4px solid #faa61a;
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+        }
+
+        .warning-box strong {
+            color: #faa61a;
+        }
+
+        .info-box {
+            background: rgba(88, 101, 242, 0.1);
+            border-left: 4px solid #5865f2;
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+        }
+
+        .info-box strong {
+            color: #5865f2;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .feature-item {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .feature-item h4 {
+            color: #fff;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+        }
+
+        .feature-item p {
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .step-list {
+            counter-reset: step-counter;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .step-list li {
+            counter-increment: step-counter;
+            position: relative;
+            padding-left: 50px;
+            margin-bottom: 20px;
+        }
+
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 32px;
+            height: 32px;
+            background: #5865f2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: #fff;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #5865f2, #4752c4);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(88, 101, 242, 0.3);
+        }
+
+        .activity-types-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        .activity-types-table th,
+        .activity-types-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .activity-types-table th {
+            color: #72767d;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .activity-types-table td {
+            color: #b9bbbe;
+        }
+
+        .activity-types-table tr:hover td {
+            background: rgba(88, 101, 242, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .wiki-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .wiki-section {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="wiki-container">
+            <div class="wiki-header">
+                <h1>CubPresence Wiki</h1>
+                <p>Everything you need to know about customizing your Discord Rich Presence</p>
+            </div>
+
+            <nav class="wiki-nav">
+                <h3>Quick Navigation</h3>
+                <div class="wiki-nav-links">
+                    <a href="#getting-started">Getting Started</a>
+                    <a href="#creating-app">Creating an App</a>
+                    <a href="#activity-types">Activity Types</a>
+                    <a href="#timestamps">Timestamps</a>
+                    <a href="#images">Images</a>
+                    <a href="#buttons">Buttons</a>
+                    <a href="#presets">Quick Presets</a>
+                    <a href="#settings">Settings</a>
+                    <a href="#troubleshooting">Troubleshooting</a>
+                </div>
+            </nav>
+
+            <section class="wiki-section" id="getting-started">
+                <h2><span class="emoji">1.</span> Getting Started</h2>
+                <p>CubPresence lets you create a fully customized Discord Rich Presence that appears on your profile. You can show what you're playing, streaming, listening to, or watching - with custom images, text, buttons, and timestamps.</p>
+
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>Custom Activity</h4>
+                        <p>Set any game, app, or activity name</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Activity Types</h4>
+                        <p>Playing, Streaming, Listening, Watching, Competing</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Custom Images</h4>
+                        <p>Large and small icons from URLs or assets</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Clickable Buttons</h4>
+                        <p>Add up to 2 buttons with custom links</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Timestamps</h4>
+                        <p>Elapsed time, countdown, or custom times</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Quick Presets</h4>
+                        <p>One-click presets for common activities</p>
+                    </div>
+                </div>
+
+                <a href="/#apps" class="download-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Download CubPresence
+                </a>
+            </section>
+
+            <section class="wiki-section" id="creating-app">
+                <h2><span class="emoji">2.</span> Creating a Discord Application</h2>
+                <p>To use CubPresence, you need to create a Discord Application. This is free and takes less than a minute.</p>
+
+                <ol class="step-list">
+                    <li>
+                        <strong>Open the Discord Developer Portal</strong><br>
+                        Go to <a href="https://discord.com/developers/applications" target="_blank" style="color: #5865f2;">discord.com/developers/applications</a> and sign in with your Discord account.
+                    </li>
+                    <li>
+                        <strong>Create a New Application</strong><br>
+                        Click the <strong>"New Application"</strong> button in the top right. Give your application a name - this will be the activity title shown on your profile (e.g., "Playing <em>Your App Name</em>").
+                    </li>
+                    <li>
+                        <strong>Copy Your Application ID</strong><br>
+                        On the application's page, you'll see an <strong>"Application ID"</strong> (also called Client ID). Copy this number - you'll paste it into CubPresence.
+                    </li>
+                    <li>
+                        <strong>Add Images (Optional)</strong><br>
+                        Go to <strong>"Rich Presence" > "Art Assets"</strong> in the sidebar. Upload images and give them names (keys). You can use these names in CubPresence's image fields.
+                    </li>
+                </ol>
+
+                <div class="tip-box">
+                    <strong>Tip:</strong> You can create multiple Discord applications with different names to switch between different activities!
+                </div>
+            </section>
+
+            <section class="wiki-section" id="activity-types">
+                <h2><span class="emoji">3.</span> Activity Types</h2>
+                <p>Discord supports different activity types that change how your presence is displayed:</p>
+
+                <table class="activity-types-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Display</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Playing</strong></td>
+                            <td>Playing [App Name]</td>
+                            <td>Playing Minecraft</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Streaming</strong></td>
+                            <td>Streaming [App Name]</td>
+                            <td>Streaming on Twitch</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Listening to</strong></td>
+                            <td>Listening to [App Name]</td>
+                            <td>Listening to Spotify</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Watching</strong></td>
+                            <td>Watching [App Name]</td>
+                            <td>Watching YouTube</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Competing in</strong></td>
+                            <td>Competing in [App Name]</td>
+                            <td>Competing in Tournament</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="info-box">
+                    <strong>Note:</strong> The "Streaming" type may show a purple "LIVE" badge on your profile. "Listening to" is what Spotify uses for its integration.
+                </div>
+            </section>
+
+            <section class="wiki-section" id="timestamps">
+                <h2><span class="emoji">4.</span> Timestamps</h2>
+                <p>Timestamps show elapsed time or countdowns on your presence. CubPresence offers several timestamp options:</p>
+
+                <h3>Available Options</h3>
+                <ul>
+                    <li><strong>None</strong> - No timestamp displayed</li>
+                    <li><strong>Since Update</strong> - Time since the presence was last updated</li>
+                    <li><strong>Since Connect</strong> - Time since you connected to Discord</li>
+                    <li><strong>Since App Start</strong> - Time since CubPresence was opened</li>
+                    <li><strong>Local Time</strong> - Shows your local time today</li>
+                    <li><strong>Custom</strong> - Set a specific start/end date and time</li>
+                </ul>
+
+                <h3>Custom Timestamps</h3>
+                <p>With custom timestamps, you can:</p>
+                <ul>
+                    <li>Set only a <strong>start time</strong> to show elapsed time from that moment</li>
+                    <li>Set both <strong>start and end times</strong> to show a countdown</li>
+                </ul>
+            </section>
+
+            <section class="wiki-section" id="images">
+                <h2><span class="emoji">5.</span> Images</h2>
+                <p>You can display two images on your presence: a large image and a small image that overlays the corner of the large one.</p>
+
+                <h3>Using Image URLs</h3>
+                <p>The easiest way is to use direct image URLs:</p>
+                <ul>
+                    <li>Paste any <code>https://</code> image URL directly into the image field</li>
+                    <li>Supported formats: PNG, JPG, GIF</li>
+                    <li>Recommended size: 512x512 pixels or larger</li>
+                </ul>
+
+                <h3>Using Discord Assets</h3>
+                <p>You can also upload images to your Discord application:</p>
+                <ol>
+                    <li>Go to your app in the Developer Portal</li>
+                    <li>Navigate to <strong>"Rich Presence" > "Art Assets"</strong></li>
+                    <li>Upload images and give them names</li>
+                    <li>Use the image name (key) in CubPresence</li>
+                </ol>
+
+                <div class="tip-box">
+                    <strong>Tip:</strong> Image tooltips appear when someone hovers over your images. Use them to add extra information!
+                </div>
+            </section>
+
+            <section class="wiki-section" id="buttons">
+                <h2><span class="emoji">6.</span> Buttons</h2>
+                <p>Add up to 2 clickable buttons to your presence that link to any URL.</p>
+
+                <h3>Button Guidelines</h3>
+                <ul>
+                    <li>Each button needs a <strong>label</strong> (max 32 characters) and a <strong>URL</strong></li>
+                    <li>URLs must start with <code>https://</code> or <code>http://</code></li>
+                    <li>Common uses: website links, social media, join links, donation pages</li>
+                </ul>
+
+                <div class="warning-box">
+                    <strong>Important:</strong> You cannot see or click your own buttons! They only appear for others viewing your profile. Ask a friend to verify they work.
+                </div>
+            </section>
+
+            <section class="wiki-section" id="presets">
+                <h2><span class="emoji">7.</span> Quick Presets</h2>
+                <p>CubPresence includes one-click presets for common activities:</p>
+
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>Gaming</h4>
+                        <p>Sets "Playing" type with elapsed time</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Streaming</h4>
+                        <p>Sets "Streaming" type for live content</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Coding</h4>
+                        <p>Perfect for developers showing work time</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Music</h4>
+                        <p>Sets "Listening to" for music sessions</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Chilling</h4>
+                        <p>Casual AFK status</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Clear All</h4>
+                        <p>Resets all fields to empty</p>
+                    </div>
+                </div>
+
+                <p>Presets only change the basic fields - your images and buttons are preserved.</p>
+            </section>
+
+            <section class="wiki-section" id="settings">
+                <h2><span class="emoji">8.</span> Settings</h2>
+                <p>CubPresence includes several helpful settings:</p>
+
+                <h3>Startup Options</h3>
+                <ul>
+                    <li><strong>Run on system startup</strong> - Launch CubPresence when Windows starts</li>
+                    <li><strong>Start minimized to tray</strong> - Start hidden in the system tray</li>
+                    <li><strong>Auto-connect on startup</strong> - Automatically connect to Discord when opened</li>
+                </ul>
+
+                <h3>Behavior Options</h3>
+                <ul>
+                    <li><strong>Minimize to tray on close</strong> - Keep running in the background when you click X</li>
+                    <li><strong>Show notifications</strong> - Desktop notifications for connection status</li>
+                    <li><strong>Remember presence on close</strong> - Save your settings and restore them next time</li>
+                </ul>
+
+                <h3>System Tray</h3>
+                <p>CubPresence runs in your system tray. Right-click the tray icon for quick actions:</p>
+                <ul>
+                    <li>Open the main window</li>
+                    <li>Quick Connect/Disconnect</li>
+                    <li>Check for updates</li>
+                    <li>Quit the application</li>
+                </ul>
+            </section>
+
+            <section class="wiki-section" id="troubleshooting">
+                <h2><span class="emoji">9.</span> Troubleshooting</h2>
+
+                <h3>"Failed to connect to Discord"</h3>
+                <ul>
+                    <li>Make sure Discord is running on your computer</li>
+                    <li>Try restarting Discord</li>
+                    <li>Make sure you're not running Discord in a browser - the desktop app is required</li>
+                </ul>
+
+                <h3>"Application ID should be a number"</h3>
+                <ul>
+                    <li>The Application ID is a long number (e.g., 1234567890123456789)</li>
+                    <li>Don't confuse it with the Public Key or other values</li>
+                    <li>Copy it directly from the Developer Portal</li>
+                </ul>
+
+                <h3>Images not showing</h3>
+                <ul>
+                    <li>If using URLs, make sure they're direct image links (ending in .png, .jpg, etc.)</li>
+                    <li>If using Discord assets, make sure the asset name matches exactly</li>
+                    <li>New Discord assets can take up to 10 minutes to become available</li>
+                </ul>
+
+                <h3>Buttons not appearing</h3>
+                <ul>
+                    <li>Remember: you can't see your own buttons!</li>
+                    <li>Make sure both label and URL are filled in</li>
+                    <li>URLs must start with http:// or https://</li>
+                </ul>
+
+                <h3>Party size not showing</h3>
+                <ul>
+                    <li>Both Party Size and Party Max must be filled in</li>
+                    <li>Party Size cannot be larger than Party Max</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong>Still having issues?</strong> Visit our <a href="/contact" style="color: #5865f2;">Contact page</a> to get help from the CUB SOFTWARE team.
+                </div>
+            </section>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+</body>
+</html>

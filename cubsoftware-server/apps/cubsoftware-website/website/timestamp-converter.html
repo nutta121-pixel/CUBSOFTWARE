@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Timestamp Converter - Unix to Human Readable & Back | Free Online</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Convert Unix timestamps to human dates instantly. Epoch to datetime, datetime to epoch. Support for multiple timezones. Essential tool for developers.">
+    <meta name="keywords" content="unix timestamp converter, epoch converter, timestamp to date, date to timestamp, unix time, epoch time">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/timestamp-converter">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Timestamp Converter - Unix Epoch Made Easy | Free">
+    <meta property="og:description" content="Stop Googling 'epoch converter'. Convert Unix timestamps to readable dates and back. Multiple timezone support, instant results.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/timestamp-converter">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/timestamp-converter.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="timestamp-container">
+            <div class="timestamp-header">
+                <h1>Timestamp Converter</h1>
+                <p>Convert between Unix timestamps and human-readable dates</p>
+            </div>
+
+            <!-- Current Time Display -->
+            <div class="current-time-card">
+                <div class="current-time-label">Current Time</div>
+                <div class="current-time-display">
+                    <div class="time-value">
+                        <span class="time-number" id="currentTimestamp">1234567890</span>
+                        <span class="time-label">Unix Timestamp</span>
+                    </div>
+                    <div class="time-separator">=</div>
+                    <div class="time-value">
+                        <span class="time-number" id="currentReadable">Jan 1, 2024 12:00:00</span>
+                        <span class="time-label">Human Readable</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Converter Panels -->
+            <div class="converter-panels">
+                <!-- Unix to Human -->
+                <div class="converter-card">
+                    <h3>Unix Timestamp → Human Date</h3>
+                    <div class="input-group">
+                        <label for="unixInput">Unix Timestamp</label>
+                        <div class="input-with-btn">
+                            <input type="number" id="unixInput" placeholder="Enter timestamp (e.g., 1704067200)">
+                            <button class="now-btn" id="nowBtn">Now</button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Format</label>
+                        <select id="unixFormat">
+                            <option value="seconds">Seconds</option>
+                            <option value="milliseconds">Milliseconds</option>
+                        </select>
+                    </div>
+                    <div class="result-box" id="unixResult">
+                        <div class="result-row">
+                            <span class="result-label">Local:</span>
+                            <span class="result-value" id="localResult">-</span>
+                            <button class="copy-btn" data-copy="localResult">Copy</button>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">UTC:</span>
+                            <span class="result-value" id="utcResult">-</span>
+                            <button class="copy-btn" data-copy="utcResult">Copy</button>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">ISO 8601:</span>
+                            <span class="result-value" id="isoResult">-</span>
+                            <button class="copy-btn" data-copy="isoResult">Copy</button>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Relative:</span>
+                            <span class="result-value" id="relativeResult">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Human to Unix -->
+                <div class="converter-card">
+                    <h3>Human Date → Unix Timestamp</h3>
+                    <div class="date-inputs">
+                        <div class="input-group">
+                            <label for="dateInput">Date</label>
+                            <input type="date" id="dateInput">
+                        </div>
+                        <div class="input-group">
+                            <label for="timeInput">Time</label>
+                            <input type="time" id="timeInput" step="1">
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="timezoneSelect">Timezone</label>
+                        <select id="timezoneSelect">
+                            <option value="local">Local Time</option>
+                            <option value="UTC">UTC</option>
+                        </select>
+                    </div>
+                    <div class="result-box" id="dateResult">
+                        <div class="result-row">
+                            <span class="result-label">Seconds:</span>
+                            <span class="result-value" id="secondsResult">-</span>
+                            <button class="copy-btn" data-copy="secondsResult">Copy</button>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Milliseconds:</span>
+                            <span class="result-value" id="millisecondsResult">-</span>
+                            <button class="copy-btn" data-copy="millisecondsResult">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Common Timestamps Reference -->
+            <div class="reference-section">
+                <h3>Common Timestamps</h3>
+                <div class="reference-grid">
+                    <div class="reference-card">
+                        <span class="ref-name">Unix Epoch</span>
+                        <span class="ref-value">0</span>
+                        <span class="ref-date">Jan 1, 1970 00:00:00 UTC</span>
+                    </div>
+                    <div class="reference-card">
+                        <span class="ref-name">Y2K</span>
+                        <span class="ref-value">946684800</span>
+                        <span class="ref-date">Jan 1, 2000 00:00:00 UTC</span>
+                    </div>
+                    <div class="reference-card">
+                        <span class="ref-name">32-bit Overflow</span>
+                        <span class="ref-value">2147483647</span>
+                        <span class="ref-date">Jan 19, 2038 03:14:07 UTC</span>
+                    </div>
+                    <div class="reference-card">
+                        <span class="ref-name">Year 2024</span>
+                        <span class="ref-value">1704067200</span>
+                        <span class="ref-date">Jan 1, 2024 00:00:00 UTC</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <script src="/static/js/timestamp-converter.js?v={{ v }}"></script>
+</body>
+</html>

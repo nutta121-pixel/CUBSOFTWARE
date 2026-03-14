@@ -1,0 +1,85 @@
+# ── Dependencies ──────────────────────────────────────────────
+node_modules/
+__pycache__/
+*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+
+# ── Environment ───────────────────────────────────────────────
+.env
+*.env
+.env.*
+.env.local
+.env.*.local
+!.env.*.example
+
+# ── Logs ──────────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+
+# ── Build outputs ─────────────────────────────────────────────
+dist/
+build/
+out/
+coverage/
+.nyc_output/
+htmlcov/
+.tox/
+.pytest_cache/
+instance/
+*.spec
+
+# ── Data / uploads (runtime, not versioned) ───────────────────
+**/data/*.json
+**/data/
+**/uploads/
+**/static/downloads/
+backups/
+BackUps/
+
+# ── App-specific download folders ─────────────────────────────
+apps/music-downloader/downloads/*
+!apps/music-downloader/downloads/.gitkeep
+apps/social-media-saver/downloads/*
+!apps/social-media-saver/downloads/.gitkeep
+
+# ── Sensitive files ───────────────────────────────────────────
+youtube_cookies.txt
+
+# ── Databases ─────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Process manager ───────────────────────────────────────────
+.pm2/
+ecosystem.config.js.backup
+
+# ── IDE ───────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+nul
+NUL
+
+# ── Temp ──────────────────────────────────────────────────────
+*.tmp
+*.temp
+
+# ── Local dev scripts (never commit) ──────────────────────────
+*.bat
+dev_server.py

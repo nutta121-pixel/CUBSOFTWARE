@@ -1,0 +1,424 @@
+/* Stream Overlays — Editor Styles */
+
+/* ─── Sidebar tabs ─── */
+.ov-tab-bar {
+    display: flex;
+    gap: 0;
+    padding: 0;
+    background: #0e0e1a;
+    border-bottom: 2px solid #7c3aed;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 50px;
+    z-index: 10;
+}
+.ov-tab {
+    flex: 1;
+    min-width: 0;
+    padding: 9px 4px 7px;
+    font-size: 9px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: #555;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    transition: color .15s, background .15s, border-color .15s;
+    white-space: nowrap;
+}
+.ov-tab:hover { color: #aaa; background: rgba(255,255,255,.04); }
+.ov-tab.active {
+    color: #c4b5fd;
+    background: rgba(124,58,237,.15);
+    border-bottom-color: #a78bfa;
+}
+.ov-tab-pane { display: none; }
+.ov-tab-pane.active { display: block; }
+
+/* ─── Sidebar search ─── */
+.ov-sidebar-search {
+    padding: 8px 10px;
+    position: sticky;
+    top: 0;
+    z-index: 11;
+    background: #0e0e1a;
+}
+.ov-sidebar-search .ov-input { width: 100%; font-size: 12px; }
+.ov-ctrl-section.ov-search-hidden { display: none; }
+
+/* Full-viewport lock — no page scroll */
+.ov-editor-body {
+    background: #080810;
+    height: 100vh;
+    overflow: hidden;
+}
+.ov-editor-body .main-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+.ov-editor-body .site-mascot { display: none !important; }
+
+.ov-editor-wrap {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ─── Top bar ─── */
+.ov-editor-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(255,255,255,.03); border-bottom: 1px solid rgba(255,255,255,.08);
+    padding: 12px 24px; gap: 12px; flex-wrap: wrap;
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: blur(8px);
+}
+.ov-editor-topbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ov-editor-back {
+    color: #7c3aed; font-family: Poppins, sans-serif; font-size: 13px;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+    transition: color .2s; white-space: nowrap;
+}
+.ov-editor-back:hover { color: #a78bfa; }
+.ov-editor-scene-name {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+    color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 15px;
+    font-family: Orbitron, sans-serif; font-weight: 700; min-width: 200px;
+    outline: none; transition: border-color .2s;
+}
+.ov-editor-scene-name:focus { border-color: rgba(124,58,237,.5); }
+.ov-editor-type-badge {
+    background: rgba(124,58,237,.15); color: #a78bfa; border: 1px solid rgba(124,58,237,.2);
+    border-radius: 6px; padding: 6px 12px; font-size: 11px; font-family: Orbitron, sans-serif;
+    letter-spacing: 1px; white-space: nowrap;
+}
+.ov-editor-topbar-right { display: flex; align-items: center; gap: 12px; }
+.ov-save-status { font-size: 12px; color: #666; font-family: Poppins, sans-serif; }
+.ov-save-status.saving { color: #7c3aed; }
+.ov-save-status.saved { color: #00cc66; }
+.ov-btn-save {
+    background: #7c3aed; color: #fff; border: none; padding: 10px 20px;
+    border-radius: 8px; font-family: Orbitron, sans-serif; font-size: 13px; font-weight: 700;
+    cursor: pointer; letter-spacing: 1px; transition: background .2s; white-space: nowrap;
+}
+.ov-btn-save:hover { background: #6d28d9; }
+.ov-btn-save:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ─── Main layout ─── */
+.ov-editor-main {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* ─── Sidebar — scrolls independently ─── */
+.ov-editor-sidebar {
+    width: 380px; flex-shrink: 0;
+    overflow-y: auto; overflow-x: hidden;
+    background: rgba(255,255,255,.02); border-right: 1px solid rgba(255,255,255,.07);
+    padding: 0 0 60px;
+}
+.ov-ctrl-section {
+    padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.ov-ctrl-section.danger { border-top: 1px solid rgba(255,68,68,.15); }
+.ov-ctrl-section-title {
+    font-family: Orbitron, sans-serif; font-size: 11px; color: #7c3aed;
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; font-weight: 700;
+}
+.ov-ctrl-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 10px; min-height: 32px;
+}
+.ov-ctrl-row label {
+    font-size: 13px; color: #aaa; font-family: Poppins, sans-serif;
+    white-space: nowrap; flex-shrink: 0; min-width: 80px;
+}
+
+/* ─── Controls ─── */
+.ov-input, .ov-select, .ov-textarea {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+    color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px;
+    font-family: Poppins, sans-serif; outline: none; width: 100%;
+    transition: border-color .2s;
+}
+.ov-input:focus, .ov-select:focus, .ov-textarea:focus { border-color: rgba(124,58,237,.5); }
+.ov-input.sm { width: 90px; }
+.ov-select { appearance: none; cursor: pointer; background-color: rgba(26,26,46,.95); }
+.ov-textarea { resize: vertical; min-height: 80px; max-height: 200px; }
+/* ─── Custom checkbox ─── */
+.ov-checkbox {
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px; flex-shrink: 0;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 4px; cursor: pointer; position: relative;
+    transition: background .15s, border-color .15s;
+}
+.ov-checkbox:checked { background: #7c3aed; border-color: #7c3aed; }
+.ov-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px; top: 2px;
+    width: 5px; height: 9px;
+    border: 2px solid #fff;
+    border-top: none; border-left: none;
+    transform: rotate(45deg);
+}
+.ov-checkbox:hover:not(:checked) { border-color: rgba(124,58,237,.5); }
+
+/* ─── Color inputs ─── */
+.ov-color-input-wrap { display: flex; align-items: center; gap: 6px; flex: 1; }
+.ov-color-swatch {
+    width: 32px; height: 32px; border-radius: 6px; border: 1px solid rgba(255,255,255,.2);
+    cursor: pointer; padding: 2px; flex-shrink: 0; background: none; overflow: hidden;
+}
+.ov-color-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.ov-color-swatch::-webkit-color-swatch { border: none; border-radius: 4px; }
+.ov-color-text {
+    flex: 1; min-width: 0;
+    font-family: 'Share Tech Mono', monospace; font-size: 13px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+    color: #fff; padding: 6px 10px; border-radius: 8px;
+    outline: none; transition: border-color .2s;
+}
+.ov-color-text:focus { border-color: rgba(124,58,237,.5); }
+
+/* ─── Range inputs ─── */
+.ov-range-wrap { display: flex; align-items: center; gap: 8px; flex: 1; }
+.ov-range-wrap span { color: #888; font-size: 12px; font-family: 'Share Tech Mono', monospace; min-width: 36px; }
+.ov-range-val { color: #888; font-size: 12px; font-family: 'Share Tech Mono', monospace; min-width: 44px; text-align: right; }
+input[type=range] {
+    -webkit-appearance: none; appearance: none;
+    height: 4px; background: rgba(255,255,255,.12); border-radius: 2px;
+    outline: none; cursor: pointer; flex: 1;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    height: 4px; background: rgba(255,255,255,.12); border-radius: 2px;
+}
+input[type=range]::-moz-range-track {
+    height: 4px; background: rgba(255,255,255,.12); border-radius: 2px; border: none;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #7c3aed; cursor: pointer;
+    border: 2px solid rgba(255,255,255,.25);
+    margin-top: -6px; transition: background .15s;
+}
+input[type=range]::-webkit-slider-thumb:hover { background: #9d6bff; }
+input[type=range]::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #7c3aed; cursor: pointer; border: 2px solid rgba(255,255,255,.25);
+}
+
+/* ─── Template grid in sidebar ─── */
+.ov-template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ov-tmpl-btn {
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 8px; overflow: hidden; cursor: pointer; text-align: center;
+    transition: border-color .2s;
+}
+.ov-tmpl-btn:hover { border-color: rgba(124,58,237,.4); }
+.ov-tmpl-btn.active { border-color: #7c3aed; background: rgba(124,58,237,.08); }
+.ov-tmpl-btn-preview {
+    height: 40px; display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-family: Orbitron, sans-serif; letter-spacing: 2px; color: #fff;
+}
+.tmpl-minimal { background: linear-gradient(135deg,#0d0d1f,#0a0a18); }
+.tmpl-neon {
+    background: #050510;
+    border: 1px solid rgba(124,58,237,.6);
+    box-shadow: inset 0 0 16px rgba(124,58,237,.15), 0 0 8px rgba(124,58,237,.2);
+    position: relative; overflow: hidden;
+}
+.tmpl-neon::after {
+    content: ''; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(124,58,237,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.04) 1px,transparent 1px);
+    background-size: 8px 8px;
+}
+.tmpl-retro {
+    background: #0a0000; color: #ff3333;
+    font-family: 'Share Tech Mono', monospace;
+    position: relative; overflow: hidden;
+}
+.tmpl-retro::after {
+    content: ''; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.3) 2px,rgba(0,0,0,.3) 3px);
+}
+.tmpl-cozy {
+    background: linear-gradient(135deg, #1c0d14, #0d1428);
+    box-shadow: inset 0 0 20px rgba(255,150,150,.05);
+}
+.tmpl-gradient {
+    background: linear-gradient(135deg, #0a0a1a, #1a0030, #001a30);
+    background-size: 200% 200%;
+}
+.tmpl-gaming {
+    background: radial-gradient(ellipse at center, rgba(124,58,237,.35) 0%, #000 70%);
+    border-bottom: 1px solid rgba(124,58,237,.3);
+}
+.tmpl-esports {
+    background: #020208;
+    border-left: 2px solid #00e5ff;
+    box-shadow: inset 4px 0 20px rgba(0,229,255,.08);
+    position: relative; overflow: hidden;
+}
+.tmpl-esports::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg,#00e5ff,transparent);
+}
+.tmpl-vaporwave {
+    background: linear-gradient(160deg, #2d004f, #001a4f);
+    position: relative; overflow: hidden;
+}
+.tmpl-vaporwave::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40%;
+    background: linear-gradient(rgba(255,113,206,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,113,206,.05) 1px,transparent 1px);
+    background-size: 6px 6px; transform: perspective(40px) rotateX(20deg); transform-origin: bottom;
+}
+.tmpl-glass {
+    background: rgba(14,14,30,.7);
+    border: 1px solid rgba(255,255,255,.15);
+    backdrop-filter: blur(8px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+}
+.tmpl-cinematic {
+    background: #000;
+    border-top: 2px solid #d4af37;
+    border-bottom: 2px solid #d4af37;
+    box-shadow: inset 0 0 20px rgba(212,175,55,.06);
+}
+.tmpl-broadcast {
+    background: #050510;
+    border-left: 4px solid #7c3aed;
+    background-image: linear-gradient(90deg,rgba(124,58,237,.07),transparent 60%);
+}
+.tmpl-lofi {
+    background: linear-gradient(135deg, #1a1008, #0f0c08);
+    border: 1px solid rgba(232,193,122,.2);
+    box-shadow: inset 0 0 20px rgba(232,193,122,.04);
+}
+.ov-tmpl-btn span { display: block; font-size: 10px; color: #888; font-family: Poppins, sans-serif; padding: 4px; }
+
+/* ─── OBS URL box ─── */
+.ov-obs-url-box {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; flex-wrap: wrap;
+}
+.ov-obs-url-box code {
+    font-family: 'Share Tech Mono', monospace; font-size: 11px; color: #888;
+    word-break: break-all; flex: 1;
+}
+.ov-hint { font-size: 11px; color: #555; font-family: Poppins, sans-serif; line-height: 1.5; }
+
+/* ─── Logo preview ─── */
+.ov-logo-preview { margin-top: 8px; text-align: center; }
+.ov-logo-preview img { max-width: 140px; max-height: 80px; object-fit: contain; border-radius: 6px; }
+
+/* ─── Dynamic list rows (co-players, games) ─── */
+.ov-list-row {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+}
+.ov-list-row .ov-input { flex: 1; }
+.ov-list-row .ov-input.sm { flex: 0 0 90px; }
+
+/* ─── Collaborators ─── */
+.ov-collab-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.ov-collab-id { font-size: 12px; color: #888; font-family: 'Share Tech Mono', monospace; flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.ov-btn-secondary {
+    background: rgba(255,255,255,.06); color: #ccc; border: 1px solid rgba(255,255,255,.15);
+    padding: 8px 14px; border-radius: 8px; font-size: 12px; cursor: pointer;
+    font-family: Poppins, sans-serif; transition: all .2s; width: 100%;
+}
+.ov-btn-secondary:hover { background: rgba(255,255,255,.1); color: #fff; }
+.ov-btn-danger {
+    background: rgba(255,68,68,.1); color: #ff6666; border: 1px solid rgba(255,68,68,.2);
+    padding: 10px 16px; border-radius: 8px; font-size: 13px; cursor: pointer;
+    font-family: Poppins, sans-serif; transition: all .2s; width: 100%;
+}
+.ov-btn-danger:hover { background: rgba(255,68,68,.2); border-color: rgba(255,68,68,.4); }
+.ov-btn-danger-sm {
+    background: transparent; color: #ff6666; border: 1px solid rgba(255,68,68,.2);
+    padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer;
+    font-family: Poppins, sans-serif; transition: all .2s; white-space: nowrap;
+}
+.ov-btn-danger-sm:hover { background: rgba(255,68,68,.1); }
+.ov-copy-btn {
+    background: rgba(124,58,237,.15); color: #a78bfa; border: 1px solid rgba(124,58,237,.2);
+    padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer;
+    font-family: Poppins, sans-serif; white-space: nowrap; transition: background .2s;
+}
+.ov-copy-btn:hover { background: rgba(124,58,237,.3); }
+
+/* ─── Schedule row in editor ─── */
+.ov-schedule-row {
+    display: grid; grid-template-columns: auto 60px 90px 1fr; gap: 6px;
+    align-items: center; margin-bottom: 6px;
+}
+.ov-schedule-day { font-size: 12px; color: #aaa; font-family: Poppins, sans-serif; }
+
+/* ─── Preview panel ─── */
+.ov-editor-preview-panel {
+    flex: 1; min-width: 0; min-height: 0;
+    display: flex; flex-direction: column; align-items: center;
+    background: #050508; padding: 16px;
+    overflow: hidden;
+}
+.ov-preview-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px; flex-shrink: 0; width: 100%;
+}
+.ov-preview-label { font-size: 12px; color: #555; font-family: Poppins, sans-serif; letter-spacing: 1px; }
+.ov-btn-refresh {
+    background: rgba(255,255,255,.06); color: #888; border: 1px solid rgba(255,255,255,.1);
+    padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 16px;
+    transition: all .2s;
+}
+.ov-btn-refresh:hover { background: rgba(255,255,255,.1); color: #fff; }
+.ov-preview-frame-wrap {
+    position: relative;
+    border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,.08);
+    background: #000; flex-shrink: 0; align-self: center;
+}
+.ov-preview-frame {
+    width: 1920px; height: 1080px; border: none; display: block;
+    transform-origin: top left; position: absolute; top: 0; left: 0;
+}
+
+/* ─── Toast ─── */
+.ov-toast {
+    position: fixed; bottom: 32px; right: 32px;
+    background: rgba(20,20,40,.96); color: #fff; padding: 14px 20px;
+    border-radius: 10px; font-size: 14px; font-family: Poppins, sans-serif;
+    border: 1px solid rgba(124,58,237,.3); transform: translateY(80px); opacity: 0;
+    transition: all .3s; z-index: 9999; pointer-events: none;
+}
+.ov-toast.show { transform: translateY(0); opacity: 1; }
+
+/* ─── Responsive ─── */
+@media (max-width: 1024px) {
+    .ov-editor-main { flex-direction: column; }
+    .ov-editor-sidebar { width: 100%; border-right: none; border-bottom: 1px solid rgba(255,255,255,.07); max-height: 500px; }
+    .ov-template-grid { grid-template-columns: repeat(6, 1fr); }
+}
+@media (max-width: 768px) {
+    .ov-editor-topbar { padding: 10px 16px; }
+    .ov-editor-scene-name { min-width: 140px; font-size: 13px; }
+    .ov-template-grid { grid-template-columns: repeat(3, 1fr); }
+    .ov-preview-frame-wrap { max-width: 100%; }
+}
+@media (max-width: 480px) {
+    .ov-editor-topbar-left { flex-wrap: wrap; gap: 8px; }
+    .ov-editor-scene-name { min-width: 120px; }
+    .ov-schedule-row { grid-template-columns: auto 50px 1fr; }
+}

@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Affiliate Dashboard - CUB SOFTWARE</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        * { box-sizing: border-box; }
+
+        .aff-wrap {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 5rem;
+            text-align: center;
+        }
+
+        /* ── Header ── */
+        .aff-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+            flex-wrap: wrap;
+            text-align: left;
+        }
+
+        .aff-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .aff-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+        }
+
+        .aff-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .aff-role {
+            font-size: 0.75rem;
+            color: var(--primary);
+            font-weight: 500;
+            background: rgba(88,101,242,0.12);
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .aff-logout {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.5rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .aff-logout:hover { border-color: #ed4245; color: #ed4245; }
+
+        /* ── Page title ── */
+        .aff-page-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #009dff, #8a2be2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.3rem;
+        }
+        .aff-page-sub {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        /* ── Vanity link card ── */
+        .link-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            text-align: left;
+        }
+
+        .link-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #009dff22, #8a2be222);
+            border: 1px solid rgba(138,43,226,0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #8a2be2;
+        }
+
+        .link-card-info { flex: 1; min-width: 180px; }
+        .link-card-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.2rem;
+        }
+        .link-card-url { font-family: monospace; font-size: 0.95rem; color: var(--text-light); word-break: break-all; }
+        .link-card-url span { color: #009dff; }
+
+        .btn-copy {
+            padding: 0.55rem 1.3rem;
+            background: linear-gradient(135deg, #009dff, #8a2be2);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-copy:hover { opacity: 0.85; transform: translateY(-1px); }
+        .btn-copy.copied { background: #57F287; color: #111; }
+
+        /* ── Stats row ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.4rem 1rem;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.45rem;
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: var(--text-light);
+            line-height: 1;
+        }
+
+        .stat-card.unique .stat-value { color: #009dff; }
+
+        .stat-card.earnings .stat-value {
+            background: linear-gradient(135deg, #57F287, #00d2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-sublabel {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        /* ── Payout card ── */
+        .payout-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .payout-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .payout-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .payout-amount {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #57F287;
+            line-height: 1;
+        }
+
+        .payout-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.3rem 0.85rem;
+            border-radius: 20px;
+            white-space: nowrap;
+            align-self: flex-start;
+        }
+        .payout-badge.eligible {
+            background: rgba(87,242,135,0.12);
+            color: #57F287;
+            border: 1px solid rgba(87,242,135,0.3);
+        }
+        .payout-badge.not-eligible {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+        }
+
+        .payout-progress-track {
+            height: 8px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .payout-progress-fill {
+            height: 100%;
+            border-radius: 99px;
+            background: linear-gradient(90deg, #009dff, #57F287);
+            transition: width 0.6s ease;
+        }
+
+        .payout-progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+        }
+
+        .payout-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .payout-meta-item { font-size: 0.8rem; color: var(--text-muted); }
+        .payout-meta-item strong { color: var(--text-light); }
+
+        /* ── Withdrawal form ── */
+        .withdraw-form {
+            margin-top: 1.25rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(255,255,255,0.07);
+        }
+        .withdraw-form-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+        .withdraw-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .withdraw-field label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+        .withdraw-field input {
+            width: 100%;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.55rem 0.75rem;
+            color: var(--text-light);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.88rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .withdraw-field input:focus { border-color: #57F287; }
+        .withdraw-hint {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+        .btn-withdraw {
+            background: linear-gradient(135deg, #57F287, #00d2ff);
+            border: none;
+            border-radius: 10px;
+            color: #111;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 700;
+            padding: 0.6rem 1.6rem;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.15s;
+        }
+        .btn-withdraw:hover { opacity: 0.88; transform: translateY(-1px); }
+        .btn-withdraw:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+        .withdraw-error {
+            font-size: 0.78rem;
+            color: #ed4245;
+            margin-top: 0.5rem;
+            display: none;
+        }
+
+        /* ── Pending withdrawal notice ── */
+        .pending-withdrawal-notice {
+            margin-top: 1.25rem;
+            padding: 0.9rem 1rem;
+            background: rgba(255,196,0,0.06);
+            border: 1px solid rgba(255,196,0,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .pending-withdrawal-notice .pwd-icon { font-size: 1.1rem; flex-shrink: 0; }
+        .pending-withdrawal-notice .pwd-text { flex: 1; font-size: 0.82rem; color: var(--text-muted); }
+        .pending-withdrawal-notice .pwd-amount { font-family: 'Orbitron', monospace; font-size: 0.95rem; font-weight: 700; color: #ffc400; white-space: nowrap; }
+
+        /* ── Chart ── */
+        .chart-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .chart-wrap { position: relative; height: 150px; }
+        .chart-bars { display: flex; align-items: flex-end; gap: 3px; height: 100%; }
+        .chart-bar-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+        }
+        .chart-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; }
+        .chart-bar.total { background: rgba(0,157,255,0.2); }
+        .chart-bar.unique { background: #009dff; }
+        .chart-bar-group:hover .chart-bar { opacity: 0.7; }
+
+        .chart-labels { display: flex; gap: 3px; margin-top: 5px; }
+        .chart-label { flex: 1; text-align: center; font-size: 0.5rem; color: var(--text-muted); overflow: hidden; }
+
+        .chart-legend { display: flex; gap: 1.25rem; margin-bottom: 0.85rem; flex-wrap: wrap; }
+        .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); }
+        .legend-dot { width: 9px; height: 9px; border-radius: 2px; }
+
+        /* ── Payment history ── */
+        .history-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .history-empty {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            padding: 1rem 0 0.5rem;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .history-item:last-child { border-bottom: none; }
+
+        .history-date { font-size: 0.8rem; color: var(--text-muted); }
+        .history-note { font-size: 0.82rem; color: var(--text-light); }
+        .history-amount {
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #57F287;
+            white-space: nowrap;
+        }
+
+        /* ── Commission ── */
+        .commission-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            text-align: left;
+        }
+        .commission-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: rgba(87,242,135,0.1); border: 1px solid rgba(87,242,135,0.25);
+            display: flex; align-items: center; justify-content: center;
+            color: #57F287; flex-shrink: 0;
+        }
+        .commission-info { flex: 1; }
+        .commission-title { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.15rem; }
+        .commission-rate { font-size: 1rem; font-weight: 700; color: #57F287; }
+        .commission-note { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+        @media (max-width: 600px) {
+            .aff-page-title { font-size: 1.6rem; }
+            .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+            .stat-value { font-size: 1.4rem; }
+        }
+        @media (max-width: 420px) {
+            .stats-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="aff-wrap">
+
+            <!-- Header bar -->
+            <div class="aff-header">
+                <div class="aff-profile">
+                    <img class="aff-avatar" src="{{ user.avatar }}" alt="{{ user.username }}">
+                    <div>
+                        <div class="aff-name">{{ user.username }}</div>
+                        <div class="aff-role">Affiliate</div>
+                    </div>
+                </div>
+                <a href="/affiliate/auth/logout" class="aff-logout">Logout</a>
+            </div>
+
+            <!-- Title -->
+            <h1 class="aff-page-title">Affiliate Dashboard</h1>
+            <p class="aff-page-sub">Track your referrals and earnings in real time.</p>
+
+            <!-- Vanity link -->
+            <div class="link-card">
+                <div class="link-card-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                </div>
+                <div class="link-card-info">
+                    <div class="link-card-label">Your Affiliate Link</div>
+                    <div class="link-card-url">https://cubsoftware.site<span>/r/{{ affiliate.code }}</span></div>
+                </div>
+                <button class="btn-copy" id="copyBtn" onclick="copyLink()">Copy Link</button>
+            </div>
+
+            <!-- Stats row — always 3 in one line -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">Total Clicks</div>
+                    <div class="stat-value">{{ stats.total_clicks }}</div>
+                    <div class="stat-sublabel">All visits via your link</div>
+                </div>
+                <div class="stat-card unique">
+                    <div class="stat-label">Unique Visitors</div>
+                    <div class="stat-value">{{ stats.unique_clicks }}</div>
+                    <div class="stat-sublabel">First-time visitors only</div>
+                </div>
+                <div class="stat-card earnings">
+                    <div class="stat-label">Total Earned</div>
+                    <div class="stat-value">NZ${{ "%.2f"|format(total_earned) }}</div>
+                    <div class="stat-sublabel">Lifetime earnings (NZD)</div>
+                </div>
+            </div>
+
+            <!-- Payout card -->
+            <div class="payout-card">
+                <div class="payout-top">
+                    <div>
+                        <div class="payout-label">Pending Payout</div>
+                        <div class="payout-amount">NZ${{ "%.2f"|format(pending_payout) }}</div>
+                    </div>
+                    {% if payout_eligible %}
+                    <div class="payout-badge eligible">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        Eligible for withdrawal
+                    </div>
+                    {% else %}
+                    <div class="payout-badge not-eligible">
+                        NZ${{ "%.2f"|format(min_payout - pending_payout) }} until eligible
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="payout-progress-track">
+                    <div class="payout-progress-fill" style="width: {{ [[(pending_payout / min_payout) * 100, 0]|max, 100]|min }}%"></div>
+                </div>
+                <div class="payout-progress-labels">
+                    <span>NZ$0</span>
+                    <span>Minimum: NZ${{ "%.0f"|format(min_payout) }}</span>
+                </div>
+
+                <div class="payout-meta">
+                    <div class="payout-meta-item">Total earned: <strong>NZ${{ "%.2f"|format(total_earned) }}</strong></div>
+                    <div class="payout-meta-item">Already paid: <strong>NZ${{ "%.2f"|format(paid_out) }}</strong></div>
+                    {% if pending_withdrawal %}
+                    <div class="payout-meta-item">Reserved: <strong style="color:#ffc400;">NZ${{ "%.2f"|format(pending_withdrawal.amount) }}</strong></div>
+                    {% endif %}
+                </div>
+                <div style="margin-top:0.5rem;font-size:0.72rem;color:var(--text-muted);">All amounts are in New Zealand dollars (NZD).</div>
+
+                {% if pending_withdrawal %}
+                <!-- Pending withdrawal notice -->
+                <div class="pending-withdrawal-notice">
+                    <div class="pwd-icon">⏳</div>
+                    <div class="pwd-text">
+                        <strong style="color:var(--text-light);">Withdrawal in progress</strong><br>
+                        Sent to PayPal: <strong style="color:var(--text-light);">{{ pending_withdrawal.paypal_email }}</strong> — we'll process it shortly.
+                    </div>
+                    <div class="pwd-amount">NZ${{ "%.2f"|format(pending_withdrawal.amount) }}</div>
+                </div>
+
+                {% elif payout_eligible %}
+                <!-- Withdrawal request form -->
+                <div class="withdraw-form">
+                    <div class="withdraw-form-title">Request Withdrawal</div>
+                    <div class="withdraw-fields">
+                        <div class="withdraw-field">
+                            <label>Amount (NZD) — min NZ${{ "%.0f"|format(min_payout) }}</label>
+                            <input type="number" id="wdAmount" min="{{ min_payout }}" max="{{ "%.2f"|format(available_payout) }}" step="0.01" placeholder="e.g. 20.00">
+                        </div>
+                        <div class="withdraw-field">
+                            <label>PayPal Email</label>
+                            <input type="email" id="wdPaypal" placeholder="you@paypal.com">
+                        </div>
+                    </div>
+                    <div class="withdraw-hint">Available to withdraw: <strong style="color:#57F287;">NZ${{ "%.2f"|format(available_payout) }}</strong> — you can withdraw any amount from NZ${{ "%.0f"|format(min_payout) }} up to your full balance.</div>
+                    <button class="btn-withdraw" id="wdBtn" onclick="requestWithdrawal()">Request Withdrawal</button>
+                    <div class="withdraw-error" id="wdError"></div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 30-day chart -->
+            <div class="chart-card">
+                <div class="card-title">Unique Clicks — Last 30 Days</div>
+                <div class="chart-legend">
+                    <div class="legend-item"><div class="legend-dot" style="background:#009dff"></div>Unique</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:rgba(0,157,255,0.25)"></div>Total</div>
+                </div>
+                <div class="chart-wrap">
+                    <div class="chart-bars" id="chartBars"></div>
+                </div>
+                <div class="chart-labels" id="chartLabels"></div>
+            </div>
+
+            <!-- Payment history -->
+            <div class="history-card">
+                <div class="card-title">Payment History</div>
+                {% if payments %}
+                    {% for p in payments %}
+                    <div class="history-item">
+                        <div>
+                            <div class="history-date">{{ p.timestamp | int | datetime }}</div>
+                            {% if p.note %}<div class="history-note">{{ p.note }}</div>{% endif %}
+                        </div>
+                        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                            {% if p.withdrawal_id %}
+                            <a href="/affiliate/invoice/{{ p.withdrawal_id }}" style="font-size:0.75rem;font-weight:600;color:#009dff;text-decoration:none;background:rgba(0,157,255,0.08);border:1px solid rgba(0,157,255,0.2);padding:3px 10px;border-radius:6px;">View Invoice</a>
+                            {% endif %}
+                            <div class="history-amount">+NZ${{ "%.2f"|format(p.amount) }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="history-empty">No payments yet. Keep sharing your link to build up earnings!</div>
+                {% endif %}
+            </div>
+
+            <!-- Stream Widget -->
+            <div class="history-card" style="text-align:left;">
+                <div class="card-title" style="margin-bottom:1rem;">Stream Widget</div>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.25rem;">Add your personal widget to OBS as a browser source. It shows your referral link on stream so viewers can visit and you get credit for every unique visitor.</p>
+
+                <!-- Widget preview -->
+                <div style="background:linear-gradient(135deg,#1a1a2e,#0a0a1a);border-radius:10px;padding:20px;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:center;min-height:80px;border:1px solid rgba(255,255,255,0.06);">
+                    <div style="display:inline-flex;align-items:center;gap:10px;padding:9px 20px;background:rgba(0,0,0,0.7);border-radius:8px;border:1px solid rgba(255,255,255,0.08);box-shadow:0 0 16px rgba(229,62,62,0.3);white-space:nowrap;">
+                        <span style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#e53e3e;letter-spacing:1.5px;">Powered by CUB SOFTWARE</span>
+                        <span style="color:rgba(255,255,255,0.25);">·</span>
+                        <span style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#e53e3e;letter-spacing:1px;">cubsoftware.site/r/{{ affiliate.code }}</span>
+                    </div>
+                </div>
+
+                <!-- URL copy row -->
+                <div style="margin-bottom:0.85rem;">
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.4rem;font-weight:500;">OBS Browser Source URL</div>
+                    <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+                        <div style="flex:1;min-width:0;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);border-radius:8px;padding:10px 14px;font-size:0.82rem;color:var(--text-light);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                            https://cubsoftware.site/affiliate/widget/{{ affiliate.code }}
+                        </div>
+                        <button class="btn-copy" id="widgetCopyBtn" onclick="copyWidget()" style="flex-shrink:0;">Copy URL</button>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div style="background:rgba(0,157,255,0.06);border:1px solid rgba(0,157,255,0.15);border-radius:8px;padding:0.9rem 1rem;">
+                    <div style="font-size:0.78rem;font-weight:600;color:#009dff;margin-bottom:0.5rem;">How to add in OBS</div>
+                    <ol style="font-size:0.78rem;color:var(--text-muted);line-height:1.8;padding-left:1.2rem;">
+                        <li>In OBS, click <strong style="color:var(--text-light);">+</strong> in the Sources panel → <strong style="color:var(--text-light);">Browser</strong></li>
+                        <li>Paste the URL above, set width to <strong style="color:var(--text-light);">700</strong> and height to <strong style="color:var(--text-light);">70</strong></li>
+                        <li>Check <strong style="color:var(--text-light);">Shutdown source when not visible</strong></li>
+                        <li>Position it anywhere on your scene — done!</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Commission rate -->
+            {% if affiliate.commission_rate > 0 %}
+            <div class="commission-card">
+                <div class="commission-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 6v2m0 8v2"/></svg>
+                </div>
+                <div class="commission-info">
+                    <div class="commission-title">Your Commission Rate</div>
+                    <div class="commission-rate">NZ${{ "%.2f"|format(affiliate.commission_rate) }} per unique visitor</div>
+                    <div class="commission-note">Minimum NZ${{ "%.0f"|format(min_payout) }} required before withdrawal. Earnings are in New Zealand dollars and for unique first-time visitors only.</div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <script>
+        const daily = {{ daily | tojson }};
+
+        function buildChart() {
+            const bars = document.getElementById('chartBars');
+            const labels = document.getElementById('chartLabels');
+            const maxTotal = Math.max(...daily.map(d => d[1].total), 1);
+
+            daily.forEach(([date, counts]) => {
+                const group = document.createElement('div');
+                group.className = 'chart-bar-group';
+                group.title = `${date}: ${counts.unique} unique, ${counts.total} total`;
+
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'position:relative;width:100%;height:100%;display:flex;flex-direction:column;justify-content:flex-end;';
+
+                const totalBar = document.createElement('div');
+                totalBar.className = 'chart-bar total';
+                totalBar.style.height = `${(counts.total / maxTotal) * 100}%`;
+
+                const uniqueBar = document.createElement('div');
+                uniqueBar.className = 'chart-bar unique';
+                uniqueBar.style.cssText = `height:${(counts.unique / maxTotal) * 100}%;position:absolute;bottom:0;width:100%;`;
+
+                wrap.appendChild(totalBar);
+                wrap.appendChild(uniqueBar);
+                group.appendChild(wrap);
+                bars.appendChild(group);
+
+                const labelEl = document.createElement('div');
+                labelEl.className = 'chart-label';
+                const dayNum = new Date(date + 'T00:00:00').getDate();
+                labelEl.textContent = (dayNum % 5 === 0) ? dayNum : '';
+                labels.appendChild(labelEl);
+            });
+        }
+
+        buildChart();
+
+        function copyLink() {
+            navigator.clipboard.writeText('https://cubsoftware.site/r/{{ affiliate.code }}').then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = 'Copy Link'; btn.classList.remove('copied'); }, 2000);
+            });
+        }
+
+        function copyWidget() {
+            navigator.clipboard.writeText('https://cubsoftware.site/affiliate/widget/{{ affiliate.code }}').then(() => {
+                const btn = document.getElementById('widgetCopyBtn');
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = 'Copy URL'; btn.classList.remove('copied'); }, 2000);
+            });
+        }
+
+        async function requestWithdrawal() {
+            const amount   = parseFloat(document.getElementById('wdAmount')?.value || 0);
+            const paypal   = document.getElementById('wdPaypal')?.value?.trim() || '';
+            const errEl    = document.getElementById('wdError');
+            const btn      = document.getElementById('wdBtn');
+
+            errEl.style.display = 'none';
+
+            if (!amount || amount < {{ min_payout }}) {
+                errEl.textContent = 'Minimum withdrawal is NZ${{ "%.0f"|format(min_payout) }}';
+                errEl.style.display = 'block';
+                return;
+            }
+            if (!paypal || !paypal.includes('@')) {
+                errEl.textContent = 'Enter a valid PayPal email address';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+
+            try {
+                const res = await fetch('/affiliate/withdraw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount, paypal_email: paypal })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    location.reload();
+                } else {
+                    errEl.textContent = data.error || 'Something went wrong. Please try again.';
+                    errEl.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = 'Request Withdrawal';
+                }
+            } catch (e) {
+                errEl.textContent = 'Network error. Please try again.';
+                errEl.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = 'Request Withdrawal';
+            }
+        }
+    </script>
+</body>
+</html>

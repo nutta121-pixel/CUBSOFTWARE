@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>QR Code Generator - Create Custom QR Codes Instantly | Free Online</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Generate QR codes in 2 seconds flat. Links, WiFi passwords, contact cards - customize colors, download as PNG or SVG. No signup, no watermarks, completely free.">
+    <meta name="keywords" content="QR code generator free, custom QR code maker, WiFi QR code, vCard QR code, QR code no signup, instant QR creator">
+    <meta name="author" content="CUB">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/apps/qr-generator">
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="QR Code Generator - Custom QR Codes in Seconds | Free">
+    <meta property="og:description" content="Stop paying for QR codes. Create unlimited custom QR codes for links, WiFi, contacts - with custom colors. Download instantly, no signup.">
+    <meta property="og:url" content="https://cubsoftware.site/apps/qr-generator">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="apple-touch-icon" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/qr-generator.css?v={{ v }}">
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="qr-container">
+            <div class="qr-header">
+                <h1>QR Code Generator</h1>
+                <p>Create custom QR codes for links, text, contacts, and WiFi networks</p>
+            </div>
+
+            <div class="qr-main">
+                <!-- Left Column: Input Options -->
+                <div class="qr-column qr-input-column">
+                    <div class="input-section">
+                        <h3>Content Type</h3>
+                        <div class="type-tabs">
+                            <button class="type-tab active" data-type="url">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                </svg>
+                                URL
+                            </button>
+                            <button class="type-tab" data-type="text">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                                Text
+                            </button>
+                            <button class="type-tab" data-type="wifi">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                                    <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                                    <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                                    <line x1="12" y1="20" x2="12.01" y2="20"></line>
+                                </svg>
+                                WiFi
+                            </button>
+                            <button class="type-tab" data-type="contact">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                                Contact
+                            </button>
+                        </div>
+
+                        <!-- URL Input -->
+                        <div class="input-form" id="urlForm">
+                            <div class="form-group">
+                                <label for="urlInput">Website URL</label>
+                                <input type="url" id="urlInput" placeholder="https://example.com" value="https://cubsoftware.site">
+                            </div>
+                        </div>
+
+                        <!-- Text Input -->
+                        <div class="input-form" id="textForm" style="display: none;">
+                            <div class="form-group">
+                                <label for="textInput">Text Content</label>
+                                <textarea id="textInput" placeholder="Enter your text here..." rows="5"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- WiFi Input -->
+                        <div class="input-form" id="wifiForm" style="display: none;">
+                            <div class="form-group">
+                                <label for="wifiSsid">Network Name (SSID)</label>
+                                <input type="text" id="wifiSsid" placeholder="MyWiFiNetwork">
+                            </div>
+                            <div class="form-group">
+                                <label for="wifiPassword">Password</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="wifiPassword" placeholder="Enter password">
+                                    <button type="button" class="toggle-password" id="togglePassword">
+                                        <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                        </svg>
+                                        <svg class="eye-off-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="wifiEncryption">Encryption Type</label>
+                                <select id="wifiEncryption">
+                                    <option value="WPA">WPA/WPA2</option>
+                                    <option value="WEP">WEP</option>
+                                    <option value="nopass">None (Open Network)</option>
+                                </select>
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="wifiHidden">
+                                <label for="wifiHidden">Hidden Network</label>
+                            </div>
+                        </div>
+
+                        <!-- Contact Input -->
+                        <div class="input-form" id="contactForm" style="display: none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="contactFirstName">First Name</label>
+                                    <input type="text" id="contactFirstName" placeholder="John">
+                                </div>
+                                <div class="form-group">
+                                    <label for="contactLastName">Last Name</label>
+                                    <input type="text" id="contactLastName" placeholder="Doe">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="contactPhone">Phone Number</label>
+                                <input type="tel" id="contactPhone" placeholder="+1 234 567 8900">
+                            </div>
+                            <div class="form-group">
+                                <label for="contactEmail">Email Address</label>
+                                <input type="email" id="contactEmail" placeholder="john@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label for="contactOrg">Organization</label>
+                                <input type="text" id="contactOrg" placeholder="Company Name">
+                            </div>
+                            <div class="form-group">
+                                <label for="contactWebsite">Website</label>
+                                <input type="url" id="contactWebsite" placeholder="https://example.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customization Options -->
+                    <div class="customization-section">
+                        <h3>Customization</h3>
+
+                        <div class="color-options">
+                            <div class="form-group">
+                                <label for="qrForeground">Foreground Color</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="qrForeground" value="#000000">
+                                    <input type="text" id="qrForegroundHex" value="#000000" maxlength="7">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="qrBackground">Background Color</label>
+                                <div class="color-input-wrapper">
+                                    <input type="color" id="qrBackground" value="#ffffff">
+                                    <input type="text" id="qrBackgroundHex" value="#ffffff" maxlength="7">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="qrErrorCorrection">Error Correction Level</label>
+                            <select id="qrErrorCorrection">
+                                <option value="L">Low (7%)</option>
+                                <option value="M" selected>Medium (15%)</option>
+                                <option value="Q">Quartile (25%)</option>
+                                <option value="H">High (30%)</option>
+                            </select>
+                            <span class="help-text">Higher levels allow the QR code to be readable even if partially damaged</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: QR Code Preview -->
+                <div class="qr-column qr-preview-column">
+                    <div class="preview-section">
+                        <h3>Preview</h3>
+                        <div class="qr-preview-box">
+                            <div class="qr-preview-wrapper">
+                                <div class="qr-preview" id="qrPreview">
+                                    <!-- QR code will be generated here -->
+                                </div>
+                                <div class="qr-logo-overlay" id="qrLogoOverlay">
+                                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="preview-info">
+                            <span id="qrDataLength">0 characters</span>
+                        </div>
+                    </div>
+
+                    <div class="download-section">
+                        <h3>Download</h3>
+                        <div class="download-buttons">
+                            <button class="download-btn primary" id="downloadPng">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download PNG
+                            </button>
+                            <button class="download-btn secondary" id="downloadSvg">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download SVG
+                            </button>
+                        </div>
+                        <button class="copy-btn" id="copyToClipboard">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Copy to Clipboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent QR Codes -->
+            <div class="recent-section">
+                <div class="recent-header">
+                    <h3>Recent QR Codes</h3>
+                    <button class="clear-recent" id="clearRecent">Clear All</button>
+                </div>
+                <div class="recent-qr-codes" id="recentQrCodes">
+                    <div class="recent-empty">No recent QR codes</div>
+                </div>
+            </div>
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+
+    <div class="toast" id="toast">Copied!</div>
+
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="/static/js/qr-generator.js?v={{ v }}"></script>
+</body>
+</html>

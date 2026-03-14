@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Twitch — CubDeck</title>
+    <style>
+        body { background: #0a0a14; color: #fff; font-family: 'Poppins', sans-serif;
+               display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .box { text-align: center; }
+        .icon { font-size: 48px; margin-bottom: 16px; }
+        h2 { font-size: 20px; margin-bottom: 8px; }
+        p { color: #888; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <div class="icon" id="icon">⏳</div>
+    <h2 id="msg">Connecting to Twitch…</h2>
+    <p id="sub">Please wait.</p>
+</div>
+<script>
+    const MODE = {{ mode | tojson }};
+    const hash = window.location.hash.substring(1);
+    const params = Object.fromEntries(new URLSearchParams(hash));
+    const token = params.access_token;
+
+    function fail(msg) {
+        document.getElementById('icon').textContent = '❌';
+        document.getElementById('msg').textContent = 'Connection failed';
+        document.getElementById('sub').textContent = msg || 'No token received.';
+    }
+
+    if (!token) {
+        fail(params.error_description || 'No token received.');
+    } else if (MODE === 'chat') {
+        // Chat token mode — fetch user info then post token + login back to parent
+        document.getElementById('sub').textContent = 'Fetching your profile…';
+        fetch('https://api.twitch.tv/helix/users', {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Client-Id': '9n9yjc79p44kpsluv81kvvh6h9bxvu'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            const user = data.data && data.data[0];
+            if (!user) return fail('Could not fetch Twitch profile.');
+            if (window.opener) {
+                window.opener.postMessage({
+                    type: 'cubdeck_twitch_token',
+                    token,
+                    login: user.login
+                }, '*');
+                document.getElementById('icon').textContent = '✅';
+                document.getElementById('msg').textContent = 'Connected as ' + user.display_name;
+                document.getElementById('sub').textContent = 'You can close this window.';
+                setTimeout(() => window.close(), 1500);
+            } else {
+                fail('No parent window found.');
+            }
+        })
+        .catch(() => fail('Could not fetch Twitch profile.'));
+    } else {
+        // Login mode — fetch Twitch user info then POST to server to create session
+        document.getElementById('sub').textContent = 'Fetching your profile…';
+        fetch('https://api.twitch.tv/helix/users', {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Client-Id': '9n9yjc79p44kpsluv81kvvh6h9bxvu'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            const user = data.data && data.data[0];
+            if (!user) return fail('Could not fetch Twitch profile.');
+            return fetch('/cubdeck/auth/twitch/session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: 'twitch_' + user.id,
+                    username: user.display_name,
+                    avatar: user.profile_image_url,
+                    twitch_token: token,
+                    twitch_login: user.login
+                })
+            });
+        })
+        .then(r => r && r.json())
+        .then(data => {
+            if (data && data.ok) {
+                document.getElementById('icon').textContent = '✅';
+                document.getElementById('msg').textContent = 'Logged in as Twitch!';
+                document.getElementById('sub').textContent = 'Redirecting…';
+                setTimeout(() => { window.location.href = data.redirect; }, 800);
+            } else {
+                fail('Session creation failed.');
+            }
+        })
+        .catch(() => fail('Network error.'));
+    }
+</script>
+</body>
+</html>

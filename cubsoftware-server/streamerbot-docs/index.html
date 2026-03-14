@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/apps/streamerbot-commands/">
+    <title>StreamerBot Commands - CubSoftware</title>
+    <link rel="stylesheet" href="css/shared.css">
+    <link rel="stylesheet" href="css/commands.css">
+    <link rel="icon" href="images/company-logo.png">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="site-header">
+            <div class="header-top">
+                <a href="/" class="logo">
+                    <span class="logo-text">
+                        <span class="cub">CUB</span><span class="software">SOFTWARE</span>
+                    </span>
+                </a>
+                <nav class="site-nav">
+                    <a href="/">Home</a>
+                    <a href="index.html" class="active">Commands</a>
+                    <a href="commands/config-setup.html">Setup Guide</a>
+                    <a href="https://github.com/HexEchoTV/CUBSOFTWARE/tree/main/cubsoftware-server/apps/streamerbot-commands/files" target="_blank">GitHub</a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="page-content">
+            <!-- Hero -->
+            <section class="hero">
+                <h1>StreamerBot Commands</h1>
+                <p>Professional C# command collection for Twitch & YouTube streamers. Full currency system, games, utilities, and more.</p>
+
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <div class="stat-number">38+</div>
+                        <div class="stat-label">Commands</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">26</div>
+                        <div class="stat-label">Games</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">13</div>
+                        <div class="stat-label">Earning</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">7</div>
+                        <div class="stat-label">Utilities</div>
+                    </div>
+                </div>
+            </section>
+            <!-- Quick Start -->
+            <section class="quick-start">
+                <h2>Quick Start</h2>
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Install ConfigSetup.cs</h3>
+                            <p>This is the foundation file. Run it first to initialize all settings.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Add Your Commands</h3>
+                            <p>Import any command .cs file into StreamerBot actions.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Set Chat Trigger</h3>
+                            <p>Link the action to a chat command like !daily or !slots.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Go Live!</h3>
+                            <p>Test in chat and enjoy your new currency system.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="cta-buttons" style="display: flex; justify-content: center; gap: 15px;">
+                    <a href="commands/config-setup.html" class="btn btn-primary">View Setup Guide</a>
+                    <a href="https://github.com/HexEchoTV/CUBSOFTWARE/tree/main/cubsoftware-server/apps/streamerbot-commands/files" class="btn btn-secondary" target="_blank">Download from GitHub</a>
+                </div>
+            </section>
+
+            <!-- Search -->
+            <section class="search-container">
+                <div class="search-box">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="text" id="commandSearch" placeholder="Search commands..." onkeyup="filterCommands()">
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+                    <button class="filter-btn" data-filter="core" onclick="setFilter('core')">Core</button>
+                    <button class="filter-btn" data-filter="gambling" onclick="setFilter('gambling')">Gambling</button>
+                    <button class="filter-btn" data-filter="earning" onclick="setFilter('earning')">Earning</button>
+                    <button class="filter-btn" data-filter="pvp" onclick="setFilter('pvp')">PvP</button>
+                    <button class="filter-btn" data-filter="utility" onclick="setFilter('utility')">Utilities</button>
+                </div>
+            </section>
+
+            <!-- Core Commands -->
+            <section class="category-section" data-category="core">
+                <div class="category-header">
+                    <div class="category-icon">&#9881;</div>
+                    <h2>Core System</h2>
+                    <span class="count">5 commands</span>
+                </div>
+                <div class="commands-grid">
+                    <a href="commands/config-setup.html" class="command-card" data-tags="core">
+                        <span class="status-badge completed">Required</span>
+                        <div class="command-name">Config Setup</div>
+                        <p class="command-description">Foundation file that initializes all global variables and settings for the entire currency system.</p>
+                        <div class="command-tags">
+                            <span class="tag core">Core</span>
+                            <span class="tag">Run First</span>
+                        </div>
+                    </a>
+                    <a href="commands/balance.html" class="command-card" data-tags="core">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!balance</code></div>
+                        <p class="command-description">Check your current currency balance or view another user's balance.</p>
+                        <div class="command-tags">
+                            <span class="tag core">Core</span>
+                        </div>
+                    </a>
+                    <a href="commands/daily.html" class="command-card" data-tags="core">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!daily</code></div>
+                        <p class="command-description">Claim daily rewards with streak bonuses. Higher streaks = bigger rewards!</p>
+                        <div class="command-tags">
+                            <span class="tag core">Core</span>
+                            <span class="tag earning">Earning</span>
+                        </div>
+                    </a>
+                    <a href="commands/give.html" class="command-card" data-tags="core">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!give</code></div>
+                        <p class="command-description">Transfer currency to another user. Usage: !give @user amount</p>
+                        <div class="command-tags">
+                            <span class="tag core">Core</span>
+                        </div>
+                    </a>
+                    <a href="commands/leaderboard.html" class="command-card" data-tags="core">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!leaderboard</code></div>
+                        <p class="command-description">View the top 5 richest users on the server.</p>
+                        <div class="command-tags">
+                            <span class="tag core">Core</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Gambling Games -->
+            <section class="category-section" data-category="gambling">
+                <div class="category-header">
+                    <div class="category-icon">&#127920;</div>
+                    <h2>Gambling Games</h2>
+                    <span class="count">20 commands</span>
+                </div>
+                <div class="commands-grid">
+                    <a href="commands/blackjack.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!blackjack</code></div>
+                        <p class="command-description">Interactive blackjack with hit/stand controls, dealer AI, and real-time gameplay.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                            <span class="tag">Interactive</span>
+                        </div>
+                    </a>
+                    <a href="commands/slots.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!slots</code></div>
+                        <p class="command-description">Classic slot machine with multiple symbol combinations and jackpots.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/coinflip.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!coinflip</code></div>
+                        <p class="command-description">Flip a coin! Pick heads or tails and double your bet.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/dice.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!dice</code></div>
+                        <p class="command-description">Roll the dice and bet on the outcome. Higher rolls = bigger wins!</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/roulette.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!roulette</code></div>
+                        <p class="command-description">Bet on red, black, or green in this classic casino game.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/wheel.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!wheel</code></div>
+                        <p class="command-description">Spin the prize wheel for multiplier rewards!</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/crash.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!crash</code></div>
+                        <p class="command-description">Watch the multiplier climb - cash out before it crashes!</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                            <span class="tag">High Risk</span>
+                        </div>
+                    </a>
+                    <a href="commands/plinko.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!plinko</code></div>
+                        <p class="command-description">Drop a ball through the Plinko board for random multipliers.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/highlow.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!highlow</code></div>
+                        <p class="command-description">Guess if the next card is higher or lower.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/keno.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!keno</code></div>
+                        <p class="command-description">Pick numbers and hope they match the draw!</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/limbo.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!limbo</code></div>
+                        <p class="command-description">Set a target multiplier - hit below it to win!</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/bingo.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!bingo</code></div>
+                        <p class="command-description">Quick bingo game with instant results.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/scratch.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!scratch</code></div>
+                        <p class="command-description">Scratch card game with hidden prizes.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/match.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!match</code></div>
+                        <p class="command-description">Match symbols to win big prizes!</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/lottery.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!lottery</code></div>
+                        <p class="command-description">Buy lottery tickets for a chance at the jackpot.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/gamble.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!gamble</code></div>
+                        <p class="command-description">Simple 50/50 gamble - double or nothing!</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/flip.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!flip</code></div>
+                        <p class="command-description">Quick coin flip with instant payout.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/trivia.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!trivia</code></div>
+                        <p class="command-description">Answer trivia questions to win rewards.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                            <span class="tag">Knowledge</span>
+                        </div>
+                    </a>
+                    <a href="commands/treasure.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!treasure</code></div>
+                        <p class="command-description">Hunt for hidden treasure chests!</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                        </div>
+                    </a>
+                    <a href="commands/heist.html" class="command-card" data-tags="gambling">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!heist</code></div>
+                        <p class="command-description">Plan and execute a heist for massive rewards.</p>
+                        <div class="command-tags">
+                            <span class="tag gambling">Gambling</span>
+                            <span class="tag">High Risk</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Earning Commands -->
+            <section class="category-section" data-category="earning">
+                <div class="category-header">
+                    <div class="category-icon">&#128176;</div>
+                    <h2>Earning Commands</h2>
+                    <span class="count">13 commands</span>
+                </div>
+                <div class="commands-grid">
+                    <a href="commands/work.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!work</code></div>
+                        <p class="command-description">Go to work and earn a steady income. 30 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$50-150</span>
+                        </div>
+                    </a>
+                    <a href="commands/fish.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!fish</code></div>
+                        <p class="command-description">Cast your line and catch fish for rewards. 20 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$30-100</span>
+                        </div>
+                    </a>
+                    <a href="commands/hunt.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!hunt</code></div>
+                        <p class="command-description">Go hunting in the wilderness. 25 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$40-130</span>
+                        </div>
+                    </a>
+                    <a href="commands/mine.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!mine</code></div>
+                        <p class="command-description">Mine for precious ores and gems. 30 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$45-140</span>
+                        </div>
+                    </a>
+                    <a href="commands/dig.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!dig</code></div>
+                        <p class="command-description">Dig for buried treasures. 25 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$35-110</span>
+                        </div>
+                    </a>
+                    <a href="commands/search.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!search</code></div>
+                        <p class="command-description">Search the area for lost coins. 20 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$30-95</span>
+                        </div>
+                    </a>
+                    <a href="commands/forage.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!forage</code></div>
+                        <p class="command-description">Forage in the forest for valuables. 25 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$30-100</span>
+                        </div>
+                    </a>
+                    <a href="commands/scavenge.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!scavenge</code></div>
+                        <p class="command-description">Scavenge through the junkyard. 30 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$15-150</span>
+                        </div>
+                    </a>
+                    <a href="commands/collect.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!collect</code></div>
+                        <p class="command-description">Collect your hourly income. 60 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$50-200</span>
+                        </div>
+                    </a>
+                    <a href="commands/beg.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!beg</code></div>
+                        <p class="command-description">Beg for spare change. Low risk, low reward. 15 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$10-50</span>
+                        </div>
+                    </a>
+                    <a href="commands/luck.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!luck</code></div>
+                        <p class="command-description">Test your luck! Rewards range from 0 to 500. 45 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$0-500</span>
+                        </div>
+                    </a>
+                    <a href="commands/battle.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!battle</code></div>
+                        <p class="command-description">Battle monsters for rewards. 60 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$35-180</span>
+                        </div>
+                    </a>
+                    <a href="commands/magic.html" class="command-card" data-tags="earning">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!magic</code></div>
+                        <p class="command-description">Cast spells for magical rewards. 45 min cooldown.</p>
+                        <div class="command-tags">
+                            <span class="tag earning">Earning</span>
+                            <span class="tag">$40-120</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- PvP Commands -->
+            <section class="category-section" data-category="pvp">
+                <div class="category-header">
+                    <div class="category-icon">&#9876;</div>
+                    <h2>PvP Commands</h2>
+                    <span class="count">4 commands</span>
+                </div>
+                <div class="commands-grid">
+                    <a href="commands/duel.html" class="command-card" data-tags="pvp">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!duel</code></div>
+                        <p class="command-description">Challenge another user to a duel. Winner takes all!</p>
+                        <div class="command-tags">
+                            <span class="tag pvp">PvP</span>
+                            <span class="tag">1v1</span>
+                        </div>
+                    </a>
+                    <a href="commands/rob.html" class="command-card" data-tags="pvp">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!rob</code></div>
+                        <p class="command-description">Attempt to steal coins from another user. Risk vs reward!</p>
+                        <div class="command-tags">
+                            <span class="tag pvp">PvP</span>
+                            <span class="tag">High Risk</span>
+                        </div>
+                    </a>
+                    <a href="commands/race.html" class="command-card" data-tags="pvp">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!race</code></div>
+                        <p class="command-description">Race against others for the prize pool!</p>
+                        <div class="command-tags">
+                            <span class="tag pvp">PvP</span>
+                        </div>
+                    </a>
+                    <a href="commands/bounty.html" class="command-card" data-tags="pvp">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!bounty</code></div>
+                        <p class="command-description">Place or hunt bounties on other players.</p>
+                        <div class="command-tags">
+                            <span class="tag pvp">PvP</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- Utility Commands -->
+            <section class="category-section" data-category="utility">
+                <div class="category-header">
+                    <div class="category-icon">&#128295;</div>
+                    <h2>Utility Commands</h2>
+                    <span class="count">7 commands</span>
+                </div>
+                <div class="commands-grid">
+                    <a href="commands/discord-logging.html" class="command-card" data-tags="utility">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name">Discord Logging</div>
+                        <p class="command-description">Automatic event logging to Discord with color-coded embeds.</p>
+                        <div class="command-tags">
+                            <span class="tag utility">Utility</span>
+                            <span class="tag">Integration</span>
+                        </div>
+                    </a>
+                    <a href="commands/discord.html" class="command-card" data-tags="utility">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!discord</code></div>
+                        <p class="command-description">Share your Discord server invite link in chat.</p>
+                        <div class="command-tags">
+                            <span class="tag utility">Utility</span>
+                        </div>
+                    </a>
+                    <a href="commands/followage.html" class="command-card" data-tags="utility">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!followage</code></div>
+                        <p class="command-description">Check how long you or another user has been following.</p>
+                        <div class="command-tags">
+                            <span class="tag utility">Utility</span>
+                        </div>
+                    </a>
+                    <a href="commands/shoutout.html" class="command-card" data-tags="utility">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!so</code></div>
+                        <p class="command-description">Give a shoutout to another streamer with OBS animations.</p>
+                        <div class="command-tags">
+                            <span class="tag utility">Utility</span>
+                            <span class="tag">OBS</span>
+                        </div>
+                    </a>
+                    <a href="commands/welcome.html" class="command-card" data-tags="utility">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name">Welcome Message</div>
+                        <p class="command-description">Automatically greet first-time chatters.</p>
+                        <div class="command-tags">
+                            <span class="tag utility">Utility</span>
+                            <span class="tag">Auto</span>
+                        </div>
+                    </a>
+                    <a href="commands/youtube-player.html" class="command-card" data-tags="utility">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name">YouTube Player</div>
+                        <p class="command-description">Channel point redemption system for video queue.</p>
+                        <div class="command-tags">
+                            <span class="tag utility">Utility</span>
+                            <span class="tag">Channel Points</span>
+                        </div>
+                    </a>
+                    <a href="commands/clip.html" class="command-card" data-tags="utility">
+                        <span class="status-badge completed">Completed</span>
+                        <div class="command-name"><code>!clip</code></div>
+                        <p class="command-description">Create Twitch clips with custom titles.</p>
+                        <div class="command-tags">
+                            <span class="tag utility">Utility</span>
+                            <span class="tag">Twitch API</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-text">
+                        &copy; 2025 CUB SOFTWARE. Made with love by
+                        <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
+                    </div>
+                    <div class="footer-legal-links">
+                        <a href="https://questcord.fun" class="footer-legal-link" target="_blank">QuestCord</a>
+                        <span class="footer-separator">|</span>
+                        <a href="/terms" class="footer-legal-link">Terms of Use</a>
+                        <span class="footer-separator">|</span>
+                        <a href="/privacy" class="footer-legal-link">Privacy Policy</a>
+                        <span class="footer-separator">|</span>
+                        <a href="/copyright" class="footer-legal-link">Copyright</a>
+                        <span class="footer-separator">|</span>
+                        <a href="/contact" class="footer-legal-link">Contact</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let currentFilter = 'all';
+
+        function filterCommands() {
+            const searchTerm = document.getElementById('commandSearch').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.command-card');
+
+            cards.forEach(card => {
+                const name = card.querySelector('.command-name').textContent.toLowerCase();
+                const desc = card.querySelector('.command-description').textContent.toLowerCase();
+                const tags = card.dataset.tags || '';
+
+                const matchesSearch = searchTerm === '' || name.includes(searchTerm) || desc.includes(searchTerm);
+                const matchesFilter = currentFilter === 'all' || tags.includes(currentFilter);
+
+                if (matchesSearch && matchesFilter) {
+                    card.style.display = '';
+                    card.removeAttribute('hidden');
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Hide empty categories
+            document.querySelectorAll('.category-section').forEach(section => {
+                const cards = section.querySelectorAll('.command-card');
+                let hasVisible = false;
+                cards.forEach(card => {
+                    if (card.style.display !== 'none') {
+                        hasVisible = true;
+                    }
+                });
+                section.style.display = hasVisible ? '' : 'none';
+            });
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            filterCommands();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            filterCommands();
+        });
+    </script>
+</body>
+</html>

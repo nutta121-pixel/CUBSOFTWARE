@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:;">
+    <title>CubPresence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<input type="hidden" id="countdownPresetVal" value="60">
+<div class="app">
+
+    <!-- Header -->
+    <header class="header">
+        <span class="version" id="appVersion"></span>
+        <div class="header-title">
+            <h1>CubPresence</h1>
+            <p>Discord Custom Rich Presence</p>
+        </div>
+        <div class="header-buttons">
+            <button class="header-btn" id="changelogBtn" title="What's Fixed (v1.3.15)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </button>
+            <button class="header-btn" id="guideBtn" title="Setup Guide">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </button>
+            <button class="header-btn" id="settingsBtn" title="Settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Update Banner -->
+    <div class="update-banner" id="updateBanner" style="display:none;">
+        <span id="updateText"></span>
+        <button id="updateAction" style="display:none;"></button>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Not connected</span>
+    </div>
+
+    <!-- Main -->
+    <main class="main-content">
+        <div class="config-panel">
+
+            <!-- Saved Profiles -->
+            <div class="section collapsible profiles-section" id="sectionProfiles">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Saved Profiles
+                    <button class="section-toggle" data-section="sectionProfiles" title="Collapse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </h2>
+                <div class="section-body">
+                    <div class="profile-search-row">
+                        <input type="text" id="profileSearch" placeholder="Search profiles..." class="profile-search">
+                    </div>
+                    <div class="profiles-controls">
+                        <select id="profileSelect"><option value="">— Select Profile —</option></select>
+                        <button type="button" class="btn-icon" id="loadProfileBtn" title="Load Profile">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                        </button>
+                        <button type="button" class="btn-icon btn-success-icon" id="loadConnectBtn" title="Load & Connect">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        </button>
+                        <button type="button" class="btn-icon" id="renameProfileBtn" title="Rename Profile">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        <button type="button" class="btn-icon" id="duplicateProfileBtn" title="Duplicate Profile">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        </button>
+                        <button type="button" class="btn-icon btn-danger-icon" id="deleteProfileBtn" title="Delete Profile">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        </button>
+                    </div>
+                    <div class="save-profile-row">
+                        <input type="text" id="profileName" placeholder="New profile name...">
+                        <button type="button" class="btn-save" id="saveProfileBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/></svg>
+                            Save Current
+                        </button>
+                    </div>
+                    <div class="profile-import-export">
+                        <button type="button" class="btn-tiny" id="exportProfilesBtn">Export Profiles</button>
+                        <button type="button" class="btn-tiny" id="importProfilesBtn">Import Profiles</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent History -->
+            <div class="section collapsible" id="sectionHistory">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Recent Presences
+                    <button class="section-toggle" data-section="sectionHistory" title="Collapse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </h2>
+                <div class="section-body">
+                    <div id="historyList"></div>
+                    <button type="button" class="btn-tiny btn-tiny-danger" id="clearHistoryBtn" style="margin-top:8px;">Clear History</button>
+                </div>
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="section collapsible presets-section" id="sectionPresets">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    Quick Presets
+                    <button class="section-toggle" data-section="sectionPresets" title="Collapse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </h2>
+                <div class="section-body">
+                    <div class="presets-grid">
+                        <button type="button" class="preset-btn" data-preset="gaming">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="17" cy="10" r="1"/><circle cx="15" cy="13" r="1"/></svg>
+                            Gaming
+                        </button>
+                        <button type="button" class="preset-btn" data-preset="streaming">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+                            Streaming
+                        </button>
+                        <button type="button" class="preset-btn" data-preset="coding">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                            Coding
+                        </button>
+                        <button type="button" class="preset-btn" data-preset="music">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                            Music
+                        </button>
+                        <button type="button" class="preset-btn" data-preset="studying">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                            Studying
+                        </button>
+                        <button type="button" class="preset-btn" data-preset="working">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            Working
+                        </button>
+                        <button type="button" class="preset-btn" data-preset="chilling">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            Chilling
+                        </button>
+                        <button type="button" class="preset-btn" data-preset="clear">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application -->
+            <div class="section collapsible" id="sectionApp">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    Application
+                    <button class="section-toggle" data-section="sectionApp" title="Collapse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </h2>
+                <div class="section-body">
+                    <div class="field">
+                        <label for="clientId">Discord Application ID</label>
+                        <input type="text" id="clientId" placeholder="e.g. 1234567890123456789">
+                        <p class="hint">Create an app at <a href="#" id="devPortalLink">Discord Developer Portal</a> · <a href="#" id="wikiLink">Wiki</a></p>
+                    </div>
+                    <div class="field">
+                        <label for="activityType">Activity Type</label>
+                        <select id="activityType">
+                            <option value="0">Playing</option>
+                            <option value="1">Streaming</option>
+                            <option value="2">Listening to</option>
+                            <option value="3">Watching</option>
+                            <option value="5">Competing in</option>
+                        </select>
+                    </div>
+                    <div class="field" id="streamUrlField" style="display:none;">
+                        <label for="streamUrl">Stream URL (Twitch / YouTube)</label>
+                        <input type="url" id="streamUrl" placeholder="https://twitch.tv/username">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Text -->
+            <div class="section collapsible" id="sectionText">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Activity Text
+                    <button class="section-toggle" data-section="sectionText" title="Collapse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </h2>
+                <div class="section-body">
+                    <p class="hint" style="margin-bottom:10px;">Live placeholders: <code>{time}</code> <code>{date}</code> <code>{day}</code> <code>{day_short}</code> <code>{day_num}</code> <code>{month}</code> <code>{month_short}</code> <code>{month_num}</code> <code>{year}</code> <code>{hour}</code> <code>{hour24}</code> <code>{ampm}</code> <code>{timezone}</code> <code>{weeknum}</code></p>
+                    <div class="field">
+                        <div class="field-label-row">
+                            <label for="details">Details (Line 1)</label>
+                            <span class="char-counter" id="detailsCounter">0/128</span>
+                        </div>
+                        <input type="text" id="details" placeholder="e.g. Playing a custom game" maxlength="128">
+                    </div>
+                    <div class="field">
+                        <div class="field-label-row">
+                            <label for="state">State (Line 2)</label>
+                            <span class="char-counter" id="stateCounter">0/128</span>
+                        </div>
+                        <input type="text" id="state" placeholder="e.g. In the main menu" maxlength="128">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timestamps -->
+            <div class="section collapsible" id="sectionTimestamps">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Timestamps
+                    <button class="section-toggle" data-section="sectionTimestamps" title="Collapse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </h2>
+                <div class="section-body">
+                    <div class="timestamp-options">
+                        <label class="radio-option active" title="No timestamp">
+                            <input type="radio" name="timestampType" value="none" checked> None
+                        </label>
+                        <label class="radio-option" title="Time since last update">
+                            <input type="radio" name="timestampType" value="since_update"> Since Update
+                        </label>
+                        <label class="radio-option" title="Time since connected">
+                            <input type="radio" name="timestampType" value="since_connection"> Since Connect
+                        </label>
+                        <label class="radio-option" title="Time since app started">
+                            <input type="radio" name="timestampType" value="since_app_start"> App Start
+                        </label>
+                        <label class="radio-option" title="Shows local time">
+                            <input type="radio" name="timestampType" value="local_time"> Local Time
+                        </label>
+                        <label class="radio-option" title="Countdown timer">
+                            <input type="radio" name="timestampType" value="countdown"> Countdown
+                        </label>
+                        <label class="radio-option" title="Set specific date/time">
+                            <input type="radio" name="timestampType" value="custom"> Custom
+                        </label>
+                    </div>
+                    <!-- Countdown quick picks -->
+                    <div class="countdown-presets">
+                        <span class="hint">Quick:</span>
+                        <button type="button" class="countdown-preset" data-minutes="15">15 min</button>
+                        <button type="button" class="countdown-preset" data-minutes="25">25 min</button>
+                        <button type="button" class="countdown-preset" data-minutes="60">1 hour</button>
+                        <button type="button" class="countdown-preset" data-minutes="120">2 hours</button>
+                    </div>
+                    <div class="custom-timestamps" id="customTimestamps" style="display:none;">
+                        <div class="field-row">
+                            <div class="field">
+                                <label for="startDateTime">Start Date &amp; Time</label>
+                                <input type="datetime-local" id="startDateTime">
+                            </div>
+                            <div class="field">
+                                <label for="endDateTime">End (optional — for countdown)</label>
+                                <input type="datetime-local" id="endDateTime">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Images -->
+            <div class="section collapsible" id="sectionImages">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    Images
+                    <button class="section-toggle" data-section="sectionImages" title="Collapse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </h2>
+                <div class="section-body">
+                    <p class="hint" style="margin-bottom:10px;">Use asset keys from your Discord app or direct image URLs (https://...)</p>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="largeImageKey">Large Image</label>
+                            <input type="text" id="largeImageKey" placeholder="Asset key or URL">
+                        </div>
+                        <div class="field">
+                            <div class="field-label-row">
+                                <label for="largeImageText">Large Tooltip</label>
+                                <span class="char-counter" id="largeImageTextCounter">0/128</span>
+                            </div>
+                            <input type="text" id="largeImageText" placeholder="Hover text" maxlength="128">
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="smallImageKey">Small Image</label>
+                            <input type="text" id="smallImageKey" placeholder="Asset key or URL">
+                        </div>
+                        <div class="field">
+                            <div class="field-label-row">
+                                <label for="smallImageText">Small Tooltip</label>
+                                <span class="char-counter" id="smallImageTextCounter">0/128</span>
+                            </div>
+                            <input type="text" id="smallImageText" placeholder="Hover text" maxlength="128">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="section collapsible" id="sectionButtons">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 12h6"/></svg>
+                    Buttons
+                    <button class="section-toggle" data-section="sectionButtons" title="Collapse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </h2>
+                <div class="section-body">
+                    <p class="hint" style="margin-bottom:10px;">You cannot click your own buttons — ask a friend to verify they work</p>
+                    <div class="field-row">
+                        <div class="field">
+                            <div class="field-label-row">
+                                <label for="btn1Label">Button 1 Label</label>
+                                <span class="char-counter" id="btn1LabelCounter">0/32</span>
+                            </div>
+                            <input type="text" id="btn1Label" placeholder="e.g. Join Game" maxlength="32">
+                        </div>
+                        <div class="field">
+                            <label for="btn1Url">Button 1 URL</label>
+                            <input type="url" id="btn1Url" placeholder="https://...">
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <div class="field-label-row">
+                                <label for="btn2Label">Button 2 Label</label>
+                                <span class="char-counter" id="btn2LabelCounter">0/32</span>
+                            </div>
+                            <input type="text" id="btn2Label" placeholder="e.g. Website" maxlength="32">
+                        </div>
+                        <div class="field">
+                            <label for="btn2Url">Button 2 URL</label>
+                            <input type="url" id="btn2Url" placeholder="https://...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Party -->
+            <div class="section collapsible" id="sectionParty">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Party (Optional)
+                    <button class="section-toggle" data-section="sectionParty" title="Collapse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </h2>
+                <div class="section-body">
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="partySize">Party Size</label>
+                            <input type="number" id="partySize" placeholder="e.g. 2" min="0">
+                        </div>
+                        <div class="field">
+                            <label for="partyMax">Party Max</label>
+                            <input type="number" id="partyMax" placeholder="e.g. 5" min="0">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Presence Rotation -->
+            <div class="section collapsible" id="sectionRotation">
+                <h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+                    Presence Rotation
+                    <button class="section-toggle" data-section="sectionRotation" title="Collapse">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                </h2>
+                <div class="section-body">
+                    <p class="hint" style="margin-bottom:10px;">Automatically cycle through saved profiles on a timer</p>
+                    <div class="field">
+                        <label>Select profiles to rotate</label>
+                        <div id="rotationProfileList" class="rotation-profile-list"></div>
+                    </div>
+                    <div class="field">
+                        <label for="rotationInterval">Interval (seconds)</label>
+                        <input type="number" id="rotationInterval" value="60" min="5" max="3600" placeholder="60">
+                    </div>
+                    <div class="rotation-controls">
+                        <button type="button" class="btn btn-secondary" id="rotationBtn">Start Rotation</button>
+                        <span class="hint" id="rotationInfo"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /config-panel -->
+
+        <!-- Preview Panel -->
+        <div class="preview-panel">
+            <h3>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Live Preview
+            </h3>
+            <p class="preview-subtitle">How others see your presence</p>
+
+            <div class="discord-preview">
+                <div class="preview-header-bar">
+                    <span class="preview-activity-type" id="previewActivityType">Playing</span>
+                </div>
+                <div class="preview-card">
+                    <div class="preview-body">
+                        <div class="preview-images">
+                            <div class="preview-large" id="previewLarge">
+                                <svg viewBox="0 0 24 24" fill="currentColor" width="28" height="28" opacity="0.3"><path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02z"/></svg>
+                            </div>
+                            <div class="preview-small" id="previewSmall" style="display:none;"></div>
+                        </div>
+                        <div class="preview-info">
+                            <div class="preview-name" id="previewName">Your App Name</div>
+                            <div class="preview-details" id="previewDetails"></div>
+                            <div class="preview-state" id="previewState"></div>
+                            <div class="preview-timestamp" id="previewTimestamp" style="display:none;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                <span id="previewTimeText"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="preview-buttons" id="previewButtons">
+                        <div class="preview-btn-placeholder">Buttons will appear here</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-tips">
+                <p><strong>Tip:</strong> Connect to see your actual presence on Discord. Placeholders like <code>{time}</code> resolve when sent.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Action Buttons -->
+    <footer class="actions">
+        <button class="btn btn-connect" id="connectBtn">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09-.01-.02-.04-.03-.07-.03-1.5.26-2.93.71-4.27 1.33-.01 0-.02.01-.03.02-2.72 4.07-3.47 8.03-3.1 11.95 0 .02.01.04.03.05 1.8 1.32 3.53 2.12 5.24 2.65.03.01.06 0 .07-.02.4-.55.76-1.13 1.07-1.74.02-.04 0-.08-.04-.09-.57-.22-1.11-.48-1.64-.78-.04-.02-.04-.08-.01-.11.11-.08.22-.17.33-.25.02-.02.05-.02.07-.01 3.44 1.57 7.15 1.57 10.55 0 .02-.01.05-.01.07.01.11.09.22.17.33.26.04.03.04.09-.01.11-.52.31-1.07.56-1.64.78-.04.01-.05.06-.04.09.32.61.68 1.19 1.07 1.74.03.01.06.02.09.01 1.72-.53 3.45-1.33 5.25-2.65.02-.01.03-.03.03-.05.44-4.53-.73-8.46-3.1-11.95-.01-.01-.02-.02-.04-.02z"/></svg>
+            Connect to Discord
+        </button>
+        <button class="btn btn-disconnect" id="disconnectBtn" style="display:none;">Disconnect</button>
+        <button class="btn btn-update" id="updateBtn" style="display:none;">Update Presence</button>
+    </footer>
+
+</div><!-- /app -->
+
+<!-- Settings Modal -->
+<div class="modal" id="settingsModal">
+    <div class="modal-content modal-wide">
+        <div class="modal-header">
+            <h2>Settings</h2>
+            <button class="modal-close" id="closeSettings">&times;</button>
+        </div>
+        <div class="modal-body">
+
+            <div class="settings-section">
+                <h3>Startup</h3>
+                <label class="toggle-option"><span>Run on system startup</span><input type="checkbox" id="settingRunOnStartup"><span class="toggle-slider"></span></label>
+                <label class="toggle-option"><span>Start minimized to tray</span><input type="checkbox" id="settingStartMinimized"><span class="toggle-slider"></span></label>
+                <label class="toggle-option"><span>Auto-connect on startup</span><input type="checkbox" id="settingAutoConnect"><span class="toggle-slider"></span></label>
+            </div>
+
+            <div class="settings-section">
+                <h3>Behavior</h3>
+                <label class="toggle-option"><span>Minimize to tray on close</span><input type="checkbox" id="settingMinimizeToTray"><span class="toggle-slider"></span></label>
+                <label class="toggle-option"><span>Tray-only mode (no window)</span><input type="checkbox" id="settingTrayOnly"><span class="toggle-slider"></span></label>
+                <label class="toggle-option"><span>Always on top</span><input type="checkbox" id="settingAlwaysOnTop"><span class="toggle-slider"></span></label>
+                <label class="toggle-option"><span>Auto-reconnect on disconnect</span><input type="checkbox" id="settingAutoReconnect"><span class="toggle-slider"></span></label>
+                <label class="toggle-option"><span>Show notifications</span><input type="checkbox" id="settingShowNotifications"><span class="toggle-slider"></span></label>
+                <label class="toggle-option"><span>Remember presence on close</span><input type="checkbox" id="settingSavePresence"><span class="toggle-slider"></span></label>
+            </div>
+
+            <div class="settings-section">
+                <h3>Appearance</h3>
+                <label class="toggle-option"><span>Compact mode</span><input type="checkbox" id="settingCompact"><span class="toggle-slider"></span></label>
+                <div class="settings-row">
+                    <span>Theme</span>
+                    <select id="settingTheme" class="settings-select">
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                    </select>
+                </div>
+                <div class="settings-row">
+                    <span>Font Size</span>
+                    <select id="settingFontSize" class="settings-select">
+                        <option value="small">Small</option>
+                        <option value="normal">Normal</option>
+                        <option value="large">Large</option>
+                    </select>
+                </div>
+                <div class="settings-row">
+                    <span>Accent Color</span>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input type="color" id="settingAccentColor" value="#5865f2" class="color-picker">
+                        <span class="hint" style="margin:0;">Click to pick</span>
+                    </div>
+                </div>
+                <div class="settings-row">
+                    <span>Window Opacity <span id="opacityLabel" style="color:var(--text-muted)">100%</span></span>
+                    <input type="range" id="settingOpacity" min="50" max="100" value="100" class="opacity-slider">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Preview</h3>
+                <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
+                    <span>App name shown in preview</span>
+                    <input type="text" id="settingPreviewAppName" placeholder="Your App Name" class="settings-text-input">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Global Hotkeys</h3>
+                <p class="hint" style="margin-bottom:12px;">Hotkeys work system-wide even when CubPresence is minimized</p>
+                <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;">
+                    <span>Connect hotkey</span>
+                    <input type="text" id="settingHotkeyConnect" placeholder="e.g. Ctrl+Shift+C" class="settings-text-input">
+                </div>
+                <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:6px;margin-top:10px;">
+                    <span>Disconnect hotkey</span>
+                    <input type="text" id="settingHotkeyDisconnect" placeholder="e.g. Ctrl+Shift+D" class="settings-text-input">
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <h3>Updates</h3>
+                <label class="toggle-option"><span>Check for updates on startup</span><input type="checkbox" id="settingCheckUpdates"><span class="toggle-slider"></span></label>
+                <label class="toggle-option"><span>Auto-download updates</span><input type="checkbox" id="settingAutoDownload"><span class="toggle-slider"></span></label>
+                <button class="btn btn-secondary" id="checkUpdatesBtn" style="margin-top:10px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4.03-3-9s1.34-9 3-9"/></svg>
+                    Check for Updates
+                </button>
+            </div>
+
+            <div class="settings-section">
+                <h3>Data</h3>
+                <button class="btn btn-danger" id="clearDataBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    Clear Saved Data
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Guide Modal -->
+<div class="modal" id="guideModal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2>Setup Guide</h2>
+            <button class="modal-close" id="closeGuide">&times;</button>
+        </div>
+        <div class="modal-body guide-content">
+            <div class="guide-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>Create a Discord Application</h4>
+                    <p>Go to the <a href="#" class="guide-link" data-url="https://discord.com/developers/applications">Discord Developer Portal</a> and click <strong>New Application</strong>. Give it a name — this becomes the presence title (e.g. "Playing <em>YourApp</em>").</p>
+                </div>
+            </div>
+            <div class="guide-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>Copy Your Application ID</h4>
+                    <p>On your application page, copy the <strong>Application ID</strong> (Client ID) and paste it into the Application ID field in CubPresence.</p>
+                </div>
+            </div>
+            <div class="guide-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>Add Images (Optional)</h4>
+                    <p>In the Developer Portal go to <strong>Rich Presence › Art Assets</strong>. Upload images and give them keys. Use those keys in the Large/Small Image fields, or use direct <code>https://</code> URLs.</p>
+                </div>
+            </div>
+            <div class="guide-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h4>Configure &amp; Connect</h4>
+                    <p>Fill in your Details, State, Timestamp, and Buttons. Click <strong>Connect to Discord</strong>. Make sure Discord is running first.</p>
+                </div>
+            </div>
+            <div class="guide-tips">
+                <h4>Pro Tips</h4>
+                <ul>
+                    <li>Use placeholders like <code>{time}</code>, <code>{day}</code>, <code>{day_num}</code>, <code>{month}</code>, <code>{timezone}</code> in Details/State for live-updating text</li>
+                    <li>Save profiles to quickly switch between different setups</li>
+                    <li>Set up global hotkeys in Settings to connect/disconnect without opening the app</li>
+                    <li>Use Presence Rotation to automatically cycle through multiple profiles</li>
+                    <li>Enable "Always on top" to keep CubPresence visible while gaming</li>
+                    <li>You cannot click your own buttons — ask a friend to test them</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Changelog Modal -->
+<div class="modal" id="changelogModal">
+    <div class="modal-content modal-wide">
+        <div class="modal-header">
+            <h2>What's Fixed — v1.3.15</h2>
+            <button class="modal-close" id="closeChangelog">&times;</button>
+        </div>
+        <div class="modal-body guide-content">
+
+            <div class="changelog-group">
+                <h4>Linux — Discord Connection</h4>
+                <ul>
+                    <li><strong>Fix:</strong> "Discord not found" on Linux — RPC scanner now tries both <code>127.0.0.1</code> and <code>::1</code> (IPv6) in parallel for each port (6463–6472). On many Linux systems Discord binds to the IPv6 loopback address instead of IPv4, causing all connection attempts to silently fail.</li>
+                    <li><strong>Fix:</strong> Error message updated to advise Linux users to use the standard <code>.deb</code> or <code>.tar.gz</code> install instead of Snap/Flatpak if the issue persists.</li>
+                    <li><strong>Improvement:</strong> Per-port failure log entries now show as info (grey) instead of error (red) to reduce log noise during the port scan.</li>
+                </ul>
+            </div>
+
+            <hr style="border-color:var(--border);margin:18px 0">
+            <h3 style="font-size:0.95rem;color:var(--text-secondary);margin-bottom:12px">v1.3.14 — previous release (41 fixes)</h3>
+
+            <div class="changelog-group">
+                <h4>Stability &amp; Crashes</h4>
+                <ul>
+                    <li><strong>Fix:</strong> App crashed on quit if Discord was connected — <code>sendToRenderer</code> now checks <code>isDestroyed()</code> before writing to webContents</li>
+                    <li><strong>Fix:</strong> Connecting while already connected triggered an unintended auto-reconnect — old client destroy is now guarded with <code>isManualDisconnect</code></li>
+                    <li><strong>Fix:</strong> Export profiles crashed on write failure — now caught and shown as an error dialog</li>
+                    <li><strong>Fix:</strong> Second-instance handler was registered inside <code>whenReady()</code> — moved before it so fast relaunches are handled correctly</li>
+                </ul>
+            </div>
+
+            <div class="changelog-group">
+                <h4>Connection &amp; Reconnect</h4>
+                <ul>
+                    <li><strong>Fix:</strong> Manual disconnect triggered auto-reconnect — <code>isManualDisconnect</code> flag added to block it</li>
+                    <li><strong>Fix:</strong> Rotation not stopped when user disconnected manually</li>
+                    <li><strong>Fix:</strong> Rotation timer callback was not <code>async</code> — <code>setActivity()</code> was fire-and-forget, so rotation errors were silently ignored</li>
+                    <li><strong>Fix:</strong> Disabling Auto-reconnect mid-countdown left the status bar stuck on "reconnecting in Xs…" — timer is now cancelled immediately</li>
+                    <li><strong>Fix:</strong> Activity update failure (e.g. Discord hiccup) incorrectly hid the Disconnect/Update buttons — uses a non-disconnecting error state now</li>
+                    <li><strong>Fix:</strong> "Presence updated!" shown even when the update failed</li>
+                    <li><strong>Fix:</strong> <code>connect()</code> catch block scheduled reconnect even during manual disconnect</li>
+                </ul>
+            </div>
+
+            <div class="changelog-group">
+                <h4>Tray &amp; Quick Connect</h4>
+                <ul>
+                    <li><strong>Fix:</strong> Tray Quick Connect silently failed on first-ever launch — renderer's <code>savedClientId</code> was stale; main now forwards it in the event payload</li>
+                    <li><strong>Fix:</strong> Tray Quick Connect showed "Please enter an Application ID" if the field was empty but a saved ID existed</li>
+                </ul>
+            </div>
+
+            <div class="changelog-group">
+                <h4>Window</h4>
+                <ul>
+                    <li><strong>Fix:</strong> Window restored off-screen after disconnecting a secondary monitor — bounds are now validated against all active displays</li>
+                    <li><strong>Fix:</strong> Update install button called <code>checkForUpdates</code> instead of <code>quitAndInstall</code></li>
+                </ul>
+            </div>
+
+            <div class="changelog-group">
+                <h4>Profiles &amp; History</h4>
+                <ul>
+                    <li><strong>Fix:</strong> Renaming a profile to an existing name silently overwrote it — now shows a warning</li>
+                    <li><strong>Fix:</strong> Duplicating a profile with an already-taken copy name silently overwrote it — now auto-increments (copy 2, copy 3…)</li>
+                    <li><strong>Fix:</strong> Party ID regenerated on every presence update, causing Discord to reset the party display — now stable per connection</li>
+                </ul>
+            </div>
+
+            <div class="changelog-group">
+                <h4>UI &amp; Presets</h4>
+                <ul>
+                    <li><strong>Fix:</strong> Streaming preset didn't show the Stream URL field</li>
+                    <li><strong>Fix:</strong> Clear preset and Clear Data left <code>largeImageText</code> / <code>smallImageText</code> character counters showing stale counts</li>
+                    <li><strong>Fix:</strong> <code>streamUrl</code> field not cleared by Clear Data</li>
+                    <li><strong>Fix:</strong> Rotation interval accepted negative values, causing Discord spam — minimum 5s enforced</li>
+                    <li><strong>Fix:</strong> Clear Data left activity type, stream URL field, timestamp radio, and custom timestamps panel in whatever state the user had them</li>
+                    <li><strong>Fix:</strong> Update error banner silently disappeared; error message now shown briefly in red</li>
+                    <li><strong>Fix:</strong> Stale <code>countdown_end</code> used after reconnect — now validated against current time, falls back to 1 hour</li>
+                    <li><strong>Fix:</strong> <code>parseInt</code> called without radix on countdown preset value — changed to <code>parseInt(…, 10)</code></li>
+                </ul>
+            </div>
+
+            <div class="changelog-group">
+                <h4>Main Process</h4>
+                <ul>
+                    <li><strong>Fix:</strong> <code>setActivity()</code> could receive <code>null</code> and throw — null guard added at function entry</li>
+                    <li><strong>Fix:</strong> Tray Disconnect click handler was not <code>async</code> — fire-and-forget disconnect could leave tray state out of sync</li>
+                    <li><strong>Fix:</strong> <code>isManualDisconnect</code> flag never reset if an exception was thrown inside <code>disconnect()</code> — wrapped in <code>try/finally</code></li>
+                    <li><strong>Fix:</strong> <code>connect()</code> could be invoked concurrently (e.g. rapid hotkey presses) causing duplicate RPC clients — guarded with <code>isConnecting</code> flag</li>
+                    <li><strong>Fix:</strong> <code>dialog.showSaveDialog</code> / <code>showOpenDialog</code> called without checking if the window is destroyed — crashes avoided with <code>isDestroyed()</code> guard</li>
+                    <li><strong>Fix:</strong> <code>mainWindow.setAlwaysOnTop()</code> and <code>setOpacity()</code> in settings handler lacked <code>isDestroyed()</code> check — could throw on window close</li>
+                    <li><strong>Fix:</strong> <code>set-always-on-top</code> and <code>set-opacity</code> IPC handlers also lacked <code>isDestroyed()</code> check when called directly from renderer</li>
+                    <li><strong>Fix:</strong> <code>show-message-box</code> IPC handler passed <code>mainWindow</code> directly to <code>dialog.showMessageBox</code> — now falls back to <code>null</code> if window is destroyed</li>
+                    <li><strong>Fix:</strong> <code>open-external</code> IPC handler discarded the <code>shell.openExternal()</code> Promise — unhandled rejection on failure; now caught and swallowed</li>
+                </ul>
+            </div>
+
+            <div class="changelog-group">
+                <h4>Renderer</h4>
+                <ul>
+                    <li><strong>Fix:</strong> <code>populateFields()</code> crashed with "Cannot read property of null" when called with a null activity — null guard added</li>
+                    <li><strong>Fix:</strong> 8 <code>parseInt()</code> calls were missing a radix argument — all updated to <code>parseInt(…, 10)</code> for strict decimal parsing</li>
+                </ul>
+            </div>
+
+            <div class="changelog-group">
+                <h4>Presence Rotation</h4>
+                <ul>
+                    <li><strong>Fix:</strong> Rotation updated the preview but not Discord — rotation now requires an active connection before starting</li>
+                    <li><strong>Fix:</strong> First profile (index 0) was skipped — the timer incremented the index before the first <code>setActivity</code> call, so profile[0] was never sent to Discord; first profile is now applied immediately on start</li>
+                    <li><strong>Fix:</strong> No feedback when rotation failed to start due to not being connected — a warning dialog is now shown</li>
+                </ul>
+            </div>
+
+            <div class="changelog-group">
+                <h4>Placeholders</h4>
+                <ul>
+                    <li><strong>Fix:</strong> Placeholders like <code>{day}</code>, <code>{month}</code>, <code>{year}</code> showed as literal text in Discord — resolution only happened in the renderer preview; main process now resolves them before sending to Discord RPC</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

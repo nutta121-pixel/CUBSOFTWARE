@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=1920">
+<title>Prediction Overlay</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:1920px;height:1080px;overflow:hidden;background:transparent;}
+#overlay{width:1920px;height:1080px;position:relative;}
+#predBox{position:absolute;top:20px;right:20px;width:500px;
+  background:rgba(10,10,26,0.92);border-radius:14px;padding:24px 28px;
+  backdrop-filter:blur(10px);border:1px solid rgba(145,70,255,.3);
+  box-shadow:0 0 40px rgba(145,70,255,.2);display:none;}
+#predBox.active{display:block;animation:predIn .5s cubic-bezier(.22,1,.36,1) forwards;}
+@keyframes predIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+.pred-label{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+.pred-title{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;color:#fff;margin-bottom:16px;line-height:1.3;}
+.pred-locked{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;letter-spacing:2px;
+  background:rgba(255,165,0,.2);border:1px solid rgba(255,165,0,.4);color:#ffa500;margin-bottom:10px;}
+.pred-outcomes{display:flex;flex-direction:column;gap:10px;}
+.pred-outcome{padding:10px 14px;border-radius:10px;border-left:4px solid var(--col);}
+.pred-outcome-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.pred-outcome-title{font-weight:700;font-size:14px;color:#fff;}
+.pred-outcome-pct{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:900;color:var(--col);}
+.pred-bar-wrap{height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:4px;}
+.pred-bar{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.22,1,.36,1);}
+.pred-points{font-size:11px;color:#888;}
+.pred-winner{padding:2px 8px;border-radius:4px;font-size:10px;letter-spacing:1px;background:rgba(0,204,102,.2);border:1px solid rgba(0,204,102,.4);color:#00cc66;margin-left:6px;}
+.pred-ended-label{text-align:center;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;color:#666;margin-top:12px;}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/overlays/static/css/overlays-effects.css?v={{ v }}">
+</head>
+<body>
+<div id="overlay"><div id="predBox"></div></div>
+<script src="/overlays/static/js/overlays-effects.js?v={{ v }}"></script>
+<script>
+const SCENE_ID='{{ scene_id }}';
+const DISCORD_USER_ID='{{ discord_user_id }}';
+let cfg={};
+let hideTimer=null;
+function esc(s){const d=document.createElement('div');d.textContent=String(s||'');return d.innerHTML;}
+
+function renderPred(state) {
+    const box=document.getElementById('predBox');
+    if(!state||(!state.active&&!state.ended&&cfg.hide_when_inactive!==false)){box.classList.remove('active');return;}
+    box.classList.add('active');
+    const accent=cfg.accent_color||'#9146ff';
+    document.documentElement.style.setProperty('--accent',accent);
+    const outcomes=state.outcomes||[];
+    const defColors=cfg.outcome_colors||['#00cc66','#ff3366','#00ccff','#ff6600','#9945ff','#ffcc00','#ff0099','#00ff88'];
+    const totalPts=outcomes.reduce((s,o)=>s+(o.channel_points||0),0)||1;
+    let html=`<div class="pred-label">🔮 PREDICTION${state.ended?' · ENDED':state.locked?' · LOCKED':''}</div>
+      <div class="pred-title">${esc(state.title||'')}</div>
+      ${state.locked&&!state.ended?'<div class="pred-locked">🔒 LOCKED</div>':''}
+      <div class="pred-outcomes">`;
+    outcomes.forEach((o,i)=>{
+        const col=defColors[i%defColors.length];
+        const pts=o.channel_points||0;
+        const pct=Math.round(pts/totalPts*100);
+        const isWinner=state.winning_outcome_id&&o.id===state.winning_outcome_id;
+        html+=`<div class="pred-outcome" style="--col:${col};background:${col}18;border-left-color:${col}">
+          <div class="pred-outcome-header">
+            <div class="pred-outcome-title" style="font-family:'${cfg.choice_font||'Poppins'}',sans-serif">${esc(o.title)}${isWinner?'<span class="pred-winner">✓ WINNER</span>':''}</div>
+            ${cfg.show_percentage?`<div class="pred-outcome-pct" style="color:${col}">${pct}%</div>`:''}
+          </div>
+          <div class="pred-bar-wrap"><div class="pred-bar" style="width:${pct}%;background:${col}"></div></div>
+          ${cfg.show_points?`<div class="pred-points">${pts.toLocaleString()} points · ${o.users||0} predictors</div>`:''}
+        </div>`;
+    });
+    html+='</div>';
+    if(state.ended) html+=`<div class="pred-ended-label">PREDICTION RESOLVED</div>`;
+    box.innerHTML=html;
+    if(state.ended){clearTimeout(hideTimer);hideTimer=setTimeout(()=>box.classList.remove('active'),12000);}
+}
+
+function applyConfig(c){cfg=c;document.documentElement.style.setProperty('--accent',c.accent_color||'#9146ff');}
+
+function connectPred(){
+    const es=new EventSource('/overlays/prediction/'+DISCORD_USER_ID+'/events');
+    es.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==='update')renderPred(m.data);}catch(_){}};
+    es.onerror=()=>{es.close();setTimeout(connectPred,3000);};
+}
+async function loadConfig(){try{const r=await fetch('/overlays/api/scenes/'+SCENE_ID+'/config');if(r.ok)applyConfig(await r.json());}catch(e){}}
+function connectSSE(){const es=new EventSource('/overlays/source/'+SCENE_ID+'/events');es.onmessage=e=>{const m=JSON.parse(e.data);if(m.type==='update')applyConfig(m.config);};es.onerror=()=>{es.close();setTimeout(connectSSE,3000);};}
+loadConfig().then(()=>{connectSSE();connectPred();});
+</script>
+</body></html>

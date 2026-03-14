@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>CubPresence Extension | CUB SOFTWARE</title>
+    <meta name="description" content="Install the CubPresence browser extension to connect to Discord Rich Presence.">
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/cubpresence.css?v={{ v }}">
+    <style>
+        .extension-page {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .extension-hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .extension-hero h1 {
+            font-size: 2.5rem;
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 1rem;
+        }
+
+        .extension-hero p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .install-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .install-card h2 {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .install-card h2 svg {
+            color: #5865f2;
+        }
+
+        .install-steps {
+            list-style: none;
+            counter-reset: step;
+        }
+
+        .install-steps li {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .install-steps li::before {
+            content: counter(step);
+            counter-increment: step;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #5865f2, #8a2be2);
+            border-radius: 50%;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .install-steps li div {
+            flex: 1;
+        }
+
+        .install-steps li strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .install-steps li p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .download-section {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, rgba(88, 101, 242, 0.2), rgba(138, 43, 226, 0.2));
+            border-radius: 12px;
+            margin-top: 2rem;
+        }
+
+        .download-section h3 {
+            margin-bottom: 1rem;
+        }
+
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: #5865f2;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .download-btn:hover {
+            background: #4752c4;
+            transform: translateY(-2px);
+        }
+
+        .browser-icons {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .browser-icon {
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .browser-icon svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+
+        .browser-icon span {
+            font-size: 0.85rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-bottom: 2rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <main class="cubpresence-main">
+            <div class="extension-page">
+                <a href="/apps/cubpresence" class="back-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                    Back to CubPresence
+                </a>
+
+                <div class="extension-hero">
+                    <h1><span class="gradient-text">CubPresence</span> Extension</h1>
+                    <p>Install the browser extension to connect CubPresence to Discord</p>
+                </div>
+
+                <div class="install-card">
+                    <h2>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="28" height="28"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        Installation Guide
+                    </h2>
+
+                    <ol class="install-steps">
+                        <li>
+                            <div>
+                                <strong>Download the Extension</strong>
+                                <p>Click the download button below to get the extension files (.zip)</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>Extract the ZIP file</strong>
+                                <p>Unzip the downloaded file to a folder on your computer</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>Open Extension Settings</strong>
+                                <p>Go to <code>chrome://extensions</code> (or your browser's extension page) and enable "Developer mode"</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>Load the Extension</strong>
+                                <p>Click "Load unpacked" and select the folder where you extracted the extension</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <strong>You're Ready!</strong>
+                                <p>Go back to CubPresence and click "Connect to Discord" - the extension will handle the rest</p>
+                            </div>
+                        </li>
+                    </ol>
+
+                    <div class="download-section">
+                        <h3>Download CubPresence Extension</h3>
+                        <a href="/static/downloads/cubpresence-extension.zip" class="download-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                            Download Extension
+                        </a>
+
+                        <div class="browser-icons">
+                            <div class="browser-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm0 2.2c2.2 0 4.2.7 5.9 1.9l-2.5 4.3c-.9-.5-2-.8-3.4-.8-1.4 0-2.5.3-3.4.8L6.1 4.1C7.8 2.9 9.8 2.2 12 2.2zM4.1 6.1l2.5 4.3c-.5.9-.8 2-.8 3.4 0 1.4.3 2.5.8 3.4l-4.3 2.5C1.5 17.2 1 14.7 1 12c0-2.2.7-4.2 1.9-5.9h1.2zM12 21.8c-2.2 0-4.2-.7-5.9-1.9l2.5-4.3c.9.5 2 .8 3.4.8 1.4 0 2.5-.3 3.4-.8l2.5 4.3c-1.7 1.2-3.7 1.9-5.9 1.9zm7.9-4.1l-2.5-4.3c.5-.9.8-2 .8-3.4 0-1.4-.3-2.5-.8-3.4l4.3-2.5c.8 1.5 1.3 4 1.3 6.7 0 2.2-.7 4.2-1.9 5.9l-1.2 1z"/></svg>
+                                <span>Chrome</span>
+                            </div>
+                            <div class="browser-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm0 2c5.5 0 10 4.5 10 10s-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2zm0 2c-4.4 0-8 3.6-8 8s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8z"/></svg>
+                                <span>Edge</span>
+                            </div>
+                            <div class="browser-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm0 2c5.5 0 10 4.5 10 10s-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2z"/></svg>
+                                <span>Opera</span>
+                            </div>
+                            <div class="browser-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm0 2c5.5 0 10 4.5 10 10s-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2z"/></svg>
+                                <span>Brave</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        {% include 'footer.html' %}
+    </div>
+</body>
+</html>

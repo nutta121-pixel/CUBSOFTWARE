@@ -801,6 +801,7 @@ BOT_SCOPES = ' '.join([
     'moderator:read:followers',
     'channel:read:subscriptions',
     'user:bot',
+    'user:write:chat',
 ])
 
 @cubassist_bp.route('/admin/setup')

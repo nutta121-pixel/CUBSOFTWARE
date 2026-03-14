@@ -1129,7 +1129,11 @@
                             <div class="settings-info"><h4>Enabled</h4><p>Automatically assign roles when members join</p></div>
                             <label class="toggle"><input type="checkbox" id="welcome-autorole-enabled" onchange="window.cpSaveWelcome()"><span class="toggle-slider"></span></label>
                         </div>
-                        <div class="form-group" style="margin-top: 1rem;">
+                        <div style="display:flex;align-items:flex-start;gap:0.6rem;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:0.75rem 1rem;margin-top:1rem;margin-bottom:0.75rem;">
+                            <span style="font-size:1.1rem;flex-shrink:0;">⚠️</span>
+                            <p style="color:#f59e0b;font-size:0.85rem;margin:0;line-height:1.5;">The bot's role must be placed <strong>higher</strong> than any role it assigns. Go to <strong>Server Settings → Roles</strong> and drag the bot's role above the roles listed here.</p>
+                        </div>
+                        <div class="form-group">
                             <label>Roles to Assign</label>
                             <div class="tag-list" id="welcome-autorole-list"></div>
                             <div class="form-row" style="margin-top: 0.5rem;">
@@ -1712,6 +1716,11 @@
                             </select>
                             <small style="color:var(--text-muted);">How members verify themselves</small>
                         </div>
+                    </div>
+
+                    <div style="display:flex;align-items:flex-start;gap:0.6rem;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:0.75rem 1rem;margin-bottom:1.5rem;">
+                        <span style="font-size:1.1rem;flex-shrink:0;">⚠️</span>
+                        <p style="color:#f59e0b;font-size:0.85rem;margin:0;line-height:1.5;">For auto-roles to work, the bot's role must be placed <strong>higher</strong> than any role it assigns in your Discord server's role list. Go to <strong>Server Settings → Roles</strong> and drag the bot's role above the roles configured here.</p>
                     </div>
 
                     <h3 style="margin-bottom:0.75rem;">Join Roles <span style="color:var(--text-muted);font-size:0.8rem;">(assigned to humans on join)</span></h3>

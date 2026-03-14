@@ -19,6 +19,11 @@ app.on('second-instance', () => {
     }
 });
 
+// Ensure Discord IPC socket is discoverable on Linux
+if (process.platform === 'linux' && !process.env.XDG_RUNTIME_DIR) {
+    process.env.XDG_RUNTIME_DIR = `/run/user/${process.getuid()}`;
+}
+
 let mainWindow = null;
 let tray = null;
 let rpcClient = null;

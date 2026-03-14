@@ -1,5 +1,5 @@
 /* ─── CubDeck Engine ─── */
-const CUBDECK_VERSION = '1.3.16';
+const CUBDECK_VERSION = '1.3.17';
 const CubDeck = (() => {
     let config = {};
     let activePage = 0;

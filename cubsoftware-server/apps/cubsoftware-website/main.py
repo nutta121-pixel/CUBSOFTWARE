@@ -3,6 +3,7 @@ from waitress import serve
 import socket
 import os
 import sys
+import tempfile
 import importlib.util
 import json
 import hashlib
@@ -10920,8 +10921,18 @@ def load_cp_json(filepath):
 
 def save_cp_json(filepath, data):
     try:
-        with open(filepath, 'w') as f:
-            json.dump(data, f, indent=2)
+        dir_ = os.path.dirname(filepath)
+        tmp_fd, tmp_path = tempfile.mkstemp(dir=dir_, suffix='.tmp')
+        try:
+            with os.fdopen(tmp_fd, 'w') as f:
+                json.dump(data, f, indent=2)
+            os.replace(tmp_path, filepath)
+        except Exception:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
     except Exception as e:
         app.logger.error(f'Failed to save {filepath}: {e}')
 

@@ -2814,13 +2814,16 @@ client.on('guildMemberAdd', async (member) => {
         try {
             const _arWelcome = loadWelcomeData();
             const _arGuildW = getWelcomeGuild(_arWelcome, member.guild.id);
+            console.log(`[AutoRole] ${member.user.tag} joined ${member.guild.name} | autorole_enabled=${_arGuildW.welcome.autorole_enabled} | roles=${JSON.stringify(_arGuildW.welcome.auto_roles)}`);
             if (_arGuildW.welcome.autorole_enabled && _arGuildW.welcome.auto_roles?.length > 0) {
                 const _delay = Math.max(0, parseInt(_arGuildW.welcome.autorole_delay) || 0) * 1000;
                 const _assignWelcomeRoles = async () => {
                     const _m = _delay > 0 ? await member.guild.members.fetch(member.id).catch(() => null) : member;
                     if (!_m) return;
                     for (const _rid of _arGuildW.welcome.auto_roles) {
-                        await _m.roles.add(_rid).catch(e => console.warn(`[AutoRole] welcome role ${_rid} → ${_m.id}: ${e.message}`));
+                        await _m.roles.add(_rid)
+                            .then(() => console.log(`[AutoRole] ✓ added role ${_rid} to ${_m.id}`))
+                            .catch(e => console.error(`[AutoRole] ✗ failed role ${_rid} to ${_m.id}: ${e.message}`));
                     }
                 };
                 if (_delay > 0) setTimeout(_assignWelcomeRoles, _delay);

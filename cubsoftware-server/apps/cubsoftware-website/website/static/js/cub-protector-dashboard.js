@@ -1635,7 +1635,7 @@
             const role = allServerRoles.find(r => r.id === roleId);
             const name = role ? escapeHtml(role.name) : roleId;
             const color = role && role.color ? `#${role.color.toString(16).padStart(6, '0')}` : '#5865f2';
-            return `<span class="tag" style="border-color:${color}40;background:${color}20;color:${color};">${name}<button class="tag-remove" onclick="window.cpRemoveAutoRole('${roleId}')">&times;</button></span>`;
+            return `<span class="tag" style="border-color:${color}40;background:${color}20;color:${color};">${name}<button class="tag-remove" onclick="window.cpRemoveWelcomeRole('${roleId}')">&times;</button></span>`;
         }).join('');
     }
 
@@ -1658,7 +1658,7 @@
         window.cpSaveWelcome();
     };
 
-    window.cpRemoveAutoRole = function(roleId) {
+    window.cpRemoveWelcomeRole = function(roleId) {
         welcomeAutoRoles = welcomeAutoRoles.filter(r => r !== roleId);
         renderAutoRoles();
         populateRoleSelect();
@@ -3456,7 +3456,14 @@
     };
 
     window.cpRemoveAutoRole = function(type, index) {
-        loadAutoRoles(); // Simple reload approach
+        const containerMap = { join: 'autoroles-join-roles', bot: 'autoroles-bot-roles', age: 'autoroles-age-roles', delay: 'autoroles-delay-roles' };
+        const container = document.getElementById(containerMap[type]);
+        if (container) {
+            const items = container.children;
+            if (items[index]) items[index].remove();
+            if (container.children.length === 0) container.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">No roles configured</p>';
+        }
+        window.cpSaveAutoRoles();
     };
 
     window.cpSaveAutoRoles = async function() {

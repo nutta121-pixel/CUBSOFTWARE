@@ -2898,13 +2898,20 @@ client.on('guildMemberAdd', async (member) => {
 
     }
 
-    // Legacy auto-roles from welcome system (runs independently of welcome message)
+    // Auto-roles from welcome system (runs independently of welcome message)
     if (guildWelcome.welcome.autorole_enabled && guildWelcome.welcome.auto_roles?.length > 0) {
-        for (const roleId of guildWelcome.welcome.auto_roles) {
-            await member.roles.add(roleId).catch(e => {
-                console.warn(`[AutoRole] Failed to add role ${roleId} to ${member.id}: ${e.message}`);
-            });
-        }
+        const delay = Math.max(0, parseInt(guildWelcome.welcome.autorole_delay) || 0) * 1000;
+        const assignRoles = async () => {
+            const m = delay > 0 ? await member.guild.members.fetch(member.id).catch(() => null) : member;
+            if (!m) return;
+            for (const roleId of guildWelcome.welcome.auto_roles) {
+                await m.roles.add(roleId).catch(e => {
+                    console.warn(`[AutoRole] Failed to add role ${roleId} to ${m.id}: ${e.message}`);
+                });
+            }
+        };
+        if (delay > 0) setTimeout(assignRoles, delay);
+        else await assignRoles();
     }
 
     // ---- Advanced Auto-Roles System ----

@@ -294,27 +294,26 @@ function buildAtempoChain(speed) {
     return filters.join(',');
 }
 
-function createAudioResourceFromUrl(audioUrl, speed = 1.0, seekSeconds = 0, volume = 1.0) {
+function createAudioResourceFromUrl(audioUrl, speed = 1.0, seekSeconds = 0) {
     const args = ['-hide_banner', '-loglevel', 'error', '-user_agent', 'CUBPodcast/1.0'];
 
     if (seekSeconds > 0) args.push('-ss', String(Math.floor(seekSeconds)));
 
     args.push('-i', audioUrl);
 
-    const filters = [];
-    if (volume !== 1.0)  filters.push(`volume=${volume.toFixed(4)}`);
-    if (speed  !== 1.0)  filters.push(buildAtempoChain(speed));
-    if (filters.length)  args.push('-af', filters.join(','));
+    // Speed via atempo; volume is handled live by inlineVolume (no restart needed)
+    if (speed !== 1.0) args.push('-af', buildAtempoChain(speed));
 
-    // Output Ogg/Opus directly — ffmpeg handles encoding, no prism-media Opus encoder needed
-    args.push('-c:a', 'libopus', '-b:a', '96k', '-ar', '48000', '-ac', '2', '-f', 'ogg', 'pipe:1');
+    // Raw PCM — requires opusscript (installed) for the Node.js Opus encoder
+    // inlineVolume: true enables resource.volume.setVolume() for live volume control
+    args.push('-f', 's16le', '-ar', '48000', '-ac', '2', 'pipe:1');
 
     const ff = spawn('ffmpeg', args);
     ff.stdin.on('error', () => {});
     ff.stderr.on('data', (d) => console.error('[PODCAST] ffmpeg:', d.toString().trim()));
     ff.on('error', (err) => console.error('[PODCAST] ffmpeg error:', err.message));
 
-    return createAudioResource(ff.stdout, { inputType: StreamType.OggOpus });
+    return createAudioResource(ff.stdout, { inputType: StreamType.Raw, inlineVolume: true });
 }
 
 // ── Session management ────────────────────────────────────────────────────────
@@ -345,6 +344,7 @@ function createSession(guildId, voiceChannel, textChannel, guild, client) {
         paused:              false,
         speed:               1.0,
         volume:              1.0,
+        resource:            null,   // current AudioResource (for live volume control)
         startedAt:           null,   // Date.now() when episode started
         pausedElapsed:       null,   // elapsed seconds at the moment of pause
         autoPlay:            true,
@@ -358,6 +358,19 @@ function createSession(guildId, voiceChannel, textChannel, guild, client) {
     connection.on('error', (err) => {
         console.error('[PODCAST] Connection error:', err.message);
         sessions.delete(guildId);
+    });
+
+    // When buffering finishes and audio actually starts, remove the loading indicator
+    player.on(AudioPlayerStatus.Playing, () => {
+        const s = sessions.get(guildId);
+        if (!s || !s.loading) return;
+        s.loading = false;
+        if (s.nowPlayingMessage) {
+            s.nowPlayingMessage.edit({
+                embeds:     [buildNowPlayingEmbed(s)],
+                components: buildNowPlayingButtons(s),
+            }).catch(() => {});
+        }
     });
 
     // When an episode finishes, auto-play queue → auto-play next in feed → idle
@@ -423,16 +436,17 @@ function buildNowPlayingEmbed(session) {
     const pod = session.currentPodcast;
     if (!ep || !pod) return new EmbedBuilder().setColor(PODCAST_COLOR).setTitle('Nothing playing');
 
-    const icon      = session.paused ? '⏸️' : '▶️';
+    const icon      = session.loading ? '⏳' : session.paused ? '⏸️' : '▶️';
     const speedTag  = session.speed !== 1.0 ? ` · ${session.speed}x` : '';
     const queueTag  = session.queue.length > 0 ? ` · ${session.queue.length} queued` : '';
+    const loadingTag = session.loading ? ' · Loading, won\'t be long...' : '';
 
     const embed = new EmbedBuilder()
         .setColor(PODCAST_COLOR)
         .setAuthor({ name: pod.name, iconURL: pod.artwork })
         .setTitle(`${icon} ${ep.title}`)
         .setThumbnail(ep.artwork || pod.artwork)
-        .setFooter({ text: `🎙️ CUB Podcast Player${speedTag}${queueTag}` });
+        .setFooter({ text: `🎙️ CUB Podcast Player${speedTag}${queueTag}${loadingTag}` });
 
     if (ep.description) {
         embed.setDescription(ep.description.length > 260
@@ -520,10 +534,15 @@ async function playEpisodeInSession(guildId, episode, podcast, seekSeconds = 0) 
 
     addToHistory(guildId, podcast.name, episode.title);
 
+    session.loading = true;
+
     try {
-        const resource = createAudioResourceFromUrl(episode.audioUrl, session.speed, seekSeconds, session.volume);
+        const resource = createAudioResourceFromUrl(episode.audioUrl, session.speed, seekSeconds);
+        resource.volume.setVolume(session.volume);
+        session.resource = resource;
         session.player.play(resource);
     } catch (err) {
+        session.loading = false;
         console.error('[PODCAST] Play error:', err.message);
         if (session.textChannel) session.textChannel.send(`⚠️ Could not play this episode: ${err.message}`).catch(() => {});
         return;
@@ -903,7 +922,9 @@ async function podcastSpeed(interaction) {
         const elapsed = getElapsedSeconds(session);
         await interaction.reply({ content: `⚡ Speed set to **${speed}x** — restarting episode from ~${formatDuration(elapsed) || '0:00'}...`, ephemeral: true });
         try {
-            const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, speed, elapsed, session.volume);
+            const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, speed, elapsed);
+            resource.volume.setVolume(session.volume);
+            session.resource = resource;
             session.startedAt = Date.now() - (elapsed * 1000);
             session.player.play(resource);
         } catch (err) {
@@ -925,18 +946,24 @@ async function podcastVolume(interaction) {
     const volume = level / 100;
     session.volume = volume;
 
-    if (session.currentEpisode && session.player.state.status !== AudioPlayerStatus.Idle) {
+    if (session.resource?.volume) {
+        session.resource.volume.setVolume(volume);
+        await interaction.reply({ content: `🔊 Volume set to **${level}%**`, ephemeral: true });
+    } else if (session.currentEpisode && session.player.state.status !== AudioPlayerStatus.Idle) {
+        // Resource exists but inline volume not available — restart at current position
         const elapsed = getElapsedSeconds(session);
         await interaction.reply({ content: `🔊 Volume set to **${level}%** — restarting from ~${formatDuration(elapsed) || '0:00'}...`, ephemeral: true });
         try {
-            const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, session.speed, elapsed, volume);
+            const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, session.speed, elapsed);
+            resource.volume.setVolume(volume);
+            session.resource = resource;
             session.startedAt = Date.now() - (elapsed * 1000);
             session.player.play(resource);
         } catch (err) {
-            console.error('[PODCAST] Volume change error:', err.message);
+            console.error('[PODCAST] Volume restart error:', err.message);
         }
     } else {
-        await interaction.reply({ content: `🔊 Volume set to **${level}%** for next episode.`, ephemeral: true });
+        await interaction.reply({ content: `🔊 Volume set to **${level}%** — will apply to next episode.`, ephemeral: true });
     }
 }
 
@@ -962,7 +989,9 @@ async function podcastSeek(interaction) {
     await interaction.reply({ content: `⏩ Seeking to **${formatDuration(targetSeconds) || `${targetSeconds}s`}**...`, ephemeral: true });
 
     try {
-        const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, session.speed, targetSeconds, session.volume);
+        const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, session.speed, targetSeconds);
+        resource.volume.setVolume(session.volume);
+        session.resource = resource;
         session.startedAt = Date.now() - (targetSeconds * 1000);
         session.player.play(resource);
     } catch (err) {

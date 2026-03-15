@@ -22,6 +22,7 @@ mkdir -p logs/cubvault-api
 mkdir -p logs/cubvault-web
 mkdir -p logs/questcord
 mkdir -p logs/onion-bot
+mkdir -p logs/cub-protector
 
 # Install CubSoftware Website dependencies
 echo "[2/7] Installing CubSoftware Website (Python)..."
@@ -45,20 +46,26 @@ cd apps/cubvault
 npm run build:web 2>/dev/null || true
 cd "$SCRIPT_DIR"
 
+# Install CUB Protector dependencies
+echo "[5/8] Installing CUB Protector..."
+cd apps/cub-protector
+npm install --silent
+cd "$SCRIPT_DIR"
+
 # Install QuestCord dependencies
-echo "[5/7] Installing QuestCord..."
+echo "[6/8] Installing QuestCord..."
 cd apps/questcord
 npm install --silent
 cd "$SCRIPT_DIR"
 
 # Install The Onion Bot dependencies
-echo "[6/7] Installing The Onion Bot..."
+echo "[7/8] Installing The Onion Bot..."
 cd "../The Onion Bot"
 npm install --silent
 cd "$SCRIPT_DIR"
 
 # Start all services
-echo "[7/7] Starting all services..."
+echo "[8/8] Starting all services..."
 pm2 start cubsoftware.config.js
 pm2 save
 

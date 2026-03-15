@@ -130,10 +130,25 @@ async function searchPodcasts(query, limit = 8) {
 }
 
 async function getTopByGenre(genreId, limit = 10) {
-    const data = await podcastApiGet(
-        `https://itunes.apple.com/search?term=podcast&entity=podcast&genreId=${genreId}&limit=${limit}`
+    // Use the iTunes RSS top-charts endpoint — this is truly genre-filtered
+    // (the search endpoint with genreId returns the same results for every genre)
+    const rssData = await podcastApiGet(
+        `https://itunes.apple.com/us/rss/toppodcasts/limit=${limit}/genre=${genreId}/json`
     );
-    return (data.results || []).map(mapItunesResult).filter(r => r.feedUrl);
+    const entries = rssData.feed?.entry || [];
+    if (!entries.length) return [];
+
+    // Extract collection IDs from the chart entries
+    const ids = entries.map(e => e.id?.attributes?.['im:id']).filter(Boolean);
+    if (!ids.length) return [];
+
+    // Batch-lookup to get feedUrls (needed for playback)
+    const lookupData = await podcastApiGet(
+        `https://itunes.apple.com/lookup?id=${ids.join(',')}&entity=podcast`
+    );
+    return (lookupData.results || [])
+        .filter(r => r.feedUrl && r.kind === 'podcast')
+        .map(mapItunesResult);
 }
 
 // ── RSS feed helpers ──────────────────────────────────────────────────────────

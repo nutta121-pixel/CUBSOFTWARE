@@ -177,6 +177,7 @@ const TOURNAMENTS_FILE = path.join(DATA_DIR, 'tournaments.json');
 const FEEDS_FILE = path.join(DATA_DIR, 'feeds.json');
 const DEBATE_FILE = path.join(DATA_DIR, 'debate.json');
 const GAMES_FILE = path.join(DATA_DIR, 'games.json');
+const MEDIA_CHANNELS_FILE = path.join(DATA_DIR, 'media_channels.json');
 const SUPPORT_SERVER_LINK = 'https://discord.gg/ngQXHUbnKg';
 const SUPPORT_USER_LINK = 'https://discord.com/users/523949187663585310';
 
@@ -2435,6 +2436,41 @@ client.on('messageCreate', async (message) => {
         for (const [userId, user] of message.mentions.users) {
             if (guildAfk[userId]) {
                 message.reply({ content: `<@${userId}> is AFK: ${guildAfk[userId].message} (since <t:${guildAfk[userId].since}:R>)`, allowedMentions: { repliedUser: false, users: [] } }).catch(() => {});
+            }
+        }
+    }
+
+    // --- Media-Only Channel Enforcement ---
+    {
+        const mediaData = loadJsonFile(MEDIA_CHANNELS_FILE);
+        const mediaGuild = mediaData.guilds?.[guildId];
+        if (mediaGuild?.settings?.enabled && mediaGuild.items?.length > 0) {
+            const mc = mediaGuild.items.find(item => item.channel === message.channel.id);
+            if (mc && !message.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
+                const attachments = [...message.attachments.values()];
+                const hasImage = attachments.some(a => a.contentType?.startsWith('image/'));
+                const hasVideo = attachments.some(a => a.contentType?.startsWith('video/'));
+                const hasMedia = hasImage || hasVideo;
+
+                let shouldDelete = false;
+                if (mc.require_video) {
+                    if (!hasVideo) shouldDelete = true;
+                } else if (mc.require_image) {
+                    if (!hasMedia) shouldDelete = true;
+                } else {
+                    // Default: require any media
+                    if (!hasMedia) shouldDelete = true;
+                }
+                // allow_text: pure text messages without any attachments are OK
+                if (mc.allow_text && message.attachments.size === 0) shouldDelete = false;
+
+                if (shouldDelete) {
+                    await message.delete().catch(() => {});
+                    const warning = mediaGuild.settings.warning || 'This channel is media-only. Please include an image or video with your message.';
+                    const warn = await message.channel.send(`<@${message.author.id}> ${warning}`).catch(() => null);
+                    if (warn) setTimeout(() => warn.delete().catch(() => {}), 7000);
+                    return;
+                }
             }
         }
     }
@@ -9867,7 +9903,7 @@ async function updateCounters() {
                         break;
                     }
                     case 'goal': {
-                        const goal = counter.extra?.goal || 100;
+                        const goal = counter.extra?.target || counter.extra?.goal || 100;
                         const current = counter.extra?.current || 0;
                         count = `${current}/${goal}`;
                         break;

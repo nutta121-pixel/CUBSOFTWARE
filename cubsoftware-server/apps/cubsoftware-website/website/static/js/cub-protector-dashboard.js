@@ -6730,9 +6730,9 @@
             populateChannelSelect('media-add-channel', null);
             const list = document.getElementById('media-list');
             if (list) {
-                list.innerHTML = (data.channels || []).map((mc, i) =>
+                list.innerHTML = (data.items || []).map((mc) =>
                     `<div class="list-item"><span>#${escapeHtml(mc.channel_name || mc.channel)}</span>
-                    <button class="btn btn-sm btn-danger" onclick="window.cpDeleteMediaChannel(${i})">Delete</button></div>`
+                    <button class="btn btn-sm btn-danger" onclick="window.cpDeleteMediaChannel('${escapeHtml(mc.id)}')">Delete</button></div>`
                 ).join('') || '<div class="text-muted">No media channels</div>';
             }
         } catch (e) { showToast('Failed to load media channels', 'error'); }
@@ -6753,10 +6753,14 @@
     };
     window.cpAddMediaChannel = async function() {
         try {
+            const channelId = document.getElementById('media-add-channel').value;
+            const channels = await fetchGuildChannels();
+            const channelObj = channels.find(c => c.id === channelId);
             const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/media-channels/add`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
-                    channel: document.getElementById('media-add-channel').value,
+                    channel: channelId,
+                    channel_name: channelObj ? channelObj.name : channelId,
                     require_image: document.getElementById('media-require-image').checked,
                     require_video: document.getElementById('media-require-video').checked,
                     allow_text: document.getElementById('media-allow-text').checked
@@ -6767,11 +6771,10 @@
             else showToast(data.error || 'Failed to add', 'error');
         } catch (e) { showToast('Failed to add media channel', 'error'); }
     };
-    window.cpDeleteMediaChannel = async function(index) {
+    window.cpDeleteMediaChannel = async function(id) {
         try {
-            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/media-channels/add`, {
-                method: 'DELETE', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ index })
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/media-channels/${id}`, {
+                method: 'DELETE'
             });
             const data = await res.json();
             if (data.success) { showToast('Media channel deleted!', 'success'); loadMediaChannels(); }

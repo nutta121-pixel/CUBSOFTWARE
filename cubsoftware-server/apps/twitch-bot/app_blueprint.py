@@ -30,6 +30,10 @@ from bot_core import (
     _load_trusted, _save_trusted,
     _load_daily_claims,
     _load_watchlist, _save_watchlist,
+    _load_timestamps, _save_timestamps,
+    _load_clips_log,
+    _load_bits_log,
+    _load_subs_log,
 )
 
 cubassist_bp = Blueprint(
@@ -1631,6 +1635,144 @@ def api_overlay_scenes_patch():
         return jsonify({'ok': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# ── Timestamps ───────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/timestamps', methods=['GET'])
+def api_get_timestamps():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    return jsonify({'timestamps': _load_timestamps(channel)})
+
+@cubassist_bp.route('/api/timestamps/<int:idx>', methods=['DELETE'])
+def api_delete_timestamp(idx):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    data = _load_timestamps(channel)
+    if 0 <= idx < len(data):
+        data.pop(idx)
+        _save_timestamps(channel, data)
+    return jsonify({'ok': True})
+
+# ── Clips ────────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/clips', methods=['GET'])
+def api_get_clips():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    return jsonify({'clips': _load_clips_log(channel)})
+
+# ── Songs blacklist ───────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/songs/blacklist', methods=['GET', 'POST'])
+def api_songs_blacklist():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    cfg = load_channel_config(channel)
+    sr = cfg.setdefault('song_requests', {})
+    if request.method == 'GET':
+        return jsonify({'blacklist': sr.get('blacklist', [])})
+    data = request.get_json() or {}
+    sr['blacklist'] = data.get('blacklist', [])
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True})
+
+# ── Last.fm integration ───────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/integrations/lastfm', methods=['GET', 'POST'])
+def api_lastfm():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    cfg = load_channel_config(channel)
+    integrations = cfg.setdefault('integrations', {})
+    if request.method == 'GET':
+        return jsonify({'lastfm_user': integrations.get('lastfm_user', '')})
+    data = request.get_json() or {}
+    integrations['lastfm_user'] = data.get('lastfm_user', '')
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True})
+
+# ── Category change alert ─────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/category-alert', methods=['GET', 'POST'])
+def api_category_alert():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    cfg = load_channel_config(channel)
+    if request.method == 'GET':
+        return jsonify(cfg.get('category_change_alert', {'enabled': False, 'message': '🎮 Category changed to $(game)!'}))
+    data = request.get_json() or {}
+    cfg['category_change_alert'] = data
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True})
+
+# ── Follower milestones ───────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/follower-milestones', methods=['GET', 'POST'])
+def api_follower_milestones():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    cfg = load_channel_config(channel)
+    if request.method == 'GET':
+        return jsonify(cfg.get('follower_milestones', {'enabled': False, 'milestones': [100, 500, 1000, 5000, 10000], 'message': '🎉 $(channel) just hit $(count) followers!', 'announced': []}))
+    data = request.get_json() or {}
+    existing = cfg.get('follower_milestones', {})
+    existing.update({k: v for k, v in data.items() if k != 'announced'})
+    cfg['follower_milestones'] = existing
+    save_channel_config(channel, cfg)
+    return jsonify({'ok': True})
+
+# ── Bits leaderboard ──────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/bits-leaderboard', methods=['GET'])
+def api_bits_leaderboard():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    bits_data = _load_bits_log(channel)
+    top = sorted(bits_data.items(), key=lambda x: x[1], reverse=True)[:10]
+    return jsonify({'leaderboard': [{'nick': n, 'bits': v} for n, v in top]})
+
+# ── Subs list ─────────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/subs-list', methods=['GET'])
+def api_subs_list():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    subs_data = _load_subs_log(channel)
+    top = sorted(subs_data.items(), key=lambda x: x[1].get('months', 0), reverse=True)[:10]
+    return jsonify({'subs': [{'nick': n, **v} for n, v in top]})
+
+# ── Stream recap ──────────────────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/stream-recap', methods=['GET'])
+def api_stream_recap():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    bot = get_bot()
+    state = bot._channels.get(channel)
+    if state and state.stream_stats:
+        return jsonify(state.stream_stats)
+    return jsonify({})
 
 # ── Auto-start ──────────────────────────────────────────────────────────────────
 

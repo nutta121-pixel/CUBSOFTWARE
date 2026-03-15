@@ -264,6 +264,58 @@ def _load_watchlist(channel: str) -> list:
 def _save_watchlist(channel: str, data: list):
     (_channel_dir(channel) / 'watchlist.json').write_text(json.dumps(data))
 
+def _load_timestamps(channel):
+    p = os.path.join(_channel_dir(channel), 'timestamps.json')
+    try:
+        if os.path.exists(p):
+            with open(p) as f: return json.load(f)
+    except Exception: pass
+    return []
+
+def _save_timestamps(channel, data):
+    p = os.path.join(_channel_dir(channel), 'timestamps.json')
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, 'w') as f: json.dump(data, f, indent=2)
+
+def _load_clips_log(channel):
+    p = os.path.join(_channel_dir(channel), 'clips_log.json')
+    try:
+        if os.path.exists(p):
+            with open(p) as f: return json.load(f)
+    except Exception: pass
+    return []
+
+def _save_clips_log(channel, data):
+    p = os.path.join(_channel_dir(channel), 'clips_log.json')
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, 'w') as f: json.dump(data, f, indent=2)
+
+def _load_bits_log(channel):
+    p = os.path.join(_channel_dir(channel), 'bits_log.json')
+    try:
+        if os.path.exists(p):
+            with open(p) as f: return json.load(f)
+    except Exception: pass
+    return {}
+
+def _save_bits_log(channel, data):
+    p = os.path.join(_channel_dir(channel), 'bits_log.json')
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, 'w') as f: json.dump(data, f, indent=2)
+
+def _load_subs_log(channel):
+    p = os.path.join(_channel_dir(channel), 'subs_log.json')
+    try:
+        if os.path.exists(p):
+            with open(p) as f: return json.load(f)
+    except Exception: pass
+    return {}
+
+def _save_subs_log(channel, data):
+    p = os.path.join(_channel_dir(channel), 'subs_log.json')
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    with open(p, 'w') as f: json.dump(data, f, indent=2)
+
 # ── Backward-compat shims (used by _maybe_autostart) ───────────────────────────
 
 def load_config() -> dict:
@@ -496,6 +548,91 @@ def resolve_vars(text, ctx):
         except Exception: return '[fetch failed]'
     text = re.sub(r'\$\(urlfetch ([^)]+)\)', _fetch, text)
 
+    # $(followage) - requires ctx to have user_id and channel
+    if '$(followage)' in text:
+        try:
+            _chan = ctx.get('channel', '')
+            _uid = ctx.get('user_id', '')
+            if _chan and _uid:
+                _client_id = os.environ.get('TWITCH_CLIENT_ID', '9n9yjc79p44kpsluv81kvvh6h9bxvu')
+                _bot_token = os.environ.get('CUBASSIST_BOT_TOKEN', '').replace('oauth:', '')
+                _bid = ''
+                try:
+                    _bid_req = urllib.request.Request(
+                        f'https://api.twitch.tv/helix/users?login={urllib.parse.quote(_chan)}',
+                        headers={'Client-Id': _client_id, 'Authorization': f'Bearer {_bot_token}'}
+                    )
+                    with urllib.request.urlopen(_bid_req, timeout=3) as _br:
+                        _bdata = json.loads(_br.read()).get('data', [])
+                    _bid = _bdata[0]['id'] if _bdata else ''
+                except Exception:
+                    pass
+                if _bid and _bot_token:
+                    _fr = urllib.request.Request(
+                        f'https://api.twitch.tv/helix/channels/followers?broadcaster_id={_bid}&user_id={urllib.parse.quote(_uid)}',
+                        headers={'Client-Id': _client_id, 'Authorization': f'Bearer {_bot_token}'}
+                    )
+                    try:
+                        with urllib.request.urlopen(_fr, timeout=3) as _fres:
+                            _fdata = json.loads(_fres.read()).get('data', [])
+                        if _fdata:
+                            _fa = datetime.datetime.fromisoformat(_fdata[0]['followed_at'].replace('Z', '+00:00'))
+                            _delta = datetime.datetime.now(datetime.timezone.utc) - _fa
+                            _days = _delta.days
+                            _yrs, _rem = divmod(_days, 365)
+                            _mos = _rem // 30
+                            if _yrs > 0:
+                                _fastr = f'{_yrs}y {_mos}m'
+                            elif _mos > 0:
+                                _fastr = f'{_mos} month{"s" if _mos!=1 else ""}'
+                            else:
+                                _fastr = f'{_days} day{"s" if _days!=1 else ""}'
+                        else:
+                            _fastr = 'not following'
+                    except Exception:
+                        _fastr = 'unknown'
+                else:
+                    _fastr = 'unknown'
+            else:
+                _fastr = 'unknown'
+        except Exception:
+            _fastr = 'unknown'
+        text = text.replace('$(followage)', _fastr)
+
+    # $(lastfm) - now playing from Last.fm
+    if '$(lastfm)' in text:
+        try:
+            _chan = ctx.get('channel', '')
+            _cfg2 = load_channel_config(_chan) if _chan else {}
+            _lfm_user = _cfg2.get('integrations', {}).get('lastfm_user', '')
+            _lfm_key = os.environ.get('LASTFM_API_KEY', '')
+            if _lfm_user and _lfm_key:
+                _lfm_params = urllib.parse.urlencode({
+                    'method': 'user.getrecenttracks', 'user': _lfm_user,
+                    'api_key': _lfm_key, 'format': 'json', 'limit': 1
+                })
+                _lr = urllib.request.Request(
+                    f'http://ws.audioscrobbler.com/2.0/?{_lfm_params}',
+                    headers={'User-Agent': 'CubAssist/1.0'}
+                )
+                try:
+                    with urllib.request.urlopen(_lr, timeout=3) as _lres:
+                        _ltracks = json.loads(_lres.read()).get('recenttracks', {}).get('track', [])
+                    if _ltracks:
+                        _t = _ltracks[0] if isinstance(_ltracks, list) else _ltracks
+                        _song = _t.get('name', 'Unknown')
+                        _artist = _t.get('artist', {}).get('#text', 'Unknown')
+                        _lfmstr = f'{_artist} - {_song}'
+                    else:
+                        _lfmstr = 'Nothing playing'
+                except Exception:
+                    _lfmstr = 'unavailable'
+            else:
+                _lfmstr = 'Last.fm not configured'
+        except Exception:
+            _lfmstr = 'unavailable'
+        text = text.replace('$(lastfm)', _lfmstr)
+
     return text
 
 # ── Per-channel runtime state ───────────────────────────────────────────────────
@@ -531,6 +668,19 @@ class ChannelState:
         self.hangman = None  # {word, display, guesses, lives_left, active}
         self.anagram = None  # {word, scrambled, active, expiry}
         self.raid_shield = False
+        self.lurkers = {}          # nick -> {'display': str, 'ts': int}
+        self.boss_battle = None    # boss battle game state
+        self.boss_cd = 0.0         # boss battle cooldown timestamp
+        self.numguess = None       # number guessing game state
+        self.chat_race = None      # chat race game state
+        self.community_goal = None # community goal state
+        self.bingo = None          # bingo game state
+        self.challenge = None      # RPS challenge state
+        self.timed_bans = {}       # nick -> {'expiry': float}
+        self.last_game = ''        # last known game/category
+        self.last_follower_count = 0
+        self.stream_was_live = False
+        self.stream_stats = {}     # current stream session stats (in-memory accumulator)
 
 # ── CubAssist multi-channel IRC bot ────────────────────────────────────────────
 
@@ -553,6 +703,12 @@ PROTECTED = {
     'daily', 'rob', 'gift', 'shop', 'redeem', 'lore',
     'trust', 'untrust', 'trusted',
     'chatmode', 'marker', 'overlay',
+    'followage', 'accountage', 'lurk', 'unlurk', 'lurkers',
+    'mystats', 'timestamp', 'vip', 'unvip',
+    'bitleaderboard', 'sublists', 'recap',
+    'boss', 'fight', 'numguess', 'race',
+    'goal', 'contribute', 'bingo', 'claim',
+    'alias', 'hug', 'slap', 'love', 'roulette', 'challenge',
 }
 
 class CubBot:
@@ -945,6 +1101,23 @@ class CubBot:
                     self.send(f'🎉 Welcome to the sub club @{display}! Thanks for subscribing! PogChamp', channel)
                 cfg = load_channel_config(channel) if channel else {}
                 self._notify_event(channel, 'sub', {'user': display, 'months': months}, cfg)
+                # Track sub for leaderboard
+                try:
+                    _sub_nick = tags.get('login', display.lower())
+                    subs_data = _load_subs_log(channel)
+                    sub_entry = subs_data.get(_sub_nick, {'months': 0, 'since_ts': int(time.time())})
+                    sub_entry['months'] = sub_entry.get('months', 0) + 1
+                    sub_entry['display'] = display
+                    subs_data[_sub_nick] = sub_entry
+                    _save_subs_log(channel, subs_data)
+                    # Track in stream stats
+                    _sub_state = self._channels.get(channel)
+                    if _sub_state:
+                        if not _sub_state.stream_stats:
+                            _sub_state.stream_stats = {'peak_viewers': 0, 'subs_received': [], 'raids_received': [], 'points_distributed': 0, 'message_counts': {}, 'chat_messages_total': 0}
+                        _sub_state.stream_stats['subs_received'].append({'nick': _sub_nick, 'ts': int(time.time())})
+                except Exception:
+                    pass
 
             elif msg_id == 'subgift':
                 channel  = params[0].lstrip('#').lower() if params else ''
@@ -1001,6 +1174,25 @@ class CubBot:
             state.chat_log = state.chat_log[-200:]
         state.line_count += 1
 
+        # Chat race winner detection
+        if state.chat_race and state.chat_race.get('active'):
+            if text.strip().upper() == state.chat_race['target'].upper():
+                state.chat_race['active'] = False
+                pts_cfg_race = cfg.get('points_config', {})
+                reward_race = cfg.get('chat_race_reward', 200)
+                if pts_cfg_race.get('enabled'):
+                    pts_race = _load_points(channel)
+                    pts_race[nick] = pts_race.get(nick, 0) + reward_race
+                    _save_points(channel, pts_race)
+                self.send(f'🏁 {display_name} wins the race! +{reward_race} {pts_cfg_race.get("name","points")}! 🏆', channel)
+                state.chat_race = None
+
+        # Track for stream recap
+        if not state.stream_stats:
+            state.stream_stats = {'peak_viewers': 0, 'subs_received': [], 'raids_received': [], 'points_distributed': 0, 'message_counts': {}, 'chat_messages_total': 0}
+        state.stream_stats['message_counts'][nick] = state.stream_stats['message_counts'].get(nick, 0) + 1
+        state.stream_stats['chat_messages_total'] = state.stream_stats.get('chat_messages_total', 0) + 1
+
         # Trivia answer check
         if state.trivia and state.trivia.get('active') and not state.trivia.get('answered'):
             if text.strip().lower() == state.trivia['answer'].lower():
@@ -1031,6 +1223,16 @@ class CubBot:
                     pts2 = _load_points(channel)
                     pts2[nick] = pts2.get(nick, 0) + bonus
                     _save_points(channel, pts2)
+                # Track bits for leaderboard
+                try:
+                    bits_data = _load_bits_log(channel)
+                    bits_data[nick] = bits_data.get(nick, 0) + bits_amount
+                    _save_bits_log(channel, bits_data)
+                    # Also track in stream stats
+                    if not state.stream_stats:
+                        state.stream_stats = {'peak_viewers': 0, 'subs_received': [], 'raids_received': [], 'points_distributed': 0, 'message_counts': {}, 'chat_messages_total': 0}
+                except Exception:
+                    pass
             except Exception:
                 pass
 
@@ -1096,6 +1298,14 @@ class CubBot:
     def _dispatch(self, cmd_name, query, nick, display_name,
                   user_id, user_level, channel, msg_id, state, cfg, user_color=''):
         custom = cfg.get('commands', {}).get(cmd_name)
+
+        if not custom:
+            # Check if cmd_name is an alias for another command
+            for cname, cdef in cfg.get('commands', {}).items():
+                if cmd_name in (cdef.get('aliases') or []):
+                    custom = cdef
+                    cmd_name = cname
+                    break
 
         if custom and custom.get('enabled', True):
             required  = custom.get('user_level', 'everyone')
@@ -1644,6 +1854,35 @@ class CubBot:
             self.send(f'⚔️ {display_name} challenges @{target_nick} to a duel for {amount:,} {pts_name}! @{target_nick}: type !accept or !decline (60s)', channel)
 
         elif cmd_name == 'accept':
+            # Check RPS challenge first
+            if state.challenge and state.challenge.get('active') and nick == state.challenge.get('target'):
+                ch = state.challenge
+                state.challenge = None
+                choices = ['Rock 🪨', 'Paper 📄', 'Scissors ✂️']
+                c1 = random.choice(choices)
+                c2 = random.choice(choices)
+                pts = _load_points(channel)
+                pts_cfg = cfg.get('points_config', {})
+                def rps_winner(a, b):
+                    if a == b: return 'tie'
+                    wins = {'Rock 🪨': 'Scissors ✂️', 'Scissors ✂️': 'Paper 📄', 'Paper 📄': 'Rock 🪨'}
+                    return 'a' if wins[a] == b else 'b'
+                result = rps_winner(c1, c2)
+                challenger_bal = pts.get(ch['challenger'], 0)
+                target_bal = pts.get(nick, 0)
+                if result == 'tie':
+                    msg = f'🎮 RPS: {ch["challenger_display"]} chose {c1} | {display_name} chose {c2} | TIE! No points exchanged!'
+                elif result == 'a':
+                    pts[ch['challenger']] = challenger_bal + ch['amount']
+                    pts[nick] = max(0, target_bal - ch['amount'])
+                    msg = f'🎮 RPS: {ch["challenger_display"]} chose {c1} | {display_name} chose {c2} | {ch["challenger_display"]} wins {ch["amount"]:,} {pts_cfg.get("name","points")}!'
+                else:
+                    pts[nick] = target_bal + ch['amount']
+                    pts[ch['challenger']] = max(0, challenger_bal - ch['amount'])
+                    msg = f'🎮 RPS: {ch["challenger_display"]} chose {c1} | {display_name} chose {c2} | {display_name} wins {ch["amount"]:,} {pts_cfg.get("name","points")}!'
+                _save_points(channel, pts)
+                self.send(msg, channel)
+                return
             if not state.duel or not state.duel.get('active'):
                 return
             if nick != state.duel['target_nick']:
@@ -1769,6 +2008,168 @@ class CubBot:
             h, rem = divmod(secs, 3600)
             m      = rem // 60
             self.send(f'⏱ {label} has {h}h {m}m of watch time.', channel)
+
+        elif cmd_name == 'followage':
+            now = time.time()
+            cd_key = f'__followage_{nick}__'
+            if now - state.cd.get(cd_key, 0) < 15:
+                return
+            state.cd[cd_key] = now
+            target = (query.strip().lstrip('@') or nick).lower()
+            try:
+                client_id = os.environ.get('TWITCH_CLIENT_ID', '9n9yjc79p44kpsluv81kvvh6h9bxvu')
+                token = os.environ.get('CUBASSIST_BOT_TOKEN', '').replace('oauth:', '')
+                bid = self._get_broadcaster_id(channel)
+                # Get target user ID
+                ur = urllib.request.Request(
+                    f'https://api.twitch.tv/helix/users?login={urllib.parse.quote(target)}',
+                    headers={'Client-Id': client_id, 'Authorization': f'Bearer {token}'}
+                )
+                with urllib.request.urlopen(ur, timeout=5) as r:
+                    udata = json.loads(r.read()).get('data', [])
+                if not udata:
+                    self.send(f'User {target} not found.', channel); return
+                uid = udata[0]['id']
+                target_display = udata[0]['display_name']
+                # Get follow data
+                fr = urllib.request.Request(
+                    f'https://api.twitch.tv/helix/channels/followers?broadcaster_id={bid}&user_id={uid}',
+                    headers={'Client-Id': client_id, 'Authorization': f'Bearer {token}'}
+                )
+                with urllib.request.urlopen(fr, timeout=5) as r:
+                    fdata = json.loads(r.read()).get('data', [])
+                if fdata:
+                    fa = datetime.datetime.fromisoformat(fdata[0]['followed_at'].replace('Z', '+00:00'))
+                    delta = datetime.datetime.now(datetime.timezone.utc) - fa
+                    days = delta.days
+                    yrs, rem = divmod(days, 365)
+                    mos = rem // 30
+                    rem_days = rem % 30
+                    parts = []
+                    if yrs: parts.append(f'{yrs} year{"s" if yrs!=1 else ""}')
+                    if mos: parts.append(f'{mos} month{"s" if mos!=1 else ""}')
+                    if rem_days and not yrs: parts.append(f'{rem_days} day{"s" if rem_days!=1 else ""}')
+                    age_str = ', '.join(parts) if parts else 'less than a day'
+                    self.send(f'@{target_display} has been following for {age_str}! 💜', channel)
+                else:
+                    self.send(f'@{target_display} is not following {channel}.', channel)
+            except Exception:
+                self.send(f'Could not fetch follow data.', channel)
+
+        elif cmd_name == 'accountage':
+            now = time.time()
+            cd_key = f'__accountage_{nick}__'
+            if now - state.cd.get(cd_key, 0) < 15:
+                return
+            state.cd[cd_key] = now
+            target = (query.strip().lstrip('@') or nick).lower()
+            try:
+                client_id = os.environ.get('TWITCH_CLIENT_ID', '9n9yjc79p44kpsluv81kvvh6h9bxvu')
+                token = os.environ.get('CUBASSIST_BOT_TOKEN', '').replace('oauth:', '')
+                ur = urllib.request.Request(
+                    f'https://api.twitch.tv/helix/users?login={urllib.parse.quote(target)}',
+                    headers={'Client-Id': client_id, 'Authorization': f'Bearer {token}'}
+                )
+                with urllib.request.urlopen(ur, timeout=5) as r:
+                    udata = json.loads(r.read()).get('data', [])
+                if not udata:
+                    self.send(f'User {target} not found.', channel); return
+                uinfo = udata[0]
+                created = datetime.datetime.fromisoformat(uinfo['created_at'].replace('Z', '+00:00'))
+                delta = datetime.datetime.now(datetime.timezone.utc) - created
+                days = delta.days
+                yrs, rem = divmod(days, 365)
+                mos = rem // 30
+                parts = []
+                if yrs: parts.append(f'{yrs} year{"s" if yrs!=1 else ""}')
+                if mos: parts.append(f'{mos} month{"s" if mos!=1 else ""}')
+                if not yrs and not mos: parts.append(f'{days} day{"s" if days!=1 else ""}')
+                age_str = ', '.join(parts)
+                created_fmt = created.strftime('%B %d, %Y')
+                self.send(f"@{uinfo['display_name']}'s account is {age_str} old (created {created_fmt}).", channel)
+            except Exception:
+                self.send(f'Could not fetch account info.', channel)
+
+        elif cmd_name == 'lurk':
+            state.lurkers[nick] = {'display': display_name, 'ts': int(time.time())}
+            self.send(f'@{display_name} is now lurking! Thanks for the lurk! PauseChamp', channel)
+
+        elif cmd_name == 'unlurk':
+            lurk_data = state.lurkers.pop(nick, None)
+            if lurk_data:
+                elapsed = int(time.time()) - lurk_data['ts']
+                mins = elapsed // 60
+                if mins >= 60:
+                    elapsed_str = f'{mins//60}h {mins%60}m'
+                elif mins > 0:
+                    elapsed_str = f'{mins}m'
+                else:
+                    elapsed_str = 'a moment'
+                self.send(f'@{display_name} is back from lurking! (gone for {elapsed_str}) Welcome back! 👋', channel)
+            else:
+                self.send(f'@{display_name} is back! 👋', channel)
+
+        elif cmd_name == 'lurkers':
+            if not state.lurkers:
+                self.send('No one is currently lurking.', channel)
+            else:
+                names = [v['display'] for v in list(state.lurkers.values())[:10]]
+                self.send(f'Currently lurking ({len(state.lurkers)}): {", ".join(names)}', channel)
+
+        elif cmd_name == 'mystats':
+            now = time.time()
+            ucd = state.user_cd.setdefault('mystats', {})
+            if now - ucd.get(nick, 0) < 10:
+                return
+            ucd[nick] = now
+            pts_data = _load_points(channel)
+            wt_data = _load_watchtime(channel)
+            warn_data = _load_warnings(channel)
+            pts_cfg = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            balance = pts_data.get(nick, 0)
+            wt_secs = wt_data.get(nick, 0)
+            wt_hrs = wt_secs // 3600
+            wt_mins = (wt_secs % 3600) // 60
+            wt_str = f'{wt_hrs}h {wt_mins}m' if wt_hrs else f'{wt_mins}m'
+            warns = len(warn_data.get(nick, []))
+            # Rank
+            ranks = cfg.get('ranks', [])
+            rank_name = 'Newcomer'
+            for r in sorted(ranks, key=lambda x: x.get('points', 0), reverse=True):
+                if balance >= r.get('points', 0):
+                    rank_name = r.get('name', rank_name)
+                    break
+            # Leaderboard position
+            sorted_pts = sorted(pts_data.items(), key=lambda x: x[1], reverse=True)
+            pos = next((i+1 for i, (n, _) in enumerate(sorted_pts) if n == nick), '?')
+            self.send(f'@{display_name} | {pts_name}: {balance:,} (#{pos}) | Rank: {rank_name} | Watchtime: {wt_str} | Warnings: {warns}', channel)
+
+        elif cmd_name == 'timestamp':
+            if not _level_gte(user_level, 'moderator'):
+                self.send(f'@{display_name}, only moderators can log timestamps.', channel)
+                return
+            note = query.strip() or 'no note'
+            timestamps = _load_timestamps(channel)
+            # Get stream uptime
+            info = state.stream_info or {}
+            started = info.get('started_at', '')
+            if started:
+                try:
+                    st = datetime.datetime.fromisoformat(started.replace('Z', '+00:00'))
+                    elapsed = datetime.datetime.now(datetime.timezone.utc) - st
+                    total_s = int(elapsed.total_seconds())
+                    h, rem = divmod(total_s, 3600)
+                    m, s = divmod(rem, 60)
+                    uptime_str = f'{h:02d}:{m:02d}:{s:02d}'
+                except Exception:
+                    uptime_str = 'unknown'
+            else:
+                uptime_str = info.get('uptime', 'unknown')
+            entry = {'ts': int(time.time()), 'uptime': uptime_str, 'note': note, 'added_by': nick}
+            timestamps.append(entry)
+            _save_timestamps(channel, timestamps)
+            self.send(f'📌 Timestamp #{len(timestamps)} logged at [{uptime_str}]: {note}', channel)
 
         elif cmd_name == 'top':
             pts_cfg  = cfg.get('points_config', {})
@@ -2345,6 +2746,329 @@ class CubBot:
             else:
                 self.send(f'✅ Trusted users: {", ".join(trusted[:20])}', channel)
 
+        elif cmd_name == 'hug':
+            target = query.strip().lstrip('@') or 'the whole chat'
+            msgs = [
+                f'{display_name} gives @{target} a big warm hug! 🤗',
+                f'@{target} just got a hug from {display_name}! 💙',
+                f'{display_name} wraps @{target} in a cozy hug! 🫂',
+            ]
+            self.send(random.choice(msgs), channel)
+
+        elif cmd_name == 'slap':
+            target = query.strip().lstrip('@') or 'the air'
+            msgs = [
+                f'{display_name} slaps @{target} with a large trout! 🐟',
+                f'@{target} got bopped by {display_name}! 👋',
+                f'{display_name} whacks @{target} with a rubber chicken! 🐔',
+            ]
+            self.send(random.choice(msgs), channel)
+
+        elif cmd_name == 'love':
+            parts_q = query.strip().split()
+            target = parts_q[0].lstrip('@') if parts_q else 'themselves'
+            import hashlib as _hl
+            seed_val = int(_hl.md5(f'{nick.lower()}{target.lower()}'.encode()).hexdigest(), 16) % 100
+            pct = seed_val
+            if pct >= 90: emoji = '💍'
+            elif pct >= 70: emoji = '💕'
+            elif pct >= 50: emoji = '❤️'
+            elif pct >= 30: emoji = '💛'
+            else: emoji = '💔'
+            self.send(f'{emoji} The love between {display_name} and @{target} is {pct}%! {emoji}', channel)
+
+        elif cmd_name == 'roulette':
+            pts_cfg = cfg.get('points_config', {})
+            if not pts_cfg.get('enabled'):
+                self.send('Points are not enabled.', channel); return
+            now = time.time()
+            ucd = state.user_cd.setdefault('roulette', {})
+            if now - ucd.get(nick, 0) < 60:
+                remaining = int(60 - (now - ucd.get(nick, 0)))
+                self.send(f'@{display_name}, roulette cooldown: {remaining}s', channel); return
+            pts = _load_points(channel)
+            balance = pts.get(nick, 0)
+            if balance <= 0:
+                self.send(f"@{display_name}, you have no {pts_cfg.get('name','points')} to risk!", channel); return
+            amount_str = query.strip().lower()
+            if amount_str in ('all', 'max'):
+                amount = balance
+            else:
+                try:
+                    amount = int(amount_str)
+                except (ValueError, TypeError):
+                    self.send(f'Usage: !roulette <amount|all>', channel); return
+            if amount <= 0 or amount > balance:
+                self.send(f"@{display_name}, invalid amount. You have {balance:,} {pts_cfg.get('name','points')}.", channel); return
+            ucd[nick] = now
+            roll = random.randint(1, 6)
+            if roll == 1:
+                pts[nick] = 0
+                _save_points(channel, pts)
+                self.send(f'🔫 BANG! @{display_name} pulled the trigger and lost ALL their {pts_cfg.get("name","points")}! 💀 (rolled {roll}/6)', channel)
+            else:
+                bonus = max(1, amount // 5)
+                pts[nick] = balance + bonus
+                _save_points(channel, pts)
+                self.send(f'🔫 *click* @{display_name} survived! +{bonus:,} {pts_cfg.get("name","points")} bonus! (rolled {roll}/6)', channel)
+
+        elif cmd_name == 'bitleaderboard':
+            bits_data = _load_bits_log(channel)
+            if not bits_data:
+                self.send('No bit data recorded yet.', channel); return
+            top = sorted(bits_data.items(), key=lambda x: x[1], reverse=True)[:5]
+            parts = [f'#{i+1} {n}: {v:,}' for i, (n, v) in enumerate(top)]
+            self.send(f'🏆 Top Bit Donors: {" | ".join(parts)}', channel)
+
+        elif cmd_name == 'sublists':
+            subs_data = _load_subs_log(channel)
+            if not subs_data:
+                self.send('No sub data recorded yet.', channel); return
+            top = sorted(subs_data.items(), key=lambda x: x[1].get('months', 0), reverse=True)[:5]
+            parts = [f'#{i+1} {n} ({v.get("months",1)}mo)' for i, (n, v) in enumerate(top)]
+            self.send(f'💜 Top Subscribers: {" | ".join(parts)}', channel)
+
+        elif cmd_name == 'recap':
+            if not _level_gte(user_level, 'moderator'):
+                self.send(f'@{display_name}, only moderators can view the recap.', channel); return
+            stats = state.stream_stats
+            if not stats:
+                self.send('No stream stats available yet.', channel); return
+            peak = stats.get('peak_viewers', 0)
+            subs = len(stats.get('subs_received', []))
+            raids = len(stats.get('raids_received', []))
+            pts_given = stats.get('points_distributed', 0)
+            msg_counts = stats.get('message_counts', {})
+            top_chatter = max(msg_counts, key=msg_counts.get) if msg_counts else 'N/A'
+            top_count = msg_counts.get(top_chatter, 0)
+            pts_cfg = cfg.get('points_config', {})
+            self.send(f'📊 Stream Recap | Peak: {peak} viewers | Subs: {subs} | Raids: {raids} | {pts_cfg.get("name","Points")} given: {pts_given:,} | Top chatter: {top_chatter} ({top_count} msgs)', channel)
+
+        elif cmd_name == 'boss':
+            sub_cmd = query.strip().lower().split()[0] if query.strip() else ''
+            boss_cfg = cfg.get('boss_battle', {'enabled': True, 'entry_time': 60, 'cost': 50, 'win_multiplier': 3, 'cooldown': 3600})
+            if sub_cmd == 'start':
+                if not _level_gte(user_level, 'moderator'):
+                    self.send(f'@{display_name}, only mods can start a boss battle.', channel); return
+                if not boss_cfg.get('enabled', True):
+                    self.send('Boss battles are disabled.', channel); return
+                if time.time() < state.boss_cd:
+                    self.send(f'Boss battle on cooldown for {int(state.boss_cd - time.time())}s.', channel); return
+                if state.boss_battle and state.boss_battle.get('active'):
+                    self.send('A boss battle is already active!', channel); return
+                parts_b = query.strip().split(None, 1)
+                boss_name = parts_b[1] if len(parts_b) > 1 else 'The Dark Boss'
+                cost = boss_cfg.get('cost', 50)
+                state.boss_battle = {
+                    'active': True, 'phase': 'joining',
+                    'boss_name': boss_name,
+                    'boss_hp': 1000, 'boss_max_hp': 1000,
+                    'participants': {},
+                    'expiry': time.time() + boss_cfg.get('entry_time', 60),
+                    'cost': cost
+                }
+                self.send(f'⚔️ {boss_name} has appeared! Type !fight to join the battle for {cost} {cfg.get("points_config",{}).get("name","points")}! You have {boss_cfg.get("entry_time",60)}s!', channel)
+            else:
+                if not state.boss_battle:
+                    self.send('No boss battle is active. Mods can start one with !boss start [name]', channel); return
+                self.send(f'⚔️ Boss: {state.boss_battle["boss_name"]} | HP: {state.boss_battle["boss_hp"]}/{state.boss_battle["boss_max_hp"]} | Fighters: {len(state.boss_battle["participants"])} | Phase: {state.boss_battle["phase"]}', channel)
+
+        elif cmd_name == 'fight':
+            if not state.boss_battle or not state.boss_battle.get('active') or state.boss_battle.get('phase') != 'joining':
+                self.send(f'@{display_name}, no boss battle is currently accepting fighters.', channel); return
+            if nick in state.boss_battle['participants']:
+                self.send(f'@{display_name}, you are already in the battle!', channel); return
+            pts_cfg = cfg.get('points_config', {})
+            if not pts_cfg.get('enabled'):
+                self.send('Points are not enabled.', channel); return
+            pts = _load_points(channel)
+            cost = state.boss_battle.get('cost', 50)
+            if pts.get(nick, 0) < cost:
+                self.send(f'@{display_name}, you need {cost} {pts_cfg.get("name","points")} to join!', channel); return
+            pts[nick] = pts.get(nick, 0) - cost
+            _save_points(channel, pts)
+            state.boss_battle['participants'][nick] = {'display': display_name, 'damage': 0}
+            self.send(f'⚔️ @{display_name} joins the battle! ({len(state.boss_battle["participants"])} fighters)', channel)
+
+        elif cmd_name == 'numguess':
+            parts_ng = query.strip().split()
+            if parts_ng and parts_ng[0].lower() == 'start':
+                if not _level_gte(user_level, 'moderator'):
+                    self.send(f'@{display_name}, only mods can start a number guessing game.', channel); return
+                if state.numguess and state.numguess.get('active'):
+                    self.send('A number guessing game is already active!', channel); return
+                try:
+                    min_val = int(parts_ng[1]) if len(parts_ng) > 1 else 1
+                    max_val = int(parts_ng[2]) if len(parts_ng) > 2 else 100
+                except (ValueError, IndexError):
+                    min_val, max_val = 1, 100
+                answer = random.randint(min_val, max_val)
+                state.numguess = {'active': True, 'min': min_val, 'max': max_val, 'answer': answer, 'expiry': time.time() + 120, 'guesses': 0}
+                self.send(f'🔢 Guess a number between {min_val} and {max_val}! Use !numguess <number>. 2 minutes!', channel)
+            elif parts_ng and parts_ng[0].lower() == 'stop':
+                if not _level_gte(user_level, 'moderator'): return
+                if state.numguess:
+                    ans = state.numguess.get('answer', '?')
+                    state.numguess = None
+                    self.send(f'Number guessing game ended. The answer was {ans}.', channel)
+            else:
+                # It's a guess
+                if not state.numguess or not state.numguess.get('active'):
+                    self.send('No number guessing game is active. Mods can start one with !numguess start [min] [max]', channel); return
+                try:
+                    guess = int(parts_ng[0]) if parts_ng else 0
+                except ValueError:
+                    self.send(f'@{display_name}, enter a valid number!', channel); return
+                state.numguess['guesses'] = state.numguess.get('guesses', 0) + 1
+                answer = state.numguess['answer']
+                if guess == answer:
+                    pts_cfg = cfg.get('points_config', {})
+                    reward = 200
+                    if pts_cfg.get('enabled'):
+                        pts = _load_points(channel)
+                        pts[nick] = pts.get(nick, 0) + reward
+                        _save_points(channel, pts)
+                    state.numguess = None
+                    self.send(f'🎉 @{display_name} guessed correctly! The answer was {answer}! +{reward} {pts_cfg.get("name","points")}!', channel)
+                elif guess < answer:
+                    self.send(f'@{display_name}, go higher! ⬆️', channel)
+                else:
+                    self.send(f'@{display_name}, go lower! ⬇️', channel)
+
+        elif cmd_name == 'race':
+            parts_r = query.strip().split(None, 1)
+            sub_r = parts_r[0].lower() if parts_r else ''
+            if sub_r == 'start':
+                if not _level_gte(user_level, 'moderator'):
+                    self.send(f'@{display_name}, only mods can start a race.', channel); return
+                if state.chat_race and state.chat_race.get('active'):
+                    self.send('A race is already active!', channel); return
+                word_banks = ['CUBSOFTWARE', 'POGCHAMP', 'LETSGO', 'GAMING', 'HYPE', 'WINNER', 'TWITCH', 'CLUTCH', 'NOICE', 'KAPOW']
+                phrase = parts_r[1].upper() if len(parts_r) > 1 else random.choice(word_banks)
+                state.chat_race = {'active': True, 'target': phrase, 'expiry': time.time() + 60}
+                self.send(f'🏁 CHAT RACE! First to type exactly: {phrase} | 60 seconds! GO!', channel)
+            elif sub_r == 'stop':
+                if not _level_gte(user_level, 'moderator'): return
+                state.chat_race = None
+                self.send('Race cancelled.', channel)
+            else:
+                self.send('Usage: !race start [word]', channel)
+
+        elif cmd_name == 'goal':
+            parts_g = query.strip().split(None, 2)
+            sub_g = parts_g[0].lower() if parts_g else 'show'
+            if sub_g == 'set':
+                if not _level_gte(user_level, 'moderator'):
+                    self.send(f'@{display_name}, only mods can set goals.', channel); return
+                try:
+                    target_amt = int(parts_g[1])
+                    reward_text = parts_g[2] if len(parts_g) > 2 else 'Special reward!'
+                except (ValueError, IndexError):
+                    self.send('Usage: !goal set <amount> <reward description>', channel); return
+                state.community_goal = {'active': True, 'target': target_amt, 'current': 0, 'reward': reward_text, 'contributors': {}}
+                pts_cfg = cfg.get('points_config', {})
+                self.send(f'🎯 Community Goal set! Contribute {target_amt:,} {pts_cfg.get("name","points")} for: {reward_text}! Use !contribute <amount>!', channel)
+            elif sub_g in ('show', 'status', ''):
+                if not state.community_goal:
+                    self.send('No community goal is active. Mods can set one with !goal set <amount> <reward>', channel); return
+                g = state.community_goal
+                pct = int(g['current'] / g['target'] * 100) if g['target'] else 0
+                bar = '█' * (pct // 10) + '░' * (10 - pct // 10)
+                self.send(f'🎯 Goal: [{bar}] {g["current"]:,}/{g["target"]:,} ({pct}%) | Reward: {g["reward"]}', channel)
+            elif sub_g == 'end':
+                if not _level_gte(user_level, 'moderator'): return
+                state.community_goal = None
+                self.send('Community goal ended.', channel)
+
+        elif cmd_name == 'contribute':
+            if not state.community_goal or not state.community_goal.get('active'):
+                self.send(f'@{display_name}, no community goal is active.', channel); return
+            pts_cfg = cfg.get('points_config', {})
+            if not pts_cfg.get('enabled'):
+                self.send('Points are not enabled.', channel); return
+            try:
+                amount = int(query.strip())
+                if amount <= 0: raise ValueError
+            except ValueError:
+                self.send(f'Usage: !contribute <amount>', channel); return
+            pts = _load_points(channel)
+            balance = pts.get(nick, 0)
+            if balance < amount:
+                self.send(f"@{display_name}, you only have {balance:,} {pts_cfg.get('name','points')}.", channel); return
+            pts[nick] = balance - amount
+            _save_points(channel, pts)
+            g = state.community_goal
+            g['current'] = g.get('current', 0) + amount
+            g['contributors'][nick] = g['contributors'].get(nick, 0) + amount
+            pct = int(g['current'] / g['target'] * 100) if g['target'] else 0
+            if g['current'] >= g['target']:
+                self.send(f'🎉 GOAL REACHED! {display_name} contributed {amount:,} to reach {g["target"]:,}! Reward: {g["reward"]} 🎊', channel)
+                state.community_goal['active'] = False
+            else:
+                self.send(f'@{display_name} contributed {amount:,}! Goal: {g["current"]:,}/{g["target"]:,} ({pct}%)', channel)
+
+        elif cmd_name == 'challenge':
+            pts_cfg = cfg.get('points_config', {})
+            if not pts_cfg.get('enabled'):
+                self.send('Points are not enabled.', channel); return
+            parts_ch = query.strip().split()
+            if not parts_ch:
+                self.send('Usage: !challenge @user <amount>', channel); return
+            target_ch = parts_ch[0].lstrip('@').lower()
+            if target_ch == nick:
+                self.send(f'@{display_name}, you cannot challenge yourself!', channel); return
+            try:
+                ch_amount = int(parts_ch[1]) if len(parts_ch) > 1 else 50
+            except ValueError:
+                self.send('Usage: !challenge @user <amount>', channel); return
+            pts = _load_points(channel)
+            if pts.get(nick, 0) < ch_amount:
+                self.send(f"@{display_name}, you need {ch_amount:,} {pts_cfg.get('name','points')} to challenge.", channel); return
+            if state.challenge and state.challenge.get('active'):
+                self.send('A challenge is already pending!', channel); return
+            state.challenge = {'active': True, 'challenger': nick, 'challenger_display': display_name, 'target': target_ch, 'amount': ch_amount, 'expiry': time.time() + 60}
+            self.send(f'🎮 @{display_name} challenges @{target_ch} to Rock Paper Scissors for {ch_amount:,} {pts_cfg.get("name","points")}! Type !accept to play!', channel)
+
+        elif cmd_name == 'alias':
+            if not _level_gte(user_level, 'moderator'):
+                self.send(f'@{display_name}, only moderators can manage aliases.', channel); return
+            parts_al = query.strip().split()
+            if not parts_al or parts_al[0].lower() not in ('add', 'remove', 'list'):
+                self.send('Usage: !alias add/remove/list !command [!alias]', channel); return
+            sub_al = parts_al[0].lower()
+            if sub_al == 'list':
+                if len(parts_al) < 2:
+                    self.send('Usage: !alias list !command', channel); return
+                cmd_key = parts_al[1].lstrip('!')
+                commands = cfg.get('commands', {})
+                if cmd_key not in commands:
+                    self.send(f'Command !{cmd_key} not found.', channel); return
+                aliases = commands[cmd_key].get('aliases', [])
+                self.send(f'Aliases for !{cmd_key}: {", ".join("!"+a for a in aliases) if aliases else "none"}', channel)
+            elif sub_al == 'add':
+                if len(parts_al) < 3:
+                    self.send('Usage: !alias add !command !alias_name', channel); return
+                cmd_key = parts_al[1].lstrip('!')
+                alias_name = parts_al[2].lstrip('!').lower()
+                commands = cfg.get('commands', {})
+                if cmd_key not in commands:
+                    self.send(f'Command !{cmd_key} not found.', channel); return
+                aliases = commands[cmd_key].setdefault('aliases', [])
+                if alias_name not in aliases:
+                    aliases.append(alias_name)
+                    save_channel_config(channel, cfg)
+                self.send(f'✅ !{alias_name} is now an alias for !{cmd_key}', channel)
+            elif sub_al == 'remove':
+                if len(parts_al) < 3:
+                    self.send('Usage: !alias remove !command !alias_name', channel); return
+                cmd_key = parts_al[1].lstrip('!')
+                alias_name = parts_al[2].lstrip('!').lower()
+                commands = cfg.get('commands', {})
+                if cmd_key in commands and alias_name in commands[cmd_key].get('aliases', []):
+                    commands[cmd_key]['aliases'].remove(alias_name)
+                    save_channel_config(channel, cfg)
+                self.send(f'✅ Alias !{alias_name} removed.', channel)
+
         # ── Watchlist ─────────────────────────────────────────────────────────
         elif cmd_name == 'watchlist' and _level_gte(user_level, 'moderator'):
             wl = _load_watchlist(channel)
@@ -2677,6 +3401,115 @@ class CubBot:
                     word = state.anagram['word']
                     state.anagram = None
                     self.send(f'⏰ Time\'s up! The anagram answer was: {word.upper()}', channel)
+
+                # Boss battle resolution
+                if state.boss_battle and state.boss_battle.get('active') and state.boss_battle.get('phase') == 'joining':
+                    if now > state.boss_battle.get('expiry', 0):
+                        bb = state.boss_battle
+                        participants = bb.get('participants', {})
+                        if not participants:
+                            state.boss_battle = None
+                            self.send(f'⚔️ No one challenged {bb["boss_name"]}... the boss retreats!', channel)
+                        else:
+                            # Battle resolution
+                            bb['phase'] = 'battle'
+                            total_dmg = sum(random.randint(50, 200) for _ in participants)
+                            bb['boss_hp'] = max(0, bb['boss_hp'] - total_dmg)
+                            boss_cfg = cfg.get('boss_battle', {'win_multiplier': 3, 'cost': 50, 'cooldown': 3600})
+                            if bb['boss_hp'] <= 0:
+                                pts = _load_points(channel)
+                                pts_cfg = cfg.get('points_config', {})
+                                reward = bb.get('cost', 50) * boss_cfg.get('win_multiplier', 3)
+                                for pnick in participants:
+                                    pts[pnick] = pts.get(pnick, 0) + reward
+                                _save_points(channel, pts)
+                                names = ', '.join(v['display'] for v in list(participants.values())[:5])
+                                self.send(f'⚔️ VICTORY! {bb["boss_name"]} defeated! {names}{"..." if len(participants)>5 else ""} each win {reward} {pts_cfg.get("name","points")}! 🏆', channel)
+                            else:
+                                self.send(f'⚔️ {bb["boss_name"]} defeated the {len(participants)} challengers! HP remaining: {bb["boss_hp"]}. Better luck next time!', channel)
+                            state.boss_battle = None
+                            state.boss_cd = now + boss_cfg.get('cooldown', 3600)
+
+                # Number guessing game expiry
+                if state.numguess and state.numguess.get('active'):
+                    if now > state.numguess.get('expiry', 0):
+                        ans = state.numguess.get('answer', '?')
+                        state.numguess = None
+                        self.send(f'🔢 Time\'s up! No one guessed the number. It was {ans}!', channel)
+
+                # Chat race expiry
+                if state.chat_race and state.chat_race.get('active'):
+                    if now > state.chat_race.get('expiry', 0):
+                        phrase = state.chat_race.get('target', '')
+                        state.chat_race = None
+                        self.send(f'🏁 Race over! No one typed "{phrase}" in time!', channel)
+
+                # RPS challenge expiry
+                if state.challenge and state.challenge.get('active'):
+                    if now > state.challenge.get('expiry', 0):
+                        state.challenge = None
+                        self.send(f'Challenge expired.', channel)
+
+                # Category change detection (every 5 minutes)
+                if now - state.cd.get('__game_check__', 0) >= 300:
+                    state.cd['__game_check__'] = now
+                    try:
+                        info = state.stream_info
+                        if info:
+                            new_game = info.get('game_name', '') or info.get('game', '')
+                            if state.last_game and new_game and new_game != state.last_game:
+                                cat_cfg = cfg.get('category_change_alert', {})
+                                if cat_cfg.get('enabled'):
+                                    msg = cat_cfg.get('message', '🎮 Category changed to $(game)!')
+                                    msg = msg.replace('$(game)', new_game).replace('$(oldgame)', state.last_game)
+                                    self.send(msg, channel)
+                            if new_game:
+                                state.last_game = new_game
+                    except Exception:
+                        pass
+
+                # Follower milestone detection (every 5 minutes)
+                if now - state.cd.get('__follower_milestone_check__', 0) >= 300:
+                    state.cd['__follower_milestone_check__'] = now
+                    try:
+                        info = state.stream_info
+                        if info:
+                            fc = info.get('follower_count', 0) or info.get('followers', 0)
+                            if fc and fc > state.last_follower_count:
+                                mile_cfg = cfg.get('follower_milestones', {})
+                                if mile_cfg.get('enabled'):
+                                    announced = mile_cfg.get('announced', [])
+                                    milestones = mile_cfg.get('milestones', [100, 500, 1000, 5000, 10000, 50000, 100000])
+                                    for m in milestones:
+                                        if state.last_follower_count < m <= fc and m not in announced:
+                                            msg_tmpl = mile_cfg.get('message', '🎉 $(channel) just hit $(count) followers! Thank you all so much!')
+                                            msg_out = msg_tmpl.replace('$(count)', f'{m:,}').replace('$(channel)', channel)
+                                            self.send(msg_out, channel)
+                                            announced.append(m)
+                                    if announced != mile_cfg.get('announced', []):
+                                        mile_cfg['announced'] = announced
+                                        cfg['follower_milestones'] = mile_cfg
+                                        save_channel_config(channel, cfg)
+                                state.last_follower_count = fc
+                    except Exception:
+                        pass
+
+                # Stream peak viewer tracking
+                try:
+                    info = state.stream_info
+                    if info:
+                        vc = info.get('viewer_count', 0) or info.get('viewers', 0)
+                        if vc:
+                            if not state.stream_stats:
+                                state.stream_stats = {'peak_viewers': 0, 'subs_received': [], 'raids_received': [], 'points_distributed': 0, 'message_counts': {}, 'chat_messages_total': 0}
+                            if vc > state.stream_stats.get('peak_viewers', 0):
+                                state.stream_stats['peak_viewers'] = vc
+                        state.stream_was_live = True
+                    elif state.stream_was_live:
+                        # Stream just ended - auto recap if configured
+                        state.stream_was_live = False
+                except Exception:
+                    pass
 
     # ── Helpers ───────────────────────────────────────────────────────────
 

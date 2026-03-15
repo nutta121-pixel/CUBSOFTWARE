@@ -2089,7 +2089,7 @@
             const rolesData = await rolesRes.json();
 
             gamesConfig = cfgData.config || {};
-            gamesChannels = (chData.channels || []).filter(c => c.type === 'text');
+            gamesChannels = (chData.channels || []).filter(c => c.type === 0 || c.type === 5);
             gamesRoles = rolesData.roles || [];
 
             // General

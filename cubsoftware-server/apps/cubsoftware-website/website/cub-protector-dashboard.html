@@ -1386,7 +1386,7 @@
                     <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:1rem;">Limit games to specific channels. Leave empty to allow in all channels.</p>
                     <div class="form-group">
                         <label>Allowed Channels</label>
-                        <select id="games-channel-add" style="margin-bottom:0.5rem;" onchange="cpGamesAddChannel(this)">
+                        <select id="games-channel-add" class="form-select" style="margin-bottom:0.5rem;" onchange="cpGamesAddChannel(this)">
                             <option value="">— Select a channel to add —</option>
                         </select>
                         <div id="games-allowed-channels" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.4rem;"></div>
@@ -1394,7 +1394,7 @@
                     <div class="form-group" style="margin-top:1rem;">
                         <label>Blocked Roles</label>
                         <p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:0.4rem;">Users with these roles cannot use any games</p>
-                        <select id="games-role-add" onchange="cpGamesAddRole(this)">
+                        <select id="games-role-add" class="form-select" onchange="cpGamesAddRole(this)">
                             <option value="">— Select a role to block —</option>
                         </select>
                         <div id="games-blocked-roles" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.4rem;"></div>

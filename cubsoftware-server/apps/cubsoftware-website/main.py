@@ -10003,20 +10003,22 @@ def cub_protector_bot_request(endpoint_or_method, endpoint_or_none=None, method=
     # json kwarg alias
     if json is not None and json_data is None:
         json_data = json
-    # Check cache for GET requests (unless bypass_cache is set)
-    cache_key = None
-    if actual_method == 'GET' and not bypass_cache:
-        param_str = str(sorted(params.items())) if params else ''
-        cache_key = f'{actual_endpoint}:{param_str}'
-        cached = _get_cached(cache_key)
-        if cached is not None:
-            return cached
-
     if token is None:
         token = get_cub_protector_token()
     if not token:
         app.logger.error('CUB PROTECTOR token not found')
         return None
+
+    # Check cache for GET requests (unless bypass_cache is set)
+    # Include a short token fingerprint so different bots don't share cache entries
+    cache_key = None
+    if actual_method == 'GET' and not bypass_cache:
+        param_str = str(sorted(params.items())) if params else ''
+        token_fp = token[-8:] if token else 'none'
+        cache_key = f'{actual_endpoint}:{param_str}:{token_fp}'
+        cached = _get_cached(cache_key)
+        if cached is not None:
+            return cached
     url = f'https://discord.com/api/v10{actual_endpoint}'
     headers = {
         'Authorization': f'Bot {token}',
@@ -12704,9 +12706,18 @@ def _get_guild_bot_token(guild_id):
     return get_cub_protector_token()
 
 def _guild_bot_request(guild_id, *args, **kwargs):
-    """Like cub_protector_bot_request but automatically picks the correct bot token for the guild."""
-    kwargs.setdefault('token', _get_guild_bot_token(guild_id))
-    return cub_protector_bot_request(*args, **kwargs)
+    """Like cub_protector_bot_request but automatically picks the correct bot token for the guild.
+    If the custom bot token fails (bot not in guild / invalid token), falls back to the main bot token."""
+    main_token = get_cub_protector_token()
+    guild_token = _get_guild_bot_token(guild_id)
+    kwargs['token'] = guild_token
+    result = cub_protector_bot_request(*args, **kwargs)
+    # If the guild-specific token failed and it was different from the main token, try main bot as fallback
+    if result is None and guild_token != main_token:
+        kwargs['token'] = main_token
+        kwargs['bypass_cache'] = True  # skip stale/empty cached result
+        result = cub_protector_bot_request(*args, **kwargs)
+    return result
 
 @app.route('/api/cub-protector/guilds/<guild_id>/custom-bot', methods=['GET'])
 @cub_protector_auth_required

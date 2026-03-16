@@ -18,6 +18,7 @@ import urllib.parse
 import urllib.error
 import datetime
 import os
+import math
 import logging
 from pathlib import Path
 
@@ -315,6 +316,60 @@ def _save_subs_log(channel, data):
     p = os.path.join(_channel_dir(channel), 'subs_log.json')
     os.makedirs(os.path.dirname(p), exist_ok=True)
     with open(p, 'w') as f: json.dump(data, f, indent=2)
+
+def _load_bank(channel: str) -> dict:
+    try: return json.loads((_channel_dir(channel) / 'bank.json').read_text())
+    except: return {}
+def _save_bank(channel: str, data: dict):
+    (_channel_dir(channel) / 'bank.json').write_text(json.dumps(data))
+
+def _load_prestige(channel: str) -> dict:
+    try: return json.loads((_channel_dir(channel) / 'prestige.json').read_text())
+    except: return {}
+def _save_prestige(channel: str, data: dict):
+    (_channel_dir(channel) / 'prestige.json').write_text(json.dumps(data))
+
+def _load_teams(channel: str) -> dict:
+    try: return json.loads((_channel_dir(channel) / 'teams.json').read_text())
+    except: return {}
+def _save_teams(channel: str, data: dict):
+    (_channel_dir(channel) / 'teams.json').write_text(json.dumps(data, indent=2))
+
+def _load_watchstreak(channel: str) -> dict:
+    try: return json.loads((_channel_dir(channel) / 'watchstreak.json').read_text())
+    except: return {}
+def _save_watchstreak(channel: str, data: dict):
+    (_channel_dir(channel) / 'watchstreak.json').write_text(json.dumps(data))
+
+def _load_birthdays(channel: str) -> dict:
+    try: return json.loads((_channel_dir(channel) / 'birthdays.json').read_text())
+    except: return {}
+def _save_birthdays(channel: str, data: dict):
+    (_channel_dir(channel) / 'birthdays.json').write_text(json.dumps(data))
+
+def _load_suggestions(channel: str) -> list:
+    try: return json.loads((_channel_dir(channel) / 'suggestions.json').read_text())
+    except: return []
+def _save_suggestions(channel: str, data: list):
+    (_channel_dir(channel) / 'suggestions.json').write_text(json.dumps(data, indent=2))
+
+def _load_stream_notes(channel: str) -> list:
+    try: return json.loads((_channel_dir(channel) / 'stream_notes.json').read_text())
+    except: return []
+def _save_stream_notes(channel: str, data: list):
+    (_channel_dir(channel) / 'stream_notes.json').write_text(json.dumps(data, indent=2))
+
+def _load_autoban_patterns(channel: str) -> list:
+    try: return json.loads((_channel_dir(channel) / 'autoban_patterns.json').read_text())
+    except: return []
+def _save_autoban_patterns(channel: str, data: list):
+    (_channel_dir(channel) / 'autoban_patterns.json').write_text(json.dumps(data))
+
+def _load_ban_reasons(channel: str) -> dict:
+    try: return json.loads((_channel_dir(channel) / 'ban_reasons.json').read_text())
+    except: return {}
+def _save_ban_reasons(channel: str, data: dict):
+    (_channel_dir(channel) / 'ban_reasons.json').write_text(json.dumps(data, indent=2))
 
 # ── Backward-compat shims (used by _maybe_autostart) ───────────────────────────
 
@@ -633,7 +688,1285 @@ def resolve_vars(text, ctx):
             _lfmstr = 'unavailable'
         text = text.replace('$(lastfm)', _lfmstr)
 
+    # ── Extra args shortcuts ────────────────────────────────────────────────
+    text = text.replace('$(args)',    query)
+    text = re.sub(r'\$\(arg(\d+)\)',  lambda m: (args[int(m.group(1))-1] if 0 < int(m.group(1)) <= len(args) else ''), text)
+    text = re.sub(r'\$\(allbut (\d+)\)', lambda m: ' '.join(args[int(m.group(1)):]), text)
+    text = text.replace('$(lastarg)', args[-1] if args else '')
+    text = text.replace('$(argcount)', str(len(args)))
+
+    # ── DateTime extended ───────────────────────────────────────────────────
+    text = text.replace('$(time12)',    now.strftime('%I:%M %p'))
+    text = text.replace('$(second)',    now.strftime('%S'))
+    text = text.replace('$(week)',      now.strftime('%V'))
+    text = text.replace('$(month)',     now.strftime('%m'))
+    text = text.replace('$(datetime)',  now.strftime('%Y-%m-%d %H:%M:%S'))
+    text = text.replace('$(iso)',       now.strftime('%Y-%m-%dT%H:%M:%S'))
+    text = text.replace('$(timestamp)', str(int(time.time())))
+    text = text.replace('$(unixtime)',  str(int(time.time())))
+    text = text.replace('$(timezone)',  'UTC')
+    text = re.sub(r'\$\(countdown ([0-9\-]+)\)',
+        lambda m: _countdown_str(m.group(1)), text)
+
+    # ── Stream info extended ────────────────────────────────────────────────
+    text = text.replace('$(status)',    'online' if info.get('uptime') and info.get('uptime') != 'offline' else 'offline')
+    text = text.replace('$(category)',  info.get('game', 'Unknown'))
+    text = text.replace('$(language)',  info.get('language', '?'))
+    text = text.replace('$(mature)',    '1' if info.get('is_mature') else '0')
+    _sr_pv = ctx.get('_state_ref')
+    _pv = (getattr(_sr_pv, 'stream_stats', None) or {}).get('peak_viewers', '?') if _sr_pv else '?'
+    text = text.replace('$(peakviewers)', str(_pv))
+
+    # ── Math operators ──────────────────────────────────────────────────────
+    def _safe_num(s):
+        try: v = float(s); return int(v) if v == int(v) else round(v, 6)
+        except: return '?'
+    text = re.sub(r'\$\(add (-?[\d.]+) (-?[\d.]+)\)',  lambda m: str(_safe_num(float(m.group(1)) + float(m.group(2)))), text)
+    text = re.sub(r'\$\(sub (-?[\d.]+) (-?[\d.]+)\)',  lambda m: str(_safe_num(float(m.group(1)) - float(m.group(2)))), text)
+    text = re.sub(r'\$\(mul (-?[\d.]+) (-?[\d.]+)\)',  lambda m: str(_safe_num(float(m.group(1)) * float(m.group(2)))), text)
+    text = re.sub(r'\$\(div (-?[\d.]+) (-?[\d.]+)\)',  lambda m: str(_safe_num(float(m.group(1)) / float(m.group(2)))) if float(m.group(2)) != 0 else '∞', text)
+    text = re.sub(r'\$\(mod (-?[\d.]+) (-?[\d.]+)\)',  lambda m: str(int(float(m.group(1))) % int(float(m.group(2)))) if float(m.group(2)) != 0 else '?', text)
+    text = re.sub(r'\$\(pow (-?[\d.]+) (-?[\d.]+)\)',  lambda m: str(_safe_num(float(m.group(1)) ** float(m.group(2)))), text)
+    text = re.sub(r'\$\(abs (-?[\d.]+)\)',             lambda m: str(_safe_num(abs(float(m.group(1))))), text)
+    text = re.sub(r'\$\(min (-?[\d.]+) (-?[\d.]+)\)',  lambda m: str(_safe_num(min(float(m.group(1)), float(m.group(2))))), text)
+    text = re.sub(r'\$\(max (-?[\d.]+) (-?[\d.]+)\)',  lambda m: str(_safe_num(max(float(m.group(1)), float(m.group(2))))), text)
+    text = re.sub(r'\$\(round (-?[\d.]+)\)',           lambda m: str(round(float(m.group(1)))), text)
+    text = re.sub(r'\$\(floor (-?[\d.]+)\)',           lambda m: str(math.floor(float(m.group(1)))), text)
+    text = re.sub(r'\$\(ceil (-?[\d.]+)\)',            lambda m: str(math.ceil(float(m.group(1)))), text)
+    text = re.sub(r'\$\(sqrt (-?[\d.]+)\)',            lambda m: str(round(float(m.group(1)) ** 0.5, 4)) if float(m.group(1)) >= 0 else '?', text)
+    text = re.sub(r'\$\(sign (-?[\d.]+)\)',            lambda m: '1' if float(m.group(1)) > 0 else ('-1' if float(m.group(1)) < 0 else '0'), text)
+    text = re.sub(r'\$\(clamp (-?[\d.]+) (-?[\d.]+) (-?[\d.]+)\)', lambda m: str(_safe_num(max(float(m.group(2)), min(float(m.group(3)), float(m.group(1)))))), text)
+    text = re.sub(r'\$\(percent (-?[\d.]+) (-?[\d.]+)\)', lambda m: str(round(float(m.group(1)) / float(m.group(2)) * 100, 1)) if float(m.group(2)) != 0 else '?', text)
+    text = re.sub(r'\$\(numformat (-?[\d.]+)\)',       lambda m: f'{float(m.group(1)):,.0f}' if float(m.group(1)) == int(float(m.group(1))) else f'{float(m.group(1)):,}', text)
+
+    # ── Comparison / logic ──────────────────────────────────────────────────
+    text = re.sub(r'\$\(eq ([^ )]+) ([^ )]+)\)',  lambda m: '1' if m.group(1) == m.group(2) else '0', text)
+    text = re.sub(r'\$\(ne ([^ )]+) ([^ )]+)\)',  lambda m: '0' if m.group(1) == m.group(2) else '1', text)
+    text = re.sub(r'\$\(gt (-?[\d.]+) (-?[\d.]+)\)', lambda m: '1' if float(m.group(1)) > float(m.group(2)) else '0', text)
+    text = re.sub(r'\$\(lt (-?[\d.]+) (-?[\d.]+)\)', lambda m: '1' if float(m.group(1)) < float(m.group(2)) else '0', text)
+    text = re.sub(r'\$\(gte (-?[\d.]+) (-?[\d.]+)\)', lambda m: '1' if float(m.group(1)) >= float(m.group(2)) else '0', text)
+    text = re.sub(r'\$\(lte (-?[\d.]+) (-?[\d.]+)\)', lambda m: '1' if float(m.group(1)) <= float(m.group(2)) else '0', text)
+    text = re.sub(r'\$\(and ([^ )]+) ([^ )]+)\)', lambda m: '1' if (m.group(1) and m.group(1) not in ('0','false','no','')) and (m.group(2) and m.group(2) not in ('0','false','no','')) else '0', text)
+    text = re.sub(r'\$\(or ([^ )]+) ([^ )]+)\)',  lambda m: '1' if (m.group(1) and m.group(1) not in ('0','false','no','')) or (m.group(2) and m.group(2) not in ('0','false','no','')) else '0', text)
+    text = re.sub(r'\$\(not ([^ )]+)\)',           lambda m: '0' if (m.group(1) and m.group(1) not in ('0','false','no','')) else '1', text)
+    def _switch(m):
+        parts = m.group(1).split('|')
+        val = parts[0].strip() if parts else ''
+        default = ''
+        for part in parts[1:]:
+            if ':' in part:
+                k, v = part.split(':', 1)
+                if k.strip() == val:
+                    return v.strip()
+                if k.strip() == 'default':
+                    default = v.strip()
+            elif part.strip():
+                default = part.strip()
+        return default
+    text = re.sub(r'\$\(switch ([^)]+)\)', _switch, text)
+
+    # ── String manipulation extended ────────────────────────────────────────
+    text = re.sub(r'\$\(trim ([^)]+)\)',      lambda m: m.group(1).strip(), text)
+    text = re.sub(r'\$\(title ([^)]+)\)',     lambda m: m.group(1).title(), text)
+    text = re.sub(r'\$\(sentence ([^)]+)\)',  lambda m: m.group(1).capitalize(), text)
+    text = re.sub(r'\$\(reverse ([^)]+)\)',   lambda m: m.group(1)[::-1], text)
+    text = re.sub(r'\$\(words ([^)]+)\)',     lambda m: str(len(m.group(1).split())), text)
+    text = re.sub(r'\$\(wordcount ([^)]+)\)', lambda m: str(len(m.group(1).split())), text)
+    def _word_n(m):
+        try:
+            n, txt = int(m.group(1)), m.group(2)
+            parts = txt.split()
+            return parts[n-1] if 0 < n <= len(parts) else ''
+        except: return ''
+    text = re.sub(r'\$\(word (\d+) ([^)]+)\)', _word_n, text)
+    def _char_n(m):
+        try:
+            n, txt = int(m.group(1)), m.group(2)
+            return txt[n-1] if 0 < n <= len(txt) else ''
+        except: return ''
+    text = re.sub(r'\$\(char (\d+) ([^)]+)\)', _char_n, text)
+    def _slice(m):
+        parts = m.group(1).split('|')
+        try:
+            txt = parts[0]; start = int(parts[1]); end = int(parts[2]) if len(parts) > 2 else len(txt)
+            return txt[start:end]
+        except: return parts[0] if parts else ''
+    text = re.sub(r'\$\(slice ([^)]+)\)', _slice, text)
+    def _replace_var(m):
+        parts = m.group(1).split('|', 2)
+        if len(parts) == 3:
+            return parts[0].replace(parts[1], parts[2])
+        return parts[0] if parts else ''
+    text = re.sub(r'\$\(replace ([^)]+)\)', _replace_var, text)
+    def _contains(m):
+        parts = m.group(1).split('|', 1)
+        if len(parts) == 2:
+            return '1' if parts[1] in parts[0] else '0'
+        return '0'
+    text = re.sub(r'\$\(contains ([^)]+)\)', _contains, text)
+    def _split_var(m):
+        parts = m.group(1).split('|')
+        try:
+            txt, sep, idx = parts[0], parts[1], int(parts[2])
+            bits = txt.split(sep)
+            return bits[idx] if 0 <= idx < len(bits) else ''
+        except: return ''
+    text = re.sub(r'\$\(split ([^)]+)\)', _split_var, text)
+    def _join_var(m):
+        parts = m.group(1).split('|')
+        if len(parts) >= 2:
+            return parts[0].join(parts[1:])
+        return ''
+    text = re.sub(r'\$\(join ([^)]+)\)', _join_var, text)
+    def _pad_var(m):
+        parts = m.group(1).split('|')
+        try: n, char, txt = int(parts[0]), parts[1], parts[2] if len(parts) > 2 else ''
+        except: return m.group(1)
+        return txt.ljust(n, char) if len(char) == 1 else txt
+    text = re.sub(r'\$\(pad ([^)]+)\)', _pad_var, text)
+    text = re.sub(r'\$\(truncate (\d+) ([^)]+)\)', lambda m: m.group(2)[:int(m.group(1))] + ('…' if len(m.group(2)) > int(m.group(1)) else ''), text)
+    text = re.sub(r'\$\(startswith ([^|)]+)\|([^)]+)\)', lambda m: '1' if m.group(2).startswith(m.group(1)) else '0', text)
+    text = re.sub(r'\$\(endswith ([^|)]+)\|([^)]+)\)',   lambda m: '1' if m.group(2).endswith(m.group(1)) else '0', text)
+
+    # ── Random extended ─────────────────────────────────────────────────────
+    text = text.replace('$(flip)',    random.choice(['Heads', 'Tails']))
+    text = text.replace('$(bool)',    random.choice(['Yes', 'No']))
+    text = text.replace('$(percent)', str(random.randint(0, 100)) + '%')
+    text = text.replace('$(roll)',    str(random.randint(1, 6)))
+    _8BALL_EXT = ['It is certain.','It is decidedly so.','Without a doubt.','Yes, definitely.',
+              'You may rely on it.','As I see it, yes.','Most likely.','Outlook good.',
+              'Yes.','Signs point to yes.','Reply hazy, try again.','Ask again later.',
+              'Better not tell you now.','Cannot predict now.','Concentrate and ask again.',
+              "Don't count on it.",'My reply is no.','My sources say no.',
+              'Outlook not so good.','Very doubtful.']
+    text = text.replace('$(8ball)',   random.choice(_8BALL_EXT))
+    text = re.sub(r'\$\(randomword ([^)]+)\)', lambda m: random.choice(m.group(1).split()) if m.group(1).split() else '', text)
+    _DONGER_LIST = ['ヽ༼ ຈل͜ຈ ༽ﾉ', '( ͡° ͜ʖ ͡°)', '(╯°□°）╯︵ ┻━┻', '¯\\_(ツ)_/¯', 'ʕ•ᴥ•ʔ']
+    text = text.replace('$(donger)',  random.choice(_DONGER_LIST))
+
+    # ── Emoticons / text art ────────────────────────────────────────────────
+    text = text.replace('$(shrug)',     '¯\\_(ツ)_/¯')
+    text = text.replace('$(tableflip)', '(╯°□°）╯︵ ┻━┻')
+    text = text.replace('$(unflip)',    '┬─┬ ノ( ゜-゜ノ)')
+    text = text.replace('$(lenny)',     '( ͡° ͜ʖ ͡°)')
+    text = text.replace('$(sunglasses)','(⌐■_■)')
+    text = text.replace('$(bear)',      'ʕ•ᴥ•ʔ')
+    text = text.replace('$(star)',      '★')
+    text = text.replace('$(heart)',     '♥')
+    text = text.replace('$(arrow)',     '→')
+    text = text.replace('$(check)',     '✓')
+    text = text.replace('$(cross)',     '✗')
+    text = text.replace('$(music)',     '♪')
+
+    # ── Fun lists ───────────────────────────────────────────────────────────
+    _COMPLIMENTS = ['You are absolutely amazing!', 'You make this stream so much better!',
+                    'Your positivity is contagious!', 'You are a legend in this chat!',
+                    'The streamer loves having you here!', 'You are one of a kind!']
+    _ROASTS = ['Did you just wake up?', 'I\'ve seen better, but not in this chat.',
+               'Are you always this impressive?', 'You\'re the reason we have bot filters.',
+               'Somewhere, someone misses you. Probably not here though.']
+    _AFFIRMATIONS = ['You\'ve got this!', 'Believe in yourself!', 'Every stream is a new adventure!',
+                     'You are doing great!', 'Keep pushing forward!', 'Progress over perfection!']
+    _FACTS = ['A group of flamingos is called a flamboyance.',
+              'Honey never spoils — archaeologists have found 3000-year-old edible honey.',
+              'Octopuses have three hearts.',
+              'The Eiffel Tower grows taller in summer heat.',
+              'A day on Venus is longer than a year on Venus.']
+    _DADJOKES = ['Why don\'t scientists trust atoms? Because they make up everything!',
+                 'I\'m reading a book on anti-gravity. It\'s impossible to put down.',
+                 'Did you hear about the mathematician who\'s afraid of negative numbers? He\'ll stop at nothing to avoid them.',
+                 'Why do cows wear bells? Because their horns don\'t work!',
+                 'I used to hate facial hair, but then it grew on me.']
+    text = text.replace('$(compliment)', random.choice(_COMPLIMENTS))
+    text = text.replace('$(roast)',      random.choice(_ROASTS))
+    text = text.replace('$(affirmation)', random.choice(_AFFIRMATIONS))
+    text = text.replace('$(fact)',       random.choice(_FACTS))
+    text = text.replace('$(dadjoke)',    random.choice(_DADJOKES))
+
+    # ── Per-channel data variables (lazy-loaded) ────────────────────────────
+    _chan = ctx.get('channel', '')
+    _nick_lower = ctx.get('nick', '').lower() or user.lower()
+
+    if '$(points)' in text or '$(points ' in text:
+        _pts_all = _load_points(_chan) if _chan else {}
+        text = text.replace('$(points)', str(_pts_all.get(_nick_lower, 0)))
+        def _pts_user(m):
+            return str(_pts_all.get(m.group(1).lstrip('@').lower(), 0))
+        text = re.sub(r'\$\(points ([^)]+)\)', _pts_user, text)
+
+    if '$(rank)' in text or '$(rank ' in text:
+        _pts_all2 = _load_points(_chan) if _chan else {}
+        _sorted = sorted(_pts_all2.items(), key=lambda x: x[1], reverse=True)
+        _rank_map = {n: i+1 for i, (n, _) in enumerate(_sorted)}
+        text = text.replace('$(rank)', str(_rank_map.get(_nick_lower, '?')))
+        text = re.sub(r'\$\(rank ([^)]+)\)', lambda m: str(_rank_map.get(m.group(1).lstrip('@').lower(), '?')), text)
+
+    if '$(watchtime)' in text or '$(watchtime ' in text:
+        _wt_all = _load_watchtime(_chan) if _chan else {}
+        _wt_secs = _wt_all.get(_nick_lower, 0)
+        _wt_hrs = round(_wt_secs / 3600, 1)
+        text = text.replace('$(watchtime)', f'{_wt_hrs}h')
+        def _wt_user(m):
+            _s = _wt_all.get(m.group(1).lstrip('@').lower(), 0)
+            return f'{round(_s/3600, 1)}h'
+        text = re.sub(r'\$\(watchtime ([^)]+)\)', _wt_user, text)
+
+    if '$(bank)' in text or '$(bank ' in text:
+        _bk_all = _load_bank(_chan) if _chan else {}
+        text = text.replace('$(bank)', str(_bk_all.get(_nick_lower, {}).get('deposited', 0)))
+        text = re.sub(r'\$\(bank ([^)]+)\)', lambda m: str(_bk_all.get(m.group(1).lstrip('@').lower(), {}).get('deposited', 0)), text)
+
+    if '$(prestige)' in text or '$(prestige ' in text:
+        _pr_all = _load_prestige(_chan) if _chan else {}
+        text = text.replace('$(prestige)', str(_pr_all.get(_nick_lower, {}).get('level', 0)))
+        text = re.sub(r'\$\(prestige ([^)]+)\)', lambda m: str(_pr_all.get(m.group(1).lstrip('@').lower(), {}).get('level', 0)), text)
+
+    if '$(streak)' in text or '$(streak ' in text:
+        _ws_all = _load_watchstreak(_chan) if _chan else {}
+        text = text.replace('$(streak)', str(_ws_all.get(_nick_lower, {}).get('streak', 0)))
+        text = re.sub(r'\$\(streak ([^)]+)\)', lambda m: str(_ws_all.get(m.group(1).lstrip('@').lower(), {}).get('streak', 0)), text)
+
+    if '$(birthday)' in text or '$(birthday ' in text:
+        _bd_all = _load_birthdays(_chan) if _chan else {}
+        text = text.replace('$(birthday)', _bd_all.get(_nick_lower, 'not set'))
+        text = re.sub(r'\$\(birthday ([^)]+)\)', lambda m: _bd_all.get(m.group(1).lstrip('@').lower(), 'not set'), text)
+
+    if '$(warnings)' in text or '$(warnings ' in text:
+        _wr_all = _load_warnings(_chan) if _chan else {}
+        text = text.replace('$(warnings)', str(len(_wr_all.get(_nick_lower, []))))
+        text = re.sub(r'\$\(warnings ([^)]+)\)', lambda m: str(len(_wr_all.get(m.group(1).lstrip('@').lower(), []))), text)
+
+    if '$(toppoints)' in text:
+        _tp_all = _load_points(_chan) if _chan else {}
+        _tp = max(_tp_all.items(), key=lambda x: x[1]) if _tp_all else ('nobody', 0)
+        text = text.replace('$(toppoints)', f'{_tp[0]} ({_tp[1]:,})')
+
+    if '$(topbank)' in text:
+        _tb_all = _load_bank(_chan) if _chan else {}
+        _tb = max(_tb_all.items(), key=lambda x: x[1].get('deposited', 0), default=('nobody', {})) if _tb_all else ('nobody', {})
+        text = text.replace('$(topbank)', f'{_tb[0]} ({_tb[1].get("deposited",0):,})')
+
+    if '$(topprestige)' in text:
+        _tpr_all = _load_prestige(_chan) if _chan else {}
+        _tpr = max(_tpr_all.items(), key=lambda x: x[1].get('level', 0), default=('nobody', {})) if _tpr_all else ('nobody', {})
+        text = text.replace('$(topprestige)', f'{_tpr[0]} (P{_tpr[1].get("level",0)})')
+
+    if '$(topstreak)' in text:
+        _ts_all = _load_watchstreak(_chan) if _chan else {}
+        _tstr = max(_ts_all.items(), key=lambda x: x[1].get('streak', 0), default=('nobody', {})) if _ts_all else ('nobody', {})
+        text = text.replace('$(topstreak)', f'{_tstr[0]} ({_tstr[1].get("streak",0)} streams)')
+
+    if '$(team)' in text or '$(team ' in text:
+        _tm_all = _load_teams(_chan) if _chan else {}
+        _user_team = next((t for t, d in _tm_all.items() if _nick_lower in d.get('members', [])), 'no team')
+        text = text.replace('$(team)', _user_team)
+        def _team_user(m):
+            _u = m.group(1).lstrip('@').lower()
+            return next((t for t, d in _tm_all.items() if _u in d.get('members', [])), 'no team')
+        text = re.sub(r'\$\(team ([^)]+)\)', _team_user, text)
+
+    if '$(lastseen)' in text or '$(lastseen ' in text:
+        _ts_data = _load_timestamps(_chan) if _chan else {}
+        def _ls(target):
+            ts_val = _ts_data.get(target.lower(), 0)
+            if not ts_val: return 'never'
+            ago = int(time.time()) - ts_val
+            if ago < 60: return f'{ago}s ago'
+            if ago < 3600: return f'{ago//60}m ago'
+            return f'{ago//3600}h ago'
+        text = text.replace('$(lastseen)', _ls(_nick_lower))
+        text = re.sub(r'\$\(lastseen ([^)]+)\)', lambda m: _ls(m.group(1).lstrip('@')), text)
+
+    if '$(bounty)' in text or '$(bounty ' in text:
+        _state_ref = ctx.get('_state_ref')
+        _bounties = getattr(_state_ref, 'bounties', {}) if _state_ref else {}
+        text = text.replace('$(bounty)', str(_bounties.get(_nick_lower, 0)))
+        text = re.sub(r'\$\(bounty ([^)]+)\)', lambda m: str(_bounties.get(m.group(1).lstrip('@').lower(), 0)), text)
+
+    if '$(emotecount)' in text or '$(emotecount ' in text:
+        _state_ref2 = ctx.get('_state_ref')
+        _emotes = getattr(_state_ref2, 'emote_counts', {}) if _state_ref2 else {}
+        text = text.replace('$(emotecount)', str(sum(_emotes.values())))
+        text = re.sub(r'\$\(emotecount ([^)]+)\)', lambda m: str(_emotes.get(m.group(1), 0)), text)
+
+    if '$(topemote)' in text:
+        _state_ref3 = ctx.get('_state_ref')
+        _em2 = getattr(_state_ref3, 'emote_counts', {}) if _state_ref3 else {}
+        _te = max(_em2.items(), key=lambda x: x[1], default=('none', 0))
+        text = text.replace('$(topemote)', f'{_te[0]} ({_te[1]})')
+
+    if '$(randomchatter)' in text:
+        _state_ref4 = ctx.get('_state_ref')
+        _log = getattr(_state_ref4, 'chat_log', []) if _state_ref4 else []
+        _unique = list({m['nick'] for m in _log}) if _log else [user]
+        text = text.replace('$(randomchatter)', random.choice(_unique))
+
+    if '$(chatters)' in text:
+        _state_ref5 = ctx.get('_state_ref')
+        _log5 = getattr(_state_ref5, 'chat_log', []) if _state_ref5 else []
+        text = text.replace('$(chatters)', str(len({m['nick'] for m in _log5})))
+
+    if '$(chattotal)' in text or '$(lines)' in text:
+        _state_ref6 = ctx.get('_state_ref')
+        _ss = getattr(_state_ref6, 'stream_stats', {}) if _state_ref6 else {}
+        _total = (_ss or {}).get('chat_messages_total', 0)
+        text = text.replace('$(chattotal)', str(_total))
+        text = text.replace('$(lines)', str(_total))
+
+    if '$(firstchatter)' in text:
+        _state_ref7 = ctx.get('_state_ref')
+        _log7 = getattr(_state_ref7, 'chat_log', []) if _state_ref7 else []
+        text = text.replace('$(firstchatter)', _log7[0]['nick'] if _log7 else '?')
+
+    if '$(recentchatter)' in text:
+        _state_ref8 = ctx.get('_state_ref')
+        _log8 = getattr(_state_ref8, 'chat_log', []) if _state_ref8 else []
+        text = text.replace('$(recentchatter)', _log8[-1]['nick'] if _log8 else '?')
+
+    if '$(lore)' in text:
+        _lore_list = (ctx.get('config') or {}).get('lore', [])
+        text = text.replace('$(lore)', random.choice(_lore_list).get('text', '[no lore]') if _lore_list else '[no lore]')
+
+    if '$(songqueue)' in text:
+        _state_ref9 = ctx.get('_state_ref')
+        _sq = getattr(_state_ref9, 'song_queue', []) if _state_ref9 else []
+        text = text.replace('$(songqueue)', str(len(_sq)))
+
+    if '$(queuesize)' in text:
+        _state_ref10 = ctx.get('_state_ref')
+        _q = getattr(_state_ref10, 'queue', []) if _state_ref10 else []
+        text = text.replace('$(queuesize)', str(len(_q)))
+
+    if '$(hypecount)' in text:
+        _state_ref11 = ctx.get('_state_ref')
+        text = text.replace('$(hypecount)', str(getattr(_state_ref11, 'hype_count', 0)))
+
+    if '$(lotterytickets)' in text:
+        _state_ref12 = ctx.get('_state_ref')
+        _lot = getattr(_state_ref12, 'lottery', None) if _state_ref12 else None
+        text = text.replace('$(lotterytickets)', str(len((_lot or {}).get('tickets', {}))))
+
+    if '$(auctionbid)' in text:
+        _state_ref13 = ctx.get('_state_ref')
+        _au = getattr(_state_ref13, 'auction', None) if _state_ref13 else None
+        text = text.replace('$(auctionbid)', str((_au or {}).get('high_bid', 0)))
+
+    # ── Ordinal / plural helpers ────────────────────────────────────────────
+    def _ordinal(m):
+        try:
+            n = int(m.group(1))
+            suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10 if n % 100 not in (11,12,13) else 0, 'th')
+            return f'{n}{suffix}'
+        except: return m.group(1)
+    text = re.sub(r'\$\(ordinal (\d+)\)', _ordinal, text)
+    def _plural(m):
+        parts = m.group(1).split('|')
+        try:
+            count = int(parts[0])
+            singular = parts[1] if len(parts) > 1 else ''
+            plural_form = parts[2] if len(parts) > 2 else singular + 's'
+            return singular if count == 1 else plural_form
+        except: return parts[1] if len(parts) > 1 else ''
+    text = re.sub(r'\$\(plural ([^)]+)\)', _plural, text)
+    text = re.sub(r'\$\(commas (-?[\d.]+)\)', lambda m: f'{float(m.group(1)):,.0f}' if '.' not in m.group(1) else f'{float(m.group(1)):,}', text)
+    text = re.sub(r'\$\(kb (\d+)\)', lambda m: f'{int(m.group(1))//1024} KB', text)
+    text = re.sub(r'\$\(mb (\d+)\)', lambda m: f'{int(m.group(1))//(1024*1024)} MB', text)
+
+    # ── User level text ─────────────────────────────────────────────────────
+    text = text.replace('$(userlevel)', user_level)
+    text = text.replace('$(isbroadcaster)', '1' if user_level == 'broadcaster' else '0')
+    text = text.replace('$(userlevellabel)', {
+        'broadcaster': 'Broadcaster', 'moderator': 'Moderator',
+        'vip': 'VIP', 'subscriber': 'Subscriber', 'everyone': 'Viewer'
+    }.get(user_level, user_level.title()))
+
+    # ── Conditional on user level ───────────────────────────────────────────
+    text = re.sub(r'\$\(ifmod ([^|)]+)\|([^)]+)\)',  lambda m: m.group(1) if _level_gte(user_level, 'moderator')  else m.group(2), text)
+    text = re.sub(r'\$\(ifsub ([^|)]+)\|([^)]+)\)',  lambda m: m.group(1) if _level_gte(user_level, 'subscriber') else m.group(2), text)
+    text = re.sub(r'\$\(ifvip ([^|)]+)\|([^)]+)\)',  lambda m: m.group(1) if _level_gte(user_level, 'vip')        else m.group(2), text)
+
+    # ════════════════════════════════════════════════════════════════════════
+    # EXTENDED VARIABLES BLOCK — 1000+ additional variables
+    # ════════════════════════════════════════════════════════════════════════
+    import hashlib as _hlib
+    import base64 as _b64
+    import urllib.parse as _up
+    import calendar as _cal
+
+    # ── Math extended ────────────────────────────────────────────────────────
+    text = text.replace('$(pi)',  str(round(math.pi, 10)))
+    text = text.replace('$(e)',   str(round(math.e, 10)))
+    text = text.replace('$(tau)', str(round(math.tau, 10)))
+    text = text.replace('$(phi)', str(round((1 + math.sqrt(5)) / 2, 10)))
+    text = text.replace('$(inf)', '∞')
+    text = re.sub(r'\$\(sin (-?[\d.]+)\)',    lambda m: str(round(math.sin(math.radians(float(m.group(1)))), 6)), text)
+    text = re.sub(r'\$\(cos (-?[\d.]+)\)',    lambda m: str(round(math.cos(math.radians(float(m.group(1)))), 6)), text)
+    text = re.sub(r'\$\(tan (-?[\d.]+)\)',    lambda m: str(round(math.tan(math.radians(float(m.group(1)))), 6)) if abs(float(m.group(1)) % 180 - 90) > 0.001 else '∞', text)
+    text = re.sub(r'\$\(asin (-?[\d.]+)\)',   lambda m: str(round(math.degrees(math.asin(max(-1.0, min(1.0, float(m.group(1)))))), 4)), text)
+    text = re.sub(r'\$\(acos (-?[\d.]+)\)',   lambda m: str(round(math.degrees(math.acos(max(-1.0, min(1.0, float(m.group(1)))))), 4)), text)
+    text = re.sub(r'\$\(atan (-?[\d.]+)\)',   lambda m: str(round(math.degrees(math.atan(float(m.group(1)))), 4)), text)
+    text = re.sub(r'\$\(atan2 (-?[\d.]+) (-?[\d.]+)\)', lambda m: str(round(math.degrees(math.atan2(float(m.group(1)), float(m.group(2)))), 4)), text)
+    text = re.sub(r'\$\(log (-?[\d.]+)\)',    lambda m: str(round(math.log(float(m.group(1))), 6)) if float(m.group(1)) > 0 else '?', text)
+    text = re.sub(r'\$\(log2 (-?[\d.]+)\)',   lambda m: str(round(math.log2(float(m.group(1))), 6)) if float(m.group(1)) > 0 else '?', text)
+    text = re.sub(r'\$\(log10 (-?[\d.]+)\)',  lambda m: str(round(math.log10(float(m.group(1))), 6)) if float(m.group(1)) > 0 else '?', text)
+    text = re.sub(r'\$\(exp (-?[\d.]+)\)',    lambda m: str(round(math.exp(min(float(m.group(1)), 700)), 6)), text)
+    text = re.sub(r'\$\(hypot (-?[\d.]+) (-?[\d.]+)\)', lambda m: str(round(math.hypot(float(m.group(1)), float(m.group(2))), 4)), text)
+    text = re.sub(r'\$\(trunc (-?[\d.]+)\)',  lambda m: str(math.trunc(float(m.group(1)))), text)
+    text = re.sub(r'\$\(frac (-?[\d.]+)\)',   lambda m: str(round(float(m.group(1)) - math.trunc(float(m.group(1))), 6)), text)
+    def _gcd2(a, b):
+        a, b = int(abs(float(a))), int(abs(float(b)))
+        while b: a, b = b, a % b
+        return a
+    text = re.sub(r'\$\(gcd (-?[\d.]+) (-?[\d.]+)\)', lambda m: str(_gcd2(m.group(1), m.group(2))), text)
+    text = re.sub(r'\$\(lcm (-?[\d.]+) (-?[\d.]+)\)', lambda m: str(int(abs(float(m.group(1)))) // _gcd2(m.group(1), m.group(2)) * int(abs(float(m.group(2)))) if _gcd2(m.group(1), m.group(2)) else '0'), text)
+    def _factorial_v(m):
+        try:
+            n = int(float(m.group(1)))
+            if n < 0 or n > 20: return '?'
+            r = 1
+            for i in range(2, n + 1): r *= i
+            return str(r)
+        except: return '?'
+    text = re.sub(r'\$\(factorial (\d+)\)', _factorial_v, text)
+    def _fib_v(m):
+        try:
+            n = int(m.group(1))
+            if n < 0 or n > 80: return '?'
+            a, b = 0, 1
+            for _ in range(n): a, b = b, a + b
+            return str(a)
+        except: return '?'
+    text = re.sub(r'\$\(fib (\d+)\)', _fib_v, text)
+    def _isprime_v(m):
+        try:
+            n = int(float(m.group(1)))
+            if n < 2: return '0'
+            if n == 2: return '1'
+            if n % 2 == 0: return '0'
+            for i in range(3, int(n ** 0.5) + 1, 2):
+                if n % i == 0: return '0'
+            return '1'
+        except: return '?'
+    text = re.sub(r'\$\(isprime (\d+)\)', _isprime_v, text)
+    text = re.sub(r'\$\(digitsum (-?[\d.]+)\)',    lambda m: str(sum(int(c) for c in str(abs(int(float(m.group(1))))) if c.isdigit())), text)
+    text = re.sub(r'\$\(digits (-?[\d.]+)\)',       lambda m: str(len(str(abs(int(float(m.group(1))))))), text)
+    text = re.sub(r'\$\(digitreverse (-?[\d.]+)\)', lambda m: str(int(str(abs(int(float(m.group(1)))))[::-1])), text)
+    text = re.sub(r'\$\(countbits (\d+)\)',         lambda m: str(bin(int(m.group(1))).count('1')), text)
+    text = re.sub(r'\$\(lerp (-?[\d.]+) (-?[\d.]+) (-?[\d.]+)\)', lambda m: str(round(float(m.group(1)) + float(m.group(3)) * (float(m.group(2)) - float(m.group(1))), 6)), text)
+    def _maprange_v(m):
+        try:
+            x, a1, a2, b1, b2 = float(m.group(1)), float(m.group(2)), float(m.group(3)), float(m.group(4)), float(m.group(5))
+            if a2 == a1: return '?'
+            return str(round(b1 + (x - a1) / (a2 - a1) * (b2 - b1), 6))
+        except: return '?'
+    text = re.sub(r'\$\(maprange (-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+) (-?[\d.]+)\)', _maprange_v, text)
+
+    # ── Number bases ─────────────────────────────────────────────────────────
+    text = re.sub(r'\$\(hex (\d+)\)',           lambda m: hex(int(m.group(1)))[2:].upper(), text)
+    text = re.sub(r'\$\(oct (\d+)\)',           lambda m: oct(int(m.group(1)))[2:], text)
+    text = re.sub(r'\$\(bin (\d+)\)',           lambda m: bin(int(m.group(1)))[2:], text)
+    text = re.sub(r'\$\(fromhex ([0-9A-Fa-f]+)\)', lambda m: str(int(m.group(1), 16)), text)
+    text = re.sub(r'\$\(fromoct ([0-7]+)\)',    lambda m: str(int(m.group(1), 8)), text)
+    text = re.sub(r'\$\(frombin ([01]+)\)',     lambda m: str(int(m.group(1), 2)), text)
+    def _roman_v(m):
+        try:
+            n = int(m.group(1))
+            if n <= 0 or n > 3999: return '?'
+            vals = [(1000,'M'),(900,'CM'),(500,'D'),(400,'CD'),(100,'C'),(90,'XC'),(50,'L'),(40,'XL'),(10,'X'),(9,'IX'),(5,'V'),(4,'IV'),(1,'I')]
+            r = ''
+            for v, s in vals:
+                while n >= v: r += s; n -= v
+            return r
+        except: return '?'
+    text = re.sub(r'\$\(roman (\d+)\)', _roman_v, text)
+    def _unroman_v(m):
+        try:
+            s = m.group(1).upper()
+            val = {'I':1,'V':5,'X':10,'L':50,'C':100,'D':500,'M':1000}
+            result = 0
+            for i in range(len(s)):
+                cur, nxt = val.get(s[i], 0), val.get(s[i+1], 0) if i+1 < len(s) else 0
+                result += cur if cur >= nxt else -cur
+            return str(result)
+        except: return '?'
+    text = re.sub(r'\$\(unroman ([IVXLCDM]+)\)', _unroman_v, text)
+
+    # ── DateTime advanced ────────────────────────────────────────────────────
+    _MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December']
+    _MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    _DAY_NAMES   = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
+    _DAY_SHORT   = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    _SEASONS_N   = ['Winter','Winter','Spring','Spring','Spring','Summer','Summer','Summer','Fall','Fall','Fall','Winter']
+    _days_in_year = 366 if (now.year % 4 == 0 and (now.year % 100 != 0 or now.year % 400 == 0)) else 365
+    _monthdays_n  = _cal.monthrange(now.year, now.month)[1]
+    text = text.replace('$(weekday)',     _DAY_NAMES[now.weekday()])
+    text = text.replace('$(weekdaynum)',  str(now.weekday()))
+    text = text.replace('$(yearday)',     str(now.timetuple().tm_yday))
+    text = text.replace('$(quarter)',     f'Q{(now.month - 1) // 3 + 1}')
+    text = text.replace('$(monthname)',   _MONTH_NAMES[now.month - 1])
+    text = text.replace('$(monthshort)',  _MONTH_SHORT[now.month - 1])
+    text = text.replace('$(dayname)',     _DAY_NAMES[now.weekday()])
+    text = text.replace('$(dayshort)',    _DAY_SHORT[now.weekday()])
+    text = text.replace('$(isweekend)',   '1' if now.weekday() >= 5 else '0')
+    text = text.replace('$(isweekday)',   '0' if now.weekday() >= 5 else '1')
+    text = text.replace('$(utchour)',     datetime.datetime.utcnow().strftime('%H'))
+    text = text.replace('$(utcdate)',     datetime.datetime.utcnow().strftime('%Y-%m-%d'))
+    text = text.replace('$(utcdatetime)', datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+    text = text.replace('$(daysleft)',    str(_days_in_year - now.timetuple().tm_yday))
+    text = text.replace('$(daysinyear)',  str(_days_in_year))
+    text = text.replace('$(monthdays)',   str(_monthdays_n))
+    text = text.replace('$(monthpct)',    str(round(now.day / _monthdays_n * 100, 1)))
+    text = text.replace('$(yearpct)',     str(round(now.timetuple().tm_yday / _days_in_year * 100, 1)))
+    text = text.replace('$(isleapyear)', '1' if _days_in_year == 366 else '0')
+    text = text.replace('$(season)',      _SEASONS_N[now.month - 1])
+    text = text.replace('$(dayofmonth)',  str(now.day))
+    text = text.replace('$(yearshort)',   now.strftime('%y'))
+    text = text.replace('$(hour12)',      now.strftime('%I').lstrip('0') or '12')
+    text = text.replace('$(ampm)',        now.strftime('%p'))
+    text = text.replace('$(milliseconds)', str(int(time.time() * 1000)))
+    text = re.sub(r'\$\(since ([0-9\-]+)\)',  lambda m: str((now.date() - datetime.date.fromisoformat(m.group(1).strip())).days) if re.match(r'\d{4}-\d{2}-\d{2}', m.group(1)) else '?', text)
+    text = re.sub(r'\$\(until ([0-9\-]+)\)',  lambda m: str((datetime.date.fromisoformat(m.group(1).strip()) - now.date()).days) if re.match(r'\d{4}-\d{2}-\d{2}', m.group(1)) else '?', text)
+    text = re.sub(r'\$\(age ([0-9\-]+)\)',    lambda m: str(now.year - datetime.date.fromisoformat(m.group(1).strip()).year - ((now.month, now.day) < (datetime.date.fromisoformat(m.group(1).strip()).month, datetime.date.fromisoformat(m.group(1).strip()).day))) if re.match(r'\d{4}-\d{2}-\d{2}', m.group(1)) else '?', text)
+    text = re.sub(r'\$\(adddays (-?\d+)\)',   lambda m: (now.date() + datetime.timedelta(days=int(m.group(1)))).strftime('%Y-%m-%d'), text)
+    text = re.sub(r'\$\(subdays (\d+)\)',     lambda m: (now.date() - datetime.timedelta(days=int(m.group(1)))).strftime('%Y-%m-%d'), text)
+    def _durationfmt_v(m):
+        try:
+            s = int(float(m.group(1))); h, rem = divmod(abs(s), 3600); mi, sec = divmod(rem, 60)
+            return f'{"-" if s < 0 else ""}{h:02d}:{mi:02d}:{sec:02d}'
+        except: return '?'
+    text = re.sub(r'\$\(durationfmt (\d+)\)', _durationfmt_v, text)
+    text = re.sub(r'\$\(timeago (\d+)\)',     lambda m: (lambda s: f'{s//86400}d ago' if s>=86400 else (f'{s//3600}h ago' if s>=3600 else (f'{s//60}m ago' if s>=60 else f'{s}s ago')))(max(0, int(time.time())-int(m.group(1)))), text)
+    text = re.sub(r'\$\(futuretime (\d+)\)',  lambda m: (lambda s: f'in {s//86400}d' if s>=86400 else (f'in {s//3600}h' if s>=3600 else (f'in {s//60}m' if s>=60 else f'in {s}s')))(max(0, int(m.group(1))-int(time.time()))), text)
+
+    # ── String advanced ──────────────────────────────────────────────────────
+    text = re.sub(r'\$\(pad (\d+) ([^)]+)\)',      lambda m: m.group(2).center(int(m.group(1))), text)
+    text = re.sub(r'\$\(padr (\d+) ([^)]+)\)',     lambda m: m.group(2).ljust(int(m.group(1))), text)
+    text = re.sub(r'\$\(padl (\d+) ([^)]+)\)',     lambda m: m.group(2).rjust(int(m.group(1))), text)
+    text = re.sub(r'\$\(repeatstr (\d+) ([^)]+)\)',lambda m: m.group(2) * min(int(m.group(1)), 50), text)
+    def _repeatjoin_v(m):
+        parts = m.group(1).split('|')
+        if len(parts) < 3: return ''
+        try: return parts[2].join([parts[0]] * min(int(parts[1]), 30))
+        except: return ''
+    text = re.sub(r'\$\(repeatjoin ([^)]+)\)', _repeatjoin_v, text)
+    text = re.sub(r'\$\(chars ([^)]+)\)',          lambda m: str(len(m.group(1))), text)
+    text = re.sub(r'\$\(truncate (\d+) ([^)]+)\)', lambda m: m.group(2)[:int(m.group(1))] + '…' if len(m.group(2)) > int(m.group(1)) else m.group(2), text)
+    def _indexof_v(m):
+        parts = m.group(1).split('|', 1)
+        return str(parts[0].find(parts[1])) if len(parts) == 2 else '-1'
+    text = re.sub(r'\$\(indexof ([^)]+)\)',        _indexof_v, text)
+    def _lastindexof_v(m):
+        parts = m.group(1).split('|', 1)
+        return str(parts[0].rfind(parts[1])) if len(parts) == 2 else '-1'
+    text = re.sub(r'\$\(lastindexof ([^)]+)\)',    _lastindexof_v, text)
+    def _countstr_v(m):
+        parts = m.group(1).split('|', 1)
+        return str(parts[0].lower().count(parts[1].lower())) if len(parts) == 2 else '0'
+    text = re.sub(r'\$\(strcount ([^)]+)\)',        _countstr_v, text)
+    def _contains_v(m):
+        parts = m.group(1).split('|', 1)
+        return ('1' if parts[1].lower() in parts[0].lower() else '0') if len(parts) == 2 else '0'
+    text = re.sub(r'\$\(strcontains ([^)]+)\)',     _contains_v, text)
+    def _startswith_v(m):
+        parts = m.group(1).split('|', 1)
+        return ('1' if parts[0].lower().startswith(parts[1].lower()) else '0') if len(parts) == 2 else '0'
+    text = re.sub(r'\$\(startswith ([^)]+)\)',      _startswith_v, text)
+    def _endswith_v(m):
+        parts = m.group(1).split('|', 1)
+        return ('1' if parts[0].lower().endswith(parts[1].lower()) else '0') if len(parts) == 2 else '0'
+    text = re.sub(r'\$\(endswith ([^)]+)\)',        _endswith_v, text)
+    text = re.sub(r'\$\(initials ([^)]+)\)',        lambda m: ''.join(w[0].upper() for w in m.group(1).split() if w), text)
+    text = re.sub(r'\$\(camel ([^)]+)\)',           lambda m: (lambda ws: ws[0].lower() + ''.join(w.capitalize() for w in ws[1:]) if ws else '')(m.group(1).split()), text)
+    text = re.sub(r'\$\(pascal ([^)]+)\)',          lambda m: ''.join(w.capitalize() for w in m.group(1).split()), text)
+    text = re.sub(r'\$\(snake ([^)]+)\)',           lambda m: '_'.join(w.lower() for w in m.group(1).split()), text)
+    text = re.sub(r'\$\(kebab ([^)]+)\)',           lambda m: '-'.join(w.lower() for w in m.group(1).split()), text)
+    text = re.sub(r'\$\(screaming ([^)]+)\)',       lambda m: '_'.join(w.upper() for w in m.group(1).split()), text)
+    text = re.sub(r'\$\(swapcase ([^)]+)\)',        lambda m: m.group(1).swapcase(), text)
+    text = re.sub(r'\$\(altcase ([^)]+)\)',         lambda m: ''.join(c.upper() if i % 2 == 0 else c.lower() for i, c in enumerate(m.group(1))), text)
+    text = re.sub(r'\$\(mock ([^)]+)\)',            lambda m: ''.join(c.upper() if i % 2 != 0 else c.lower() for i, c in enumerate(m.group(1))), text)
+    def _rot13_v(m):
+        r = ''
+        for c in m.group(1):
+            if 'a' <= c <= 'z': r += chr((ord(c) - 97 + 13) % 26 + 97)
+            elif 'A' <= c <= 'Z': r += chr((ord(c) - 65 + 13) % 26 + 65)
+            else: r += c
+        return r
+    text = re.sub(r'\$\(rot13 ([^)]+)\)',           _rot13_v, text)
+    def _piglatin_v(m):
+        def pl(w):
+            v = 'aeiouAEIOU'
+            if not w: return w
+            if w[0] in v: return w + 'yay'
+            i = 0
+            while i < len(w) and w[i] not in v: i += 1
+            return w[i:] + w[:i] + 'ay'
+        return ' '.join(pl(w) for w in m.group(1).split())
+    text = re.sub(r'\$\(pig ([^)]+)\)',             _piglatin_v, text)
+    def _uwu_v(m):
+        s = m.group(1).replace('r','w').replace('l','w').replace('R','W').replace('L','W')
+        s = s.replace('na','nya').replace('Na','Nya').replace('no','nyo').replace('ne','nye')
+        return s + ' ' + random.choice(['uwu','owo','~','>w<','UwU','(≧◡≦)'])
+    text = re.sub(r'\$\(uwu ([^)]+)\)',             _uwu_v, text)
+    text = re.sub(r'\$\(leet ([^)]+)\)',            lambda m: m.group(1).translate(str.maketrans('aAeEiIoOtTsS','443311007755')), text)
+    text = re.sub(r'\$\(zalgo ([^)]+)\)',           lambda m: ''.join(c + random.choice(['̈','̃','̂','̊','̇','̄']) if c.isalpha() and random.random() > 0.5 else c for c in m.group(1)), text)
+    text = re.sub(r'\$\(palindrome ([^)]+)\)',      lambda m: '1' if (s := m.group(1).lower().replace(' ','')) == s[::-1] else '0', text)
+    def _b64e_v(m):
+        try: return _b64.b64encode(m.group(1).encode()).decode()
+        except: return '?'
+    text = re.sub(r'\$\(base64e ([^)]+)\)',         _b64e_v, text)
+    def _b64d_v(m):
+        try: return _b64.b64decode(m.group(1) + '==').decode(errors='replace')
+        except: return '?'
+    text = re.sub(r'\$\(base64d ([^)]+)\)',         _b64d_v, text)
+    text = re.sub(r'\$\(urlenc ([^)]+)\)',          lambda m: _up.quote(m.group(1), safe=''), text)
+    text = re.sub(r'\$\(urldec ([^)]+)\)',          lambda m: _up.unquote(m.group(1)), text)
+    text = re.sub(r'\$\(md5 ([^)]+)\)',             lambda m: _hlib.md5(m.group(1).encode()).hexdigest()[:16], text)
+    text = re.sub(r'\$\(sha1 ([^)]+)\)',            lambda m: _hlib.sha1(m.group(1).encode()).hexdigest()[:16], text)
+    text = re.sub(r'\$\(sha256 ([^)]+)\)',          lambda m: _hlib.sha256(m.group(1).encode()).hexdigest()[:16], text)
+    def _crc32_v(m):
+        import binascii
+        return str(binascii.crc32(m.group(1).encode()) & 0xFFFFFFFF)
+    text = re.sub(r'\$\(crc32 ([^)]+)\)',           _crc32_v, text)
+    if '$(uuid)' in text:
+        import uuid as _uuid_mod
+        text = text.replace('$(uuid)', str(_uuid_mod.uuid4()))
+    text = re.sub(r'\$\(nanoid (\d+)\)',            lambda m: ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=min(int(m.group(1)), 64))), text)
+    text = text.replace('$(nanoid)', ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', k=12)))
+    def _wordshuffle_v(m):
+        ws = m.group(1).split(); random.shuffle(ws); return ' '.join(ws)
+    text = re.sub(r'\$\(wordshuffle ([^)]+)\)',     _wordshuffle_v, text)
+    def _charshuffle_v(m):
+        cs = list(m.group(1)); random.shuffle(cs); return ''.join(cs)
+    text = re.sub(r'\$\(charshuffle ([^)]+)\)',     _charshuffle_v, text)
+    text = re.sub(r'\$\(stripspace ([^)]+)\)',      lambda m: ' '.join(m.group(1).split()), text)
+    text = re.sub(r'\$\(zfill (\d+) (\d+)\)',       lambda m: m.group(2).zfill(int(m.group(1))), text)
+
+    # ── List operations ──────────────────────────────────────────────────────
+    def _nth_v(m):
+        parts = m.group(1).split('|')
+        try: return parts[int(parts[-1]) - 1] if 0 < int(parts[-1]) <= len(parts) - 1 else ''
+        except: return ''
+    text = re.sub(r'\$\(nth ([^)]+)\)',             _nth_v, text)
+    text = re.sub(r'\$\(listlen ([^)]+)\)',         lambda m: str(len([p for p in m.group(1).split('|') if p])), text)
+    def _sort_v(m):
+        parts = [p.strip() for p in m.group(1).split('|') if p.strip()]
+        try: return '|'.join(sorted(parts, key=lambda x: float(x)))
+        except: return '|'.join(sorted(parts))
+    text = re.sub(r'\$\(listsort ([^)]+)\)',        _sort_v, text)
+    def _rsort_v(m):
+        parts = [p.strip() for p in m.group(1).split('|') if p.strip()]
+        try: return '|'.join(sorted(parts, key=lambda x: float(x), reverse=True))
+        except: return '|'.join(sorted(parts, reverse=True))
+    text = re.sub(r'\$\(listrsort ([^)]+)\)',       _rsort_v, text)
+    def _unique_v(m):
+        seen, result = set(), []
+        for p in m.group(1).split('|'):
+            if p not in seen: seen.add(p); result.append(p)
+        return '|'.join(result)
+    text = re.sub(r'\$\(listunique ([^)]+)\)',      _unique_v, text)
+    text = re.sub(r'\$\(listreverse ([^)]+)\)',     lambda m: '|'.join(reversed(m.group(1).split('|'))), text)
+    def _head_v(m):
+        parts = m.group(1).split('|')
+        try: n = int(parts[-1]); return '|'.join(parts[:-1][:n])
+        except: return m.group(1)
+    text = re.sub(r'\$\(listhead ([^)]+)\)',        _head_v, text)
+    def _tail_v(m):
+        parts = m.group(1).split('|')
+        try: n = int(parts[-1]); return '|'.join((parts[:-1] if n > 0 else [])[-n:] if n > 0 else [])
+        except: return m.group(1)
+    text = re.sub(r'\$\(listtail ([^)]+)\)',        _tail_v, text)
+    def _listcontains_v(m):
+        parts = m.group(1).split('|')
+        return ('1' if parts[-1] in parts[:-1] else '0') if len(parts) >= 2 else '0'
+    text = re.sub(r'\$\(listcontains ([^)]+)\)',    _listcontains_v, text)
+    def _sample_v(m):
+        parts = m.group(1).split('|')
+        try: n = int(parts[-1]); items = parts[:-1]; return '|'.join(random.sample(items, min(n, len(items))))
+        except: return m.group(1)
+    text = re.sub(r'\$\(listsample ([^)]+)\)',      _sample_v, text)
+    def _randitem_v(m):
+        parts = [p.strip() for p in m.group(1).split('|') if p.strip()]
+        return random.choice(parts) if parts else ''
+    text = re.sub(r'\$\(randitem ([^)]+)\)',        _randitem_v, text)
+    def _join_v(m):
+        parts = m.group(1).split('|')
+        if len(parts) >= 2: return parts[-1].join(parts[:-1])
+        return m.group(1)
+    text = re.sub(r'\$\(listjoin ([^)]+)\)',        _join_v, text)
+    def _splitget_v(m):
+        parts = m.group(1).split('|')
+        if len(parts) < 3: return ''
+        try: sp = parts[0].split(parts[1]); return sp[int(parts[2]) - 1] if 0 < int(parts[2]) <= len(sp) else ''
+        except: return ''
+    text = re.sub(r'\$\(splitget ([^)]+)\)',        _splitget_v, text)
+    def _listmap_v(m):
+        # $(listmap LIST|upper) or $(listmap LIST|lower) etc
+        parts = m.group(1).split('|')
+        if len(parts) < 2: return m.group(1)
+        items, fn = parts[:-1], parts[-1].strip()
+        ops = {'upper': str.upper, 'lower': str.lower, 'title': str.title, 'strip': str.strip, 'reverse': lambda s: s[::-1]}
+        f = ops.get(fn, lambda s: s)
+        return '|'.join(f(i) for i in items)
+    text = re.sub(r'\$\(listmap ([^)]+)\)',         _listmap_v, text)
+    def _listfilter_v(m):
+        # $(listfilter LIST|SEARCH) - keep items containing SEARCH
+        parts = m.group(1).split('|')
+        if len(parts) < 2: return m.group(1)
+        items, needle = parts[:-1], parts[-1].lower()
+        return '|'.join(i for i in items if needle in i.lower())
+    text = re.sub(r'\$\(listfilter ([^)]+)\)',      _listfilter_v, text)
+    def _listcount_v(m):
+        # $(listcount LIST|ITEM) - count occurrences
+        parts = m.group(1).split('|')
+        if len(parts) < 2: return '0'
+        items, target = parts[:-1], parts[-1]
+        return str(items.count(target))
+    text = re.sub(r'\$\(listcount ([^)]+)\)',       _listcount_v, text)
+    def _listadd_v(m):
+        # $(listadd LIST|ITEM) - append item
+        parts = m.group(1).split('|')
+        if len(parts) < 2: return m.group(1)
+        return '|'.join(parts[:-1] + [parts[-1]])
+    text = re.sub(r'\$\(listadd ([^)]+)\)',         _listadd_v, text)
+    def _listremove_v(m):
+        # $(listremove LIST|ITEM) - remove first occurrence
+        parts = m.group(1).split('|')
+        if len(parts) < 2: return m.group(1)
+        items, target = list(parts[:-1]), parts[-1]
+        if target in items: items.remove(target)
+        return '|'.join(items)
+    text = re.sub(r'\$\(listremove ([^)]+)\)',      _listremove_v, text)
+    def _listindex_v(m):
+        # $(listindex LIST|ITEM) - index of item (1-based)
+        parts = m.group(1).split('|')
+        if len(parts) < 2: return '-1'
+        items, target = parts[:-1], parts[-1]
+        return str(items.index(target) + 1) if target in items else '-1'
+    text = re.sub(r'\$\(listindex ([^)]+)\)',       _listindex_v, text)
+
+    # ── Conditional / flow extended ───────────────────────────────────────────
+    def _ifgt_v(m):
+        p = m.group(1).split('|')
+        if len(p) < 4: return ''
+        try: return p[2] if float(p[0]) > float(p[1]) else p[3]
+        except: return p[2] if p[0] > p[1] else p[3]
+    text = re.sub(r'\$\(ifgt ([^)]+)\)',            _ifgt_v, text)
+    def _iflt_v(m):
+        p = m.group(1).split('|')
+        if len(p) < 4: return ''
+        try: return p[2] if float(p[0]) < float(p[1]) else p[3]
+        except: return p[2] if p[0] < p[1] else p[3]
+    text = re.sub(r'\$\(iflt ([^)]+)\)',            _iflt_v, text)
+    def _ifeq_v(m):
+        p = m.group(1).split('|')
+        return (p[2] if p[0] == p[1] else p[3]) if len(p) >= 4 else ''
+    text = re.sub(r'\$\(ifeq ([^)]+)\)',            _ifeq_v, text)
+    def _ifne_v(m):
+        p = m.group(1).split('|')
+        return (p[2] if p[0] != p[1] else p[3]) if len(p) >= 4 else ''
+    text = re.sub(r'\$\(ifne ([^)]+)\)',            _ifne_v, text)
+    def _ifempty_v(m):
+        p = m.group(1).split('|')
+        return (p[1] if not p[0].strip() else p[2]) if len(p) >= 3 else ''
+    text = re.sub(r'\$\(ifempty ([^)]+)\)',         _ifempty_v, text)
+    def _ifnotempty_v(m):
+        p = m.group(1).split('|')
+        return (p[1] if p[0].strip() else p[2]) if len(p) >= 3 else ''
+    text = re.sub(r'\$\(ifnotempty ([^)]+)\)',      _ifnotempty_v, text)
+    def _ifcontains_v(m):
+        p = m.group(1).split('|')
+        return (p[2] if p[1].lower() in p[0].lower() else p[3]) if len(p) >= 4 else ''
+    text = re.sub(r'\$\(ifcontains ([^)]+)\)',      _ifcontains_v, text)
+    def _ifstartswith_v(m):
+        p = m.group(1).split('|')
+        return (p[2] if p[0].lower().startswith(p[1].lower()) else p[3]) if len(p) >= 4 else ''
+    text = re.sub(r'\$\(ifstartswith ([^)]+)\)',    _ifstartswith_v, text)
+    def _ifendswith_v(m):
+        p = m.group(1).split('|')
+        return (p[2] if p[0].lower().endswith(p[1].lower()) else p[3]) if len(p) >= 4 else ''
+    text = re.sub(r'\$\(ifendswith ([^)]+)\)',      _ifendswith_v, text)
+    def _coalesce_v(m):
+        for p in m.group(1).split('|'):
+            if p.strip(): return p.strip()
+        return ''
+    text = re.sub(r'\$\(coalesce ([^)]+)\)',        _coalesce_v, text)
+    def _default_v(m):
+        p = m.group(1).split('|', 1)
+        return p[0] if len(p) < 2 or p[0].strip() else p[1]
+    text = re.sub(r'\$\(default ([^)]+)\)',         _default_v, text)
+    def _ternary_v(m):
+        p = m.group(1).split('|')
+        if len(p) < 3: return ''
+        return p[1] if p[0].strip() and p[0].strip() not in ('0','false','no') else p[2]
+    text = re.sub(r'\$\(ternary ([^)]+)\)',         _ternary_v, text)
+    def _case_v(m):
+        p = m.group(1).split('|', 1)
+        if len(p) < 2: return m.group(1)
+        txt, mode = p[0], p[1].strip()
+        return {'upper': txt.upper, 'lower': txt.lower, 'title': txt.title, 'sentence': txt.capitalize, 'swap': txt.swapcase}.get(mode, lambda: txt)()
+    text = re.sub(r'\$\(case ([^)]+)\)',            _case_v, text)
+    def _ifnum_v(m):
+        p = m.group(1).split('|')
+        if len(p) < 3: return ''
+        try: float(p[0]); return p[1]
+        except: return p[2]
+    text = re.sub(r'\$\(ifnum ([^)]+)\)',           _ifnum_v, text)
+    def _ifgte_v(m):
+        p = m.group(1).split('|')
+        if len(p) < 4: return ''
+        try: return p[2] if float(p[0]) >= float(p[1]) else p[3]
+        except: return ''
+    text = re.sub(r'\$\(ifgte ([^)]+)\)',           _ifgte_v, text)
+    def _iflte_v(m):
+        p = m.group(1).split('|')
+        if len(p) < 4: return ''
+        try: return p[2] if float(p[0]) <= float(p[1]) else p[3]
+        except: return ''
+    text = re.sub(r'\$\(iflte ([^)]+)\)',           _iflte_v, text)
+
+    # ── List statistics ──────────────────────────────────────────────────────
+    def _ls(fn):
+        def _h(m):
+            try:
+                nums = [float(x) for x in m.group(1).split('|') if x.strip()]
+                if not nums: return '?'
+                r = fn(nums)
+                return str(int(r) if r == int(r) else round(r, 4))
+            except: return '?'
+        return _h
+    text = re.sub(r'\$\(sum ([^)]+)\)',        _ls(sum), text)
+    text = re.sub(r'\$\(product ([^)]+)\)',    _ls(lambda ns: __import__('functools').reduce(lambda a, b: a * b, ns, 1)), text)
+    text = re.sub(r'\$\(mean ([^)]+)\)',       _ls(lambda ns: sum(ns) / len(ns)), text)
+    text = re.sub(r'\$\(maxlist ([^)]+)\)',    _ls(max), text)
+    text = re.sub(r'\$\(minlist ([^)]+)\)',    _ls(min), text)
+    text = re.sub(r'\$\(rangelist ([^)]+)\)',  _ls(lambda ns: max(ns) - min(ns)), text)
+    text = re.sub(r'\$\(median ([^)]+)\)',     _ls(lambda ns: sorted(ns)[len(ns)//2] if len(ns) % 2 else (sorted(ns)[len(ns)//2-1] + sorted(ns)[len(ns)//2]) / 2), text)
+    text = re.sub(r'\$\(stddev ([^)]+)\)',     _ls(lambda ns: (sum((x - sum(ns)/len(ns))**2 for x in ns) / len(ns)) ** 0.5), text)
+    text = re.sub(r'\$\(variance ([^)]+)\)',   _ls(lambda ns: sum((x - sum(ns)/len(ns))**2 for x in ns) / len(ns)), text)
+
+    # ── Unit conversions ─────────────────────────────────────────────────────
+    text = re.sub(r'\$\(kmtomi (-?[\d.]+)\)',    lambda m: str(round(float(m.group(1)) * 0.621371, 2)), text)
+    text = re.sub(r'\$\(mitokm (-?[\d.]+)\)',    lambda m: str(round(float(m.group(1)) * 1.60934, 2)), text)
+    text = re.sub(r'\$\(kgtolbs (-?[\d.]+)\)',   lambda m: str(round(float(m.group(1)) * 2.20462, 2)), text)
+    text = re.sub(r'\$\(lbstokg (-?[\d.]+)\)',   lambda m: str(round(float(m.group(1)) * 0.453592, 2)), text)
+    text = re.sub(r'\$\(ctof (-?[\d.]+)\)',      lambda m: str(round(float(m.group(1)) * 9 / 5 + 32, 1)), text)
+    text = re.sub(r'\$\(ftoc (-?[\d.]+)\)',      lambda m: str(round((float(m.group(1)) - 32) * 5 / 9, 1)), text)
+    text = re.sub(r'\$\(ctok (-?[\d.]+)\)',      lambda m: str(round(float(m.group(1)) + 273.15, 2)), text)
+    text = re.sub(r'\$\(ktoc (-?[\d.]+)\)',      lambda m: str(round(float(m.group(1)) - 273.15, 2)), text)
+    text = re.sub(r'\$\(mtoft (-?[\d.]+)\)',     lambda m: str(round(float(m.group(1)) * 3.28084, 2)), text)
+    text = re.sub(r'\$\(fttom (-?[\d.]+)\)',     lambda m: str(round(float(m.group(1)) * 0.3048, 2)), text)
+    text = re.sub(r'\$\(cmtoin (-?[\d.]+)\)',    lambda m: str(round(float(m.group(1)) * 0.393701, 2)), text)
+    text = re.sub(r'\$\(intocm (-?[\d.]+)\)',    lambda m: str(round(float(m.group(1)) * 2.54, 2)), text)
+    text = re.sub(r'\$\(ltogl (-?[\d.]+)\)',     lambda m: str(round(float(m.group(1)) * 0.264172, 3)), text)
+    text = re.sub(r'\$\(gltol (-?[\d.]+)\)',     lambda m: str(round(float(m.group(1)) * 3.78541, 3)), text)
+    text = re.sub(r'\$\(oztoml (-?[\d.]+)\)',    lambda m: str(round(float(m.group(1)) * 29.5735, 2)), text)
+    text = re.sub(r'\$\(mltoz (-?[\d.]+)\)',     lambda m: str(round(float(m.group(1)) * 0.033814, 3)), text)
+    text = re.sub(r'\$\(mphtokmh (-?[\d.]+)\)',  lambda m: str(round(float(m.group(1)) * 1.60934, 2)), text)
+    text = re.sub(r'\$\(kmhtomph (-?[\d.]+)\)',  lambda m: str(round(float(m.group(1)) * 0.621371, 2)), text)
+    text = re.sub(r'\$\(acretoha (-?[\d.]+)\)',  lambda m: str(round(float(m.group(1)) * 0.404686, 4)), text)
+    text = re.sub(r'\$\(hatoacre (-?[\d.]+)\)',  lambda m: str(round(float(m.group(1)) * 2.47105, 4)), text)
+    text = re.sub(r'\$\(joulestocal (-?[\d.]+)\)', lambda m: str(round(float(m.group(1)) * 0.239006, 4)), text)
+    text = re.sub(r'\$\(caltojoules (-?[\d.]+)\)', lambda m: str(round(float(m.group(1)) * 4.184, 4)), text)
+    text = re.sub(r'\$\(mstomph (-?[\d.]+)\)',   lambda m: str(round(float(m.group(1)) * 2.23694, 2)), text)
+    text = re.sub(r'\$\(nmitokm (-?[\d.]+)\)',   lambda m: str(round(float(m.group(1)) * 1.852, 3)), text)
+    text = re.sub(r'\$\(pxtoem (-?[\d.]+)\)',    lambda m: str(round(float(m.group(1)) / 16, 4)), text)
+    text = re.sub(r'\$\(emtopx (-?[\d.]+)\)',    lambda m: str(round(float(m.group(1)) * 16, 2)), text)
+
+    # ── Color utilities ───────────────────────────────────────────────────────
+    def _hextorgb_v(m):
+        try:
+            h = m.group(1).lstrip('#')
+            if len(h) == 3: h = ''.join(c * 2 for c in h)
+            return f'{int(h[0:2],16)},{int(h[2:4],16)},{int(h[4:6],16)}'
+        except: return '?'
+    text = re.sub(r'\$\(hextorgb ([0-9A-Fa-f#]+)\)',  _hextorgb_v, text)
+    def _rgbtohex_v(m):
+        try:
+            p = m.group(1).split('|'); return f'#{int(p[0]):02X}{int(p[1]):02X}{int(p[2]):02X}'
+        except: return '?'
+    text = re.sub(r'\$\(rgbtohex ([^)]+)\)',            _rgbtohex_v, text)
+    def _lighten_v(m):
+        try:
+            p = m.group(1).split('|'); h = p[0].lstrip('#')
+            if len(h) == 3: h = ''.join(c * 2 for c in h)
+            pct = float(p[1]) / 100 if len(p) > 1 else 0.2
+            r = min(255, int(int(h[0:2],16) + (255 - int(h[0:2],16)) * pct))
+            g = min(255, int(int(h[2:4],16) + (255 - int(h[2:4],16)) * pct))
+            b = min(255, int(int(h[4:6],16) + (255 - int(h[4:6],16)) * pct))
+            return f'#{r:02X}{g:02X}{b:02X}'
+        except: return '?'
+    text = re.sub(r'\$\(lighten ([^)]+)\)',             _lighten_v, text)
+    def _darken_v(m):
+        try:
+            p = m.group(1).split('|'); h = p[0].lstrip('#')
+            if len(h) == 3: h = ''.join(c * 2 for c in h)
+            pct = float(p[1]) / 100 if len(p) > 1 else 0.2
+            r = max(0, int(int(h[0:2],16) * (1 - pct)))
+            g = max(0, int(int(h[2:4],16) * (1 - pct)))
+            b = max(0, int(int(h[4:6],16) * (1 - pct)))
+            return f'#{r:02X}{g:02X}{b:02X}'
+        except: return '?'
+    text = re.sub(r'\$\(darken ([^)]+)\)',              _darken_v, text)
+    def _complement_v(m):
+        try:
+            h = m.group(1).lstrip('#')
+            if len(h) == 3: h = ''.join(c * 2 for c in h)
+            return f'#{255-int(h[0:2],16):02X}{255-int(h[2:4],16):02X}{255-int(h[4:6],16):02X}'
+        except: return '?'
+    text = re.sub(r'\$\(complementhex ([0-9A-Fa-f#]+)\)', _complement_v, text)
+
+    # ── Progress / visual helpers ─────────────────────────────────────────────
+    def _progressbar_v(m):
+        try:
+            p = m.group(1).split('|')
+            pct = max(0.0, min(100.0, float(p[0])))
+            w = min(int(p[1]), 30) if len(p) > 1 else 10
+            filled = int(pct / 100 * w)
+            return '█' * filled + '░' * (w - filled) + f' {pct:.0f}%'
+        except: return '?'
+    text = re.sub(r'\$\(progressbar ([^)]+)\)', _progressbar_v, text)
+    text = re.sub(r'\$\(bar ([^)]+)\)',          _progressbar_v, text)
+    def _stargraph_v(m):
+        try:
+            p = m.group(1).split('|')
+            pct = max(0.0, min(100.0, float(p[0])))
+            w = min(int(p[1]), 20) if len(p) > 1 else 5
+            filled = int(pct / 100 * w)
+            return '⭐' * filled + '☆' * (w - filled)
+        except: return '?'
+    text = re.sub(r'\$\(stars ([^)]+)\)',        _stargraph_v, text)
+    def _hpbar_v(m):
+        try:
+            p = m.group(1).split('|')
+            cur, mx = float(p[0]), float(p[1])
+            pct = max(0.0, min(100.0, cur / mx * 100)) if mx else 0
+            filled = int(pct / 100 * 10)
+            return f'❤️ {"█"*filled}{"░"*(10-filled)} {int(cur)}/{int(mx)}'
+        except: return '?'
+    text = re.sub(r'\$\(hpbar ([^)]+)\)',        _hpbar_v, text)
+
+    # ── Random extended lists ─────────────────────────────────────────────────
+    _RW   = ['galaxy','quantum','nebula','pixel','cipher','nexus','void','prism','echo','flux','zenith','vortex','pulse','nova','delta','axiom','rune','phantom','ether','solstice','aurora','cosmos','helix','orbit','parallax','radiance','tempest','umbra','zenon','alpha']
+    _RADJ = ['blazing','crimson','silent','ancient','electric','neon','cosmic','mythic','frozen','golden','shadow','radiant','dark','swift','fierce','ethereal','legendary','colossal','tiny','brilliant','spectral','cursed','divine','hollow','iron','jade','lunar','mystic','serene','wild']
+    _RN   = ['dragon','phoenix','cipher','rune','blade','shield','realm','abyss','crown','vault','beacon','oracle','specter','golem','titan','chimera','hydra','gryphon','sphinx','kraken','wraith','warden','sentinel','harbinger','nexus','revenant','seraph','templar','void','colossus']
+    _RV   = ['vanquish','conjure','traverse','obliterate','transcend','illuminate','shatter','forge','summon','banish','unlock','ascend','descend','awaken','destroy','create','discover','unleash','protect','defy','enchant','fracture','invoke','nullify','overpower','pursue','reclaim','strike','unravel','wield']
+    _RCOL = ['Crimson','Cobalt','Emerald','Amber','Violet','Teal','Scarlet','Indigo','Magenta','Cerulean','Vermillion','Chartreuse','Turquoise','Maroon','Ochre','Lavender','Coral','Ivory','Ebony','Jade','Azure','Bronze','Copper','Gold','Obsidian','Pearl','Ruby','Sapphire','Silver','Topaz']
+    _RAAN = ['Axolotl','Capybara','Quokka','Platypus','Tardigrade','Narwhal','Pangolin','Ocelot','Fennec','Wombat','Mantis Shrimp','Glassfish','Mudskipper','Shoebill','Aye-aye','Blobfish','Kakapo','Tapir','Okapi','Binturong','Fossa','Numbat','Saiga','Tarsier','Vaquita','Zonkey','Zorilla','Dhole','Kinkajou','Viscacha']
+    _RFD  = ['Baklava','Ramen','Pierogi','Injera','Poutine','Shakshuka','Bibimbap','Mole','Tagine','Khachapuri','Rendang','Goulash','Borscht','Pho','Gyoza','Paella','Tiramisu','Croissant','Sushi','Churros','Falafel','Jerk Chicken','Kimchi','Lumpia','Naan','Okonomiyaki','Peking Duck','Quesadilla','Ratatouille','Stroganoff']
+    _RCNT = ['Iceland','Bhutan','Seychelles','Liechtenstein','Vanuatu','Kiribati','Andorra','Nauru','Tuvalu','San Marino','Monaco','Palau','Marshall Islands','Tonga','Samoa','Comoros','Suriname','Djibouti','Eritrea','Belize','Brunei','Cabo Verde','Eswatini','Gambia','Guyana','Lesotho','Malawi','Mauritius','Moldova','Montenegro']
+    _RCAP = ['Reykjavik','Thimphu','Victoria','Vaduz','Port Vila','Tarawa','Andorra la Vella','Yaren','Funafuti','San Marino','Monaco','Ngerulmud','Majuro','Nuku\'alofa','Apia','Moroni','Paramaribo','Djibouti','Asmara','Belmopan','Bandar Seri Begawan','Praia','Mbabane','Banjul','Georgetown','Maseru','Lilongwe','Port Louis','Chișinău','Podgorica']
+    _RLNG = ['Basque','Swahili','Quechua','Tamil','Icelandic','Welsh','Zulu','Tagalog','Armenian','Georgian','Mongolian','Tibetan','Hausa','Yoruba','Amharic','Khmer','Sinhala','Lao','Dzongkha','Nahuatl','Aymara','Catalan','Cherokee','Guarani','Hawaiian','Inuktitut','Maori','Navajo','Occitan','Sanskrit']
+    _RFN  = ['Aiden','Brianna','Caleb','Delilah','Ethan','Fiona','Gavin','Hana','Isaac','Jasmine','Kai','Luna','Mason','Nora','Owen','Piper','Quinn','Riley','Sebastian','Talia','Uma','Victor','Wren','Xander','Yara','Zane','Aria','Blaze','Cleo','Dex']
+    _RLN  = ['Storm','Frost','Drake','Vale','Quinn','Shore','Mist','Crane','Ford','Knight','Ash','Blaze','Cross','Dawn','Edge','Fall','Grant','Hawk','Jade','Lake','March','Nash','Onyx','Park','Reed','Sage','Thorn','Upton','Vex','Wolf']
+    _RWPN = ['Plasma Cannon','Runic Blade','Shadow Dagger','Thunder Hammer','Frost Bow','Void Lance','Solar Axe','Spectral Staff','Iron Gauntlets','Mystic Crossbow','Chain Whip','Crystal Spear','Demon Sickle','Ether Blade','Flaming Sword','Ghost Pistol','Holy Mace','Ice Pick','Jade Halberd','Kraken Trident']
+    _RSP  = ['Arcane Surge','Void Rend','Temporal Shift','Celestial Beam','Shadow Walk','Frost Nova','Chain Lightning','Soul Drain','Phoenix Flame','Ethereal Bind','Blood Pact','Cosmic Smite','Death Coil','Eclipse Burst','Fireball','Gravity Well','Hex Wave','Ice Lance','Judgement','Karma Strike']
+    _RPT  = ['Elixir of Fortitude','Brew of Invisibility','Tonic of Swiftness','Potion of True Sight','Draught of Dragon Breath','Vial of Mending','Flask of Giant Strength','Mixture of Luck','Oil of Slipperiness','Philter of Love','Reagent of Recall','Serum of Silence','Tincture of Time','Unguent of Undying','Vapor of Vision']
+    _RSUP = ['Time manipulation','Telekinesis','Invisibility','Super strength','Telepathy','Flight','Elemental control','Phasing','Healing factor','Energy projection','Probability manipulation','Reality warping','Dimensional travel','Precognition','Technopathy','Biokinesis','Gravity control','Magnetism','Sound control','Weather control']
+    _RCR  = ['Eternal Hiccups','Speak Only in Questions','Invisible to Cats','Sneeze Glitter','Dance When Music Plays','Glow in the Dark','Speak Backwards','Turn Blue When Lying','Attract Pigeons','Can Only Walk Sideways','Hiccup When Lying','Only Whisper After Dark','Random Giggling','Shoes Untie Themselves','Smell Like Cinnamon Always']
+    _RPR  = ['When the twin moons align, the chosen one will rise','The ancient seal will break at the seventh toll','One born of fire shall end the endless winter','The last dragon whispers the name of the true king','From the depths of the forgotten realm, salvation arrives','He who seeks the void shall become the void','The stars will fall when the silent queen speaks']
+    _RACH = ['Speed Runner','First Blood','No Scope','100% Complete','Pacifist','World Record','Master Chef','Night Owl','Early Bird','Last Standing','Untouchable','Legend','Clutch King','Flawless Victory','Godlike','Headhunter','Ironman','Just Lucky','Kingslayer','Lifesaver']
+    _RQU  = ['Retrieve the lost artifact from the ancient ruins','Defeat the shadow wyrm terrorizing the villages','Discover the source of the corrupted spring','Escort the merchant through bandit territory','Infiltrate the enemy fortress undetected','Negotiate a peace treaty between warring factions','Protect the village from the oncoming horde','Recover the stolen royal heirloom','Solve the mystery of the vanishing villagers','Track down the rogue alchemist']
+    _RCL  = ['Paladin','Warlock','Druid','Rogue','Berserker','Necromancer','Monk','Ranger','Bard','Artificer','Shaman','Templar','Illusionist','Assassin','Summoner','Arcanist','Battlemage','Corsair','Demonhunter','Enchanter']
+    _RRC  = ['High Elf','Dark Elf','Dwarf','Halfling','Gnome','Tiefling','Dragonborn','Aasimar','Orc','Kenku','Tabaxi','Triton','Fire Genasi','Goliath','Changeling','Autognome','Fairy','Harengon','Owlin','Sea Elf']
+    _RMN  = ['Lich King','Shadow Drake','Void Titan','Frost Giant','Abyssal Horror','Spectral Knight','Iron Golem','Chimera','Basilisk','Manticore','Wyvern','Banshee','Revenant','Mimic','Beholder','Aboleth','Behir','Cloaker','Darkmantle','Elder Dragon']
+    _RDG  = ['The Sunken Citadel','Tomb of the Eternal King','Ruins of Khareth','The Whispering Vaults','Caverns of Despair','The Iron Fortress','Hall of Forgotten Gods','The Cursed Labyrinth','Abyss of Echoes','Black Spire','Crypt of the Undying','Desolation Keep','Ember Hollow','Frostpeak Tower','Gloomhaven','Haunted Colosseum','Infernal Pit','Jade Palace','Kraken Bay','Lost Citadel']
+    _RLT  = ['Legendary Sword +5','Bag of Infinite Holding','Ring of True Sight','Amulet of Dragon Resistance','Boots of Silent Steps','Cloak of Shadows','Tome of Forbidden Knowledge','Ancient Dragon Scale','Crown of the Lich','Divine Shield','Ethereal Bow','Frostbrand Dagger','Golden Fleece','Helm of Brilliance','Ioun Stone of Mastery']
+    _RHS  = ['Today is perfect for new beginnings!','Trust your instincts — they will lead you right.','An unexpected encounter brings great fortune.','Focus on what matters most today.','Your creativity is at its peak!','Good things come to those who persevere.','A surprise awaits you around the corner.','The stars align in your favor today.','Embrace the challenge — growth awaits.','Your kindness will be rewarded.']
+    _RFT  = ['A great adventure awaits you.','Someone is thinking of you right now.','Your talents will be recognized soon.','The answer you seek is closer than you think.','Fortune favors the bold today.','New doors are opening for you.','Trust the process — it all makes sense in time.','The tide turns in your favor.','What you seek is seeking you.','Your next big win is just around the corner.']
+    _RRD  = ['I have cities but no houses, mountains but no trees, water but no fish. What am I? (A map)','The more you take, the more you leave behind. What am I? (Footsteps)','I speak without a mouth and hear without ears. What am I? (An echo)','I have hands but cannot clap. What am I? (A clock)','The more you have of it, the less you see. What is it? (Darkness)']
+    _RPN  = ['Why did the scarecrow win an award? Outstanding in his field!','Why don\'t skeletons fight? They don\'t have the guts.','What do you call fake spaghetti? An impasta!','Why did the math book look sad? Too many problems.','I used to hate facial hair but then it grew on me.','What do you call a fish without eyes? A fsh.','Why do cows wear bells? Because their horns don\'t work.']
+    _RDJ  = ['I\'m reading about anti-gravity. Impossible to put down!','Did you hear about the mathematician afraid of negative numbers? He\'ll stop at nothing.','I used to play piano by ear, now I use my hands.','I would make a joke about infinity but I wouldn\'t know where to start.','Why can\'t a bicycle stand on its own? It\'s two-tired.','I told my wife she was drawing her eyebrows too high. She looked surprised.']
+    _RSH  = ['What if dogs think we\'re the pets?','If you dig a hole straight down, where do you end up?','Is the "S" in "lisp" ironic?','What color are mirrors?','Do fish get thirsty?','What was the first person to milk a cow trying to do?','If nobody buys a ticket, does the lottery just never happen?','What is sand but a bunch of little rocks?','Why is the word "abbreviated" so long?','Do you ever wonder if your dog wonders about you?']
+    _RWY  = ['Would you rather have unlimited pizza or unlimited tacos?','Would you rather have super speed or super strength?','Would you rather never sleep again or always be tired?','Would you rather speak all languages or play all instruments?','Would you rather fly or be invisible?','Would you rather always be 10 minutes late or 20 minutes early?','Would you rather have a pause button or a rewind button for your life?']
+    _RTR  = ['What is your most embarrassing moment?','What is your biggest fear?','What is your guilty pleasure?','What is the strangest dream you\'ve had?','What\'s a secret talent you have?','What would you do with a million dollars?','What\'s the most embarrassing song on your playlist?']
+    _RDR  = ['Do your best impression of the streamer','Type your name with your elbows','Describe yourself in three emotes','Tell a joke in chat','Sing the first line of the current song','Roast yourself in one sentence','Say the alphabet backwards (or try to)']
+    _RPU  = ['Are you a magician? Whenever I look at you, everyone else disappears.','Do you have a map? I keep getting lost in your eyes.','Are you a keyboard? You\'re just my type.','Do you like science? We have great chemistry.','Are you a Wi-Fi signal? I\'m feeling a connection.','Are you a star? You light up the room.']
+    _RCM  = ['You have an incredible sense of humor!','Your presence lights up this chat!','You\'re the reason this community is so amazing!','Your creativity knows no bounds!','You make streaming so much more fun!','Your energy is absolutely contagious!','The world is a better place with you in it!','You\'re genuinely one of a kind!']
+    _RIN  = ['You\'re not the dumbest person alive, but don\'t let that be a comfort.','I\'ve seen better code in a kindergarten class.','Your ping is higher than your IQ.','Even your shadow leaves you sometimes.','Your game sense is like a Wi-Fi signal — great until it matters.','If brains were dynamite you couldn\'t blow your hat off.']
+    _RRT  = ['If brains were gasoline, {0} couldn\'t power a moped!','The only thing {0} takes seriously is themselves — and that\'s a tragedy.','I\'d say {0} is out of their mind, but that implies something was there.','They say practice makes perfect, but nothing explains {0}.','{0} is proof that evolution can go backwards.']
+    _RMG  = ['Lo-fi Hip Hop','Progressive Metal','Synthwave','Bossa Nova','Celtic Folk','J-Pop','Reggaeton','Afrobeat','Drone Ambient','Bluegrass','K-Pop','Drum and Bass','Baroque','Chiptune','Dark Jazz','Electro Swing','Future Bass','Hyperpop','Indie Folk','Jazz Fusion']
+    _RIT  = ['Theremin','Didgeridoo','Balalaika','Sitar','Guqin','Hurdy-Gurdy','Dulcimer','Bouzouki','Charango','Koto','Shamisen','Zither','Mbira','Bandoneón','Hang Drum','Erhu','Gayageum','Ney Flute','Santoor','Ukulele']
+    _RSP2 = ['Ultimate Frisbee','Sepak Takraw','Kabaddi','Hurling','Pelota Vasca','Bossaball','Cheese Rolling','Bog Snorkeling','Underwater Hockey','Snow Polo','Buzkashi','Calcio Storico','Jai Alai','Korfball','Lacrosse','Polo','Pétanque','Sumo','Tchoukball','Yukigassen']
+    _RES  = ['Valorant','Dota 2','CS2','League of Legends','Rocket League','Overwatch 2','Rainbow Six Siege','Apex Legends','Warzone','Street Fighter 6','Tekken 8','Starcraft II','Age of Empires IV','PUBG','Fortnite','Halo Infinite','Hearthstone','FIFA','Clash Royale','Brawl Stars']
+    _RET  = ['Team Liquid','Cloud9','FaZe Clan','Natus Vincere','Fnatic','G2 Esports','100 Thieves','Evil Geniuses','TSM','Sentinels','Astralis','Complexity','FURIA','Gen.G','ENCE','Heroic','Ninjas in Pyjamas','OG','T1','Vitality']
+    _RBG  = ['Catan','Pandemic','Ticket to Ride','Gloomhaven','Azul','Wingspan','Terraforming Mars','Scythe','7 Wonders','Spirit Island','Arkham Horror','Blood Rage','Codenames','Dead of Winter','Everdell','Forbidden Island','Hanabi','Istanbul','Jaws of the Lion','Kingdomino']
+    _RPL  = ['Rust','Kotlin','Julia','Elixir','Haskell','Zig','Crystal','Nim','Raku','Pony','V','Odin','Grain','Gleam','Carbon','Mojo','Vale','Bend','Inko','Ante']
+    _RFW  = ['SvelteKit','Nuxt 3','Astro','Remix','Fresh (Deno)','Qwik','Solid.js','htmx','Django Ninja','FastAPI','Hono','Elder.js','Enhance','Marko','Mitosis','Preact','Stencil','Ultra','Analog','Brisa']
+    _RAL  = ['Dijkstra\'s','A*','Quick Sort','Merge Sort','Bellman-Ford','Floyd-Warshall','KMP Pattern Matching','Fast Fourier Transform','PageRank','Bloom Filter','Consistent Hashing','HyperLogLog','Knuth-Morris-Pratt','Levenshtein Distance','Needleman-Wunsch','Raft Consensus','RSA','SHA-256','Simulated Annealing','Viterbi']
+    _RDS  = ['B-Tree','Skip List','Trie','Segment Tree','Fenwick Tree','Disjoint Set Union','Red-Black Tree','Fibonacci Heap','Suffix Array','Bloom Filter','AVL Tree','Binomial Heap','C-Trie','DAG','Finger Tree','Hash Array Mapped Trie','Interval Tree','Jump Consistent Hash','K-D Tree','Left-Leaning Red-Black Tree']
+    _RPln = ['Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune']
+    _RCon = ['Orion','Cassiopeia','Ursa Major','Scorpius','Perseus','Andromeda','Lyra','Cygnus','Aquila','Canis Major','Boötes','Centaurus','Corona Borealis','Draco','Hercules','Leo','Pegasus','Taurus','Virgo','Gemini']
+    _REle = ['Hydrogen','Helium','Carbon','Oxygen','Nitrogen','Iron','Gold','Silver','Platinum','Uranium','Plutonium','Xenon','Neon','Krypton','Einsteinium','Fermium','Gallium','Hafnium','Indium','Nobelium']
+    _RFr  = ['Durian','Rambutan','Mangosteen','Cherimoya','Jackfruit','Dragon Fruit','Feijoa','Lychee','Longan','Guava','Persimmon','Pawpaw','Carambola','Jabuticaba','Sapodilla','Acerola','Buddha\'s Hand','Calamansi','Duhat','Emu Apple']
+    _RVg  = ['Kohlrabi','Celeriac','Romanesco','Jicama','Taro','Chayote','Bitter Melon','Breadfruit','Yuca','Purslane','Samphire','Fiddlehead','Sunchoke','Moringa','Bok Choy','Amaranth','Burdock','Callaloo','Dasheen','Epazote']
+    _RCk  = ['Negroni','Daiquiri','Old Fashioned','Singapore Sling','French 75','Last Word','Penicillin','Corpse Reviver','Paper Plane','Naked and Famous','Aviation','Bee\'s Knees','Clover Club','Dark \'n\' Stormy','El Diablo','Fog Cutter','Gold Rush','Hanky Panky','Improved Whiskey Cocktail','Jungle Bird']
+    _RCu  = ['Peruvian','Ethiopian','Georgian','Vietnamese','Moroccan','Lebanese','Oaxacan','Szechuan','Basque','Bengali','Cambodian','Danish','Ecuadorian','Filipino','Greek','Hmong','Iraqi','Jamaican','Kazakh','Lao']
+    _RKao = ['(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧','(ʘ‿ʘ)','¯\\_(ツ)_/¯','(づ｡◕‿‿◕｡)づ','(╯°□°）╯︵ ┻━┻','ヽ(ﾟДﾟ)ﾉ','(◕‿◕)','(•̀ᴗ•́)و','(ง°ل͜°)ง','ᕦ(ò_óˇ)ᕤ','(＾▽＾)','(⌐■_■)','(づ￣ ³￣)づ','（；´д｀）ゞ','(ﾟДﾟ;)','〜(￣▽￣〜)','(っ˘ω˘ς)','(≧∇≦)/','(ｏ･ω･ｏ)','(｡◕‿◕｡)']
+    _RLH  = ['Label your cables with bread clip tags.','Use a rubber band on a stripped screw for grip.','Chill wine fast by wrapping a wet paper towel around it.','Put a wooden spoon over a boiling pot to stop overflow.','Use dental floss to cut soft foods cleanly.','Freeze coffee in ice cube trays for iced coffee without dilution.','Put a sticker on a power strip to label each plug.','Use a squeegee to remove pet hair from carpet.','Store bed sheets inside one of their pillowcases.','Use a binder clip to protect razor blades when traveling.']
+    _RTar = ['The Fool — New beginnings','The Magician — Skill and cunning','The High Priestess — Hidden knowledge','The Empress — Abundance','The Emperor — Authority','The Hierophant — Tradition','The Lovers — Union','The Chariot — Willpower','Strength — Courage','The Hermit — Solitude','Wheel of Fortune — Cycles','Justice — Balance','The Hanged Man — Surrender','Death — Transformation','Temperance — Patience','The Devil — Temptation','The Tower — Upheaval','The Star — Hope','The Moon — Illusion','The Sun — Clarity','Judgement — Renewal','The World — Completion']
+    _RHog = ['Gryffindor','Hufflepuff','Ravenclaw','Slytherin']
+    _RCZY = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig']
+    _RMOON= ['🌑 New Moon','🌒 Waxing Crescent','🌓 First Quarter','🌔 Waxing Gibbous','🌕 Full Moon','🌖 Waning Gibbous','🌗 Last Quarter','🌘 Waning Crescent']
+    _RDEF = ['🌪️','⚡','🔥','❄️','🌊','🌿','☀️','🌙','💜','🎯','💎','🏆','🎮','🎲','🎸']
+
+    text = text.replace('$(randword)',            random.choice(_RW))
+    text = text.replace('$(randadjective)',       random.choice(_RADJ))
+    text = text.replace('$(randnoun)',            random.choice(_RN))
+    text = text.replace('$(randverb)',            random.choice(_RV))
+    text = text.replace('$(randcolor)',           random.choice(_RCOL))
+    text = text.replace('$(randhex)',             '#' + ''.join(random.choices('0123456789ABCDEF', k=6)))
+    text = text.replace('$(randanimal)',          random.choice(_RAAN))
+    text = text.replace('$(randfood)',            random.choice(_RFD))
+    text = text.replace('$(randcountry)',         random.choice(_RCNT))
+    text = text.replace('$(randcapital)',         random.choice(_RCAP))
+    text = text.replace('$(randlanguage)',        random.choice(_RLNG))
+    text = text.replace('$(randname)',            random.choice(_RFN))
+    text = text.replace('$(randlastname)',        random.choice(_RLN))
+    text = text.replace('$(randletter)',          random.choice('abcdefghijklmnopqrstuvwxyz'))
+    text = text.replace('$(randdigit)',           str(random.randint(0, 9)))
+    text = text.replace('$(randbool)',            random.choice(['0', '1']))
+    text = text.replace('$(weapon)',              random.choice(_RWPN))
+    text = text.replace('$(spell)',               random.choice(_RSP))
+    text = text.replace('$(potion)',              random.choice(_RPT))
+    text = text.replace('$(superpower)',          random.choice(_RSUP))
+    text = text.replace('$(curse)',               random.choice(_RCR))
+    text = text.replace('$(prophecy)',            random.choice(_RPR))
+    text = text.replace('$(achievement)',         random.choice(_RACH))
+    text = text.replace('$(quest)',               random.choice(_RQU))
+    text = text.replace('$(rpgclass)',            random.choice(_RCL))
+    text = text.replace('$(fantasyrace)',         random.choice(_RRC))
+    text = text.replace('$(monster)',             random.choice(_RMN))
+    text = text.replace('$(dungeon)',             random.choice(_RDG))
+    text = text.replace('$(loot)',                random.choice(_RLT))
+    text = text.replace('$(horoscope)',           random.choice(_RHS))
+    text = text.replace('$(fortune)',             random.choice(_RFT))
+    text = text.replace('$(riddle)',              random.choice(_RRD))
+    text = text.replace('$(pun)',                 random.choice(_RPN))
+    text = text.replace('$(dadjoke)',             random.choice(_RDJ))
+    text = text.replace('$(shower)',              random.choice(_RSH))
+    text = text.replace('$(wyr)',                 random.choice(_RWY))
+    text = text.replace('$(truth)',               random.choice(_RTR))
+    text = text.replace('$(dare)',                random.choice(_RDR))
+    text = text.replace('$(pickup)',              random.choice(_RPU))
+    text = text.replace('$(compliment2)',         random.choice(_RCM))
+    text = text.replace('$(insult)',              random.choice(_RIN))
+    text = text.replace('$(musicgenre)',          random.choice(_RMG))
+    text = text.replace('$(instrument)',          random.choice(_RIT))
+    text = text.replace('$(sport)',               random.choice(_RSP2))
+    text = text.replace('$(esport)',              random.choice(_RES))
+    text = text.replace('$(esportteam)',          random.choice(_RET))
+    text = text.replace('$(boardgame)',           random.choice(_RBG))
+    text = text.replace('$(programminglanguage)', random.choice(_RPL))
+    text = text.replace('$(framework)',           random.choice(_RFW))
+    text = text.replace('$(algorithm)',           random.choice(_RAL))
+    text = text.replace('$(datastructure)',       random.choice(_RDS))
+    text = text.replace('$(planet)',              random.choice(_RPln))
+    text = text.replace('$(constellation)',       random.choice(_RCon))
+    text = text.replace('$(element)',             random.choice(_REle))
+    text = text.replace('$(fruit)',               random.choice(_RFr))
+    text = text.replace('$(vegetable)',           random.choice(_RVg))
+    text = text.replace('$(cocktail)',            random.choice(_RCk))
+    text = text.replace('$(cuisine)',             random.choice(_RCu))
+    text = text.replace('$(kaomoji)',             random.choice(_RKao))
+    text = text.replace('$(lifehack)',            random.choice(_RLH))
+    text = text.replace('$(tarot)',               random.choice(_RTar))
+    text = text.replace('$(chineseyear)',         _RCZY[(now.year - 4) % 12])
+    text = text.replace('$(moonphase)',           _RMOON[int(((int(time.time() / 86400) + 2440588 - 2451550) / 29.5306) % 1 * 8) % 8])
+    text = text.replace('$(randomemoji)',         random.choice(_RDEF))
+    text = text.replace('$(randip)',              '.'.join(str(random.randint(1, 254)) for _ in range(4)))
+    text = text.replace('$(randmac)',             ':'.join(f'{random.randint(0, 255):02X}' for _ in range(6)))
+    text = text.replace('$(randport)',            str(random.randint(1024, 65535)))
+    text = text.replace('$(httpstatus)',          random.choice(['200 OK','201 Created','301 Moved','400 Bad Request','401 Unauthorized','403 Forbidden','404 Not Found','418 I\'m a Teapot','429 Too Many Requests','500 Server Error','503 Service Unavailable']))
+    text = re.sub(r'\$\(roast ([^)]+)\)',         lambda m: random.choice(_RRT).format(m.group(1).lstrip('@')), text)
+    text = re.sub(r'\$\(randpassword (\d+)\)',    lambda m: ''.join(random.choices('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*', k=min(int(m.group(1)), 64))), text)
+    def _randseed_v(m):
+        p = m.group(1).split('|')
+        try:
+            seed = int(_hlib.md5(p[0].encode()).hexdigest(), 16)
+            mn, mx = int(p[1]), int(p[2])
+            return str(mn + seed % (mx - mn + 1))
+        except: return '?'
+    text = re.sub(r'\$\(randseed ([^)]+)\)',      _randseed_v, text)
+
+    # ── User-seeded deterministic vars ───────────────────────────────────────
+    if nick:
+        _uh = sum(ord(c) for c in nick.lower())
+        text = text.replace('$(personality)',   ['Analytical','Creative','Chaotic','Orderly','Rebellious','Diplomatic','Visionary','Pragmatic','Adventurous','Stoic'][_uh % 10])
+        text = text.replace('$(aura)',          ['Golden','Crimson','Azure','Emerald','Violet','Silver','Shadow','Radiant','Cosmic','Ethereal'][_uh % 10])
+        text = text.replace('$(vibe)',          ['Chill','Hype','Mysterious','Friendly','Competitive','Laid-back','Intense','Wholesome','Chaotic','Pure'][_uh % 10])
+        text = text.replace('$(mood)',          ['Ready to grind','Vibing','Sweating','Chillin\'','In the zone','On tilt','Clutching up','Hyped up'][_uh % 8])
+        text = text.replace('$(alignment)',     ['Lawful Good','Neutral Good','Chaotic Good','Lawful Neutral','True Neutral','Chaotic Neutral','Lawful Evil','Neutral Evil','Chaotic Evil'][_uh % 9])
+        text = text.replace('$(classfor)',      _RCL[_uh % len(_RCL)])
+        text = text.replace('$(elementfor)',    ['Fire','Water','Earth','Air','Lightning','Ice','Shadow','Light','Nature','Void'][_uh % 10])
+        text = text.replace('$(spiritanimal)', ['Wolf','Eagle','Dolphin','Tiger','Owl','Fox','Bear','Dragon','Phoenix','Lion','Raven','Deer','Shark','Hawk','Panther'][_uh % 15])
+        text = text.replace('$(powerlevel)',    str((_uh * 137 + 1337) % 9001 + 1000))
+        text = text.replace('$(hogwarts)',      _RHog[_uh % 4])
+        text = text.replace('$(numerology)',    str(_uh % 9 + 1))
+        text = text.replace('$(luckynumber)',   str(_uh % 99 + 1))
+        text = text.replace('$(luckycolor)',    _RCOL[_uh % len(_RCOL)])
+        text = text.replace('$(lifequest)',     _RQU[_uh % len(_RQU)])
+    def _zodiac_v(m):
+        try:
+            parts = m.group(1).split('/')
+            mo, d = int(parts[0]), int(parts[1])
+            signs = ['Capricorn','Aquarius','Pisces','Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius']
+            dates = [(1,19),(2,18),(3,20),(4,19),(5,20),(6,20),(7,22),(8,22),(9,22),(10,22),(11,21),(12,21)]
+            for i, (mm, dd) in enumerate(dates):
+                if mo == mm and d <= dd: return signs[i]
+                if mo < mm: return signs[i]
+            return 'Capricorn'
+        except: return '?'
+    text = re.sub(r'\$\(zodiac ([^)]+)\)', _zodiac_v, text)
+    def _hogwarts_v(m):
+        u = m.group(1).lstrip('@').lower()
+        return _RHog[sum(ord(c) for c in u) % 4]
+    text = re.sub(r'\$\(hogwartsfor ([^)]+)\)', _hogwarts_v, text)
+    def _spiritfor_v(m):
+        u = m.group(1).lstrip('@').lower()
+        return ['Wolf','Eagle','Dolphin','Tiger','Owl','Fox','Bear','Dragon','Phoenix','Lion','Raven','Deer','Shark','Hawk','Panther'][sum(ord(c) for c in u) % 15]
+    text = re.sub(r'\$\(spiritanimalfor ([^)]+)\)', _spiritfor_v, text)
+    def _powerfor_v(m):
+        u = m.group(1).lstrip('@').lower()
+        return str((sum(ord(c) for c in u) * 137 + 1337) % 9001 + 1000)
+    text = re.sub(r'\$\(powerlevelfor ([^)]+)\)', _powerfor_v, text)
+    def _classfor_v(m):
+        u = m.group(1).lstrip('@').lower()
+        return _RCL[sum(ord(c) for c in u) % len(_RCL)]
+    text = re.sub(r'\$\(classfor ([^)]+)\)', _classfor_v, text)
+    def _elemfor_v(m):
+        u = m.group(1).lstrip('@').lower()
+        return ['Fire','Water','Earth','Air','Lightning','Ice','Shadow','Light','Nature','Void'][sum(ord(c) for c in u) % 10]
+    text = re.sub(r'\$\(elementfor ([^)]+)\)', _elemfor_v, text)
+    def _alignfor_v(m):
+        u = m.group(1).lstrip('@').lower()
+        return ['Lawful Good','Neutral Good','Chaotic Good','Lawful Neutral','True Neutral','Chaotic Neutral','Lawful Evil','Neutral Evil','Chaotic Evil'][sum(ord(c) for c in u) % 9]
+    text = re.sub(r'\$\(alignmentfor ([^)]+)\)', _alignfor_v, text)
+
+    # ── Game / event state ────────────────────────────────────────────────────
+    _sr_ext = ctx.get('_state_ref')
+    if _sr_ext:
+        _poll_s   = getattr(_sr_ext, 'poll', None) or {}
+        _gw_s     = getattr(_sr_ext, 'giveaway', None) or {}
+        _au_s     = getattr(_sr_ext, 'auction', None) or {}
+        _hm_s     = getattr(_sr_ext, 'hangman', None) or {}
+        _tr_s     = getattr(_sr_ext, 'trivia', None) or {}
+        _heist_s  = getattr(_sr_ext, 'heist', None) or {}
+        _race_s   = getattr(_sr_ext, 'chat_race', None) or {}
+        _wc_s     = getattr(_sr_ext, 'wordchain', None) or {}
+        _ty_s     = getattr(_sr_ext, 'typerace', None) or {}
+        _ng_s     = getattr(_sr_ext, 'numguess', None) or {}
+        _bb_s     = getattr(_sr_ext, 'boss_battle', None) or {}
+        _cg_s     = getattr(_sr_ext, 'community_goal', None) or {}
+        _lot_s    = getattr(_sr_ext, 'lottery', None) or {}
+        _cr_s     = getattr(_sr_ext, 'coinrain', None) or {}
+        _ss_s     = getattr(_sr_ext, 'stream_stats', None) or {}
+        _pv_votes = _poll_s.get('votes', {})
+        _pv_opts  = _poll_s.get('options', [])
+        _pv_lead  = max(_pv_votes, key=_pv_votes.get) if _pv_votes else ''
+        _pv_label = _pv_opts[int(_pv_lead) - 1] if _pv_lead and _pv_opts and 0 < int(_pv_lead) <= len(_pv_opts) else _pv_lead
+        text = text.replace('$(pollactive)',       '1' if _poll_s.get('active') else '0')
+        text = text.replace('$(pollquestion)',     _poll_s.get('question', 'none'))
+        text = text.replace('$(pollvotes)',        str(sum(_pv_votes.values())))
+        text = text.replace('$(pollleader)',       _pv_label)
+        text = text.replace('$(giveawayactive)',   '1' if _gw_s.get('active') else '0')
+        text = text.replace('$(giveawayprize)',    _gw_s.get('prize', 'none'))
+        text = text.replace('$(giveawayentries)',  str(len(_gw_s.get('entries', []))))
+        text = text.replace('$(auctionactive)',    '1' if _au_s.get('active') else '0')
+        text = text.replace('$(auctionitem)',      _au_s.get('item', 'none'))
+        text = text.replace('$(auctionhighbid)',   str(_au_s.get('high_bid', 0)))
+        text = text.replace('$(auctionhighbidder)',_au_s.get('high_display', 'none'))
+        text = text.replace('$(hangmanactive)',    '1' if _hm_s.get('active') else '0')
+        text = text.replace('$(hangmanword)',      _hm_s.get('display', '?').strip())
+        text = text.replace('$(hangmanlives)',     str(_hm_s.get('lives_left', 0)))
+        text = text.replace('$(triviaactive)',     '1' if _tr_s.get('active') else '0')
+        text = text.replace('$(triviaquestion)',   _tr_s.get('question', 'none'))
+        text = text.replace('$(triviareward)',     str(_tr_s.get('reward', 0)))
+        text = text.replace('$(heistactive)',      '1' if _heist_s.get('phase') == 'joining' else '0')
+        text = text.replace('$(heistcount)',       str(len(_heist_s.get('entries', []))))
+        text = text.replace('$(raceactive)',       '1' if _race_s.get('active') else '0')
+        text = text.replace('$(racetarget)',       _race_s.get('target', '?'))
+        text = text.replace('$(wordchainactive)',  '1' if _wc_s.get('active') else '0')
+        text = text.replace('$(wordchainlast)',    _wc_s.get('last_word', '?'))
+        text = text.replace('$(typeraceactive)',   '1' if _ty_s.get('active') else '0')
+        text = text.replace('$(typeracetext)',     _ty_s.get('text', '?'))
+        text = text.replace('$(numguessactive)',   '1' if _ng_s.get('active') else '0')
+        text = text.replace('$(numguessrange)',    f'{_ng_s.get("min",1)}-{_ng_s.get("max",100)}')
+        text = text.replace('$(bossactive)',       '1' if _bb_s.get('active') else '0')
+        text = text.replace('$(bossname)',         _bb_s.get('boss_name', 'none'))
+        text = text.replace('$(bosshp)',           str(_bb_s.get('boss_hp', 0)))
+        text = text.replace('$(bossmaxhp)',        str(_bb_s.get('boss_max_hp', 1000)))
+        text = text.replace('$(bossfighters)',     str(len(_bb_s.get('participants', {}))))
+        _cg_pct = round(_cg_s.get('current', 0) / _cg_s.get('target', 1) * 100, 1) if _cg_s.get('target') else 0
+        text = text.replace('$(goaltarget)',       str(_cg_s.get('target', 0)))
+        text = text.replace('$(goalcurrent)',      str(_cg_s.get('current', 0)))
+        text = text.replace('$(goalpct)',          str(_cg_pct))
+        text = text.replace('$(goalreward)',       _cg_s.get('reward', 'none'))
+        text = text.replace('$(lotterypot)',       str(_lot_s.get('pot', 0)))
+        text = text.replace('$(lotteryentries)',   str(len(_lot_s.get('tickets', {}))))
+        text = text.replace('$(lotteryactive)',    '1' if _lot_s and _lot_s.get('active') else '0')
+        text = text.replace('$(coinrainactive)',   '1' if _cr_s and _cr_s.get('active') else '0')
+        text = text.replace('$(coinrainamount)',   str(_cr_s.get('amount', 0)))
+        text = text.replace('$(streamraidcount)',  str(len(_ss_s.get('raids_received', []))))
+        text = text.replace('$(streamsubcount)',   str(len(_ss_s.get('subs_received', []))))
+        text = text.replace('$(streambitcount)',   str(_ss_s.get('bits_received', 0)))
+        text = text.replace('$(streammsgtotal)',   str(_ss_s.get('chat_messages_total', 0)))
+        text = text.replace('$(challengeactive)',  '1' if (getattr(_sr_ext, 'challenge', None) or {}).get('active') else '0')
+
+    # ── Bot / system / channel ────────────────────────────────────────────────
+    text = text.replace('$(botname)',    os.environ.get('CUBASSIST_BOT_NICK', 'CubAssist'))
+    text = text.replace('$(channelurl)', f'twitch.tv/{_chan}' if _chan else 'twitch.tv/?')
+    text = text.replace('$(botversion)', '2.0')
+    text = text.replace('$(prefix)',     '!')
+    text = text.replace('$(cmdname)',    ctx.get('cmd_name', '?'))
+    text = text.replace('$(channelname)', _chan or '?')
+
+    # ── Socials from config ───────────────────────────────────────────────────
+    _cfg_ext   = ctx.get('config') or {}
+    _soc_ext   = _cfg_ext.get('socials', {}) if isinstance(_cfg_ext, dict) else {}
+    text = text.replace('$(discordurl)',   _soc_ext.get('discord', ''))
+    text = text.replace('$(youtubeurl)',   _soc_ext.get('youtube', ''))
+    text = text.replace('$(twitterurl)',   _soc_ext.get('twitter', ''))
+    text = text.replace('$(instagramurl)', _soc_ext.get('instagram', ''))
+    text = text.replace('$(tiktokurl)',    _soc_ext.get('tiktok', ''))
+    text = text.replace('$(donateurl)',    _cfg_ext.get('donate_url', '') if isinstance(_cfg_ext, dict) else '')
+
+    # ── Custom vars ($(cv:name) and $(customvar name)) ────────────────────────
+    _cvars = _cfg_ext.get('custom_vars', {}) if isinstance(_cfg_ext, dict) else {}
+    if _cvars:
+        for _cv_k, _cv_v in _cvars.items():
+            text = text.replace(f'$(cv:{_cv_k})', str(_cv_v))
+            text = text.replace(f'$(customvar {_cv_k})', str(_cv_v))
+    text = re.sub(r'\$\(cv:([a-zA-Z0-9_]+)\)',        lambda m: str(_cvars.get(m.group(1), '')), text)
+    text = re.sub(r'\$\(customvar ([a-zA-Z0-9_]+)\)', lambda m: str(_cvars.get(m.group(1), '')), text)
+
+    # ── Persistent counter access ─────────────────────────────────────────────
+    if _chan and '$(counter:' in text:
+        _cnt_ext = _load_counters(_chan)
+        _ccustom = _cnt_ext.get('custom', {})
+        text = re.sub(r'\$\(counter:([a-zA-Z0-9_]+)\)', lambda m: str(_ccustom.get(m.group(1), 0)), text)
+
     return text
+
+
+def _countdown_str(date_str: str) -> str:
+    """Return human-readable countdown to a date (YYYY-MM-DD)."""
+    try:
+        target = datetime.datetime.strptime(date_str.strip(), '%Y-%m-%d')
+        delta = target - datetime.datetime.now()
+        if delta.total_seconds() < 0:
+            return 'already passed'
+        days = delta.days
+        if days >= 365:
+            return f'{days // 365}y {(days % 365) // 30}mo'
+        if days >= 30:
+            return f'{days // 30}mo {days % 30}d'
+        if days >= 1:
+            return f'{days}d {delta.seconds // 3600}h'
+        hrs = delta.seconds // 3600
+        mins = (delta.seconds % 3600) // 60
+        return f'{hrs}h {mins}m'
+    except Exception:
+        return '?'
 
 # ── Per-channel runtime state ───────────────────────────────────────────────────
 
@@ -681,6 +2014,29 @@ class ChannelState:
         self.last_follower_count = 0
         self.stream_was_live = False
         self.stream_stats = {}     # current stream session stats (in-memory accumulator)
+        # ── New feature states ────────────────────────────────────────────────
+        self.blackjack          = {}     # nick -> {hand, dealer, deck, bet}
+        self.highlow            = None   # {current, active}
+        self.wordchain          = None   # {last_word, last_nick, active}
+        self.typerace           = None   # {text, active, expiry}
+        self.lottery            = None   # {tickets:{nick:count}, prize, active}
+        self.auction            = None   # {item, high_bid, high_bidder, active, expiry}
+        self.coinrain           = None   # {amount, active, expiry}
+        self.bounties           = {}     # target_nick -> amount
+        self.first_chatter_done = False
+        self.hype_count         = 0
+        self.hype_last_announce = 0.0
+        self.emote_counts       = {}     # emote -> count
+        self.tts_queue          = []     # [{user, text, ts}]
+        self.hype_train_active  = False
+        self.hype_train_level   = 0
+        self.hype_train_expiry  = 0.0
+        self.category_history   = []     # [{game, started_ts}]
+        self.subgoal            = None   # {target, current, message}
+        self.bitsgoal           = None   # {target, current, message}
+        self.raid_queue         = []     # [channel_name, ...]
+        self.chat_alert_counts  = {}     # keyword -> [ts, ts, ...]
+        self.wheel_spinning     = False
 
 # ── CubAssist multi-channel IRC bot ────────────────────────────────────────────
 
@@ -709,7 +2065,77 @@ PROTECTED = {
     'boss', 'fight', 'numguess', 'race',
     'goal', 'contribute', 'bingo', 'claim',
     'alias', 'hug', 'slap', 'love', 'roulette', 'challenge',
+    # ── New commands ──────────────────────────────────────────────────────────
+    'blackjack', 'hit', 'stand', 'double', 'coinrain',
+    'dice', 'highlow', 'hl',
+    'wordchain',
+    'typerace',
+    'wheel',
+    'lottery', 'lottodraw',
+    'auction', 'bid',
+    'grab',
+    'bounty',
+    'watchstreak',
+    'suggest', 'suggestions', 'approve', 'deny',
+    'spotlight',
+    'birthday', 'birthdays',
+    'hype',
+    'schedule',
+    'socials',
+    'streamnote', 'streamnotes',
+    'raidqueue',
+    'subgoal',
+    'bitsgoal',
+    'cliplast',
+    'cmdstats',
+    'banreason',
+    'bank', 'deposit', 'withdraw',
+    'prestige',
+    'team',
+    'lastseen',
+    'tts',
+    'alert',
+    'emotecount',
+    'chatalert',
+    'raidshield',
+    'autoban',
+    'shadowwarn',
+    'chatexport',
+    'temprole',
+    'multiwin',
 }
+
+# ── Commands disabled by default (user must enable per-channel) ────────────────
+_DEFAULT_DISABLED: frozenset = frozenset({
+    # Games
+    'blackjack', 'hit', 'stand', 'double', 'dice', 'highlow', 'hl',
+    'wordchain', 'typerace', 'wheel',
+    # Economy
+    'lottery', 'lottodraw', 'auction', 'bid', 'coinrain', 'grab',
+    'bounty', 'bank', 'deposit', 'withdraw', 'prestige',
+    # Community
+    'watchstreak', 'suggest', 'suggestions', 'approve', 'deny',
+    'spotlight', 'birthday', 'birthdays', 'hype', 'team',
+    # Stream Tools
+    'schedule', 'socials', 'streamnote', 'streamnotes',
+    'raidqueue', 'subgoal', 'bitsgoal', 'cliplast',
+    # Mod Tools
+    'cmdstats', 'banreason', 'lastseen', 'tts', 'alert',
+    'emotecount', 'chatalert', 'raidshield', 'autoban',
+    'shadowwarn', 'chatexport', 'temprole', 'multiwin',
+    # Existing opt-in features
+    'duel', 'heist', 'trivia', 'anagram', 'numguess',
+    'boss', 'joinboss', 'hangman', 'guess', 'chatr', 'race', 'rps',
+    'challenge', 'accept', 'reject',
+    'rob', 'give', 'leaderboard', 'points', 'rank',
+    'giveaway', 'enter', 'pick', 'poll', 'vote', 'endpoll',
+    'queue', 'openqueue', 'closequeue', 'removequeue', 'clearqueue',
+    'songrequest', 'sr', 'skipsong', 'currentsong', 'songsopen', 'songsclose',
+    'shop', 'buy', 'myrewards',
+    'watchtime', 'wt',
+    'lore', 'addlore', 'dellore',
+    'vip', 'unvip',
+})
 
 class CubBot:
     def __init__(self):
@@ -1174,6 +2600,80 @@ class CubBot:
             state.chat_log = state.chat_log[-200:]
         state.line_count += 1
 
+        # First chatter announcement
+        if not state.first_chatter_done and cfg.get('first_chatter', {}).get('enabled'):
+            state.first_chatter_done = True
+            fc_msg = cfg.get('first_chatter', {}).get('message', '🎉 @$(user) is the first chatter of the stream!')
+            self.send(fc_msg.replace('$(user)', display_name), channel)
+            pts_cfg_fc = cfg.get('points_config', {})
+            fc_reward = int(cfg.get('first_chatter', {}).get('reward', 0))
+            if pts_cfg_fc.get('enabled') and fc_reward > 0:
+                pts_fc = _load_points(channel)
+                pts_fc[nick] = pts_fc.get(nick, 0) + fc_reward
+                _save_points(channel, pts_fc)
+
+        # Emote counting (track capitalised-looking tokens as potential emotes)
+        for token in text.split():
+            if len(token) >= 3 and token[0].isupper() and token.isalnum():
+                state.emote_counts[token] = state.emote_counts.get(token, 0) + 1
+
+        # Autoban pattern check
+        try:
+            patterns_ab = _load_autoban_patterns(channel)
+            if patterns_ab:
+                for pat in patterns_ab:
+                    try:
+                        if re.search(pat, text, re.I):
+                            self.ban(nick, channel, f'Autoban: matched pattern "{pat}"')
+                            break
+                    except re.error:
+                        pass
+        except Exception:
+            pass
+
+        # Keyword chat alerts
+        try:
+            kw_alerts = cfg.get('chat_keyword_alerts', [])
+            now_kw = time.time()
+            for kw in kw_alerts:
+                if kw and kw.lower() in text.lower():
+                    times = state.chat_alert_counts.setdefault(kw, [])
+                    times.append(now_kw)
+                    # Keep only last 60 seconds
+                    state.chat_alert_counts[kw] = [t for t in times if now_kw - t < 60]
+                    if len(state.chat_alert_counts[kw]) >= int(cfg.get('chat_alert_threshold', 5)):
+                        state.chat_alert_counts[kw] = []
+                        self.send(f'🔔 Keyword alert: "{kw}" has been said {cfg.get("chat_alert_threshold",5)}+ times in the last minute!', channel)
+        except Exception:
+            pass
+
+        # Watchstreak update on first message of stream session
+        try:
+            if state.stream_was_live:
+                ws_data = _load_watchstreak(channel)
+                ws_entry = ws_data.get(nick, {'streak': 0, 'last_day': ''})
+                today_ws = datetime.datetime.now().strftime('%Y-%m-%d')
+                if ws_entry.get('last_day', '') != today_ws:
+                    # Check if consecutive (yesterday)
+                    yesterday_ws = (datetime.datetime.now() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+                    if ws_entry.get('last_day', '') == yesterday_ws:
+                        ws_entry['streak'] = ws_entry.get('streak', 0) + 1
+                    else:
+                        ws_entry['streak'] = 1
+                    ws_entry['last_day'] = today_ws
+                    ws_data[nick] = ws_entry
+                    _save_watchstreak(channel, ws_data)
+        except Exception:
+            pass
+
+        # Bounty check — if someone with a bounty sent this message, remind about it
+        if nick in state.bounties:
+            bounty_val = state.bounties[nick]
+            if bounty_val > 0 and not state.timer_last.get(f'__bounty_remind_{nick}__', 0) > time.time() - 120:
+                state.timer_last[f'__bounty_remind_{nick}__'] = time.time()
+                pts_cfg_b = cfg.get('points_config', {})
+                self.send(f'💀 {nick} has a bounty of {bounty_val:,} {pts_cfg_b.get("name","points")} on their head!', channel)
+
         # Chat race winner detection
         if state.chat_race and state.chat_race.get('active'):
             if text.strip().upper() == state.chat_race['target'].upper():
@@ -1231,6 +2731,20 @@ class CubBot:
                     # Also track in stream stats
                     if not state.stream_stats:
                         state.stream_stats = {'peak_viewers': 0, 'subs_received': [], 'raids_received': [], 'points_distributed': 0, 'message_counts': {}, 'chat_messages_total': 0}
+                except Exception:
+                    pass
+                # Bits goal tracking
+                try:
+                    if state.bitsgoal:
+                        bg_data = state.bitsgoal
+                        bg_data['current'] = bg_data.get('current', 0) + bits_amount
+                        pct_bg = int(bg_data['current'] / bg_data['target'] * 100) if bg_data.get('target') else 0
+                        bar_bg = '█' * (pct_bg // 10) + '░' * (10 - pct_bg // 10)
+                        if bg_data['current'] >= bg_data['target']:
+                            self.send(f'✨ BITS GOAL REACHED! [{bar_bg}] {bg_data["current"]:,}/{bg_data["target"]:,} bits! {bg_data.get("message","")} 🎉', channel)
+                            state.bitsgoal = None
+                        elif pct_bg % 25 == 0:
+                            self.send(f'✨ Bits goal: [{bar_bg}] {bg_data["current"]:,}/{bg_data["target"]:,} ({pct_bg}%)', channel)
                 except Exception:
                     pass
             except Exception:
@@ -1334,6 +2848,7 @@ class CubBot:
                 'nick':       nick,
                 'user_color': user_color,
                 'user_level': user_level,
+                '_state_ref': state,
             }
             response = resolve_vars(custom.get('response', ''), ctx)
             if response:
@@ -1368,6 +2883,12 @@ class CubBot:
         self._builtin(cmd_name, query, nick, display_name, user_level, user_id, channel, state, cfg)
 
     def _builtin(self, cmd_name, query, nick, display_name, user_level, user_id, channel, state, cfg):
+        # ── Feature flag check ────────────────────────────────────────────
+        _enabled_cmds = cfg.get('enabled_commands', {})
+        # Default: commands in _DEFAULT_DISABLED are off unless explicitly enabled
+        if not _enabled_cmds.get(cmd_name, cmd_name not in _DEFAULT_DISABLED):
+            return
+
         if cmd_name == 'commands':
             names = [f'!{n}' for n, c in cfg.get('commands', {}).items() if c.get('enabled', True)]
             self.send('Commands: ' + ', '.join(names) if names else 'No commands configured.', channel)
@@ -2136,8 +3657,8 @@ class CubBot:
             # Rank
             ranks = cfg.get('ranks', [])
             rank_name = 'Newcomer'
-            for r in sorted(ranks, key=lambda x: x.get('points', 0), reverse=True):
-                if balance >= r.get('points', 0):
+            for r in sorted(ranks, key=lambda x: x.get('min_points', 0), reverse=True):
+                if balance >= r.get('min_points', 0):
                     rank_name = r.get('name', rank_name)
                     break
             # Leaderboard position
@@ -2492,6 +4013,11 @@ class CubBot:
             if roll < 0.45:  # 45% success
                 pts[nick] = robber_pts + rob_amount
                 pts[target] = rob_from - rob_amount
+                # Bounty payout
+                bounty_payout = state.bounties.pop(target, 0)
+                if bounty_payout:
+                    pts[nick] += bounty_payout
+                    self.send(f'💀 Bounty collected! +{bounty_payout:,} {pts_name} bonus for robbing {target_raw}!', channel)
                 _save_points(channel, pts)
                 self.send(f'🦹 {display_name} successfully robbed {target_raw} for {rob_amount:,} {pts_name}!', channel)
             elif roll < 0.75:  # 30% caught, fine
@@ -3313,6 +4839,870 @@ class CubBot:
             else:
                 self.send('Usage: !overlay [timer|goal|counter|title|subtitle|ticker|widget|effect|scene]', channel)
 
+        # ── Blackjack ─────────────────────────────────────────────────────
+        elif cmd_name == 'blackjack':
+            pts_cfg = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points must be enabled to play blackjack.', channel); return
+            if nick in state.blackjack:
+                g = state.blackjack[nick]
+                hand_str = ', '.join(g['hand'])
+                self.send(f'@{display_name} — your hand: {hand_str} (value: {self._bj_value(g["hand"])}) | !hit, !stand, !double', channel); return
+            try: bet = max(1, int(query.strip()))
+            except: self.send('Usage: !blackjack <amount>', channel); return
+            pts = _load_points(channel)
+            if pts.get(nick, 0) < bet:
+                self.send(f'@{display_name}, not enough {pts_name}.', channel); return
+            pts[nick] -= bet
+            _save_points(channel, pts)
+            deck = self._bj_deck()
+            hand = [deck.pop(), deck.pop()]
+            dealer = [deck.pop(), deck.pop()]
+            state.blackjack[nick] = {'hand': hand, 'dealer': dealer, 'deck': deck, 'bet': bet}
+            val = self._bj_value(hand)
+            self.send(f'🃏 {display_name} — Hand: {", ".join(hand)} ({val}) | Dealer shows: {dealer[0]} | !hit, !stand, !double', channel)
+            if val == 21:
+                win = int(bet * 1.5)
+                pts = _load_points(channel)
+                pts[nick] = pts.get(nick, 0) + bet + win
+                _save_points(channel, pts)
+                del state.blackjack[nick]
+                self.send(f'🃏 Blackjack! @{display_name} wins {win} {pts_name}! 🎉', channel)
+
+        elif cmd_name == 'hit':
+            if nick not in state.blackjack: return
+            g = state.blackjack[nick]
+            g['hand'].append(g['deck'].pop())
+            val = self._bj_value(g['hand'])
+            if val > 21:
+                del state.blackjack[nick]
+                self.send(f'🃏 @{display_name} busts with {val}! Hand: {", ".join(g["hand"])}. Better luck next time!', channel)
+            elif val == 21:
+                self._bj_stand(nick, display_name, channel, state, cfg)
+            else:
+                self.send(f'🃏 @{display_name} — Hand: {", ".join(g["hand"])} ({val}) | !hit, !stand', channel)
+
+        elif cmd_name == 'stand':
+            if nick not in state.blackjack: return
+            self._bj_stand(nick, display_name, channel, state, cfg)
+
+        elif cmd_name == 'double':
+            if nick not in state.blackjack: return
+            g = state.blackjack[nick]
+            pts_cfg = cfg.get('points_config', {})
+            pts = _load_points(channel)
+            if pts.get(nick, 0) < g['bet']:
+                self.send(f'@{display_name}, not enough {pts_cfg.get("name","points")} to double.', channel); return
+            pts[nick] -= g['bet']
+            g['bet'] *= 2
+            _save_points(channel, pts)
+            g['hand'].append(g['deck'].pop())
+            val = self._bj_value(g['hand'])
+            if val > 21:
+                del state.blackjack[nick]
+                self.send(f'🃏 @{display_name} doubled and busts with {val}! Hand: {", ".join(g["hand"])}.', channel)
+            else:
+                self._bj_stand(nick, display_name, channel, state, cfg)
+
+        # ── Dice ──────────────────────────────────────────────────────────
+        elif cmd_name == 'dice':
+            expr = query.strip().lower() or '1d6'
+            m = re.match(r'^(\d+)d(\d+)$', expr)
+            if not m:
+                self.send('Usage: !dice [NdN] e.g. !dice 2d6', channel); return
+            n_dice, sides = int(m.group(1)), int(m.group(2))
+            n_dice = min(max(n_dice, 1), 10)
+            sides  = min(max(sides, 2), 100)
+            rolls  = [random.randint(1, sides) for _ in range(n_dice)]
+            total  = sum(rolls)
+            roll_str = ', '.join(str(r) for r in rolls)
+            self.send(f'🎲 @{display_name} rolled {n_dice}d{sides}: [{roll_str}] = {total}', channel)
+            pts_cfg = cfg.get('points_config', {})
+            if pts_cfg.get('enabled') and sides == 6 and n_dice == 1 and total == 6:
+                reward = 25
+                pts = _load_points(channel)
+                pts[nick] = pts.get(nick, 0) + reward
+                _save_points(channel, pts)
+                self.send(f'🎲 Natural 6! +{reward} {pts_cfg.get("name","points")} bonus!', channel)
+
+        # ── High / Low ────────────────────────────────────────────────────
+        elif cmd_name in ('highlow', 'hl'):
+            pts_cfg = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points must be enabled to play high/low.', channel); return
+            ucd = state.user_cd.setdefault('highlow', {})
+            now2 = time.time()
+            if now2 - ucd.get(nick, 0) < 10:
+                return
+            ucd[nick] = now2
+            if not state.highlow:
+                state.highlow = {'current': random.randint(1, 100)}
+            curr = state.highlow['current']
+            guess = query.strip().lower()
+            if guess not in ('h', 'l', 'high', 'low', 'higher', 'lower'):
+                self.send(f'🔢 Current number: {curr} | Guess: !hl high or !hl low', channel); return
+            nxt = random.randint(1, 100)
+            pts = _load_points(channel)
+            reward = 30
+            if guess in ('h', 'high', 'higher'):
+                won = nxt > curr
+            else:
+                won = nxt < curr
+            if nxt == curr:
+                self.send(f'🔢 Same number ({nxt})! No change. New number: {nxt}', channel)
+            elif won:
+                pts[nick] = pts.get(nick, 0) + reward
+                _save_points(channel, pts)
+                self.send(f'🔢 {display_name} got it! {curr} → {nxt}. +{reward} {pts_name}!', channel)
+            else:
+                pts[nick] = max(0, pts.get(nick, 0) - reward)
+                _save_points(channel, pts)
+                self.send(f'🔢 Wrong! {curr} → {nxt}. -{reward} {pts_name}.', channel)
+            state.highlow = {'current': nxt}
+
+        # ── Word Chain ────────────────────────────────────────────────────
+        elif cmd_name == 'wordchain':
+            parts_wc = query.strip().split(None, 1)
+            sub_wc = parts_wc[0].lower() if parts_wc else ''
+            if sub_wc == 'start' and _level_gte(user_level, 'moderator'):
+                seed = parts_wc[1].strip().lower() if len(parts_wc) > 1 else random.choice(['apple','banana','cat','dragon','eagle'])
+                state.wordchain = {'last_word': seed, 'last_nick': '', 'active': True, 'used': {seed}}
+                self.send(f'🔗 Word Chain started! Last word: "{seed}" — type a word starting with "{seed[-1].upper()}"!', channel)
+            elif sub_wc in ('stop', 'end') and _level_gte(user_level, 'moderator'):
+                state.wordchain = None
+                self.send('Word chain ended.', channel)
+            elif state.wordchain and state.wordchain.get('active'):
+                word = sub_wc.strip().lower()
+                wc = state.wordchain
+                if not word.isalpha():
+                    return
+                if word[0] != wc['last_word'][-1]:
+                    self.send(f'@{display_name}, your word must start with "{wc["last_word"][-1].upper()}"!', channel); return
+                if word in wc.get('used', set()):
+                    self.send(f'@{display_name}, "{word}" was already used!', channel); return
+                if wc.get('last_nick') == nick:
+                    self.send(f'@{display_name}, wait for someone else to go!', channel); return
+                wc['used'].add(word)
+                wc['last_word'] = word
+                wc['last_nick'] = nick
+                pts_cfg = cfg.get('points_config', {})
+                if pts_cfg.get('enabled'):
+                    pts = _load_points(channel)
+                    pts[nick] = pts.get(nick, 0) + 5
+                    _save_points(channel, pts)
+                self.send(f'🔗 {display_name}: "{word}" ✅ | Next: word starting with "{word[-1].upper()}"', channel)
+            else:
+                self.send('No word chain active. A mod can use !wordchain start [word].', channel)
+
+        # ── Type Race ─────────────────────────────────────────────────────
+        elif cmd_name == 'typerace':
+            parts_tr = query.strip().split(None, 1)
+            sub_tr = parts_tr[0].lower() if parts_tr else ''
+            _RACE_PHRASES = [
+                'the quick brown fox jumps over the lazy dog',
+                'streaming is life and chat is family',
+                'cubsoftware twitch bot is the best bot',
+                'press f to pay respects in chat right now',
+                'never gonna give you up never gonna let you down',
+                'one does not simply walk into mordor without snacks',
+            ]
+            if sub_tr == 'start' and _level_gte(user_level, 'moderator'):
+                if state.typerace and state.typerace.get('active'):
+                    self.send('A type race is already running!', channel); return
+                phrase = parts_tr[1].strip() if len(parts_tr) > 1 else random.choice(_RACE_PHRASES)
+                reward = int(cfg.get('points_config', {}).get('trivia_reward', 100))
+                state.typerace = {'text': phrase, 'active': True, 'expiry': time.time() + 60, 'reward': reward}
+                self.send(f'⌨️ TYPE RACE! First to type: "{phrase}" wins {reward} pts! 60s GO!', channel)
+            elif state.typerace and state.typerace.get('active'):
+                if query.strip().lower() == state.typerace['text'].lower():
+                    reward = state.typerace['reward']
+                    state.typerace = None
+                    pts_cfg = cfg.get('points_config', {})
+                    if pts_cfg.get('enabled'):
+                        pts = _load_points(channel)
+                        pts[nick] = pts.get(nick, 0) + reward
+                        _save_points(channel, pts)
+                    self.send(f'⌨️ @{display_name} wins the type race! +{reward} {pts_cfg.get("name","points")}! 🏆', channel)
+            elif sub_tr == 'stop' and _level_gte(user_level, 'moderator'):
+                state.typerace = None
+                self.send('Type race cancelled.', channel)
+            else:
+                self.send('No type race active. A mod can use !typerace start [text].', channel)
+
+        # ── Spin Wheel ────────────────────────────────────────────────────
+        elif cmd_name == 'wheel':
+            if _level_gte(user_level, 'moderator') and not state.wheel_spinning:
+                segments = cfg.get('wheel_segments', [
+                    {'label': '+100 points', 'type': 'points', 'value': 100},
+                    {'label': '+50 points',  'type': 'points', 'value': 50},
+                    {'label': 'Nothing',     'type': 'none',   'value': 0},
+                    {'label': 'Timeout 30s', 'type': 'timeout','value': 30},
+                    {'label': '+200 points', 'type': 'points', 'value': 200},
+                    {'label': 'VIP 1 hour',  'type': 'vip',    'value': 3600},
+                ])
+                if not segments:
+                    self.send('No wheel segments configured.', channel); return
+                target_nick = query.strip().lstrip('@').lower() if query.strip() else nick
+                target_display = query.strip().lstrip('@') if query.strip() else display_name
+                state.wheel_spinning = True
+                seg = random.choice(segments)
+                state.wheel_spinning = False
+                pts_cfg = cfg.get('points_config', {})
+                if seg['type'] == 'points' and pts_cfg.get('enabled'):
+                    pts = _load_points(channel)
+                    pts[target_nick] = pts.get(target_nick, 0) + int(seg['value'])
+                    _save_points(channel, pts)
+                elif seg['type'] == 'timeout':
+                    self.timeout(target_nick, channel, int(seg['value']), 'Wheel spin result')
+                self.send(f'🎡 @{target_display} spins the wheel... and lands on: {seg["label"]}!', channel)
+            else:
+                segs = cfg.get('wheel_segments', [])
+                self.send(f'🎡 Wheel has {len(segs)} segments. Mods: !wheel @user to spin.', channel)
+
+        # ── Lottery ───────────────────────────────────────────────────────
+        elif cmd_name == 'lottery':
+            pts_cfg = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points must be enabled for the lottery.', channel); return
+            parts_lot = query.strip().split()
+            sub_lot = parts_lot[0].lower() if parts_lot else ''
+            if sub_lot == 'start' and _level_gte(user_level, 'moderator'):
+                ticket_cost = int(parts_lot[1]) if len(parts_lot) > 1 and parts_lot[1].isdigit() else 50
+                state.lottery = {'active': True, 'tickets': {}, 'ticket_cost': ticket_cost, 'pot': 0}
+                self.send(f'🎟️ Lottery started! Buy a ticket for {ticket_cost} {pts_name} with !lottery buy. Mod draws with !lottodraw.', channel)
+            elif sub_lot == 'buy':
+                if not state.lottery or not state.lottery.get('active'):
+                    self.send('No lottery active.', channel); return
+                cost = state.lottery.get('ticket_cost', 50)
+                pts = _load_points(channel)
+                if pts.get(nick, 0) < cost:
+                    self.send(f'@{display_name}, you need {cost} {pts_name} for a ticket.', channel); return
+                if nick in state.lottery['tickets']:
+                    self.send(f'@{display_name}, you already have a ticket!', channel); return
+                pts[nick] -= cost
+                state.lottery['tickets'][nick] = {'display': display_name}
+                state.lottery['pot'] = state.lottery.get('pot', 0) + cost
+                _save_points(channel, pts)
+                n = len(state.lottery['tickets'])
+                self.send(f'🎟️ @{display_name} bought a lottery ticket! {n} total entries. Pot: {state.lottery["pot"]:,} {pts_name}', channel)
+            else:
+                if state.lottery and state.lottery.get('active'):
+                    self.send(f'🎟️ Lottery active! {len(state.lottery["tickets"])} tickets sold. Pot: {state.lottery.get("pot",0):,} {pts_name}. !lottery buy to enter.', channel)
+                else:
+                    self.send('No lottery active. Mods can !lottery start <ticket_cost>.', channel)
+
+        elif cmd_name == 'lottodraw' and _level_gte(user_level, 'moderator'):
+            if not state.lottery or not state.lottery.get('active'):
+                self.send('No lottery active.', channel); return
+            tickets = state.lottery.get('tickets', {})
+            if not tickets:
+                self.send('No tickets sold yet!', channel); return
+            winner_nick = random.choice(list(tickets.keys()))
+            winner_display = tickets[winner_nick]['display']
+            pot = state.lottery.get('pot', 0)
+            pts_cfg = cfg.get('points_config', {})
+            if pts_cfg.get('enabled') and pot:
+                pts = _load_points(channel)
+                pts[winner_nick] = pts.get(winner_nick, 0) + pot
+                _save_points(channel, pts)
+            state.lottery = None
+            self.send(f'🎟️ Lottery draw! The winner is @{winner_display}! They win {pot:,} {pts_cfg.get("name","points")}! 🎉', channel)
+
+        # ── Auction ───────────────────────────────────────────────────────
+        elif cmd_name == 'auction':
+            parts_au = query.strip().split(None, 1)
+            sub_au = parts_au[0].lower() if parts_au else ''
+            pts_cfg = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if sub_au == 'start' and _level_gte(user_level, 'moderator'):
+                item = parts_au[1].strip() if len(parts_au) > 1 else 'Mystery Prize'
+                state.auction = {'item': item, 'high_bid': 0, 'high_bidder': '', 'high_display': '', 'active': True, 'expiry': time.time() + 120}
+                self.send(f'💰 Auction started for: {item}! Use !bid <amount> to bid. 2 minutes!', channel)
+            elif sub_au == 'end' and _level_gte(user_level, 'moderator'):
+                au = state.auction
+                if not au or not au.get('active'):
+                    self.send('No active auction.', channel); return
+                state.auction['active'] = False
+                if au.get('high_bidder'):
+                    pts = _load_points(channel)
+                    pts[au['high_bidder']] = max(0, pts.get(au['high_bidder'], 0) - au['high_bid'])
+                    _save_points(channel, pts)
+                    self.send(f'💰 Auction ended! @{au["high_display"]} wins "{au["item"]}" for {au["high_bid"]:,} {pts_name}! 🎉', channel)
+                else:
+                    self.send(f'💰 Auction for "{au["item"]}" ended with no bids.', channel)
+                state.auction = None
+            else:
+                au = state.auction
+                if au and au.get('active'):
+                    self.send(f'💰 Auction: {au["item"]} | High bid: {au["high_bid"]:,} {pts_name} by {au.get("high_display","—")} | !bid <amount>', channel)
+                else:
+                    self.send('No auction active. Mods: !auction start <item>', channel)
+
+        elif cmd_name == 'bid':
+            au = state.auction
+            if not au or not au.get('active'):
+                self.send('No auction active.', channel); return
+            pts_cfg = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            try: amount = int(query.strip())
+            except: self.send('Usage: !bid <amount>', channel); return
+            if amount <= au.get('high_bid', 0):
+                self.send(f'@{display_name}, current bid is {au["high_bid"]:,} {pts_name}. Bid higher!', channel); return
+            pts = _load_points(channel)
+            if pts.get(nick, 0) < amount:
+                self.send(f'@{display_name}, not enough {pts_name}.', channel); return
+            au['high_bid'] = amount
+            au['high_bidder'] = nick
+            au['high_display'] = display_name
+            self.send(f'💰 @{display_name} bids {amount:,} {pts_name} for "{au["item"]}"!', channel)
+
+        # ── Coin Rain ─────────────────────────────────────────────────────
+        elif cmd_name == 'coinrain' and _level_gte(user_level, 'moderator'):
+            pts_cfg = cfg.get('points_config', {})
+            if not pts_cfg.get('enabled'):
+                self.send('Points must be enabled for coin rain.', channel); return
+            try: cr_amount = int(query.strip()) if query.strip() else 50
+            except: cr_amount = 50
+            state.coinrain = {'amount': cr_amount, 'active': True, 'expiry': time.time() + 30}
+            self.send(f'🪙 COIN RAIN! First chatter to type !grab wins {cr_amount:,} {pts_cfg.get("name","points")}! (30s!)', channel)
+
+        elif cmd_name == 'grab':
+            if not state.coinrain or not state.coinrain.get('active'):
+                return
+            reward = state.coinrain.get('amount', 50)
+            state.coinrain = None
+            pts_cfg = cfg.get('points_config', {})
+            if pts_cfg.get('enabled'):
+                pts = _load_points(channel)
+                pts[nick] = pts.get(nick, 0) + reward
+                _save_points(channel, pts)
+            self.send(f'🪙 @{display_name} grabbed the coin rain! +{reward} {pts_cfg.get("name","points")}! 💰', channel)
+
+        # ── Bounty ────────────────────────────────────────────────────────
+        elif cmd_name == 'bounty':
+            pts_cfg = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points must be enabled for bounties.', channel); return
+            parts_bn = query.strip().split()
+            if len(parts_bn) < 2:
+                active = ' | '.join(f'{t}: {a:,}' for t, a in list(state.bounties.items())[:5])
+                self.send(f'💀 Active bounties: {active}' if state.bounties else '💀 No active bounties. Mods: !bounty @user <amount>', channel); return
+            if not _level_gte(user_level, 'moderator'):
+                self.send('Only mods can set bounties.', channel); return
+            target_bn = parts_bn[0].lstrip('@').lower()
+            try: amount_bn = int(parts_bn[1])
+            except: self.send('Usage: !bounty @user <amount>', channel); return
+            state.bounties[target_bn] = state.bounties.get(target_bn, 0) + amount_bn
+            self.send(f'💀 Bounty on {target_bn}: {state.bounties[target_bn]:,} {pts_name}! First to rob them successfully collects it!', channel)
+
+        # ── First Chatter ─────────────────────────────────────────────────
+        # (handled automatically in PRIVMSG, but command to check)
+
+        # ── Watchstreak ───────────────────────────────────────────────────
+        elif cmd_name == 'watchstreak':
+            target_ws = query.strip().lstrip('@').lower() if query.strip() else nick
+            label_ws = query.strip().lstrip('@') if query.strip() else display_name
+            ws_data = _load_watchstreak(channel)
+            entry_ws = ws_data.get(target_ws, {})
+            streak = entry_ws.get('streak', 0)
+            self.send(f'🔥 @{label_ws} — Watch Streak: {streak} stream{"s" if streak != 1 else ""}!', channel)
+
+        # ── Suggestion Box ────────────────────────────────────────────────
+        elif cmd_name == 'suggest':
+            text_sg = query.strip()
+            if not text_sg:
+                self.send('Usage: !suggest <your suggestion>', channel); return
+            suggs = _load_suggestions(channel)
+            suggs.append({'text': text_sg, 'user': display_name, 'nick': nick, 'ts': int(time.time()), 'status': 'pending'})
+            _save_suggestions(channel, suggs)
+            self.send(f'💡 @{display_name}, your suggestion has been submitted! (#{len(suggs)})', channel)
+
+        elif cmd_name == 'suggestions' and _level_gte(user_level, 'moderator'):
+            suggs = _load_suggestions(channel)
+            pending = [s for s in suggs if s.get('status') == 'pending']
+            if not pending:
+                self.send('No pending suggestions.', channel); return
+            parts_list = [f'#{i+1}: {s["text"]} ({s["user"]})' for i, s in enumerate(pending[:3])]
+            self.send(f'💡 Pending ({len(pending)}): ' + ' | '.join(parts_list), channel)
+
+        elif cmd_name == 'approve' and _level_gte(user_level, 'moderator'):
+            try: idx_ap = int(query.strip()) - 1
+            except: self.send('Usage: !approve <number>', channel); return
+            suggs = _load_suggestions(channel)
+            pending = [s for s in suggs if s.get('status') == 'pending']
+            if 0 <= idx_ap < len(pending):
+                pending[idx_ap]['status'] = 'approved'
+                _save_suggestions(channel, suggs)
+                self.send(f'✅ Suggestion approved: "{pending[idx_ap]["text"]}"', channel)
+
+        elif cmd_name == 'deny' and _level_gte(user_level, 'moderator'):
+            try: idx_dn = int(query.strip()) - 1
+            except: self.send('Usage: !deny <number>', channel); return
+            suggs = _load_suggestions(channel)
+            pending = [s for s in suggs if s.get('status') == 'pending']
+            if 0 <= idx_dn < len(pending):
+                pending[idx_dn]['status'] = 'denied'
+                _save_suggestions(channel, suggs)
+                self.send(f'❌ Suggestion denied: "{pending[idx_dn]["text"]}"', channel)
+
+        # ── Spotlight ─────────────────────────────────────────────────────
+        elif cmd_name == 'spotlight' and _level_gte(user_level, 'moderator'):
+            target_sp = query.strip().lstrip('@') if query.strip() else ''
+            if not target_sp:
+                self.send('Usage: !spotlight @user', channel); return
+            spotlight_msg = cfg.get('spotlight_message', '🌟 Shoutout to @$(user) — go say hi!')
+            self.send(spotlight_msg.replace('$(user)', target_sp), channel)
+
+        # ── Birthday ──────────────────────────────────────────────────────
+        elif cmd_name == 'birthday':
+            bday_str = query.strip()
+            if bday_str:
+                if not re.match(r'^\d{1,2}/\d{1,2}$', bday_str):
+                    self.send('Usage: !birthday MM/DD', channel); return
+                bdays = _load_birthdays(channel)
+                bdays[nick] = bday_str
+                _save_birthdays(channel, bdays)
+                self.send(f'🎂 @{display_name}, birthday saved as {bday_str}!', channel)
+            else:
+                bdays = _load_birthdays(channel)
+                val = bdays.get(nick)
+                self.send(f'🎂 @{display_name}, your birthday: {val}' if val else f'@{display_name}, no birthday set. Use !birthday MM/DD', channel)
+
+        elif cmd_name == 'birthdays' and _level_gte(user_level, 'moderator'):
+            bdays = _load_birthdays(channel)
+            today = datetime.datetime.now().strftime('%-m/%-d') if os.name != 'nt' else datetime.datetime.now().strftime('%m/%d').lstrip('0').replace('/0','/')
+            today_bdays = [n for n, d in bdays.items() if d == today]
+            if today_bdays:
+                self.send(f'🎂 Birthdays today: {", ".join(today_bdays[:10])} 🎉', channel)
+            else:
+                self.send(f'🎂 No birthdays today. {len(bdays)} registered.', channel)
+
+        # ── Hype Meter ────────────────────────────────────────────────────
+        elif cmd_name == 'hype':
+            state.hype_count += 1
+            thresh = int(cfg.get('hype_threshold', 20))
+            if state.hype_count >= thresh:
+                now_h = time.time()
+                if now_h - state.hype_last_announce > 30:
+                    state.hype_last_announce = now_h
+                    state.hype_count = 0
+                    self.send(f'🔥🔥🔥 HYPE METER FULL! Chat is going crazy right now! 🔥🔥🔥', channel)
+                    self._patch_overlay_scene(channel, {'background_effect': 'confetti'})
+
+        # ── Schedule ──────────────────────────────────────────────────────
+        elif cmd_name == 'schedule':
+            sched = cfg.get('stream_schedule', '')
+            self.send(sched if sched else f'📅 No schedule set. Check twitch.tv/{channel} for updates!', channel)
+
+        # ── Socials ───────────────────────────────────────────────────────
+        elif cmd_name == 'socials':
+            socials_cfg = cfg.get('socials', {})
+            if not socials_cfg:
+                self.send(f'No social links configured. Find {channel} on your favourite platforms!', channel); return
+            parts_s = []
+            for platform, url in socials_cfg.items():
+                if url: parts_s.append(f'{platform}: {url}')
+            self.send(' | '.join(parts_s) if parts_s else 'No social links set.', channel)
+
+        # ── Stream Notes ──────────────────────────────────────────────────
+        elif cmd_name == 'streamnote' and _level_gte(user_level, 'moderator'):
+            note_text = query.strip()
+            if not note_text:
+                self.send('Usage: !streamnote <text>', channel); return
+            notes_data = _load_stream_notes(channel)
+            info_sn = state.stream_info or {}
+            notes_data.append({'text': note_text, 'ts': int(time.time()), 'uptime': info_sn.get('uptime', '?'), 'by': nick})
+            _save_stream_notes(channel, notes_data)
+            self.send(f'📝 Stream note #{len(notes_data)} saved: {note_text}', channel)
+
+        elif cmd_name == 'streamnotes' and _level_gte(user_level, 'moderator'):
+            notes_data = _load_stream_notes(channel)
+            if not notes_data:
+                self.send('No stream notes yet. Use !streamnote <text>.', channel); return
+            recent = notes_data[-3:]
+            parts_sn = [f'[{n["uptime"]}] {n["text"]}' for n in recent]
+            self.send(f'📝 Notes ({len(notes_data)} total): ' + ' | '.join(parts_sn), channel)
+
+        # ── Raid Queue ────────────────────────────────────────────────────
+        elif cmd_name == 'raidqueue' and _level_gte(user_level, 'moderator'):
+            parts_rq = query.strip().split(None, 1)
+            sub_rq = parts_rq[0].lower() if parts_rq else ''
+            if sub_rq == 'add':
+                target_rq = parts_rq[1].strip().lstrip('@').lower() if len(parts_rq) > 1 else ''
+                if not target_rq:
+                    self.send('Usage: !raidqueue add @channel', channel); return
+                state.raid_queue.append(target_rq)
+                self.send(f'🚨 {target_rq} added to raid queue ({len(state.raid_queue)} queued).', channel)
+            elif sub_rq == 'next':
+                if not state.raid_queue:
+                    self.send('Raid queue is empty.', channel); return
+                next_raid = state.raid_queue.pop(0)
+                self._raw(f'PRIVMSG #{channel} :/raid {next_raid}')
+                self.send(f'🚨 Raiding {next_raid}! ({len(state.raid_queue)} remaining in queue)', channel)
+            elif sub_rq == 'clear':
+                state.raid_queue = []
+                self.send('Raid queue cleared.', channel)
+            else:
+                if state.raid_queue:
+                    self.send(f'🚨 Raid queue ({len(state.raid_queue)}): {", ".join(state.raid_queue[:5])}', channel)
+                else:
+                    self.send('Raid queue is empty.', channel)
+
+        # ── Sub Goal ──────────────────────────────────────────────────────
+        elif cmd_name == 'subgoal':
+            parts_sg2 = query.strip().split(None, 2)
+            sub_sg = parts_sg2[0].lower() if parts_sg2 else ''
+            if sub_sg == 'set' and _level_gte(user_level, 'moderator'):
+                try: target_sg = int(parts_sg2[1])
+                except: self.send('Usage: !subgoal set <number> [message]', channel); return
+                msg_sg = parts_sg2[2] if len(parts_sg2) > 2 else f'Let\'s hit {target_sg} subs!'
+                state.subgoal = {'target': target_sg, 'message': msg_sg}
+                self.send(f'🎯 Sub goal set: {target_sg} subs — {msg_sg}', channel)
+            elif sub_sg == 'clear' and _level_gte(user_level, 'moderator'):
+                state.subgoal = None
+                self.send('Sub goal cleared.', channel)
+            else:
+                if state.subgoal:
+                    info_s = self._get_stream_info(channel, state)
+                    current_subs = '?'
+                    self.send(f'🎯 Sub goal: {current_subs}/{state.subgoal["target"]} subs | {state.subgoal["message"]}', channel)
+                else:
+                    self.send('No sub goal set. Mods: !subgoal set <number> [message]', channel)
+
+        # ── Bits Goal ─────────────────────────────────────────────────────
+        elif cmd_name == 'bitsgoal':
+            parts_bg = query.strip().split(None, 2)
+            sub_bg = parts_bg[0].lower() if parts_bg else ''
+            if sub_bg == 'set' and _level_gte(user_level, 'moderator'):
+                try: target_bg = int(parts_bg[1])
+                except: self.send('Usage: !bitsgoal set <amount> [message]', channel); return
+                msg_bg = parts_bg[2] if len(parts_bg) > 2 else f'Cheer {target_bg} bits!'
+                state.bitsgoal = {'target': target_bg, 'current': 0, 'message': msg_bg}
+                self.send(f'✨ Bits goal set: {target_bg} bits — {msg_bg}', channel)
+            elif sub_bg == 'clear' and _level_gte(user_level, 'moderator'):
+                state.bitsgoal = None
+                self.send('Bits goal cleared.', channel)
+            else:
+                if state.bitsgoal:
+                    bg = state.bitsgoal
+                    pct_bg = int(bg['current'] / bg['target'] * 100) if bg['target'] else 0
+                    bar_bg = '█' * (pct_bg // 10) + '░' * (10 - pct_bg // 10)
+                    self.send(f'✨ Bits goal: [{bar_bg}] {bg["current"]:,}/{bg["target"]:,} ({pct_bg}%) — {bg["message"]}', channel)
+                else:
+                    self.send('No bits goal set. Mods: !bitsgoal set <amount> [message]', channel)
+
+        # ── Clip Last ─────────────────────────────────────────────────────
+        elif cmd_name == 'cliplast':
+            clips = _load_clips_log(channel)
+            if not clips:
+                self.send('No clips logged yet.', channel); return
+            last_clip = clips[-1]
+            url = last_clip.get('url', last_clip.get('edit_url', '?'))
+            ts_c = datetime.datetime.fromtimestamp(last_clip.get('ts', 0)).strftime('%H:%M') if last_clip.get('ts') else '?'
+            self.send(f'🎬 Last clip at {ts_c}: {url}', channel)
+
+        # ── Command Stats ─────────────────────────────────────────────────
+        elif cmd_name == 'cmdstats' and _level_gte(user_level, 'moderator'):
+            cmds = cfg.get('commands', {})
+            top_cmds = sorted(cmds.items(), key=lambda x: x[1].get('count', 0), reverse=True)[:5]
+            if not top_cmds:
+                self.send('No command usage data yet.', channel); return
+            parts_cs = ' | '.join(f'!{n}: {c.get("count",0)}' for n, c in top_cmds)
+            self.send(f'📊 Top commands: {parts_cs}', channel)
+
+        # ── Ban Reason ────────────────────────────────────────────────────
+        elif cmd_name == 'banreason' and _level_gte(user_level, 'moderator'):
+            parts_br = query.strip().split(None, 1)
+            if not parts_br:
+                self.send('Usage: !banreason @user <reason>', channel); return
+            target_br = parts_br[0].lstrip('@').lower()
+            reason_br = parts_br[1].strip() if len(parts_br) > 1 else 'No reason given'
+            ban_log = _load_ban_reasons(channel)
+            ban_log.setdefault(target_br, []).append({'reason': reason_br, 'by': nick, 'ts': int(time.time())})
+            _save_ban_reasons(channel, ban_log)
+            self.send(f'📋 Ban reason logged for {target_br}: {reason_br}', channel)
+
+        # ── Bank ──────────────────────────────────────────────────────────
+        elif cmd_name == 'bank':
+            pts_cfg = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            bank = _load_bank(channel)
+            entry_bk = bank.get(nick, {'deposited': 0, 'interest_ts': int(time.time())})
+            deposited = entry_bk.get('deposited', 0)
+            pts = _load_points(channel)
+            wallet = pts.get(nick, 0)
+            self.send(f'🏦 @{display_name} — Wallet: {wallet:,} | Bank: {deposited:,} {pts_name} (earns 2% interest/hr)', channel)
+
+        elif cmd_name == 'deposit':
+            pts_cfg = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points must be enabled.', channel); return
+            try: amount_dep = int(query.strip())
+            except: self.send('Usage: !deposit <amount>', channel); return
+            pts = _load_points(channel)
+            if pts.get(nick, 0) < amount_dep or amount_dep <= 0:
+                self.send(f'@{display_name}, invalid amount.', channel); return
+            pts[nick] -= amount_dep
+            _save_points(channel, pts)
+            bank = _load_bank(channel)
+            entry_dep = bank.get(nick, {'deposited': 0, 'interest_ts': int(time.time())})
+            entry_dep['deposited'] = entry_dep.get('deposited', 0) + amount_dep
+            entry_dep.setdefault('interest_ts', int(time.time()))
+            bank[nick] = entry_dep
+            _save_bank(channel, bank)
+            self.send(f'🏦 @{display_name} deposited {amount_dep:,} {pts_name}. Bank balance: {entry_dep["deposited"]:,}', channel)
+
+        elif cmd_name == 'withdraw':
+            pts_cfg = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points must be enabled.', channel); return
+            bank = _load_bank(channel)
+            entry_wd = bank.get(nick, {'deposited': 0})
+            try: amount_wd = int(query.strip())
+            except: self.send('Usage: !withdraw <amount>', channel); return
+            if entry_wd.get('deposited', 0) < amount_wd or amount_wd <= 0:
+                self.send(f'@{display_name}, bank balance: {entry_wd.get("deposited",0):,} {pts_name}.', channel); return
+            entry_wd['deposited'] -= amount_wd
+            bank[nick] = entry_wd
+            _save_bank(channel, bank)
+            pts = _load_points(channel)
+            pts[nick] = pts.get(nick, 0) + amount_wd
+            _save_points(channel, pts)
+            self.send(f'🏦 @{display_name} withdrew {amount_wd:,} {pts_name}. Wallet: {pts[nick]:,}', channel)
+
+        # ── Prestige ──────────────────────────────────────────────────────
+        elif cmd_name == 'prestige':
+            pts_cfg = cfg.get('points_config', {})
+            pts_name = pts_cfg.get('name', 'points')
+            if not pts_cfg.get('enabled'):
+                self.send('Points must be enabled for prestige.', channel); return
+            prestige_cost = int(cfg.get('prestige_cost', 50000))
+            pts = _load_points(channel)
+            if pts.get(nick, 0) < prestige_cost:
+                self.send(f'@{display_name}, prestige costs {prestige_cost:,} {pts_name}. You have {pts.get(nick,0):,}.', channel); return
+            prestige_data = _load_prestige(channel)
+            current_level = prestige_data.get(nick, {}).get('level', 0)
+            new_level = current_level + 1
+            pts[nick] = 0
+            _save_points(channel, pts)
+            prestige_data[nick] = {'level': new_level, 'ts': int(time.time())}
+            _save_prestige(channel, prestige_data)
+            self.send(f'✨ @{display_name} prestiged! Reached Prestige {new_level} ⭐ (points reset to 0)', channel)
+
+        # ── Teams ─────────────────────────────────────────────────────────
+        elif cmd_name == 'team':
+            parts_t = query.strip().split(None, 1)
+            sub_t = parts_t[0].lower() if parts_t else ''
+            arg_t = parts_t[1].strip() if len(parts_t) > 1 else ''
+            teams = _load_teams(channel)
+            if sub_t == 'create' and _level_gte(user_level, 'moderator'):
+                tname = arg_t.lower().replace(' ', '_')
+                if not tname:
+                    self.send('Usage: !team create <name>', channel); return
+                if tname in teams:
+                    self.send(f'Team "{tname}" already exists.', channel); return
+                teams[tname] = {'members': [], 'points': 0}
+                _save_teams(channel, teams)
+                self.send(f'👥 Team "{tname}" created! Use !team join {tname} to join.', channel)
+            elif sub_t == 'join':
+                tname = arg_t.lower().replace(' ', '_')
+                if tname not in teams:
+                    self.send(f'Team "{tname}" not found.', channel); return
+                for t in teams.values():
+                    if nick in t.get('members', []):
+                        t['members'].remove(nick)
+                teams[tname]['members'].append(nick)
+                _save_teams(channel, teams)
+                self.send(f'👥 @{display_name} joined team {tname}!', channel)
+            elif sub_t == 'points':
+                if not teams:
+                    self.send('No teams created yet.', channel); return
+                pts = _load_points(channel)
+                team_scores = {}
+                for tname, tdata in teams.items():
+                    team_scores[tname] = sum(pts.get(m, 0) for m in tdata.get('members', []))
+                top_t = sorted(team_scores.items(), key=lambda x: x[1], reverse=True)[:5]
+                self.send(f'👥 Team standings: ' + ' | '.join(f'{t}: {s:,}' for t, s in top_t), channel)
+            elif sub_t == 'list':
+                if not teams:
+                    self.send('No teams. Mods: !team create <name>', channel); return
+                _key_members = 'members'
+                self.send(f'👥 Teams: {", ".join(f"{t} ({len(d.get(_key_members, []))})" for t, d in list(teams.items())[:5])}', channel)
+            else:
+                self.send('Usage: !team create|join|points|list', channel)
+
+        # ── Last Seen ─────────────────────────────────────────────────────
+        elif cmd_name == 'lastseen':
+            target_ls = query.strip().lstrip('@').lower() if query.strip() else ''
+            if not target_ls:
+                self.send('Usage: !lastseen @user', channel); return
+            log = state.chat_log
+            matches = [m for m in reversed(log) if m['nick'].lower() == target_ls or m.get('user_id', '') == target_ls]
+            if matches:
+                last_ts = matches[0]['ts']
+                ago = int(time.time()) - last_ts
+                if ago < 60: ago_str = f'{ago}s ago'
+                elif ago < 3600: ago_str = f'{ago//60}m ago'
+                else: ago_str = f'{ago//3600}h {(ago%3600)//60}m ago'
+                self.send(f'👁 @{target_ls} was last seen {ago_str} in chat.', channel)
+            else:
+                self.send(f'@{target_ls} has not been seen in recent chat history.', channel)
+
+        # ── TTS Queue ─────────────────────────────────────────────────────
+        elif cmd_name == 'tts':
+            tts_cfg = cfg.get('tts_config', {'enabled': False, 'min_level': 'subscriber', 'max_length': 150})
+            if not tts_cfg.get('enabled', False):
+                self.send('TTS is not enabled on this channel.', channel); return
+            required_level = tts_cfg.get('min_level', 'subscriber')
+            if not _level_gte(user_level, required_level):
+                self.send(f'@{display_name}, TTS requires {required_level} or higher.', channel); return
+            msg_tts = query.strip()[:int(tts_cfg.get('max_length', 150))]
+            if not msg_tts:
+                self.send('Usage: !tts <message>', channel); return
+            state.tts_queue.append({'user': display_name, 'text': msg_tts, 'ts': int(time.time())})
+            if len(state.tts_queue) > 20:
+                state.tts_queue = state.tts_queue[-20:]
+            self.send(f'🔊 TTS queued from @{display_name}', channel)
+
+        # ── Alert Trigger ─────────────────────────────────────────────────
+        elif cmd_name == 'alert' and _level_gte(user_level, 'moderator'):
+            alert_type = query.strip().lower() or 'hype'
+            self._notify_event(channel, 'custom_alert', {'type': alert_type, 'user': display_name}, cfg)
+            self._patch_overlay_scene(channel, {'alert_type': alert_type})
+            self.send(f'🔔 Alert "{alert_type}" triggered!', channel)
+
+        # ── Emote Count ───────────────────────────────────────────────────
+        elif cmd_name == 'emotecount':
+            emote_q = query.strip()
+            if emote_q:
+                count_ec = state.emote_counts.get(emote_q, 0)
+                self.send(f'📊 "{emote_q}" used {count_ec:,} times this stream.', channel)
+            else:
+                if not state.emote_counts:
+                    self.send('No emote data this stream yet.', channel); return
+                top_ec = sorted(state.emote_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+                self.send(f'📊 Top emotes: ' + ' | '.join(f'{e}: {c}' for e, c in top_ec), channel)
+
+        # ── Chat Alert ────────────────────────────────────────────────────
+        elif cmd_name == 'chatalert' and _level_gte(user_level, 'moderator'):
+            parts_ca = query.strip().split(None, 1)
+            sub_ca = parts_ca[0].lower() if parts_ca else ''
+            if sub_ca == 'add':
+                kw = parts_ca[1].strip().lower() if len(parts_ca) > 1 else ''
+                if not kw:
+                    self.send('Usage: !chatalert add <keyword>', channel); return
+                alerts_cfg = cfg.setdefault('chat_keyword_alerts', [])
+                if kw not in alerts_cfg:
+                    alerts_cfg.append(kw)
+                    save_channel_config(channel, cfg)
+                self.send(f'🔔 Chat alert added for keyword: "{kw}"', channel)
+            elif sub_ca == 'remove':
+                kw = parts_ca[1].strip().lower() if len(parts_ca) > 1 else ''
+                alerts_cfg = cfg.get('chat_keyword_alerts', [])
+                if kw in alerts_cfg:
+                    alerts_cfg.remove(kw)
+                    save_channel_config(channel, cfg)
+                self.send(f'🔔 Chat alert removed: "{kw}"', channel)
+            elif sub_ca == 'list':
+                alerts_cfg = cfg.get('chat_keyword_alerts', [])
+                self.send(f'🔔 Keyword alerts: {", ".join(alerts_cfg) or "none"}', channel)
+            else:
+                self.send('Usage: !chatalert add|remove|list <keyword>', channel)
+
+        # ── Raid Shield ───────────────────────────────────────────────────
+        elif cmd_name == 'raidshield' and _level_gte(user_level, 'moderator'):
+            sub_rs = query.strip().lower()
+            if sub_rs in ('on', 'enable'):
+                cfg['raid_shield'] = {'enabled': True, 'slow_secs': 30, 'follower_mins': 10}
+                save_channel_config(channel, cfg)
+                self.send('🛡 Raid shield enabled — auto slow mode + follower-only on raid.', channel)
+            elif sub_rs in ('off', 'disable'):
+                cfg['raid_shield'] = {'enabled': False}
+                save_channel_config(channel, cfg)
+                self.send('🛡 Raid shield disabled.', channel)
+            else:
+                enabled = cfg.get('raid_shield', {}).get('enabled', False)
+                self.send(f'🛡 Raid shield is {"ON" if enabled else "OFF"}. !raidshield on/off', channel)
+
+        # ── Autoban Patterns ──────────────────────────────────────────────
+        elif cmd_name == 'autoban' and _level_gte(user_level, 'moderator'):
+            parts_ab = query.strip().split(None, 1)
+            sub_ab = parts_ab[0].lower() if parts_ab else ''
+            arg_ab = parts_ab[1].strip() if len(parts_ab) > 1 else ''
+            patterns = _load_autoban_patterns(channel)
+            if sub_ab == 'add':
+                if not arg_ab:
+                    self.send('Usage: !autoban add <pattern>', channel); return
+                try: re.compile(arg_ab)
+                except re.error:
+                    self.send('Invalid regex pattern.', channel); return
+                if arg_ab not in patterns:
+                    patterns.append(arg_ab)
+                    _save_autoban_patterns(channel, patterns)
+                self.send(f'🚫 Autoban pattern added: {arg_ab}', channel)
+            elif sub_ab == 'remove':
+                if arg_ab in patterns:
+                    patterns.remove(arg_ab)
+                    _save_autoban_patterns(channel, patterns)
+                self.send(f'🚫 Autoban pattern removed.', channel)
+            elif sub_ab == 'list':
+                self.send(f'🚫 Autoban patterns ({len(patterns)}): {", ".join(patterns[:10]) or "none"}', channel)
+            else:
+                self.send('Usage: !autoban add|remove|list <pattern>', channel)
+
+        # ── Shadow Warn ───────────────────────────────────────────────────
+        elif cmd_name == 'shadowwarn' and _level_gte(user_level, 'moderator'):
+            parts_sw = query.split(None, 1)
+            if not parts_sw:
+                self.send('Usage: !shadowwarn @user [reason]', channel); return
+            target_sw = parts_sw[0].lstrip('@').lower()
+            reason_sw = parts_sw[1].strip() if len(parts_sw) > 1 else 'No reason'
+            warns_sw = _load_warnings(channel)
+            warns_sw.setdefault(target_sw, []).append({'reason': reason_sw, 'by': nick, 'ts': int(time.time()), 'silent': True})
+            _save_warnings(channel, warns_sw)
+            count_sw = len(warns_sw[target_sw])
+            # Only the mod sees this message, sent directly (no public announce)
+            self.send(f'/w {nick} [Shadow] {target_sw} silently warned ({count_sw} total): {reason_sw}', channel)
+
+        # ── Chat Export ───────────────────────────────────────────────────
+        elif cmd_name == 'chatexport' and _level_gte(user_level, 'moderator'):
+            log = state.chat_log[-50:]
+            lines = [f'[{datetime.datetime.fromtimestamp(m["ts"]).strftime("%H:%M:%S")}] {m["nick"]}: {m["text"]}' for m in log]
+            self.send(f'📋 Last {len(lines)} messages exported to dashboard (Settings > Chat Export).', channel)
+
+        # ── Temp Role ─────────────────────────────────────────────────────
+        elif cmd_name == 'temprole' and _level_gte(user_level, 'moderator'):
+            parts_tmp = query.strip().split()
+            if len(parts_tmp) < 2:
+                self.send('Usage: !temprole @user <duration_seconds>', channel); return
+            target_tmp = parts_tmp[0].lstrip('@').lower()
+            try: dur_tmp = int(parts_tmp[1])
+            except: self.send('Usage: !temprole @user <seconds>', channel); return
+            self._raw(f'PRIVMSG #{channel} :/vip {target_tmp}')
+            state.timed_bans[target_tmp] = {'expiry': time.time() + dur_tmp, 'action': 'unvip'}
+            self.send(f'✅ @{target_tmp} granted VIP for {dur_tmp}s.', channel)
+
+        # ── Multi-winner Giveaway ─────────────────────────────────────────
+        elif cmd_name == 'multiwin' and _level_gte(user_level, 'moderator'):
+            parts_mw = query.strip().split()
+            if not parts_mw or not parts_mw[0].isdigit():
+                self.send('Usage: !multiwin <count> (draws N winners from current giveaway)', channel); return
+            n_winners = min(int(parts_mw[0]), 20)
+            entries = (state.giveaway or {}).get('entries', [])
+            if not entries:
+                self.send('No giveaway entries.', channel); return
+            pool = list(entries)
+            random.shuffle(pool)
+            winners = pool[:n_winners]
+            names = ', '.join(f'@{w["nick"]}' for w in winners)
+            self.send(f'🎊 {n_winners} winners drawn: {names} 🎉', channel)
+
     # ── Timers ────────────────────────────────────────────────────────────
 
     def _timer_loop(self):
@@ -3506,8 +5896,95 @@ class CubBot:
                                 state.stream_stats['peak_viewers'] = vc
                         state.stream_was_live = True
                     elif state.stream_was_live:
-                        # Stream just ended - auto recap if configured
+                        # Stream just ended - reset first chatter flag
                         state.stream_was_live = False
+                        state.first_chatter_done = False
+                except Exception:
+                    pass
+
+                # Bank interest (every hour, 2% of deposited balance)
+                if now - state.timer_last.get('__bank_interest__', 0) >= 3600:
+                    state.timer_last['__bank_interest__'] = now
+                    try:
+                        bank = _load_bank(channel)
+                        if bank:
+                            pts = _load_points(channel)
+                            for bnick, bdata in bank.items():
+                                dep = bdata.get('deposited', 0)
+                                if dep > 0:
+                                    interest = max(1, int(dep * 0.02))
+                                    bdata['deposited'] = dep + interest
+                            _save_bank(channel, bank)
+                    except Exception:
+                        pass
+
+                # Auction expiry
+                if state.auction and state.auction.get('active') and now > state.auction.get('expiry', 0):
+                    au = state.auction
+                    pts_cfg2 = cfg.get('points_config', {})
+                    if au.get('high_bidder'):
+                        pts2 = _load_points(channel)
+                        pts2[au['high_bidder']] = max(0, pts2.get(au['high_bidder'], 0) - au['high_bid'])
+                        _save_points(channel, pts2)
+                        self.send(f'💰 Auction closed! @{au["high_display"]} wins "{au["item"]}" for {au["high_bid"]:,} {pts_cfg2.get("name","points")}!', channel)
+                    else:
+                        self.send(f'💰 Auction for "{au["item"]}" ended with no bids.', channel)
+                    state.auction = None
+
+                # Coin rain expiry
+                if state.coinrain and state.coinrain.get('active') and now > state.coinrain.get('expiry', 0):
+                    state.coinrain = None
+                    self.send('🪙 Coin rain expired! Nobody grabbed it in time.', channel)
+
+                # Type race expiry
+                if state.typerace and state.typerace.get('active') and now > state.typerace.get('expiry', 0):
+                    phrase = state.typerace.get('text', '')
+                    state.typerace = None
+                    self.send(f'⌨️ Type race over! No one typed the phrase in time.', channel)
+
+                # Birthday check (once per hour)
+                if now - state.timer_last.get('__bday_check__', 0) >= 3600:
+                    state.timer_last['__bday_check__'] = now
+                    try:
+                        bdays = _load_birthdays(channel)
+                        today_str = datetime.datetime.now().strftime('%m/%d').lstrip('0').replace('/0', '/')
+                        celebrants = [n for n, d in bdays.items() if d == today_str]
+                        if celebrants and not state.timer_last.get('__bday_announced__', 0) == datetime.datetime.now().day:
+                            state.timer_last['__bday_announced__'] = datetime.datetime.now().day
+                            self.send(f'🎂 Happy Birthday to: {", ".join(celebrants[:5])}! 🎉', channel)
+                    except Exception:
+                        pass
+
+                # Timed unvip
+                for target_tv, tv_data in list(state.timed_bans.items()):
+                    if now > tv_data.get('expiry', 0):
+                        action_tv = tv_data.get('action', '')
+                        if action_tv == 'unvip':
+                            self._raw(f'PRIVMSG #{channel} :/unvip {target_tv}')
+                        del state.timed_bans[target_tv]
+
+                # Chat milestone announcements
+                try:
+                    total_msgs = (state.stream_stats or {}).get('chat_messages_total', 0)
+                    milestones_chat = [100, 500, 1000, 5000, 10000]
+                    announced_chat = state.timer_last.get('__chat_milestones__', [])
+                    if not isinstance(announced_chat, list): announced_chat = []
+                    for ms in milestones_chat:
+                        if total_msgs >= ms and ms not in announced_chat:
+                            announced_chat.append(ms)
+                            state.timer_last['__chat_milestones__'] = announced_chat
+                            self.send(f'🎉 {ms:,} messages in chat this stream! You all are amazing! 💬', channel)
+                except Exception:
+                    pass
+
+                # Category history tracking
+                try:
+                    info_ch = state.stream_info
+                    if info_ch:
+                        cur_game = info_ch.get('game', '')
+                        if cur_game:
+                            if not state.category_history or state.category_history[-1].get('game') != cur_game:
+                                state.category_history.append({'game': cur_game, 'started_ts': int(now)})
                 except Exception:
                     pass
 
@@ -3651,6 +6128,52 @@ class CubBot:
             pct   = round(count / total * 100)
             parts.append(f'{i+1}) {opt}: {count} ({pct}%)')
         return f'Results — {poll["question"]}: ' + ' | '.join(parts)
+
+    # ── Blackjack helpers ─────────────────────────────────────────────────
+
+    def _bj_deck(self) -> list:
+        suits = ['♠', '♥', '♦', '♣']
+        ranks = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']
+        deck = [f'{r}{s}' for s in suits for r in ranks]
+        random.shuffle(deck)
+        return deck
+
+    def _bj_value(self, hand: list) -> int:
+        total, aces = 0, 0
+        for card in hand:
+            rank = card[:-1]
+            if rank in ('J','Q','K'):   total += 10
+            elif rank == 'A':           total += 11; aces += 1
+            else:                       total += int(rank)
+        while total > 21 and aces:
+            total -= 10; aces -= 1
+        return total
+
+    def _bj_stand(self, nick, display_name, channel, state, cfg):
+        g = state.blackjack.pop(nick, None)
+        if not g: return
+        dealer = g['dealer']
+        deck   = g['deck']
+        while self._bj_value(dealer) < 17:
+            dealer.append(deck.pop())
+        pval  = self._bj_value(g['hand'])
+        dval  = self._bj_value(dealer)
+        pts_cfg = cfg.get('points_config', {})
+        pts_name = pts_cfg.get('name', 'points')
+        pts = _load_points(channel)
+        bet = g['bet']
+        hand_str   = ', '.join(g['hand'])
+        dealer_str = ', '.join(dealer)
+        if dval > 21 or pval > dval:
+            pts[nick] = pts.get(nick, 0) + bet * 2
+            _save_points(channel, pts)
+            self.send(f'🃏 @{display_name} wins! You: {hand_str} ({pval}) | Dealer: {dealer_str} ({dval}). +{bet*2} {pts_name}!', channel)
+        elif pval == dval:
+            pts[nick] = pts.get(nick, 0) + bet
+            _save_points(channel, pts)
+            self.send(f'🃏 Push! You: {hand_str} ({pval}) | Dealer: {dealer_str} ({dval}). Bet returned.', channel)
+        else:
+            self.send(f'🃏 @{display_name} loses! You: {hand_str} ({pval}) | Dealer: {dealer_str} ({dval}).', channel)
 
     # ── Twitch Helix API ──────────────────────────────────────────────────
 

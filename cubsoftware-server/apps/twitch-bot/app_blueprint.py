@@ -34,6 +34,15 @@ from bot_core import (
     _load_clips_log,
     _load_bits_log,
     _load_subs_log,
+    _load_bank, _save_bank,
+    _load_prestige, _save_prestige,
+    _load_teams, _save_teams,
+    _load_watchstreak,
+    _load_birthdays, _save_birthdays,
+    _load_suggestions, _save_suggestions,
+    _load_stream_notes, _save_stream_notes,
+    _load_autoban_patterns, _save_autoban_patterns,
+    _load_ban_reasons,
 )
 
 cubassist_bp = Blueprint(
@@ -1785,3 +1794,308 @@ def _maybe_autostart():
         get_bot().start()
 
 _maybe_autostart()
+
+# ── New feature API endpoints ────────────────────────────────────────────────────
+
+@cubassist_bp.route('/api/suggestions', methods=['GET'])
+def api_suggestions_get():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    data = _load_suggestions(channel)
+    return jsonify(data)
+
+@cubassist_bp.route('/api/suggestions/<int:idx>', methods=['PUT', 'DELETE'])
+def api_suggestion_update(idx):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    data = _load_suggestions(channel)
+    if idx < 0 or idx >= len(data):
+        return jsonify({'error': 'Not found'}), 404
+    if request.method == 'DELETE':
+        data.pop(idx)
+    else:
+        body = request.get_json() or {}
+        data[idx].update({k: v for k, v in body.items() if k in ('status', 'text')})
+    _save_suggestions(channel, data)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/stream-notes', methods=['GET', 'DELETE'])
+def api_stream_notes():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    if request.method == 'DELETE':
+        _save_stream_notes(channel, [])
+        return jsonify({'ok': True})
+    return jsonify(_load_stream_notes(channel))
+
+@cubassist_bp.route('/api/bank', methods=['GET'])
+def api_bank():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    data = _load_bank(channel)
+    top = sorted(data.items(), key=lambda x: x[1].get('deposited', 0), reverse=True)[:10]
+    return jsonify([{'nick': n, 'deposited': v.get('deposited', 0)} for n, v in top])
+
+@cubassist_bp.route('/api/prestige', methods=['GET'])
+def api_prestige():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    data = _load_prestige(channel)
+    top = sorted(data.items(), key=lambda x: x[1].get('level', 0), reverse=True)[:10]
+    return jsonify([{'nick': n, 'level': v.get('level', 0)} for n, v in top])
+
+@cubassist_bp.route('/api/teams', methods=['GET', 'POST'])
+def api_teams():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    if request.method == 'POST':
+        body = request.get_json() or {}
+        teams = _load_teams(channel)
+        name = body.get('name', '').lower().replace(' ', '_')
+        if not name: return jsonify({'error': 'Name required'}), 400
+        teams[name] = {'members': [], 'points': 0}
+        _save_teams(channel, teams)
+        return jsonify({'ok': True})
+    teams = _load_teams(channel)
+    return jsonify(teams)
+
+@cubassist_bp.route('/api/teams/<name>', methods=['DELETE'])
+def api_team_delete(name):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    teams = _load_teams(channel)
+    teams.pop(name, None)
+    _save_teams(channel, teams)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/watchstreak', methods=['GET'])
+def api_watchstreak():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    data = _load_watchstreak(channel)
+    top = sorted(data.items(), key=lambda x: x[1].get('streak', 0), reverse=True)[:10]
+    return jsonify([{'nick': n, 'streak': v.get('streak', 0)} for n, v in top])
+
+@cubassist_bp.route('/api/birthdays', methods=['GET', 'POST'])
+def api_birthdays():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    if request.method == 'POST':
+        body = request.get_json() or {}
+        data = _load_birthdays(channel)
+        nick = body.get('nick', '').lower()
+        bday = body.get('birthday', '').replace('-', '/')
+        # Normalize to M/D format (strip leading zeros) to match bot command storage
+        try:
+            parts_bd = bday.split('/')
+            if len(parts_bd) == 2:
+                bday = f'{int(parts_bd[0])}/{int(parts_bd[1])}'
+        except (ValueError, IndexError):
+            pass
+        if nick and bday: data[nick] = bday
+        _save_birthdays(channel, data)
+        return jsonify({'ok': True})
+    data = _load_birthdays(channel)
+    return jsonify([{'nick': n, 'birthday': d} for n, d in data.items()])
+
+@cubassist_bp.route('/api/birthdays/<nick>', methods=['DELETE'])
+def api_birthday_delete(nick):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    data = _load_birthdays(channel)
+    data.pop(nick.lower(), None)
+    _save_birthdays(channel, data)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/autoban', methods=['GET', 'POST'])
+def api_autoban():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    if request.method == 'POST':
+        body = request.get_json() or {}
+        patterns = _load_autoban_patterns(channel)
+        pat = body.get('pattern', '')
+        if pat and pat not in patterns:
+            patterns.append(pat)
+            _save_autoban_patterns(channel, patterns)
+        return jsonify({'ok': True})
+    return jsonify(_load_autoban_patterns(channel))
+
+@cubassist_bp.route('/api/autoban/<int:idx>', methods=['DELETE'])
+def api_autoban_delete(idx):
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    patterns = _load_autoban_patterns(channel)
+    if 0 <= idx < len(patterns):
+        patterns.pop(idx)
+        _save_autoban_patterns(channel, patterns)
+    return jsonify({'ok': True})
+
+@cubassist_bp.route('/api/ban-reasons', methods=['GET'])
+def api_ban_reasons():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    return jsonify(_load_ban_reasons(channel))
+
+@cubassist_bp.route('/api/wheel-segments', methods=['GET', 'POST'])
+def api_wheel_segments():
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    cfg = load_channel_config(channel)
+    if request.method == 'POST':
+        body = request.get_json() or {}
+        cfg['wheel_segments'] = body.get('segments', [])
+        save_channel_config(channel, cfg)
+        return jsonify({'ok': True})
+    return jsonify(cfg.get('wheel_segments', []))
+
+@cubassist_bp.route('/api/feature-config', methods=['GET', 'POST'])
+def api_feature_config():
+    """Get/set per-feature enable flags and settings."""
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    cfg = load_channel_config(channel)
+    if request.method == 'POST':
+        body = request.get_json() or {}
+        for key in ('first_chatter', 'tts_config', 'hype_threshold',
+                    'stream_schedule', 'socials', 'spotlight_message',
+                    'prestige_cost', 'raid_shield', 'chat_keyword_alerts',
+                    'chat_alert_threshold', 'wheel_segments'):
+            if key in body:
+                cfg[key] = body[key]
+        save_channel_config(channel, cfg)
+        return jsonify({'ok': True})
+    return jsonify({
+        'first_chatter':       cfg.get('first_chatter', {'enabled': False, 'message': '🎉 @$(user) is the first chatter!', 'reward': 0}),
+        'tts_config':          cfg.get('tts_config', {'enabled': False, 'min_level': 'subscriber', 'max_length': 150}),
+        'hype_threshold':      cfg.get('hype_threshold', 20),
+        'stream_schedule':     cfg.get('stream_schedule', ''),
+        'socials':             cfg.get('socials', {}),
+        'spotlight_message':   cfg.get('spotlight_message', '🌟 Shoutout to @$(user)!'),
+        'prestige_cost':       cfg.get('prestige_cost', 50000),
+        'raid_shield':         cfg.get('raid_shield', {'enabled': False, 'slow_secs': 30}),
+        'chat_keyword_alerts': cfg.get('chat_keyword_alerts', []),
+        'chat_alert_threshold': cfg.get('chat_alert_threshold', 5),
+        'wheel_segments':      cfg.get('wheel_segments', []),
+    })
+
+@cubassist_bp.route('/api/live-state', methods=['GET'])
+def api_live_state():
+    """Return live in-memory state for new features."""
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    bot = get_bot()
+    state = bot._channels.get(channel)
+    if not state:
+        return jsonify({})
+    return jsonify({
+        'blackjack_players':  list(state.blackjack.keys()),
+        'lottery':            state.lottery,
+        'auction':            {k: v for k, v in (state.auction or {}).items() if k != 'expiry'} if state.auction else None,
+        'coinrain':           bool(state.coinrain and state.coinrain.get('active')),
+        'bounties':           state.bounties,
+        'subgoal':            state.subgoal,
+        'bitsgoal':           state.bitsgoal,
+        'raid_queue':         state.raid_queue,
+        'tts_queue':          state.tts_queue[-5:] if state.tts_queue else [],
+        'hype_count':         state.hype_count,
+        'category_history':   state.category_history[-10:] if state.category_history else [],
+        'emote_counts':       dict(sorted(state.emote_counts.items(), key=lambda x: x[1], reverse=True)[:10]),
+    })
+
+# ── Feature flags (per-channel command enable/disable) ───────────────────────
+
+# All built-in commands that can be toggled — grouped for the dashboard
+_FEATURE_GROUPS = {
+    'Games': [
+        'blackjack', 'hit', 'stand', 'double', 'dice',
+        'highlow', 'hl', 'wordchain', 'typerace', 'wheel',
+        'trivia', 'anagram', 'hangman', 'numguess', 'chatr',
+        'rps', 'challenge', 'accept', 'reject',
+        'boss', 'joinboss',
+    ],
+    'Economy': [
+        'points', 'rank', 'leaderboard', 'give', 'rob',
+        'lottery', 'lottodraw', 'auction', 'bid',
+        'coinrain', 'grab', 'bounty',
+        'bank', 'deposit', 'withdraw', 'prestige',
+        'shop', 'buy', 'myrewards',
+        'duel', 'heist',
+    ],
+    'Community': [
+        'watchstreak', 'suggest', 'suggestions', 'approve', 'deny',
+        'spotlight', 'birthday', 'birthdays', 'hype', 'team',
+        'giveaway', 'enter', 'pick',
+        'poll', 'vote', 'endpoll',
+        'lore', 'addlore', 'dellore',
+    ],
+    'Stream Tools': [
+        'schedule', 'socials', 'streamnote', 'streamnotes',
+        'raidqueue', 'subgoal', 'bitsgoal', 'cliplast',
+        'watchtime', 'wt',
+        'queue', 'openqueue', 'closequeue', 'removequeue', 'clearqueue',
+        'songrequest', 'sr', 'skipsong', 'currentsong', 'songsopen', 'songsclose',
+    ],
+    'Mod Tools': [
+        'cmdstats', 'banreason', 'lastseen', 'tts', 'alert',
+        'emotecount', 'chatalert', 'raidshield', 'autoban',
+        'shadowwarn', 'chatexport', 'temprole', 'multiwin',
+        'vip', 'unvip',
+        'warn', 'timeout', 'ban', 'unban', 'untimeout',
+        'permit', 'trusted',
+    ],
+    'Info': [
+        'commands', 'uptime', 'game', 'title', 'followage',
+        'watchtime', 'points', 'rank', 'quote',
+    ],
+}
+
+@cubassist_bp.route('/api/enabled-commands', methods=['GET', 'POST'])
+def api_enabled_commands():
+    """Get or set the per-channel command enable/disable map."""
+    err = _require_auth()
+    if err: return err
+    channel = _user_channel()
+    if not channel: return jsonify({'error': 'No channel'}), 400
+    cfg = load_channel_config(channel)
+    if request.method == 'POST':
+        body = request.get_json() or {}
+        cfg['enabled_commands'] = {str(k): bool(v) for k, v in body.items()}
+        save_channel_config(channel, cfg)
+        return jsonify({'ok': True})
+    return jsonify({
+        'enabled': cfg.get('enabled_commands', {}),
+        'groups':  _FEATURE_GROUPS,
+    })

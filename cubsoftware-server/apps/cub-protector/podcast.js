@@ -294,26 +294,27 @@ function buildAtempoChain(speed) {
     return filters.join(',');
 }
 
-function createAudioResourceFromUrl(audioUrl, speed = 1.0, seekSeconds = 0) {
+function createAudioResourceFromUrl(audioUrl, speed = 1.0, seekSeconds = 0, volume = 1.0) {
     const args = ['-hide_banner', '-loglevel', 'error', '-user_agent', 'CUBPodcast/1.0'];
 
     if (seekSeconds > 0) args.push('-ss', String(Math.floor(seekSeconds)));
 
     args.push('-i', audioUrl);
 
-    // Speed via atempo; volume is handled live by inlineVolume (no restart needed)
-    if (speed !== 1.0) args.push('-af', buildAtempoChain(speed));
+    const filters = [];
+    if (volume !== 1.0) filters.push(`volume=${volume.toFixed(4)}`);
+    if (speed  !== 1.0) filters.push(buildAtempoChain(speed));
+    if (filters.length) args.push('-af', filters.join(','));
 
-    // Raw PCM — requires opusscript (installed) for the Node.js Opus encoder
-    // inlineVolume: true enables resource.volume.setVolume() for live volume control
-    args.push('-f', 's16le', '-ar', '48000', '-ac', '2', 'pipe:1');
+    // Output Ogg/Opus — no Node.js Opus encoder needed, ffmpeg handles everything
+    args.push('-c:a', 'libopus', '-b:a', '128k', '-ar', '48000', '-ac', '2', '-f', 'ogg', 'pipe:1');
 
     const ff = spawn('ffmpeg', args);
     ff.stdin.on('error', () => {});
     ff.stderr.on('data', (d) => console.error('[PODCAST] ffmpeg:', d.toString().trim()));
     ff.on('error', (err) => console.error('[PODCAST] ffmpeg error:', err.message));
 
-    return createAudioResource(ff.stdout, { inputType: StreamType.Raw, inlineVolume: true });
+    return createAudioResource(ff.stdout, { inputType: StreamType.OggOpus });
 }
 
 // ── Session management ────────────────────────────────────────────────────────
@@ -361,10 +362,12 @@ function createSession(guildId, voiceChannel, textChannel, guild, client) {
     });
 
     // When buffering finishes and audio actually starts, remove the loading indicator
+    // and reset startedAt so elapsed time is measured from the real audio start
     player.on(AudioPlayerStatus.Playing, () => {
         const s = sessions.get(guildId);
         if (!s || !s.loading) return;
         s.loading = false;
+        s.startedAt = Date.now();
         if (s.nowPlayingMessage) {
             s.nowPlayingMessage.edit({
                 embeds:     [buildNowPlayingEmbed(s)],
@@ -386,14 +389,14 @@ function createSession(guildId, voiceChannel, textChannel, guild, client) {
         }
 
         // 2. Auto-play next episode from the same podcast
-        // RSS is newest-first: index 0 = newest, index length-1 = oldest (ep 1).
-        // "Next in order" = one index lower (chronologically newer episode).
+        // RSS is newest-first: index 0 = newest, index length-1 = oldest.
+        // +1 goes toward older episodes — natural listening order (latest, then the one before, etc.)
         if (s.autoPlay && s.currentPodcast?.feedUrl) {
             try {
                 const feed     = await parseFeed(s.currentPodcast.feedUrl);
                 const episodes = feed.items.map(i => parseEpisode(i, s.currentPodcast.artwork)).filter(Boolean);
-                const nextIdx  = s.currentEpisodeIndex - 1;
-                if (nextIdx >= 0) {
+                const nextIdx  = s.currentEpisodeIndex + 1;
+                if (nextIdx < episodes.length) {
                     s.currentEpisodeIndex = nextIdx;
                     await playEpisodeInSession(guildId, episodes[nextIdx], s.currentPodcast, 0);
                     return;
@@ -537,8 +540,7 @@ async function playEpisodeInSession(guildId, episode, podcast, seekSeconds = 0) 
     session.loading = true;
 
     try {
-        const resource = createAudioResourceFromUrl(episode.audioUrl, session.speed, seekSeconds);
-        resource.volume.setVolume(session.volume);
+        const resource = createAudioResourceFromUrl(episode.audioUrl, session.speed, seekSeconds, session.volume);
         session.resource = resource;
         session.player.play(resource);
     } catch (err) {
@@ -861,8 +863,8 @@ async function podcastSkip(interaction) {
         try {
             const feed     = await parseFeed(session.currentPodcast.feedUrl);
             const episodes = feed.items.map(i => parseEpisode(i, session.currentPodcast.artwork)).filter(Boolean);
-            const nextIdx  = session.currentEpisodeIndex - 1;
-            if (nextIdx >= 0) {
+            const nextIdx  = session.currentEpisodeIndex + 1;
+            if (nextIdx < episodes.length) {
                 session.currentEpisodeIndex = nextIdx;
                 session.player.stop(true);
                 await playEpisodeInSession(interaction.guildId, episodes[nextIdx], session.currentPodcast, 0);
@@ -922,8 +924,7 @@ async function podcastSpeed(interaction) {
         const elapsed = getElapsedSeconds(session);
         await interaction.reply({ content: `⚡ Speed set to **${speed}x** — restarting episode from ~${formatDuration(elapsed) || '0:00'}...`, ephemeral: true });
         try {
-            const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, speed, elapsed);
-            resource.volume.setVolume(session.volume);
+            const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, speed, elapsed, session.volume);
             session.resource = resource;
             session.startedAt = Date.now() - (elapsed * 1000);
             session.player.play(resource);
@@ -946,16 +947,11 @@ async function podcastVolume(interaction) {
     const volume = level / 100;
     session.volume = volume;
 
-    if (session.resource?.volume) {
-        session.resource.volume.setVolume(volume);
-        await interaction.reply({ content: `🔊 Volume set to **${level}%**`, ephemeral: true });
-    } else if (session.currentEpisode && session.player.state.status !== AudioPlayerStatus.Idle) {
-        // Resource exists but inline volume not available — restart at current position
+    if (session.currentEpisode && session.player.state.status !== AudioPlayerStatus.Idle) {
         const elapsed = getElapsedSeconds(session);
         await interaction.reply({ content: `🔊 Volume set to **${level}%** — restarting from ~${formatDuration(elapsed) || '0:00'}...`, ephemeral: true });
         try {
-            const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, session.speed, elapsed);
-            resource.volume.setVolume(volume);
+            const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, session.speed, elapsed, volume);
             session.resource = resource;
             session.startedAt = Date.now() - (elapsed * 1000);
             session.player.play(resource);
@@ -989,8 +985,7 @@ async function podcastSeek(interaction) {
     await interaction.reply({ content: `⏩ Seeking to **${formatDuration(targetSeconds) || `${targetSeconds}s`}**...`, ephemeral: true });
 
     try {
-        const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, session.speed, targetSeconds);
-        resource.volume.setVolume(session.volume);
+        const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, session.speed, targetSeconds, session.volume);
         session.resource = resource;
         session.startedAt = Date.now() - (targetSeconds * 1000);
         session.player.play(resource);

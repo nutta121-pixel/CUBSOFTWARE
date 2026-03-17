@@ -33,8 +33,27 @@ logger = BotLogger('cubsoftware-website', os.environ.get('BOT_API_KEY'))
 app = Flask(__name__,
             static_folder='website/static')
 
-# Secret key for sessions - IMPORTANT: Set FLASK_SECRET_KEY in environment for persistence
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
+# Secret key for sessions — loads from env var, persisted key file, or generates + saves a new one
+def _load_or_create_secret_key() -> str:
+    env_key = os.environ.get('FLASK_SECRET_KEY', '')
+    if env_key:
+        return env_key
+    key_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'secret_key.txt')
+    key_path = os.path.normpath(key_path)
+    try:
+        if os.path.exists(key_path):
+            stored = open(key_path).read().strip()
+            if stored:
+                return stored
+        new_key = secrets.token_hex(32)
+        os.makedirs(os.path.dirname(key_path), exist_ok=True)
+        with open(key_path, 'w') as f:
+            f.write(new_key)
+        return new_key
+    except Exception:
+        return secrets.token_hex(32)
+
+app.secret_key = _load_or_create_secret_key()
 
 # Dev mode — set DEV_MODE=1 in environment to enable auth bypass on localhost
 IS_DEV = os.environ.get('DEV_MODE', '') == '1'
@@ -45,7 +64,7 @@ if IS_DEV:
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = False if IS_DEV else True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
+app.config['PERMANENT_SESSION_LIFETIME'] = 2592000  # 30 days
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Don't cache static files
 if IS_DEV:
     print('[DEV] SESSION_COOKIE_SECURE=False for localhost HTTP')

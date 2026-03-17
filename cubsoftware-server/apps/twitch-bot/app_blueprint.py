@@ -168,6 +168,7 @@ def login_callback():
     except Exception as e:
         return render_template('cubassist-login.html', error=f'Failed to fetch user info: {e}')
 
+    session.permanent = True
     session['cubassist_user'] = {
         'login':         user_info.get('login', ''),
         'display_name':  user_info.get('display_name', ''),

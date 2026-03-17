@@ -12,9 +12,11 @@
 <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
 <style>
 /* ── Page-level overrides ────────────────────────────────────────────── */
-body { overflow: hidden; }
+html { height: 100%; overflow: hidden; }
+body { height: 100%; overflow: hidden; }
 .main-container {
     height: 100dvh;
+    max-height: 100dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -82,6 +84,9 @@ body { overflow: hidden; }
     background: var(--surface); border-right: 1px solid var(--border);
     display: flex; flex-direction: column; padding: 12px 0; gap: 2px;
     overflow-y: auto;
+    min-height: 0;
+    /* Constrain to parent height so content scrolls instead of pushing layout */
+    max-height: 100%;
 }
 .nav-item {
     display: flex; align-items: center; gap: 10px;
@@ -266,6 +271,57 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
     .nav-section-label { display: none; }
     .tab { padding: 16px; }
     .stat-grid { grid-template-columns: repeat(2, 1fr); }
+
+    /* Topbar — hide subtitle, compress status */
+    .topbar-logo span { display: none; }
+    .topbar-status span { display: none; }
+    .topbar-actions { gap: 4px; }
+
+    /* Card rows stack vertically */
+    .card-row { flex-direction: column; }
+
+    /* Reduce tab padding */
+    .tab { padding: 14px; }
+
+    /* Form rows allow single column */
+    .form-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+    /* Sidebar icon-only, smaller */
+    .app-sidebar { width: 44px; }
+    .nav-item { padding: 10px; justify-content: center; }
+    .nav-item .ni { width: auto; }
+
+    /* Topbar — very compact */
+    .app-topbar { padding: 0 12px; gap: 8px; height: auto; min-height: 48px; flex-wrap: wrap; padding-top: 6px; padding-bottom: 6px; }
+    .topbar-logo { font-size: 13px; }
+    .topbar-status { display: none; }
+    #channelBadge { display: none; }
+    .topbar-actions { gap: 3px; }
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+    /* Tabs */
+    .tab { padding: 10px; gap: 12px; }
+
+    /* Stats */
+    .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-val { font-size: 20px; }
+
+    /* Cards */
+    .card { padding: 14px 16px; }
+
+    /* Wiki modal — hide example column, allow variable wrap */
+    .wiki-ex { display: none; }
+    .wiki-var { white-space: normal; word-break: break-word; }
+    .wiki-table { font-size: 11px; }
+
+    /* Modal */
+    .modal { padding: 20px 18px; border-radius: 12px; }
+    .modal-title { font-size: 15px; }
+
+    /* Toast */
+    #toast { white-space: normal; text-align: center; width: 90vw; }
 }
 </style>
 </head>
@@ -1967,6 +2023,11 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
             <table class="wiki-table">
                 <tr><td class="wiki-var" onclick="wikiCopy('$(query)')">$(query)</td><td class="wiki-desc">Everything typed after the command name</td><td class="wiki-ex">hello world</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(args 1)')">$(args 1)</td><td class="wiki-desc">First word of input. Change number for 2nd, 3rd, etc.</td><td class="wiki-ex">hello</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(args)')">$(args)</td><td class="wiki-desc">All arguments (alias for $(query))</td><td class="wiki-ex">hello world</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(arg1)')">$(arg1) / $(arg2)…</td><td class="wiki-desc">Shorthand for $(args 1), $(args 2), etc.</td><td class="wiki-ex">hello</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(lastarg)')">$(lastarg)</td><td class="wiki-desc">The last word in the input</td><td class="wiki-ex">world</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(argcount)')">$(argcount)</td><td class="wiki-desc">Number of words in the input</td><td class="wiki-ex">2</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(allbut 1)')">$(allbut N)</td><td class="wiki-desc">Everything after the Nth word</td><td class="wiki-ex">world</td></tr>
             </table>
         </div>
 
@@ -1975,16 +2036,87 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
             <table class="wiki-table">
                 <tr><td class="wiki-var" onclick="wikiCopy('$(count)')">$(count)</td><td class="wiki-desc">How many times this command has been used in total. Increments on every use.</td><td class="wiki-ex">42</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(usercount)')">$(usercount)</td><td class="wiki-desc">How many times this specific user has used this command</td><td class="wiki-ex">7</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(counter:countername)')">$(counter:name)</td><td class="wiki-desc">Read a persistent counter value by name</td><td class="wiki-ex">47</td></tr>
             </table>
         </div>
 
         <div class="wiki-section">
-            <div class="wiki-section-title">🎲 Random & Logic</div>
+            <div class="wiki-section-title">🎲 Random & Fun</div>
             <table class="wiki-table">
                 <tr><td class="wiki-var" onclick="wikiCopy('$(random 1 100)')">$(random 1 100)</td><td class="wiki-desc">Random integer between two numbers (inclusive)</td><td class="wiki-ex">73</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(choose opt1|opt2|opt3)')">$(choose a|b|c)</td><td class="wiki-desc">Pick one of the pipe-separated options at random</td><td class="wiki-ex">b</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(math 1+2)')">$(math 1+2)</td><td class="wiki-desc">Evaluate a math expression. Supports + - * / ** % //</td><td class="wiki-ex">3</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(if $(ismod)|yes|no)')">$(if cond|yes|no)</td><td class="wiki-desc">Return the second value if condition is truthy (non-empty, non-zero), else the third</td><td class="wiki-ex">yes</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(flip)')">$(flip)</td><td class="wiki-desc">Heads or Tails</td><td class="wiki-ex">Heads</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(bool)')">$(bool)</td><td class="wiki-desc">Yes or No</td><td class="wiki-ex">Yes</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(percent)')">$(percent)</td><td class="wiki-desc">Random 0–100%</td><td class="wiki-ex">73%</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(roll)')">$(roll)</td><td class="wiki-desc">Roll a single d6</td><td class="wiki-ex">4</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(8ball)')">$(8ball)</td><td class="wiki-desc">Magic 8-ball answer</td><td class="wiki-ex">It is certain.</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(randomword apple banana cherry)')">$(randomword list)</td><td class="wiki-desc">Pick a random space-separated word from a list</td><td class="wiki-ex">banana</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(donger)')">$(donger)</td><td class="wiki-desc">Random ASCII emoticon</td><td class="wiki-ex">( ͡° ͜ʖ ͡°)</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(randomchatter)')">$(randomchatter)</td><td class="wiki-desc">Random username from recent chat</td><td class="wiki-ex">ChatUser42</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(word)')">$(word)</td><td class="wiki-desc">Random English word</td><td class="wiki-ex">ephemeral</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(adjective)')">$(adjective)</td><td class="wiki-desc">Random adjective</td><td class="wiki-ex">resilient</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(noun)')">$(noun)</td><td class="wiki-desc">Random noun</td><td class="wiki-ex">labyrinth</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(verb)')">$(verb)</td><td class="wiki-desc">Random verb</td><td class="wiki-ex">obliterate</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(color)')">$(color)</td><td class="wiki-desc">Random named color</td><td class="wiki-ex">crimson</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(animal)')">$(animal)</td><td class="wiki-desc">Random animal</td><td class="wiki-ex">axolotl</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(food)')">$(food)</td><td class="wiki-desc">Random food item</td><td class="wiki-ex">takoyaki</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(country)')">$(country)</td><td class="wiki-desc">Random country name</td><td class="wiki-ex">Iceland</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(capital)')">$(capital)</td><td class="wiki-desc">Random world capital city</td><td class="wiki-ex">Reykjavik</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(language)')">$(language)</td><td class="wiki-desc">Random spoken language</td><td class="wiki-ex">Swahili</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(firstname)')">$(firstname)</td><td class="wiki-desc">Random first name</td><td class="wiki-ex">Evelyn</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(lastname)')">$(lastname)</td><td class="wiki-desc">Random last name</td><td class="wiki-ex">Nakamura</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(weapon)')">$(weapon)</td><td class="wiki-desc">Random fantasy weapon name</td><td class="wiki-ex">vorpal blade</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(spell)')">$(spell)</td><td class="wiki-desc">Random magical spell</td><td class="wiki-ex">Infernis Maxima</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(potion)')">$(potion)</td><td class="wiki-desc">Random potion name</td><td class="wiki-ex">Elixir of Swiftness</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(superpower)')">$(superpower)</td><td class="wiki-desc">Random superpower</td><td class="wiki-ex">Time Manipulation</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(curse)')">$(curse)</td><td class="wiki-desc">Random fantasy curse</td><td class="wiki-ex">Eternal Slumber</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(prophecy)')">$(prophecy)</td><td class="wiki-desc">Random dramatic prophecy</td><td class="wiki-ex">When the moon bleeds…</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(achievement)')">$(achievement)</td><td class="wiki-desc">Random achievement name</td><td class="wiki-ex">First Blood</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(quest)')">$(quest)</td><td class="wiki-desc">Random RPG quest title</td><td class="wiki-ex">The Lost Relic</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(rpgclass)')">$(rpgclass)</td><td class="wiki-desc">Random RPG class</td><td class="wiki-ex">Paladin</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(fantasyrace)')">$(fantasyrace)</td><td class="wiki-desc">Random fantasy race</td><td class="wiki-ex">Half-Elf</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(monster)')">$(monster)</td><td class="wiki-desc">Random monster name</td><td class="wiki-ex">Basilisk</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(dungeon)')">$(dungeon)</td><td class="wiki-desc">Random dungeon name</td><td class="wiki-ex">Caverns of Despair</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(loot)')">$(loot)</td><td class="wiki-desc">Random loot item</td><td class="wiki-ex">Legendary Boots of Speed</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(horoscope)')">$(horoscope)</td><td class="wiki-desc">Random horoscope prediction</td><td class="wiki-ex">Success awaits the bold</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(fortune)')">$(fortune)</td><td class="wiki-desc">Random fortune cookie message</td><td class="wiki-ex">A change is coming</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(riddle)')">$(riddle)</td><td class="wiki-desc">Random riddle</td><td class="wiki-ex">I speak without a mouth…</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(pun)')">$(pun)</td><td class="wiki-desc">Random pun</td><td class="wiki-ex">It grew on me</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(showerthought)')">$(showerthought)</td><td class="wiki-desc">Random shower thought</td><td class="wiki-ex">Mirrors are just windows…</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(wyr)')">$(wyr)</td><td class="wiki-desc">Random "Would You Rather" question</td><td class="wiki-ex">Be invisible or fly?</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(truth)')">$(truth)</td><td class="wiki-desc">Random truth question for Truth or Dare</td><td class="wiki-ex">What's your biggest fear?</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(dare)')">$(dare)</td><td class="wiki-desc">Random dare for Truth or Dare</td><td class="wiki-ex">Do your best impression</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(pickup)')">$(pickup)</td><td class="wiki-desc">Random pick-up line</td><td class="wiki-ex">Are you a map? I got lost in your eyes</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(insult)')">$(insult)</td><td class="wiki-desc">Random playful insult</td><td class="wiki-ex">You're like a software update — ignored</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(musicgenre)')">$(musicgenre)</td><td class="wiki-desc">Random music genre</td><td class="wiki-ex">Synthwave</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(instrument)')">$(instrument)</td><td class="wiki-desc">Random musical instrument</td><td class="wiki-ex">Theremin</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(sport)')">$(sport)</td><td class="wiki-desc">Random sport</td><td class="wiki-ex">Curling</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(esport)')">$(esport)</td><td class="wiki-desc">Random esport title</td><td class="wiki-ex">Counter-Strike 2</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(esportteam)')">$(esportteam)</td><td class="wiki-desc">Random esports team name</td><td class="wiki-ex">Team Liquid</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(boardgame)')">$(boardgame)</td><td class="wiki-desc">Random board game</td><td class="wiki-ex">Terraforming Mars</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(proglang)')">$(proglang)</td><td class="wiki-desc">Random programming language</td><td class="wiki-ex">Rust</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(framework)')">$(framework)</td><td class="wiki-desc">Random software framework</td><td class="wiki-ex">SvelteKit</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(algorithm)')">$(algorithm)</td><td class="wiki-desc">Random algorithm name</td><td class="wiki-ex">Dijkstra's Shortest Path</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(datastructure)')">$(datastructure)</td><td class="wiki-desc">Random data structure</td><td class="wiki-ex">Red-Black Tree</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(planet)')">$(planet)</td><td class="wiki-desc">Random planet in the solar system</td><td class="wiki-ex">Neptune</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(constellation)')">$(constellation)</td><td class="wiki-desc">Random constellation name</td><td class="wiki-ex">Orion</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(element)')">$(element)</td><td class="wiki-desc">Random periodic table element</td><td class="wiki-ex">Xenon</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(fruit)')">$(fruit)</td><td class="wiki-desc">Random fruit</td><td class="wiki-ex">Dragonfruit</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(vegetable)')">$(vegetable)</td><td class="wiki-desc">Random vegetable</td><td class="wiki-ex">Artichoke</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(cocktail)')">$(cocktail)</td><td class="wiki-desc">Random cocktail name</td><td class="wiki-ex">Negroni</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(cuisine)')">$(cuisine)</td><td class="wiki-desc">Random world cuisine style</td><td class="wiki-ex">Ethiopian</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(kaomoji)')">$(kaomoji)</td><td class="wiki-desc">Random kaomoji emoticon</td><td class="wiki-ex">(づ｡◕‿‿◕｡)づ</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(lifehack)')">$(lifehack)</td><td class="wiki-desc">Random life hack tip</td><td class="wiki-ex">Use rubber bands to open jars easily</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(tarot)')">$(tarot)</td><td class="wiki-desc">Random tarot card name</td><td class="wiki-ex">The Moon</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(chinesezodiac)')">$(chinesezodiac)</td><td class="wiki-desc">Random Chinese zodiac sign</td><td class="wiki-ex">Year of the Dragon</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(moonphase)')">$(moonphase)</td><td class="wiki-desc">Random moon phase with emoji</td><td class="wiki-ex">🌖 Waning Gibbous</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(randomemoji)')">$(randomemoji)</td><td class="wiki-desc">Random emoji character</td><td class="wiki-ex">🦊</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(randomip)')">$(randomip)</td><td class="wiki-desc">Random fake IPv4 address</td><td class="wiki-ex">192.168.42.7</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(randommac)')">$(randommac)</td><td class="wiki-desc">Random fake MAC address</td><td class="wiki-ex">2A:F3:07:C1:88:4E</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(randomport)')">$(randomport)</td><td class="wiki-desc">Random port number (1024–65535)</td><td class="wiki-ex">49152</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(randomhttpstatus)')">$(randomhttpstatus)</td><td class="wiki-desc">Random HTTP status code</td><td class="wiki-ex">418</td></tr>
             </table>
         </div>
 
@@ -1995,6 +2127,62 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 <tr><td class="wiki-var" onclick="wikiCopy('$(lower text)')">$(lower text)</td><td class="wiki-desc">Convert text to lowercase</td><td class="wiki-ex">text</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(length text)')">$(length text)</td><td class="wiki-desc">Number of characters in the text</td><td class="wiki-ex">4</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(repeat text|3)')">$(repeat text|N)</td><td class="wiki-desc">Repeat text N times (max 20). Separate text and count with a pipe.</td><td class="wiki-ex">texttexttext</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(trim $(query))')">$(trim text)</td><td class="wiki-desc">Remove leading/trailing whitespace</td><td class="wiki-ex">hello</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(title hello world)')">$(title text)</td><td class="wiki-desc">Title Case Every Word</td><td class="wiki-ex">Hello World</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(sentence hello world)')">$(sentence text)</td><td class="wiki-desc">Capitalise first letter only</td><td class="wiki-ex">Hello world</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(reverse hello)')">$(reverse text)</td><td class="wiki-desc">Reverse a string character by character</td><td class="wiki-ex">olleh</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(words hello world foo)')">$(words text)</td><td class="wiki-desc">Count of words in text</td><td class="wiki-ex">3</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(wordcount hello world foo)')">$(wordcount text)</td><td class="wiki-desc">Alias for $(words)</td><td class="wiki-ex">3</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(word 2 hello world)')">$(word N text)</td><td class="wiki-desc">Get the Nth word of text</td><td class="wiki-ex">world</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(char 1 hello)')">$(char N text)</td><td class="wiki-desc">Get the Nth character of text</td><td class="wiki-ex">h</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(slice hello|1|3)')">$(slice text|start|end)</td><td class="wiki-desc">Substring slice (Python-style indexes)</td><td class="wiki-ex">el</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(replace hello world|world|there)')">$(replace text|old|new)</td><td class="wiki-desc">Replace all occurrences of old with new in text</td><td class="wiki-ex">hello there</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(contains hello world|world)')">$(contains text|sub)</td><td class="wiki-desc">1 if sub is found in text, else 0</td><td class="wiki-ex">1</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(split a-b-c|-|1)')">$(split text|sep|idx)</td><td class="wiki-desc">Split text by separator and get item at index (0-based)</td><td class="wiki-ex">b</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(join -|a|b|c)')">$(join sep|w1|w2…)</td><td class="wiki-desc">Join words with a separator</td><td class="wiki-ex">a-b-c</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(pad 10 hello)')">$(pad N TEXT)</td><td class="wiki-desc">Center-pad TEXT to width N with spaces</td><td class="wiki-ex">&nbsp;&nbsp;hello&nbsp;&nbsp;</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(padr 10 hello)')">$(padr N TEXT)</td><td class="wiki-desc">Right-pad TEXT to width N with spaces</td><td class="wiki-ex">hello&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(padl 10 hello)')">$(padl N TEXT)</td><td class="wiki-desc">Left-pad TEXT to width N with spaces</td><td class="wiki-ex">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hello</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(truncate 20 $(title))')">$(truncate N text)</td><td class="wiki-desc">Truncate text to N characters (adds … if cut)</td><td class="wiki-ex">hello worl…</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(startswith hello|hel)')">$(startswith TEXT|PREFIX)</td><td class="wiki-desc">1 if TEXT starts with PREFIX, else 0</td><td class="wiki-ex">1</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(endswith hello|llo)')">$(endswith TEXT|SUFFIX)</td><td class="wiki-desc">1 if TEXT ends with SUFFIX, else 0</td><td class="wiki-ex">1</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(repeatstr 3 ha)')">$(repeatstr N TEXT)</td><td class="wiki-desc">Repeat TEXT N times</td><td class="wiki-ex">hahaha</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(repeatjoin ha|3|-)')">$(repeatjoin TEXT|N|SEP)</td><td class="wiki-desc">Repeat TEXT N times joined by SEP</td><td class="wiki-ex">ha-ha-ha</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(chars hello)')">$(chars TEXT)</td><td class="wiki-desc">Number of characters in TEXT</td><td class="wiki-ex">5</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(indexof hello|l)')">$(indexof TEXT|SEARCH)</td><td class="wiki-desc">First index of SEARCH in TEXT (0-based)</td><td class="wiki-ex">2</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(lastindexof hello|l)')">$(lastindexof TEXT|SEARCH)</td><td class="wiki-desc">Last index of SEARCH in TEXT</td><td class="wiki-ex">3</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(strcount hello|l)')">$(strcount TEXT|CHAR)</td><td class="wiki-desc">Count occurrences of CHAR in TEXT</td><td class="wiki-ex">2</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(strcontains hello|ell)')">$(strcontains TEXT|SEARCH)</td><td class="wiki-desc">1 if TEXT contains SEARCH, else 0</td><td class="wiki-ex">1</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(initials John Doe)')">$(initials TEXT)</td><td class="wiki-desc">Initials of each word in TEXT</td><td class="wiki-ex">JD</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(camel hello world)')">$(camel TEXT)</td><td class="wiki-desc">Convert TEXT to camelCase</td><td class="wiki-ex">helloWorld</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(pascal hello world)')">$(pascal TEXT)</td><td class="wiki-desc">Convert TEXT to PascalCase</td><td class="wiki-ex">HelloWorld</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(snake Hello World)')">$(snake TEXT)</td><td class="wiki-desc">Convert TEXT to snake_case</td><td class="wiki-ex">hello_world</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(kebab Hello World)')">$(kebab TEXT)</td><td class="wiki-desc">Convert TEXT to kebab-case</td><td class="wiki-ex">hello-world</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(screaming hello world)')">$(screaming TEXT)</td><td class="wiki-desc">SCREAMING_SNAKE_CASE</td><td class="wiki-ex">HELLO_WORLD</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(swapcase Hello World)')">$(swapcase TEXT)</td><td class="wiki-desc">Swap upper and lower case of each letter</td><td class="wiki-ex">hELLO wORLD</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(altcase hello world)')">$(altcase TEXT)</td><td class="wiki-desc">Alternate casing: hElLo WoRlD</td><td class="wiki-ex">hElLo WoRlD</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(mock hello world)')">$(mock TEXT)</td><td class="wiki-desc">SpOnGeBoB mocking meme case</td><td class="wiki-ex">hElLo WoRlD</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(rot13 Hello)')">$(rot13 TEXT)</td><td class="wiki-desc">ROT-13 cipher transformation</td><td class="wiki-ex">Uryyb</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(pig hello)')">$(pig TEXT)</td><td class="wiki-desc">Pig Latin translation</td><td class="wiki-ex">ellohay</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(uwu hello world)')">$(uwu TEXT)</td><td class="wiki-desc">UwU-ify text</td><td class="wiki-ex">hewwo wowwd :3</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(leet hello)')">$(leet TEXT)</td><td class="wiki-desc">L33tspeak substitution</td><td class="wiki-ex">h3ll0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(zalgo hello)')">$(zalgo TEXT)</td><td class="wiki-desc">Zalgo glitch/corrupted text effect</td><td class="wiki-ex">h̷e̸l̶l̴o̵</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(palindrome racecar)')">$(palindrome TEXT)</td><td class="wiki-desc">1 if TEXT is a palindrome, else 0</td><td class="wiki-ex">1</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(base64e hello)')">$(base64e TEXT)</td><td class="wiki-desc">Base64-encode TEXT</td><td class="wiki-ex">aGVsbG8=</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(base64d aGVsbG8=)')">$(base64d TEXT)</td><td class="wiki-desc">Base64-decode TEXT</td><td class="wiki-ex">hello</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(urlenc hello world)')">$(urlenc TEXT)</td><td class="wiki-desc">URL-encode TEXT</td><td class="wiki-ex">hello%20world</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(urldec hello%20world)')">$(urldec TEXT)</td><td class="wiki-desc">URL-decode TEXT</td><td class="wiki-ex">hello world</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(md5 hello)')">$(md5 TEXT)</td><td class="wiki-desc">MD5 hash of TEXT</td><td class="wiki-ex">5d4140…</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(sha1 hello)')">$(sha1 TEXT)</td><td class="wiki-desc">SHA-1 hash of TEXT</td><td class="wiki-ex">aaf4c6…</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(sha256 hello)')">$(sha256 TEXT)</td><td class="wiki-desc">SHA-256 hash of TEXT</td><td class="wiki-ex">2cf24d…</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(crc32 hello)')">$(crc32 TEXT)</td><td class="wiki-desc">CRC32 checksum of TEXT</td><td class="wiki-ex">907060870</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(uuid)')">$(uuid)</td><td class="wiki-desc">Generate a random UUID v4</td><td class="wiki-ex">f47ac10b-…</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(nanoid)')">$(nanoid)</td><td class="wiki-desc">Generate a random 21-char NanoID</td><td class="wiki-ex">V1StGXR8_Z5jdHi6B-myT</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(nanoid 8)')">$(nanoid N)</td><td class="wiki-desc">Generate a random N-char NanoID</td><td class="wiki-ex">V1StGXR8</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(wordshuffle hello world foo)')">$(wordshuffle TEXT)</td><td class="wiki-desc">Shuffle the words in TEXT randomly</td><td class="wiki-ex">foo hello world</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(charshuffle hello)')">$(charshuffle TEXT)</td><td class="wiki-desc">Shuffle the characters in TEXT randomly</td><td class="wiki-ex">lolhe</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(stripspace hello  world)')">$(stripspace TEXT)</td><td class="wiki-desc">Collapse multiple spaces and trim</td><td class="wiki-ex">hello world</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(zfill 5 42)')">$(zfill N NUM)</td><td class="wiki-desc">Zero-pad NUM to width N</td><td class="wiki-ex">00042</td></tr>
             </table>
         </div>
 
@@ -2006,6 +2194,12 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 <tr><td class="wiki-var" onclick="wikiCopy('$(title)')">$(title)</td><td class="wiki-desc">Stream title</td><td class="wiki-ex">Sunday chill stream</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(viewers)')">$(viewers)</td><td class="wiki-desc">Current live viewer count</td><td class="wiki-ex">248</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(followers)')">$(followers)</td><td class="wiki-desc">Channel follower count (requires bot to have moderator:read:followers scope)</td><td class="wiki-ex">1024</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(status)')">$(status)</td><td class="wiki-desc">online or offline</td><td class="wiki-ex">online</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(category)')">$(category)</td><td class="wiki-desc">Current category (alias for $(game))</td><td class="wiki-ex">Minecraft</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(mature)')">$(mature)</td><td class="wiki-desc">1 if stream is marked mature, else 0</td><td class="wiki-ex">0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(peakviewers)')">$(peakviewers)</td><td class="wiki-desc">Peak viewer count this stream session</td><td class="wiki-ex">342</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(followage)')">$(followage)</td><td class="wiki-desc">How long the user has been following (Twitch API)</td><td class="wiki-ex">2y 3m</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(lastfm)')">$(lastfm)</td><td class="wiki-desc">Now playing from Last.fm (requires integration)</td><td class="wiki-ex">Artist - Song</td></tr>
             </table>
         </div>
 
@@ -2021,6 +2215,47 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 <tr><td class="wiki-var" onclick="wikiCopy('$(monthnum)')">$(monthnum)</td><td class="wiki-desc">Month as a two-digit number</td><td class="wiki-ex">03</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(day)')">$(day)</td><td class="wiki-desc">Day of the month (padded)</td><td class="wiki-ex">14</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(year)')">$(year)</td><td class="wiki-desc">Current year</td><td class="wiki-ex">2025</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(time12)')">$(time12)</td><td class="wiki-desc">12-hour clock with AM/PM</td><td class="wiki-ex">8:35 PM</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(second)')">$(second)</td><td class="wiki-desc">Current second (00-59)</td><td class="wiki-ex">42</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(week)')">$(week)</td><td class="wiki-desc">Week of year (ISO, 01-53)</td><td class="wiki-ex">12</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(month)')">$(month)</td><td class="wiki-desc">Month number (01-12)</td><td class="wiki-ex">03</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(datetime)')">$(datetime)</td><td class="wiki-desc">Full date + time string</td><td class="wiki-ex">2025-03-14 20:35:42</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(iso)')">$(iso)</td><td class="wiki-desc">ISO 8601 datetime</td><td class="wiki-ex">2025-03-14T20:35:42</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(timestamp)')">$(timestamp)</td><td class="wiki-desc">Unix timestamp (seconds since epoch)</td><td class="wiki-ex">1741992942</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(timezone)')">$(timezone)</td><td class="wiki-desc">Server timezone identifier</td><td class="wiki-ex">UTC</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(countdown 2025-12-25)')">$(countdown YYYY-MM-DD)</td><td class="wiki-desc">Human-readable countdown to a date</td><td class="wiki-ex">285d 4h</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(weekday)')">$(weekday)</td><td class="wiki-desc">Full name of current weekday</td><td class="wiki-ex">Tuesday</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(weekdaynum)')">$(weekdaynum)</td><td class="wiki-desc">Weekday number (Mon=0 … Sun=6)</td><td class="wiki-ex">1</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(yearday)')">$(yearday)</td><td class="wiki-desc">Day of year (1–366)</td><td class="wiki-ex">76</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(quarter)')">$(quarter)</td><td class="wiki-desc">Current quarter (Q1–Q4)</td><td class="wiki-ex">Q1</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(monthshort)')">$(monthshort)</td><td class="wiki-desc">3-letter month abbreviation</td><td class="wiki-ex">Mar</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(dayname)')">$(dayname)</td><td class="wiki-desc">Full weekday name (alias of weekday)</td><td class="wiki-ex">Tuesday</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(dayshort)')">$(dayshort)</td><td class="wiki-desc">3-letter weekday abbreviation</td><td class="wiki-ex">Tue</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(isweekend)')">$(isweekend)</td><td class="wiki-desc">1 if today is Sat/Sun, else 0</td><td class="wiki-ex">0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(isweekday)')">$(isweekday)</td><td class="wiki-desc">1 if today is Mon–Fri, else 0</td><td class="wiki-ex">1</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(utchour)')">$(utchour)</td><td class="wiki-desc">Current UTC hour (0–23)</td><td class="wiki-ex">18</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(utcdate)')">$(utcdate)</td><td class="wiki-desc">Today's date in UTC (YYYY-MM-DD)</td><td class="wiki-ex">2026-03-17</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(utcdatetime)')">$(utcdatetime)</td><td class="wiki-desc">Full UTC date and time</td><td class="wiki-ex">2026-03-17 18:30</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(daysleft)')">$(daysleft)</td><td class="wiki-desc">Days remaining in the current year</td><td class="wiki-ex">289</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(daysinyear)')">$(daysinyear)</td><td class="wiki-desc">Total days in the current year (365 or 366)</td><td class="wiki-ex">365</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(monthdays)')">$(monthdays)</td><td class="wiki-desc">Total days in the current month</td><td class="wiki-ex">31</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(monthpct)')">$(monthpct)</td><td class="wiki-desc">Percentage through the current month</td><td class="wiki-ex">54.8%</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(yearpct)')">$(yearpct)</td><td class="wiki-desc">Percentage through the current year</td><td class="wiki-ex">20.8%</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(isleapyear)')">$(isleapyear)</td><td class="wiki-desc">1 if current year is a leap year, else 0</td><td class="wiki-ex">0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(season)')">$(season)</td><td class="wiki-desc">Current meteorological season</td><td class="wiki-ex">Spring</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(dayofmonth)')">$(dayofmonth)</td><td class="wiki-desc">Day of the month (1–31)</td><td class="wiki-ex">17</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(yearshort)')">$(yearshort)</td><td class="wiki-desc">2-digit year</td><td class="wiki-ex">26</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(hour12)')">$(hour12)</td><td class="wiki-desc">Current hour in 12-hour format</td><td class="wiki-ex">6</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ampm)')">$(ampm)</td><td class="wiki-desc">AM or PM based on current hour</td><td class="wiki-ex">PM</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(milliseconds)')">$(milliseconds)</td><td class="wiki-desc">Current Unix time in milliseconds</td><td class="wiki-ex">1742235000000</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(since 2024-01-01)')">$(since YYYY-MM-DD)</td><td class="wiki-desc">Days since a given date</td><td class="wiki-ex">441</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(until 2026-12-31)')">$(until YYYY-MM-DD)</td><td class="wiki-desc">Days until a given date</td><td class="wiki-ex">289</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(age 1990-05-15)')">$(age YYYY-MM-DD)</td><td class="wiki-desc">Age in years from a birthdate</td><td class="wiki-ex">35</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(adddays 7)')">$(adddays N)</td><td class="wiki-desc">Date N days from today (YYYY-MM-DD)</td><td class="wiki-ex">2026-03-24</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(subdays 7)')">$(subdays N)</td><td class="wiki-desc">Date N days before today</td><td class="wiki-ex">2026-03-10</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(durationfmt 3661)')">$(durationfmt SECS)</td><td class="wiki-desc">Format seconds as Xh Xm Xs</td><td class="wiki-ex">1h 1m 1s</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(timeago 1742000000)')">$(timeago TIMESTAMP)</td><td class="wiki-desc">Human-readable time since a Unix timestamp</td><td class="wiki-ex">3 days ago</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(futuretime 1800)')">$(futuretime SECS)</td><td class="wiki-desc">Clock time N seconds from now</td><td class="wiki-ex">20:00</td></tr>
             </table>
         </div>
 
@@ -2029,6 +2264,12 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
             <table class="wiki-table">
                 <tr><td class="wiki-var" onclick="wikiCopy('$(bot)')">$(bot)</td><td class="wiki-desc">The bot's Twitch account name <span style="color:var(--success)">●</span></td><td class="wiki-ex">cubassist</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(channel)')">$(channel)</td><td class="wiki-desc">The channel name the command ran in <span style="color:var(--success)">●</span></td><td class="wiki-ex">cubsoftware</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(botname)')">$(botname)</td><td class="wiki-desc">The bot's Twitch username</td><td class="wiki-ex">CubAssist</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(channelurl)')">$(channelurl)</td><td class="wiki-desc">The channel's Twitch URL</td><td class="wiki-ex">twitch.tv/yourchannel</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(botversion)')">$(botversion)</td><td class="wiki-desc">Current bot version string</td><td class="wiki-ex">2.0.0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(prefix)')">$(prefix)</td><td class="wiki-desc">Bot command prefix character</td><td class="wiki-ex">!</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(cmdname)')">$(cmdname)</td><td class="wiki-desc">Name of the currently executing command</td><td class="wiki-ex">hello</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(channelname)')">$(channelname)</td><td class="wiki-desc">The broadcaster's channel name</td><td class="wiki-ex">yourchannel</td></tr>
             </table>
         </div>
 
@@ -2040,74 +2281,16 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 <tr><td class="wiki-var" onclick="wikiCopy('$(quote 1)')">$(quote N)</td><td class="wiki-desc">A specific quote by its number</td><td class="wiki-ex">#1: First quote</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(urlfetch https://example.com/api)')">$(urlfetch url)</td><td class="wiki-desc">Fetch the raw text body of a URL (max 500 chars, 5s timeout)</td><td class="wiki-ex">72°F</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(lore)')">$(lore)</td><td class="wiki-desc">Random entry from your channel's Lore list</td><td class="wiki-ex">The great fall of 2024...</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(cv:varname)')">$(cv:name)</td><td class="wiki-desc">Read a persistent custom channel variable by name</td><td class="wiki-ex">my stored value</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(customvar varname)')">$(customvar name)</td><td class="wiki-desc">Alias for $(cv:name) — read a named custom variable</td><td class="wiki-ex">my stored value</td></tr>
             </table>
         </div>
 
-        <div class="wiki-section">
-            <div class="wiki-section-title">✏️ Arguments Extended</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(args)')">$(args)</td><td class="wiki-desc">All arguments (alias for $(query))</td><td class="wiki-ex">hello world</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(arg1)')">$(arg1) / $(arg2)…</td><td class="wiki-desc">Shorthand for $(args 1), $(args 2), etc.</td><td class="wiki-ex">hello</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(lastarg)')">$(lastarg)</td><td class="wiki-desc">The last word in the input</td><td class="wiki-ex">world</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(argcount)')">$(argcount)</td><td class="wiki-desc">Number of words in the input</td><td class="wiki-ex">2</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(allbut 1)')">$(allbut N)</td><td class="wiki-desc">Everything after the Nth word</td><td class="wiki-ex">world</td></tr>
-            </table>
-        </div>
+
+
 
         <div class="wiki-section">
-            <div class="wiki-section-title">🕐 Date & Time Extended <span style="color:var(--success)">●</span></div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(time12)')">$(time12)</td><td class="wiki-desc">12-hour clock with AM/PM</td><td class="wiki-ex">8:35 PM</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(second)')">$(second)</td><td class="wiki-desc">Current second (00-59)</td><td class="wiki-ex">42</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(week)')">$(week)</td><td class="wiki-desc">Week of year (ISO, 01-53)</td><td class="wiki-ex">12</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(month)')">$(month)</td><td class="wiki-desc">Month number (01-12)</td><td class="wiki-ex">03</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(datetime)')">$(datetime)</td><td class="wiki-desc">Full date + time string</td><td class="wiki-ex">2025-03-14 20:35:42</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(iso)')">$(iso)</td><td class="wiki-desc">ISO 8601 datetime</td><td class="wiki-ex">2025-03-14T20:35:42</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(timestamp)')">$(timestamp)</td><td class="wiki-desc">Unix timestamp (seconds since epoch)</td><td class="wiki-ex">1741992942</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(unixtime)')">$(unixtime)</td><td class="wiki-desc">Alias for $(timestamp)</td><td class="wiki-ex">1741992942</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(timezone)')">$(timezone)</td><td class="wiki-desc">Server timezone identifier</td><td class="wiki-ex">UTC</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(countdown 2025-12-25)')">$(countdown YYYY-MM-DD)</td><td class="wiki-desc">Human-readable countdown to a date</td><td class="wiki-ex">285d 4h</td></tr>
-            </table>
-        </div>
-
-        <div class="wiki-section">
-            <div class="wiki-section-title">📺 Stream Extended</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(status)')">$(status)</td><td class="wiki-desc">online or offline</td><td class="wiki-ex">online</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(category)')">$(category)</td><td class="wiki-desc">Current category (alias for $(game))</td><td class="wiki-ex">Minecraft</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(language)')">$(language)</td><td class="wiki-desc">Stream language code</td><td class="wiki-ex">en</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(mature)')">$(mature)</td><td class="wiki-desc">1 if stream is marked mature, else 0</td><td class="wiki-ex">0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(peakviewers)')">$(peakviewers)</td><td class="wiki-desc">Peak viewer count this stream session</td><td class="wiki-ex">342</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(followage)')">$(followage)</td><td class="wiki-desc">How long the user has been following (Twitch API)</td><td class="wiki-ex">2y 3m</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(lastfm)')">$(lastfm)</td><td class="wiki-desc">Now playing from Last.fm (requires integration)</td><td class="wiki-ex">Artist - Song</td></tr>
-            </table>
-        </div>
-
-        <div class="wiki-section">
-            <div class="wiki-section-title">🔤 String Extended</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(trim $(query))')">$(trim text)</td><td class="wiki-desc">Remove leading/trailing whitespace</td><td class="wiki-ex">hello</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(title hello world)')">$(title text)</td><td class="wiki-desc">Title Case Every Word</td><td class="wiki-ex">Hello World</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(sentence hello world)')">$(sentence text)</td><td class="wiki-desc">Capitalise first letter only</td><td class="wiki-ex">Hello world</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(reverse hello)')">$(reverse text)</td><td class="wiki-desc">Reverse a string character by character</td><td class="wiki-ex">olleh</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(words hello world foo)')">$(words text)</td><td class="wiki-desc">Count of words in text</td><td class="wiki-ex">3</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(wordcount hello world foo)')">$(wordcount text)</td><td class="wiki-desc">Alias for $(words)</td><td class="wiki-ex">3</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(word 2 hello world)')">$(word N text)</td><td class="wiki-desc">Get the Nth word of text</td><td class="wiki-ex">world</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(char 1 hello)')">$(char N text)</td><td class="wiki-desc">Get the Nth character of text</td><td class="wiki-ex">h</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(slice hello|1|3)')">$(slice text|start|end)</td><td class="wiki-desc">Substring slice (Python-style indexes)</td><td class="wiki-ex">el</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(replace hello world|world|there)')">$(replace text|old|new)</td><td class="wiki-desc">Replace all occurrences of old with new in text</td><td class="wiki-ex">hello there</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(contains hello world|world)')">$(contains text|sub)</td><td class="wiki-desc">1 if sub is found in text, else 0</td><td class="wiki-ex">1</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(split a-b-c|-|1)')">$(split text|sep|idx)</td><td class="wiki-desc">Split text by separator and get item at index (0-based)</td><td class="wiki-ex">b</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(join -|a|b|c)')">$(join sep|w1|w2…)</td><td class="wiki-desc">Join words with a separator</td><td class="wiki-ex">a-b-c</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(pad 10|_|hello)')">$(pad N|char|text)</td><td class="wiki-desc">Left-pad text to N chars using char</td><td class="wiki-ex">_____hello</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(truncate 10 hello world foo)')">$(truncate N text)</td><td class="wiki-desc">Truncate text to N characters (adds … if cut)</td><td class="wiki-ex">hello worl…</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(startswith hello|hell)')">$(startswith prefix|text)</td><td class="wiki-desc">1 if text starts with prefix, else 0</td><td class="wiki-ex">1</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(endswith world|hello world)')">$(endswith suffix|text)</td><td class="wiki-desc">1 if text ends with suffix, else 0</td><td class="wiki-ex">1</td></tr>
-            </table>
-        </div>
-
-        <div class="wiki-section">
-            <div class="wiki-section-title">🔢 Math Extended</div>
+            <div class="wiki-section-title">🔢 Math</div>
             <table class="wiki-table">
                 <tr><td class="wiki-var" onclick="wikiCopy('$(add 5 3)')">$(add N N)</td><td class="wiki-desc">Addition</td><td class="wiki-ex">8</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(sub 10 4)')">$(sub N N)</td><td class="wiki-desc">Subtraction</td><td class="wiki-ex">6</td></tr>
@@ -2127,6 +2310,36 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 <tr><td class="wiki-var" onclick="wikiCopy('$(percent 45 200)')">$(percent N total)</td><td class="wiki-desc">N as a percentage of total</td><td class="wiki-ex">22.5</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(numformat 1234567)')">$(numformat N)</td><td class="wiki-desc">Format number with commas (1,234,567)</td><td class="wiki-ex">1,234,567</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(commas 1234567)')">$(commas N)</td><td class="wiki-desc">Alias for $(numformat N)</td><td class="wiki-ex">1,234,567</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(sin 1.5708)')">$(sin X)</td><td class="wiki-desc">Sine of X (radians)</td><td class="wiki-ex">1.0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(cos 0)')">$(cos X)</td><td class="wiki-desc">Cosine of X (radians)</td><td class="wiki-ex">1.0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(tan 0.7854)')">$(tan X)</td><td class="wiki-desc">Tangent of X (radians)</td><td class="wiki-ex">1.0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(asin 1)')">$(asin X)</td><td class="wiki-desc">Arc-sine of X → radians</td><td class="wiki-ex">1.5708</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(acos 0)')">$(acos X)</td><td class="wiki-desc">Arc-cosine of X → radians</td><td class="wiki-ex">1.5708</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(atan 1)')">$(atan X)</td><td class="wiki-desc">Arc-tangent of X → radians</td><td class="wiki-ex">0.7854</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(atan2 1 1)')">$(atan2 Y X)</td><td class="wiki-desc">Two-argument arc-tangent</td><td class="wiki-ex">0.7854</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(log 2.718)')">$(log X)</td><td class="wiki-desc">Natural logarithm of X</td><td class="wiki-ex">1.0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(log2 8)')">$(log2 X)</td><td class="wiki-desc">Base-2 logarithm of X</td><td class="wiki-ex">3.0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(log10 1000)')">$(log10 X)</td><td class="wiki-desc">Base-10 logarithm of X</td><td class="wiki-ex">3.0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(exp 1)')">$(exp X)</td><td class="wiki-desc">e raised to the power X</td><td class="wiki-ex">2.71828</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(hypot 3 4)')">$(hypot X Y)</td><td class="wiki-desc">Euclidean distance √(X²+Y²)</td><td class="wiki-ex">5.0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(trunc 3.7)')">$(trunc X)</td><td class="wiki-desc">Truncate X toward zero</td><td class="wiki-ex">3</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(frac 3.7)')">$(frac X)</td><td class="wiki-desc">Fractional part of X</td><td class="wiki-ex">0.7</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(gcd 12 8)')">$(gcd A B)</td><td class="wiki-desc">Greatest common divisor of A and B</td><td class="wiki-ex">4</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(lcm 4 6)')">$(lcm A B)</td><td class="wiki-desc">Least common multiple of A and B</td><td class="wiki-ex">12</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(factorial 5)')">$(factorial N)</td><td class="wiki-desc">N factorial (N!)</td><td class="wiki-ex">120</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(fib 10)')">$(fib N)</td><td class="wiki-desc">Nth Fibonacci number</td><td class="wiki-ex">55</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(isprime 7)')">$(isprime N)</td><td class="wiki-desc">1 if N is prime, else 0</td><td class="wiki-ex">1</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(digitsum 123)')">$(digitsum N)</td><td class="wiki-desc">Sum of all digits in N</td><td class="wiki-ex">6</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(digits 123)')">$(digits N)</td><td class="wiki-desc">Number of digits in N</td><td class="wiki-ex">3</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(digitreverse 1234)')">$(digitreverse N)</td><td class="wiki-desc">Reverse the digits of N</td><td class="wiki-ex">4321</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(countbits 7)')">$(countbits N)</td><td class="wiki-desc">Count of set bits (1s) in N</td><td class="wiki-ex">3</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(lerp 0 100 0.5)')">$(lerp A B T)</td><td class="wiki-desc">Linear interpolation from A to B at T (0–1)</td><td class="wiki-ex">50.0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(maprange 5 0 10 0 100)')">$(maprange X a1 a2 b1 b2)</td><td class="wiki-desc">Map X from range [a1,a2] to [b1,b2]</td><td class="wiki-ex">50.0</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(pi)')">$(pi)</td><td class="wiki-desc">π (3.14159…)</td><td class="wiki-ex">3.14159</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(e)')">$(e)</td><td class="wiki-desc">Euler's number (2.71828…)</td><td class="wiki-ex">2.71828</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(tau)')">$(tau)</td><td class="wiki-desc">τ = 2π (6.28318…)</td><td class="wiki-ex">6.28318</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(phi)')">$(phi)</td><td class="wiki-desc">Golden ratio φ (1.61803…)</td><td class="wiki-ex">1.61803</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(inf)')">$(inf)</td><td class="wiki-desc">Infinity symbol ∞</td><td class="wiki-ex">∞</td></tr>
             </table>
         </div>
 
@@ -2143,20 +2356,21 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 <tr><td class="wiki-var" onclick="wikiCopy('$(or $(ismod) $(isvip))')">$(or a b)</td><td class="wiki-desc">1 if either a or b is truthy, else 0</td><td class="wiki-ex">1</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(not $(ismod))')">$(not a)</td><td class="wiki-desc">Invert a boolean — 1 becomes 0 and vice versa</td><td class="wiki-ex">0</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(switch $(userlevel)|moderator:Mod|broadcaster:Boss|default:Viewer)')">$(switch val|k:v|…|default)</td><td class="wiki-desc">Return value matching key, or the default. E.g. label a user level.</td><td class="wiki-ex">Viewer</td></tr>
-            </table>
-        </div>
-
-        <div class="wiki-section">
-            <div class="wiki-section-title">🎲 Random Extended</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(flip)')">$(flip)</td><td class="wiki-desc">Heads or Tails</td><td class="wiki-ex">Heads</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(bool)')">$(bool)</td><td class="wiki-desc">Yes or No</td><td class="wiki-ex">Yes</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(percent)')">$(percent)</td><td class="wiki-desc">Random 0–100%</td><td class="wiki-ex">73%</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(roll)')">$(roll)</td><td class="wiki-desc">Roll a single d6</td><td class="wiki-ex">4</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(8ball)')">$(8ball)</td><td class="wiki-desc">Magic 8-ball answer</td><td class="wiki-ex">It is certain.</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(randomword apple banana cherry)')">$(randomword list)</td><td class="wiki-desc">Pick a random space-separated word from a list</td><td class="wiki-ex">banana</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(donger)')">$(donger)</td><td class="wiki-desc">Random ASCII emoticon</td><td class="wiki-ex">( ͡° ͜ʖ ͡°)</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(randomchatter)')">$(randomchatter)</td><td class="wiki-desc">Random username from recent chat</td><td class="wiki-ex">ChatUser42</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ifgt $(points)|100|rich!|broke)')">$(ifgt A|B|YES|NO)</td><td class="wiki-desc">YES if A &gt; B (numeric), else NO</td><td class="wiki-ex">rich!</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(iflt $(points)|100|low|ok)')">$(iflt A|B|YES|NO)</td><td class="wiki-desc">YES if A &lt; B (numeric), else NO</td><td class="wiki-ex">ok</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ifeq $(game)|Minecraft|MC fan!|other)')">$(ifeq A|B|YES|NO)</td><td class="wiki-desc">YES if A equals B, else NO</td><td class="wiki-ex">MC fan!</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ifne $(game)|Minecraft|not MC|MC)')">$(ifne A|B|YES|NO)</td><td class="wiki-desc">YES if A does not equal B, else NO</td><td class="wiki-ex">not MC</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ifempty $(query)|no args|$(query))')">$(ifempty TEXT|YES|NO)</td><td class="wiki-desc">YES if TEXT is empty/whitespace, else NO</td><td class="wiki-ex">no args</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ifnotempty $(query)|$(query)|nothing)')">$(ifnotempty TEXT|YES|NO)</td><td class="wiki-desc">YES if TEXT is not empty, else NO</td><td class="wiki-ex">nothing</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ifcontains $(game)|Craft|Minecraft!|other)')">$(ifcontains TEXT|SEARCH|YES|NO)</td><td class="wiki-desc">YES if TEXT contains SEARCH, else NO</td><td class="wiki-ex">Minecraft!</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ifstartswith $(query)|!|cmd|msg)')">$(ifstartswith TEXT|PREFIX|YES|NO)</td><td class="wiki-desc">YES if TEXT starts with PREFIX, else NO</td><td class="wiki-ex">msg</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ifendswith $(query)|?|question|statement)')">$(ifendswith TEXT|SUFFIX|YES|NO)</td><td class="wiki-desc">YES if TEXT ends with SUFFIX, else NO</td><td class="wiki-ex">statement</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(coalesce ||fallback)')">$(coalesce A|B|C)</td><td class="wiki-desc">Returns first non-empty value among A, B, C</td><td class="wiki-ex">fallback</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(default $(query)|nothing here)')">$(default TEXT|FALLBACK)</td><td class="wiki-desc">TEXT if non-empty, else FALLBACK</td><td class="wiki-ex">nothing here</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ternary 1|yes|no)')">$(ternary COND|YES|NO)</td><td class="wiki-desc">YES if COND is 1/true/yes, else NO</td><td class="wiki-ex">yes</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ifnum 42|it is a number|not a number)')">$(ifnum TEXT|YES|NO)</td><td class="wiki-desc">YES if TEXT is a valid number, else NO</td><td class="wiki-ex">it is a number</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(ifgte $(points)|100|rich|broke)')">$(ifgte A|B|YES|NO)</td><td class="wiki-desc">YES if A ≥ B (numeric), else NO</td><td class="wiki-ex">broke</td></tr>
+                <tr><td class="wiki-var" onclick="wikiCopy('$(iflte $(points)|100|low|ok)')">$(iflte A|B|YES|NO)</td><td class="wiki-desc">YES if A ≤ B (numeric), else NO</td><td class="wiki-ex">low</td></tr>
             </table>
         </div>
 
@@ -2270,42 +2484,6 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
         <!-- ═══════════════════════════════════════════════════════════════ -->
 
         <div class="wiki-section">
-            <div class="wiki-section-title">➕ Math Extended</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(sin 1.5708)')">$(sin X)</td><td class="wiki-desc">Sine of X (radians)</td><td class="wiki-ex">1.0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(cos 0)')">$(cos X)</td><td class="wiki-desc">Cosine of X (radians)</td><td class="wiki-ex">1.0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(tan 0.7854)')">$(tan X)</td><td class="wiki-desc">Tangent of X (radians)</td><td class="wiki-ex">1.0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(asin 1)')">$(asin X)</td><td class="wiki-desc">Arc-sine of X → radians</td><td class="wiki-ex">1.5708</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(acos 0)')">$(acos X)</td><td class="wiki-desc">Arc-cosine of X → radians</td><td class="wiki-ex">1.5708</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(atan 1)')">$(atan X)</td><td class="wiki-desc">Arc-tangent of X → radians</td><td class="wiki-ex">0.7854</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(atan2 1 1)')">$(atan2 Y X)</td><td class="wiki-desc">Two-argument arc-tangent</td><td class="wiki-ex">0.7854</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(log 2.718)')">$(log X)</td><td class="wiki-desc">Natural logarithm of X</td><td class="wiki-ex">1.0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(log2 8)')">$(log2 X)</td><td class="wiki-desc">Base-2 logarithm of X</td><td class="wiki-ex">3.0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(log10 1000)')">$(log10 X)</td><td class="wiki-desc">Base-10 logarithm of X</td><td class="wiki-ex">3.0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(exp 1)')">$(exp X)</td><td class="wiki-desc">e raised to the power X</td><td class="wiki-ex">2.71828</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(hypot 3 4)')">$(hypot X Y)</td><td class="wiki-desc">Euclidean distance √(X²+Y²)</td><td class="wiki-ex">5.0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(trunc 3.7)')">$(trunc X)</td><td class="wiki-desc">Truncate X toward zero</td><td class="wiki-ex">3</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(frac 3.7)')">$(frac X)</td><td class="wiki-desc">Fractional part of X</td><td class="wiki-ex">0.7</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(gcd 12 8)')">$(gcd A B)</td><td class="wiki-desc">Greatest common divisor of A and B</td><td class="wiki-ex">4</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(lcm 4 6)')">$(lcm A B)</td><td class="wiki-desc">Least common multiple of A and B</td><td class="wiki-ex">12</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(factorial 5)')">$(factorial N)</td><td class="wiki-desc">N factorial (N!)</td><td class="wiki-ex">120</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(fib 10)')">$(fib N)</td><td class="wiki-desc">Nth Fibonacci number</td><td class="wiki-ex">55</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(isprime 7)')">$(isprime N)</td><td class="wiki-desc">1 if N is prime, else 0</td><td class="wiki-ex">1</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(digitsum 123)')">$(digitsum N)</td><td class="wiki-desc">Sum of all digits in N</td><td class="wiki-ex">6</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(digits 123)')">$(digits N)</td><td class="wiki-desc">Number of digits in N</td><td class="wiki-ex">3</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(digitreverse 1234)')">$(digitreverse N)</td><td class="wiki-desc">Reverse the digits of N</td><td class="wiki-ex">4321</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(countbits 7)')">$(countbits N)</td><td class="wiki-desc">Count of set bits (1s) in N</td><td class="wiki-ex">3</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(lerp 0 100 0.5)')">$(lerp A B T)</td><td class="wiki-desc">Linear interpolation from A to B at T (0–1)</td><td class="wiki-ex">50.0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(maprange 5 0 10 0 100)')">$(maprange X a1 a2 b1 b2)</td><td class="wiki-desc">Map X from range [a1,a2] to [b1,b2]</td><td class="wiki-ex">50.0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(pi)')">$(pi)</td><td class="wiki-desc">π (3.14159…)</td><td class="wiki-ex">3.14159</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(e)')">$(e)</td><td class="wiki-desc">Euler's number (2.71828…)</td><td class="wiki-ex">2.71828</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(tau)')">$(tau)</td><td class="wiki-desc">τ = 2π (6.28318…)</td><td class="wiki-ex">6.28318</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(phi)')">$(phi)</td><td class="wiki-desc">Golden ratio φ (1.61803…)</td><td class="wiki-ex">1.61803</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(inf)')">$(inf)</td><td class="wiki-desc">Infinity symbol ∞</td><td class="wiki-ex">∞</td></tr>
-            </table>
-        </div>
-
-        <div class="wiki-section">
             <div class="wiki-section-title">🔣 Number Bases</div>
             <table class="wiki-table">
                 <tr><td class="wiki-var" onclick="wikiCopy('$(hex 255)')">$(hex N)</td><td class="wiki-desc">Decimal N to hexadecimal</td><td class="wiki-ex">ff</td></tr>
@@ -2316,93 +2494,6 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 <tr><td class="wiki-var" onclick="wikiCopy('$(frombin 101)')">$(frombin S)</td><td class="wiki-desc">Binary string S to decimal</td><td class="wiki-ex">5</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(roman 14)')">$(roman N)</td><td class="wiki-desc">Convert integer to Roman numerals</td><td class="wiki-ex">XIV</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(unroman XIV)')">$(unroman S)</td><td class="wiki-desc">Roman numeral string to integer</td><td class="wiki-ex">14</td></tr>
-            </table>
-        </div>
-
-        <div class="wiki-section">
-            <div class="wiki-section-title">📅 Date &amp; Time Extended</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(weekday)')">$(weekday)</td><td class="wiki-desc">Full name of current weekday</td><td class="wiki-ex">Tuesday</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(weekdaynum)')">$(weekdaynum)</td><td class="wiki-desc">Weekday number (Mon=0 … Sun=6)</td><td class="wiki-ex">1</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(yearday)')">$(yearday)</td><td class="wiki-desc">Day of year (1–366)</td><td class="wiki-ex">76</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(quarter)')">$(quarter)</td><td class="wiki-desc">Current quarter (Q1–Q4)</td><td class="wiki-ex">Q1</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(monthname)')">$(monthname)</td><td class="wiki-desc">Full name of current month</td><td class="wiki-ex">March</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(monthshort)')">$(monthshort)</td><td class="wiki-desc">3-letter month abbreviation</td><td class="wiki-ex">Mar</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(dayname)')">$(dayname)</td><td class="wiki-desc">Full weekday name</td><td class="wiki-ex">Tuesday</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(dayshort)')">$(dayshort)</td><td class="wiki-desc">3-letter weekday abbreviation</td><td class="wiki-ex">Tue</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(isweekend)')">$(isweekend)</td><td class="wiki-desc">1 if today is Sat/Sun, else 0</td><td class="wiki-ex">0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(isweekday)')">$(isweekday)</td><td class="wiki-desc">1 if today is Mon–Fri, else 0</td><td class="wiki-ex">1</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(utchour)')">$(utchour)</td><td class="wiki-desc">Current UTC hour (0–23)</td><td class="wiki-ex">18</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(utcdate)')">$(utcdate)</td><td class="wiki-desc">Today's date in UTC (YYYY-MM-DD)</td><td class="wiki-ex">2026-03-17</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(utcdatetime)')">$(utcdatetime)</td><td class="wiki-desc">Full UTC date and time</td><td class="wiki-ex">2026-03-17 18:30</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(daysleft)')">$(daysleft)</td><td class="wiki-desc">Days remaining in the current year</td><td class="wiki-ex">289</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(daysinyear)')">$(daysinyear)</td><td class="wiki-desc">Total days in the current year (365 or 366)</td><td class="wiki-ex">365</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(monthdays)')">$(monthdays)</td><td class="wiki-desc">Total days in the current month</td><td class="wiki-ex">31</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(monthpct)')">$(monthpct)</td><td class="wiki-desc">Percentage through the current month</td><td class="wiki-ex">54.8%</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(yearpct)')">$(yearpct)</td><td class="wiki-desc">Percentage through the current year</td><td class="wiki-ex">20.8%</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(isleapyear)')">$(isleapyear)</td><td class="wiki-desc">1 if current year is a leap year, else 0</td><td class="wiki-ex">0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(season)')">$(season)</td><td class="wiki-desc">Current meteorological season</td><td class="wiki-ex">Spring</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(dayofmonth)')">$(dayofmonth)</td><td class="wiki-desc">Day of the month (1–31)</td><td class="wiki-ex">17</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(yearshort)')">$(yearshort)</td><td class="wiki-desc">2-digit year</td><td class="wiki-ex">26</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(hour12)')">$(hour12)</td><td class="wiki-desc">Current hour in 12-hour format</td><td class="wiki-ex">6</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ampm)')">$(ampm)</td><td class="wiki-desc">AM or PM based on current hour</td><td class="wiki-ex">PM</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(milliseconds)')">$(milliseconds)</td><td class="wiki-desc">Current Unix time in milliseconds</td><td class="wiki-ex">1742235000000</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(since 2024-01-01)')">$(since YYYY-MM-DD)</td><td class="wiki-desc">Days since a given date</td><td class="wiki-ex">441</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(until 2026-12-31)')">$(until YYYY-MM-DD)</td><td class="wiki-desc">Days until a given date</td><td class="wiki-ex">289</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(age 1990-05-15)')">$(age YYYY-MM-DD)</td><td class="wiki-desc">Age in years from a birthdate</td><td class="wiki-ex">35</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(adddays 7)')">$(adddays N)</td><td class="wiki-desc">Date N days from today (YYYY-MM-DD)</td><td class="wiki-ex">2026-03-24</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(subdays 7)')">$(subdays N)</td><td class="wiki-desc">Date N days before today</td><td class="wiki-ex">2026-03-10</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(durationfmt 3661)')">$(durationfmt SECS)</td><td class="wiki-desc">Format seconds as Xh Xm Xs</td><td class="wiki-ex">1h 1m 1s</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(timeago 1742000000)')">$(timeago TIMESTAMP)</td><td class="wiki-desc">Human-readable time since a Unix timestamp</td><td class="wiki-ex">3 days ago</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(futuretime 1800)')">$(futuretime SECS)</td><td class="wiki-desc">Clock time N seconds from now</td><td class="wiki-ex">20:00</td></tr>
-            </table>
-        </div>
-
-        <div class="wiki-section">
-            <div class="wiki-section-title">🔤 String Advanced</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(pad 10 hello)')">$(pad N TEXT)</td><td class="wiki-desc">Center-pad TEXT to width N with spaces</td><td class="wiki-ex">&nbsp;&nbsp;hello&nbsp;&nbsp;</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(padr 10 hello)')">$(padr N TEXT)</td><td class="wiki-desc">Right-pad TEXT to width N with spaces</td><td class="wiki-ex">hello&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(padl 10 hello)')">$(padl N TEXT)</td><td class="wiki-desc">Left-pad TEXT to width N with spaces</td><td class="wiki-ex">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hello</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(repeatstr 3 ha)')">$(repeatstr N TEXT)</td><td class="wiki-desc">Repeat TEXT N times</td><td class="wiki-ex">hahaha</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(repeatjoin ha|3|-)')">$(repeatjoin TEXT|N|SEP)</td><td class="wiki-desc">Repeat TEXT N times joined by SEP</td><td class="wiki-ex">ha-ha-ha</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(chars hello)')">$(chars TEXT)</td><td class="wiki-desc">Number of characters in TEXT</td><td class="wiki-ex">5</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(indexof hello|l)')">$(indexof TEXT|SEARCH)</td><td class="wiki-desc">First index of SEARCH in TEXT (0-based)</td><td class="wiki-ex">2</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(lastindexof hello|l)')">$(lastindexof TEXT|SEARCH)</td><td class="wiki-desc">Last index of SEARCH in TEXT</td><td class="wiki-ex">3</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(strcount hello|l)')">$(strcount TEXT|CHAR)</td><td class="wiki-desc">Count occurrences of CHAR in TEXT</td><td class="wiki-ex">2</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(strcontains hello|ell)')">$(strcontains TEXT|SEARCH)</td><td class="wiki-desc">1 if TEXT contains SEARCH, else 0</td><td class="wiki-ex">1</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(startswith hello|hel)')">$(startswith TEXT|PREFIX)</td><td class="wiki-desc">1 if TEXT starts with PREFIX, else 0</td><td class="wiki-ex">1</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(endswith hello|llo)')">$(endswith TEXT|SUFFIX)</td><td class="wiki-desc">1 if TEXT ends with SUFFIX, else 0</td><td class="wiki-ex">1</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(initials John Doe)')">$(initials TEXT)</td><td class="wiki-desc">Initials of each word in TEXT</td><td class="wiki-ex">JD</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(camel hello world)')">$(camel TEXT)</td><td class="wiki-desc">Convert TEXT to camelCase</td><td class="wiki-ex">helloWorld</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(pascal hello world)')">$(pascal TEXT)</td><td class="wiki-desc">Convert TEXT to PascalCase</td><td class="wiki-ex">HelloWorld</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(snake Hello World)')">$(snake TEXT)</td><td class="wiki-desc">Convert TEXT to snake_case</td><td class="wiki-ex">hello_world</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(kebab Hello World)')">$(kebab TEXT)</td><td class="wiki-desc">Convert TEXT to kebab-case</td><td class="wiki-ex">hello-world</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(screaming hello world)')">$(screaming TEXT)</td><td class="wiki-desc">SCREAMING_SNAKE_CASE</td><td class="wiki-ex">HELLO_WORLD</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(swapcase Hello World)')">$(swapcase TEXT)</td><td class="wiki-desc">Swap upper and lower case of each letter</td><td class="wiki-ex">hELLO wORLD</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(altcase hello world)')">$(altcase TEXT)</td><td class="wiki-desc">Alternate casing: hElLo WoRlD</td><td class="wiki-ex">hElLo WoRlD</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(mock hello world)')">$(mock TEXT)</td><td class="wiki-desc">SpOnGeBoB mocking meme case</td><td class="wiki-ex">hElLo WoRlD</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(rot13 Hello)')">$(rot13 TEXT)</td><td class="wiki-desc">ROT-13 cipher transformation</td><td class="wiki-ex">Uryyb</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(pig hello)')">$(pig TEXT)</td><td class="wiki-desc">Pig Latin translation</td><td class="wiki-ex">ellohay</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(uwu hello world)')">$(uwu TEXT)</td><td class="wiki-desc">UwU-ify text (w substitutions, :3, etc.)</td><td class="wiki-ex">hewwo wowwd :3</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(leet hello)')">$(leet TEXT)</td><td class="wiki-desc">L33tspeak substitution</td><td class="wiki-ex">h3ll0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(zalgo hello)')">$(zalgo TEXT)</td><td class="wiki-desc">Zalgo glitch/corrupted text effect</td><td class="wiki-ex">h̷e̸l̶l̴o̵</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(palindrome racecar)')">$(palindrome TEXT)</td><td class="wiki-desc">1 if TEXT is a palindrome, else 0</td><td class="wiki-ex">1</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(base64e hello)')">$(base64e TEXT)</td><td class="wiki-desc">Base64-encode TEXT</td><td class="wiki-ex">aGVsbG8=</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(base64d aGVsbG8=)')">$(base64d TEXT)</td><td class="wiki-desc">Base64-decode TEXT</td><td class="wiki-ex">hello</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(urlenc hello world)')">$(urlenc TEXT)</td><td class="wiki-desc">URL-encode TEXT</td><td class="wiki-ex">hello%20world</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(urldec hello%20world)')">$(urldec TEXT)</td><td class="wiki-desc">URL-decode TEXT</td><td class="wiki-ex">hello world</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(md5 hello)')">$(md5 TEXT)</td><td class="wiki-desc">MD5 hash of TEXT</td><td class="wiki-ex">5d4140…</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(sha1 hello)')">$(sha1 TEXT)</td><td class="wiki-desc">SHA-1 hash of TEXT</td><td class="wiki-ex">aaf4c6…</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(sha256 hello)')">$(sha256 TEXT)</td><td class="wiki-desc">SHA-256 hash of TEXT</td><td class="wiki-ex">2cf24d…</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(crc32 hello)')">$(crc32 TEXT)</td><td class="wiki-desc">CRC32 checksum of TEXT</td><td class="wiki-ex">907060870</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(uuid)')">$(uuid)</td><td class="wiki-desc">Generate a random UUID v4</td><td class="wiki-ex">f47ac10b-…</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(nanoid)')">$(nanoid)</td><td class="wiki-desc">Generate a random 21-char NanoID</td><td class="wiki-ex">V1StGXR8_Z5jdHi6B-myT</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(nanoid 8)')">$(nanoid N)</td><td class="wiki-desc">Generate a random N-char NanoID</td><td class="wiki-ex">V1StGXR8</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(wordshuffle hello world foo)')">$(wordshuffle TEXT)</td><td class="wiki-desc">Shuffle the words in TEXT randomly</td><td class="wiki-ex">foo hello world</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(charshuffle hello)')">$(charshuffle TEXT)</td><td class="wiki-desc">Shuffle the characters in TEXT randomly</td><td class="wiki-ex">lolhe</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(stripspace hello  world)')">$(stripspace TEXT)</td><td class="wiki-desc">Collapse multiple spaces and trim</td><td class="wiki-ex">hello world</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(zfill 5 42)')">$(zfill N NUM)</td><td class="wiki-desc">Zero-pad NUM to width N</td><td class="wiki-ex">00042</td></tr>
             </table>
         </div>
 
@@ -2427,27 +2518,6 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 <tr><td class="wiki-var" onclick="wikiCopy('$(listadd a,b,c|d)')">$(listadd LIST|ITEM)</td><td class="wiki-desc">Append ITEM to LIST and return new LIST</td><td class="wiki-ex">a,b,c,d</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(listremove a,b,c|b)')">$(listremove LIST|ITEM)</td><td class="wiki-desc">Remove first occurrence of ITEM from LIST</td><td class="wiki-ex">a,c</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(listindex a,b,c|b)')">$(listindex LIST|ITEM)</td><td class="wiki-desc">1-based index of ITEM in LIST (0 if not found)</td><td class="wiki-ex">2</td></tr>
-            </table>
-        </div>
-
-        <div class="wiki-section">
-            <div class="wiki-section-title">🔀 Conditionals Extended</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ifgt $(points)|100|rich!|broke)')">$(ifgt A|B|YES|NO)</td><td class="wiki-desc">YES if A &gt; B (numeric), else NO</td><td class="wiki-ex">rich!</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(iflt $(points)|100|low|ok)')">$(iflt A|B|YES|NO)</td><td class="wiki-desc">YES if A &lt; B (numeric), else NO</td><td class="wiki-ex">ok</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ifeq $(game)|Minecraft|MC fan!|other)')">$(ifeq A|B|YES|NO)</td><td class="wiki-desc">YES if A equals B, else NO</td><td class="wiki-ex">MC fan!</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ifne $(game)|Minecraft|not MC|MC)')">$(ifne A|B|YES|NO)</td><td class="wiki-desc">YES if A does not equal B, else NO</td><td class="wiki-ex">not MC</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ifempty $(query)|no args|$(query))')">$(ifempty TEXT|YES|NO)</td><td class="wiki-desc">YES if TEXT is empty/whitespace, else NO</td><td class="wiki-ex">no args</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ifnotempty $(query)|$(query)|nothing)')">$(ifnotempty TEXT|YES|NO)</td><td class="wiki-desc">YES if TEXT is not empty, else NO</td><td class="wiki-ex">nothing</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ifcontains $(game)|Craft|Minecraft!|other)')">$(ifcontains TEXT|SEARCH|YES|NO)</td><td class="wiki-desc">YES if TEXT contains SEARCH, else NO</td><td class="wiki-ex">Minecraft!</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ifstartswith $(query)|!|cmd|msg)')">$(ifstartswith TEXT|PREFIX|YES|NO)</td><td class="wiki-desc">YES if TEXT starts with PREFIX, else NO</td><td class="wiki-ex">msg</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ifendswith $(query)|?|question|statement)')">$(ifendswith TEXT|SUFFIX|YES|NO)</td><td class="wiki-desc">YES if TEXT ends with SUFFIX, else NO</td><td class="wiki-ex">statement</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(coalesce ||fallback)')">$(coalesce A|B|C)</td><td class="wiki-desc">Returns first non-empty value among A, B, C</td><td class="wiki-ex">fallback</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(default $(query)|nothing here)')">$(default TEXT|FALLBACK)</td><td class="wiki-desc">TEXT if non-empty, else FALLBACK</td><td class="wiki-ex">nothing here</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ternary 1|yes|no)')">$(ternary COND|YES|NO)</td><td class="wiki-desc">YES if COND is 1/true/yes, else NO</td><td class="wiki-ex">yes</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ifnum 42|it is a number|not a number)')">$(ifnum TEXT|YES|NO)</td><td class="wiki-desc">YES if TEXT is a valid number, else NO</td><td class="wiki-ex">it is a number</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(ifgte $(points)|100|rich|broke)')">$(ifgte A|B|YES|NO)</td><td class="wiki-desc">YES if A ≥ B (numeric), else NO</td><td class="wiki-ex">broke</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(iflte $(points)|100|low|ok)')">$(iflte A|B|YES|NO)</td><td class="wiki-desc">YES if A ≤ B (numeric), else NO</td><td class="wiki-ex">low</td></tr>
             </table>
         </div>
 
@@ -2518,74 +2588,6 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 <tr><td class="wiki-var" onclick="wikiCopy('$(bar 50|10)')">$(bar PCT|WIDTH)</td><td class="wiki-desc">Alias for $(progressbar PCT|WIDTH)</td><td class="wiki-ex">█████░░░░░ 50%</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(stars 80|5)')">$(stars PCT|WIDTH)</td><td class="wiki-desc">Star-rating bar (★☆) at PCT% across W stars</td><td class="wiki-ex">★★★★☆</td></tr>
                 <tr><td class="wiki-var" onclick="wikiCopy('$(hpbar 750|1000)')">$(hpbar CUR|MAX)</td><td class="wiki-desc">HP health bar from CUR/MAX values</td><td class="wiki-ex">███████░░░ 750/1000</td></tr>
-            </table>
-        </div>
-
-        <div class="wiki-section">
-            <div class="wiki-section-title">🎲 Random Lists</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(word)')">$(word)</td><td class="wiki-desc">Random English word</td><td class="wiki-ex">ephemeral</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(adjective)')">$(adjective)</td><td class="wiki-desc">Random adjective</td><td class="wiki-ex">resilient</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(noun)')">$(noun)</td><td class="wiki-desc">Random noun</td><td class="wiki-ex">labyrinth</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(verb)')">$(verb)</td><td class="wiki-desc">Random verb</td><td class="wiki-ex">obliterate</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(color)')">$(color)</td><td class="wiki-desc">Random named color</td><td class="wiki-ex">crimson</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(animal)')">$(animal)</td><td class="wiki-desc">Random animal</td><td class="wiki-ex">axolotl</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(food)')">$(food)</td><td class="wiki-desc">Random food item</td><td class="wiki-ex">takoyaki</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(country)')">$(country)</td><td class="wiki-desc">Random country name</td><td class="wiki-ex">Iceland</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(capital)')">$(capital)</td><td class="wiki-desc">Random world capital city</td><td class="wiki-ex">Reykjavik</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(language)')">$(language)</td><td class="wiki-desc">Random spoken language</td><td class="wiki-ex">Swahili</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(firstname)')">$(firstname)</td><td class="wiki-desc">Random first name</td><td class="wiki-ex">Evelyn</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(lastname)')">$(lastname)</td><td class="wiki-desc">Random last name</td><td class="wiki-ex">Nakamura</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(weapon)')">$(weapon)</td><td class="wiki-desc">Random fantasy weapon name</td><td class="wiki-ex">vorpal blade</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(spell)')">$(spell)</td><td class="wiki-desc">Random magical spell</td><td class="wiki-ex">Infernis Maxima</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(potion)')">$(potion)</td><td class="wiki-desc">Random potion name</td><td class="wiki-ex">Elixir of Swiftness</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(superpower)')">$(superpower)</td><td class="wiki-desc">Random superpower</td><td class="wiki-ex">Time Manipulation</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(curse)')">$(curse)</td><td class="wiki-desc">Random fantasy curse</td><td class="wiki-ex">Eternal Slumber</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(prophecy)')">$(prophecy)</td><td class="wiki-desc">Random dramatic prophecy</td><td class="wiki-ex">When the moon bleeds…</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(achievement)')">$(achievement)</td><td class="wiki-desc">Random achievement name</td><td class="wiki-ex">First Blood</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(quest)')">$(quest)</td><td class="wiki-desc">Random RPG quest title</td><td class="wiki-ex">The Lost Relic</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(rpgclass)')">$(rpgclass)</td><td class="wiki-desc">Random RPG class</td><td class="wiki-ex">Paladin</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(fantasyrace)')">$(fantasyrace)</td><td class="wiki-desc">Random fantasy race</td><td class="wiki-ex">Half-Elf</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(monster)')">$(monster)</td><td class="wiki-desc">Random monster name</td><td class="wiki-ex">Basilisk</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(dungeon)')">$(dungeon)</td><td class="wiki-desc">Random dungeon name</td><td class="wiki-ex">Caverns of Despair</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(loot)')">$(loot)</td><td class="wiki-desc">Random loot item</td><td class="wiki-ex">Legendary Boots of Speed</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(horoscope)')">$(horoscope)</td><td class="wiki-desc">Random horoscope prediction</td><td class="wiki-ex">Success awaits the bold</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(fortune)')">$(fortune)</td><td class="wiki-desc">Random fortune cookie message</td><td class="wiki-ex">A change is coming</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(riddle)')">$(riddle)</td><td class="wiki-desc">Random riddle</td><td class="wiki-ex">I speak without a mouth…</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(pun)')">$(pun)</td><td class="wiki-desc">Random pun</td><td class="wiki-ex">It grew on me</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(showerthought)')">$(showerthought)</td><td class="wiki-desc">Random shower thought</td><td class="wiki-ex">Mirrors are just windows…</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(wyr)')">$(wyr)</td><td class="wiki-desc">Random "Would You Rather" question</td><td class="wiki-ex">Be invisible or fly?</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(truth)')">$(truth)</td><td class="wiki-desc">Random truth question for Truth or Dare</td><td class="wiki-ex">What's your biggest fear?</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(dare)')">$(dare)</td><td class="wiki-desc">Random dare for Truth or Dare</td><td class="wiki-ex">Do your best impression</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(pickup)')">$(pickup)</td><td class="wiki-desc">Random pick-up line</td><td class="wiki-ex">Are you a map? I got lost in your eyes</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(insult)')">$(insult)</td><td class="wiki-desc">Random playful insult</td><td class="wiki-ex">You're like a software update — ignored</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(musicgenre)')">$(musicgenre)</td><td class="wiki-desc">Random music genre</td><td class="wiki-ex">Synthwave</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(instrument)')">$(instrument)</td><td class="wiki-desc">Random musical instrument</td><td class="wiki-ex">Theremin</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(sport)')">$(sport)</td><td class="wiki-desc">Random sport</td><td class="wiki-ex">Curling</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(esport)')">$(esport)</td><td class="wiki-desc">Random esport title</td><td class="wiki-ex">Counter-Strike 2</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(esportteam)')">$(esportteam)</td><td class="wiki-desc">Random esports team name</td><td class="wiki-ex">Team Liquid</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(boardgame)')">$(boardgame)</td><td class="wiki-desc">Random board game</td><td class="wiki-ex">Terraforming Mars</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(proglang)')">$(proglang)</td><td class="wiki-desc">Random programming language</td><td class="wiki-ex">Rust</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(framework)')">$(framework)</td><td class="wiki-desc">Random software framework</td><td class="wiki-ex">SvelteKit</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(algorithm)')">$(algorithm)</td><td class="wiki-desc">Random algorithm name</td><td class="wiki-ex">Dijkstra's Shortest Path</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(datastructure)')">$(datastructure)</td><td class="wiki-desc">Random data structure</td><td class="wiki-ex">Red-Black Tree</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(planet)')">$(planet)</td><td class="wiki-desc">Random planet in the solar system</td><td class="wiki-ex">Neptune</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(constellation)')">$(constellation)</td><td class="wiki-desc">Random constellation name</td><td class="wiki-ex">Orion</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(element)')">$(element)</td><td class="wiki-desc">Random periodic table element</td><td class="wiki-ex">Xenon</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(fruit)')">$(fruit)</td><td class="wiki-desc">Random fruit</td><td class="wiki-ex">Dragonfruit</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(vegetable)')">$(vegetable)</td><td class="wiki-desc">Random vegetable</td><td class="wiki-ex">Artichoke</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(cocktail)')">$(cocktail)</td><td class="wiki-desc">Random cocktail name</td><td class="wiki-ex">Negroni</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(cuisine)')">$(cuisine)</td><td class="wiki-desc">Random world cuisine style</td><td class="wiki-ex">Ethiopian</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(kaomoji)')">$(kaomoji)</td><td class="wiki-desc">Random kaomoji emoticon</td><td class="wiki-ex">(づ｡◕‿‿◕｡)づ</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(lifehack)')">$(lifehack)</td><td class="wiki-desc">Random life hack tip</td><td class="wiki-ex">Use rubber bands to open jars easily</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(tarot)')">$(tarot)</td><td class="wiki-desc">Random tarot card name</td><td class="wiki-ex">The Moon</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(chinesezodiac)')">$(chinesezodiac)</td><td class="wiki-desc">Random Chinese zodiac sign</td><td class="wiki-ex">Year of the Dragon</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(moonphase)')">$(moonphase)</td><td class="wiki-desc">Random moon phase with emoji</td><td class="wiki-ex">🌖 Waning Gibbous</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(randomemoji)')">$(randomemoji)</td><td class="wiki-desc">Random emoji character</td><td class="wiki-ex">🦊</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(randomip)')">$(randomip)</td><td class="wiki-desc">Random fake IPv4 address</td><td class="wiki-ex">192.168.42.7</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(randommac)')">$(randommac)</td><td class="wiki-desc">Random fake MAC address</td><td class="wiki-ex">2A:F3:07:C1:88:4E</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(randomport)')">$(randomport)</td><td class="wiki-desc">Random port number (1024–65535)</td><td class="wiki-ex">49152</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(randomhttpstatus)')">$(randomhttpstatus)</td><td class="wiki-desc">Random HTTP status code</td><td class="wiki-ex">418</td></tr>
             </table>
         </div>
 
@@ -2665,18 +2667,6 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
         </div>
 
         <div class="wiki-section">
-            <div class="wiki-section-title">🤖 Bot &amp; System</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(botname)')">$(botname)</td><td class="wiki-desc">The bot's Twitch username</td><td class="wiki-ex">CubAssist</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(channelurl)')">$(channelurl)</td><td class="wiki-desc">The channel's Twitch URL</td><td class="wiki-ex">twitch.tv/yourchannel</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(botversion)')">$(botversion)</td><td class="wiki-desc">Current bot version string</td><td class="wiki-ex">2.0.0</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(prefix)')">$(prefix)</td><td class="wiki-desc">Bot command prefix character</td><td class="wiki-ex">!</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(cmdname)')">$(cmdname)</td><td class="wiki-desc">Name of the currently executing command</td><td class="wiki-ex">hello</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(channelname)')">$(channelname)</td><td class="wiki-desc">The broadcaster's channel name</td><td class="wiki-ex">yourchannel</td></tr>
-            </table>
-        </div>
-
-        <div class="wiki-section">
             <div class="wiki-section-title">🔗 Socials</div>
             <table class="wiki-table">
                 <tr><td class="wiki-var" onclick="wikiCopy('$(discordurl)')">$(discordurl)</td><td class="wiki-desc">Discord server invite link (from channel config)</td><td class="wiki-ex">discord.gg/yourserver</td></tr>
@@ -2688,20 +2678,6 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
             </table>
         </div>
 
-        <div class="wiki-section">
-            <div class="wiki-section-title">📦 Custom Variables</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(cv:varname)')">$(cv:name)</td><td class="wiki-desc">Read a persistent custom channel variable by name</td><td class="wiki-ex">my stored value</td></tr>
-                <tr><td class="wiki-var" onclick="wikiCopy('$(customvar varname)')">$(customvar name)</td><td class="wiki-desc">Alias for $(cv:name) — read a named custom variable</td><td class="wiki-ex">my stored value</td></tr>
-            </table>
-        </div>
-
-        <div class="wiki-section">
-            <div class="wiki-section-title">🔢 Counter Access</div>
-            <table class="wiki-table">
-                <tr><td class="wiki-var" onclick="wikiCopy('$(counter:countername)')">$(counter:name)</td><td class="wiki-desc">Read a persistent counter value by name</td><td class="wiki-ex">47</td></tr>
-            </table>
-        </div>
     </div>
 </div>
 

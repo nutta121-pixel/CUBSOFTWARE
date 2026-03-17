@@ -371,8 +371,16 @@
         grid-template-columns: repeat(2, 1fr);
     }
 
+    .feature-card {
+        padding: 24px 20px;
+    }
+
     .feature-card h3 {
         font-size: 1.3rem;
+    }
+
+    .category-section {
+        margin-bottom: 36px;
     }
 }
 
@@ -400,15 +408,28 @@
         max-width: none;
     }
 
+    .features-grid-4col {
+        grid-template-columns: 1fr;
+    }
+
     .feature-card {
-        padding: 25px;
+        padding: 20px;
     }
 
     .feature-card h3 {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 
     .feature-card p {
-        font-size: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .about-section {
+        padding: 40px 12px;
+    }
+
+    .category-title {
+        font-size: 1.1rem;
+        letter-spacing: 1.5px;
     }
 }

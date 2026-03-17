@@ -262,7 +262,7 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
 .wiki-var { font-family: 'Fira Code', monospace; color: #a78bfa; white-space: nowrap; cursor: pointer; }
 .wiki-var:hover { color: #c4b5fd; text-decoration: underline; }
 .wiki-desc { color: var(--text-sec); padding: 0 12px; }
-.wiki-ex { font-family: 'Fira Code', monospace; color: var(--success); font-size: 11px; opacity: .8; white-space: nowrap; }
+.wiki-ex { display: none; }
 
 /* ── Responsive ─────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
@@ -311,8 +311,7 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
     /* Cards */
     .card { padding: 14px 16px; }
 
-    /* Wiki modal — hide example column, allow variable wrap */
-    .wiki-ex { display: none; }
+    /* Wiki modal — allow variable wrap on small screens */
     .wiki-var { white-space: normal; word-break: break-word; }
     .wiki-table { font-size: 11px; }
 

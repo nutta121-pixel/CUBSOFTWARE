@@ -14,7 +14,7 @@ import urllib.parse
 from pathlib import Path
 
 from flask import (Blueprint, request, jsonify, session,
-                   redirect, render_template)
+                   redirect, render_template, make_response)
 
 sys.path.insert(0, str(Path(__file__).parent))
 from bot_core import (
@@ -80,9 +80,41 @@ def _save_global_settings(data: dict):
 
 _login_states: dict[str, float] = {}
 
+# ── Persistent remember-me token store ─────────────────────────────────────────
+
+_REMEMBER_COOKIE = 'cubassist_remember'
+_REMEMBER_MAX_AGE = 365 * 24 * 3600  # 1 year
+
+def _remembered_path() -> Path:
+    return _data_dir() / 'remembered_users.json'
+
+def _load_remembered() -> dict:
+    p = _remembered_path()
+    try:
+        return _json.loads(p.read_text()) if p.exists() else {}
+    except Exception:
+        return {}
+
+def _save_remembered(data: dict):
+    _remembered_path().write_text(_json.dumps(data, indent=2))
+
 # ── Auth helpers ────────────────────────────────────────────────────────────────
 
+def _restore_from_cookie():
+    """If session has no cubassist_user, try to restore it from the remember cookie."""
+    if session.get('cubassist_user'):
+        return
+    token = request.cookies.get(_REMEMBER_COOKIE)
+    if not token:
+        return
+    remembered = _load_remembered()
+    user = remembered.get(token)
+    if user:
+        session.permanent = True
+        session['cubassist_user'] = user
+
 def _authed():
+    _restore_from_cookie()
     return (session.get('cubassist_user') or
             session.get('cubdeck_user') or
             session.get('cubsoftware_user'))
@@ -94,6 +126,7 @@ def _require_auth():
 
 def _user_channel() -> str:
     """Returns the logged-in user's Twitch channel name."""
+    _restore_from_cookie()
     user = (session.get('cubassist_user') or
             session.get('cubdeck_user') or
             session.get('cubsoftware_user') or {})
@@ -120,7 +153,6 @@ def login():
         'response_type': 'code',
         'scope':         'user:write:chat moderation:read channel:bot',
         'state':         state,
-        'force_verify':  'true',
     })
     return redirect(f'https://id.twitch.tv/oauth2/authorize?{params}')
 
@@ -168,14 +200,21 @@ def login_callback():
     except Exception as e:
         return render_template('cubassist-login.html', error=f'Failed to fetch user info: {e}')
 
-    session.permanent = True
-    session['cubassist_user'] = {
+    user_data = {
         'login':         user_info.get('login', ''),
         'display_name':  user_info.get('display_name', ''),
         'profile_image': user_info.get('profile_image_url', ''),
         'id':            user_info.get('id', ''),
         'access_token':  access_token,
     }
+    session.permanent = True
+    session['cubassist_user'] = user_data
+
+    # Save persistent remember-me token
+    remember_token = secrets.token_hex(32)
+    remembered = _load_remembered()
+    remembered[remember_token] = user_data
+    _save_remembered(remembered)
 
     # Register the user's channel and make the bot join it
     channel = user_info.get('login', '').lower()
@@ -187,12 +226,28 @@ def login_callback():
         else:
             bot.join_channel(channel)
 
-    return redirect('/cubassist/')
+    resp = make_response(redirect('/cubassist/'))
+    resp.set_cookie(
+        _REMEMBER_COOKIE, remember_token,
+        max_age=_REMEMBER_MAX_AGE,
+        httponly=True,
+        samesite='Lax',
+        secure=not os.environ.get('DEV_MODE'),
+    )
+    return resp
 
 @cubassist_bp.route('/logout')
 def logout():
+    # Clear persistent remember-me token
+    token = request.cookies.get(_REMEMBER_COOKIE)
+    if token:
+        remembered = _load_remembered()
+        remembered.pop(token, None)
+        _save_remembered(remembered)
     session.pop('cubassist_user', None)
-    return redirect('/cubassist/')
+    resp = make_response(redirect('/cubassist/'))
+    resp.delete_cookie(_REMEMBER_COOKIE)
+    return resp
 
 # ── Pages ───────────────────────────────────────────────────────────────────────
 

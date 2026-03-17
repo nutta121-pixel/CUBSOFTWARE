@@ -50,7 +50,9 @@ module.exports = {
                 DISCORD_CLIENT_SECRET: s('DISCORD_CLIENT_SECRET'),
                 TWITCH_CLIENT_ID: '9n9yjc79p44kpsluv81kvvh6h9bxvu',
                 TWITCH_CLIENT_SECRET: s('TWITCH_CLIENT_SECRET'),
-                TWITCH_REDIRECT_URI: 'https://cubsoftware.site/apps/multi-twitch'
+                TWITCH_REDIRECT_URI: 'https://cubsoftware.site/apps/multi-twitch',
+                CUBASSIST_ADMIN_KEY: s('CUBASSIST_ADMIN_KEY'),
+                FLASK_SECRET_KEY: s('FLASK_SECRET_KEY'),
             },
             env_development: {
                 FLASK_ENV: 'development',

@@ -332,7 +332,7 @@ async function joinChannelForSpeaking(channelId, guildId) {
             channelId: channelId,
             guildId: guildId,
             adapterCreator: guild.voiceAdapterCreator,
-            selfDeaf: true,
+            selfDeaf: false,  // Must be false — selfDeaf stops RTP packets, breaking receiver.speaking
             selfMute: true
         });
 

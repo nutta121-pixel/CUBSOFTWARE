@@ -484,6 +484,61 @@ public class CPHInline
             CPH.LogWarn("Discord webhook not configured. Edit line 423 to set your webhook URL.");
         }
 
+        // ===== AI SHOUTOUT CONFIGURATION =====
+        // Used by: Shoutout-AI Generated Text/shoutout-with-generated-text.cs
+        // Run this config once to set defaults. Change any value here and re-run to update.
+
+        // -- REQUIRED --
+        // Get a free Groq API key at https://console.groq.com (no credit card needed)
+        string groqApiKey = "YOUR_GROQ_API_KEY_HERE";
+        CPH.SetGlobalVar("groqApiKey", groqApiKey, true);
+
+        // Get Client ID and Secret by registering a free app at https://dev.twitch.tv/console/apps
+        // Set redirect URL to http://localhost - app name does not matter
+        // The shoutout command uses these to look up the last game played (works even when offline)
+        string shoutoutTwitchClientId     = "YOUR_TWITCH_CLIENT_ID_HERE";
+        string shoutoutTwitchClientSecret = "YOUR_TWITCH_CLIENT_SECRET_HERE";
+        CPH.SetGlobalVar("twitchClientId",     shoutoutTwitchClientId,     true);
+        CPH.SetGlobalVar("twitchClientSecret", shoutoutTwitchClientSecret, true);
+
+        // -- STYLE --
+        // Controls the vibe of every generated shoutout.
+        // Options: hype | funny | chill | chaotic | professional
+        string shoutoutStyle = "hype";
+        CPH.SetGlobalVar("shoutoutStyle", shoutoutStyle, true);
+
+        // -- AI MODEL --
+        // llama-3.1-8b-instant  = fast, free (default)
+        // llama-3.3-70b-versatile = smarter output, still free
+        string shoutoutModel = "llama-3.1-8b-instant";
+        CPH.SetGlobalVar("shoutoutModel", shoutoutModel, true);
+
+        // -- EXTRA INSTRUCTIONS (optional) --
+        // Bolt extra rules onto any style. Leave blank for no extras.
+        // Examples: "Always end with a relevant emoji."
+        //           "Always include a fun fact about the game."
+        //           "Always mention their follower count."
+        string shoutoutExtra = "";
+        CPH.SetGlobalVar("shoutoutExtra", shoutoutExtra, true);
+
+        // -- CUSTOM PROMPT (optional) --
+        // Override the entire AI instruction with your own. Leave blank to use the built-in prompt.
+        // Available tokens: {name} {login} {game} {link} {title} {bio} {tags}
+        //                   {badge} {status} {followers} {age} {since} {by} {today}
+        // Example: "Roast {name} for playing {game} then tell everyone to go to {link}."
+        string shoutoutPrompt = "";
+        CPH.SetGlobalVar("shoutoutPrompt", shoutoutPrompt, true);
+
+        // Check if Groq API key was configured
+        if (groqApiKey != "YOUR_GROQ_API_KEY_HERE")
+        {
+            CPH.LogInfo("AI Shoutout: Groq API key configured successfully.");
+        }
+        else
+        {
+            CPH.LogWarn("AI Shoutout: Groq API key not set. Edit shoutoutTwitchClientId above. Get a free key at https://console.groq.com");
+        }
+
         // Check if YouTube API key was configured
         if (!string.IsNullOrEmpty(youtubeApiKey) && youtubeApiKey != "YOUR_YOUTUBE_API_KEY_HERE")
         {

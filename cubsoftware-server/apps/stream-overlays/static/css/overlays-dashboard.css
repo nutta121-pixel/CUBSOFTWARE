@@ -125,7 +125,7 @@
 /* ─── Scenes Grid ─── */
 .ov-scenes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 18px;
 }
 
@@ -318,7 +318,7 @@
 /* ─── Responsive ─── */
 @media (max-width: 900px) {
     .ov-dashboard { padding: 20px 24px 60px; }
-    .ov-scenes-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+    .ov-scenes-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
 }
 @media (max-width: 600px) {
     .ov-dashboard { padding: 16px 14px 60px; }

@@ -4512,6 +4512,8 @@ def admin_get_features():
         {'id': 'cubreactive', 'name': 'CubReactive', 'description': 'Discord reactive images for streamers'},
         {'id': 'cubpresence', 'name': 'CubPresence', 'description': 'Discord custom rich presence from your browser'},
         {'id': 'cleanme', 'name': 'CleanMe', 'description': 'Discord bot management'},
+        {'id': 'cubassist', 'name': 'CubAssist', 'description': 'Twitch bot dashboard and management'},
+        {'id': 'stream-overlays', 'name': 'Stream Overlays', 'description': 'OBS stream overlays and scenes'},
         {'id': 'admin-dashboard', 'name': 'Admin Dashboard', 'description': 'Admin control panel'},
     ]
 
@@ -4815,6 +4817,42 @@ def enforce_ip_bans():
                                  reason=reason,
                                  ban_type=ban_type,
                                  expires=expires), 403
+
+    return None
+
+# Blueprint feature enforcement - block direct URL access when feature is disabled
+@app.before_request
+def enforce_blueprint_features():
+    """Block access to CubAssist and Stream Overlays when disabled via admin features panel"""
+    path = request.path
+
+    # Skip static files and admin/auth routes so admins can always re-enable
+    if path.startswith('/static/') or path.startswith('/api/admin/') or path.startswith('/api/pm2/') or path.startswith('/dashboard'):
+        return None
+
+    # Map URL prefixes to feature IDs
+    blueprint_feature_map = [
+        ('/cubassist/login', None),        # Always allow login/auth (no block)
+        ('/cubassist/logout', None),
+        ('/cubassist', 'cubassist'),
+        ('/overlays/auth', None),          # Always allow OAuth callbacks
+        ('/overlays/twitch/webhook', None), # Always allow EventSub webhooks
+        ('/overlays/source/', None),        # Always allow OBS browser source URLs
+        ('/overlays/alerts/', None),        # Always allow OBS alert overlay URLs
+        ('/overlays', 'stream-overlays'),
+    ]
+
+    for prefix, feature_id in blueprint_feature_map:
+        if path.startswith(prefix):
+            if feature_id and is_feature_disabled(feature_id):
+                if request.is_json or path.startswith('/api/'):
+                    return jsonify({
+                        'error': 'Feature disabled',
+                        'feature': feature_id,
+                        'message': 'This feature is currently disabled for maintenance.'
+                    }), 503
+                return render_template('feature-disabled.html', feature=feature_id), 503
+            break  # First matching prefix wins
 
     return None
 

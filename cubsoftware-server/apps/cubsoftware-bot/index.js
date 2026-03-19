@@ -436,8 +436,9 @@ async function joinChannelForSpeaking(channelId, guildId) {
     }
 }
 
-// Subscribe to a user's audio stream so @discordjs/voice triggers speaking events
-// Newer versions of the library require at least one active subscription per user
+// Subscribe to a user's audio stream and detect speaking from packet timing.
+// This bypasses receiver.speaking (unreliable in @discordjs/voice 0.16+) and
+// instead uses raw data arrival: packets arriving = speaking, 250ms silence = stopped.
 function subscribeForSpeaking(connection, userId, channelId) {
     const channelSubs = activeSubscriptions.get(channelId);
     if (channelSubs && channelSubs.has(userId)) return; // Already subscribed
@@ -446,9 +447,34 @@ function subscribeForSpeaking(connection, userId, channelId) {
         const stream = connection.receiver.subscribe(userId, {
             end: { behavior: EndBehaviorType.Manual }
         });
-        // Drain without processing — we only need speaking events, not the audio
-        stream.on('data', () => {});
+
+        let speakTimeout = null;
+        let currentlySpeaking = false;
+
+        const setSpeaking = (value) => {
+            if (currentlySpeaking === value) return;
+            currentlySpeaking = value;
+            const state = voiceStates.get(userId);
+            if (state) {
+                state.speaking = value;
+                voiceStates.set(userId, state);
+                broadcastVoiceUpdate(userId, state);
+                console.log(`[CubReactive] Speaking ${value ? 'start' : 'end'}: ${state.username} (${userId})`);
+            }
+        };
+
+        stream.on('data', () => {
+            setSpeaking(true);
+            clearTimeout(speakTimeout);
+            speakTimeout = setTimeout(() => setSpeaking(false), 250);
+        });
+
         stream.on('error', () => {});
+
+        stream.on('close', () => {
+            clearTimeout(speakTimeout);
+            setSpeaking(false);
+        });
 
         if (!activeSubscriptions.has(channelId)) activeSubscriptions.set(channelId, new Map());
         activeSubscriptions.get(channelId).set(userId, stream);
@@ -1956,10 +1982,11 @@ client.once('ready', () => {
     terminal.init();
     registerCommands();
     startLogServer();
-    startCubReactiveWebSocket();
 
-    // Scan all voice channels on startup to capture users already in voice
+    // Scan BEFORE starting WebSocket server so voiceStates is populated
+    // when OBS overlay reconnects immediately after bot restart
     scanAllVoiceChannels();
+    startCubReactiveWebSocket();
 });
 
 // Scan all voice channels across all guilds to capture existing voice states
@@ -2139,11 +2166,9 @@ function startLogServer() {
     });
 
     // CubReactive: notify overlay clients to refresh when config changes
+    // No auth check needed — server is bound to 127.0.0.1 (internal only)
     app.post('/cubreactive/refresh', (req, res) => {
-        const { userId, apiKey } = req.body;
-        if (apiKey !== config.apiKey) {
-            return res.status(401).json({ error: 'Invalid API key' });
-        }
+        const { userId } = req.body;
         if (!userId) {
             return res.status(400).json({ error: 'userId required' });
         }

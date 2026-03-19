@@ -396,6 +396,286 @@ def cleanme_logo_image():
 </svg>'''
     return Response(svg, mimetype='image/svg+xml')
 
+# ==================== UNIFIED LOGIN SYSTEM ====================
+
+CUB_REMEMBERED_USERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'cub_remembered_users.json')
+CUB_REMEMBER_COOKIE = 'cub_remember'
+CUB_REMEMBER_DAYS = 30
+CUB_LOGIN_DISCORD_REDIRECT = os.environ.get('CUB_LOGIN_DISCORD_REDIRECT', 'https://cubsoftware.site/login/discord/callback')
+CUB_LOGIN_TWITCH_REDIRECT = os.environ.get('CUB_LOGIN_TWITCH_REDIRECT', 'https://cubsoftware.site/login/twitch/callback')
+
+def _cub_load_remembered():
+    if os.path.exists(CUB_REMEMBERED_USERS_FILE):
+        try:
+            with open(CUB_REMEMBERED_USERS_FILE, 'r') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def _cub_save_remembered(data):
+    os.makedirs(os.path.dirname(CUB_REMEMBERED_USERS_FILE), exist_ok=True)
+    with open(CUB_REMEMBERED_USERS_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
+
+def _cub_create_remember_token(user_data):
+    token = secrets.token_urlsafe(48)
+    data = _cub_load_remembered()
+    data[token] = {
+        'user': user_data,
+        'expires': (datetime.utcnow() + timedelta(days=CUB_REMEMBER_DAYS)).isoformat()
+    }
+    _cub_save_remembered(data)
+    return token
+
+def _cub_validate_remember_token(token):
+    data = _cub_load_remembered()
+    entry = data.get(token)
+    if not entry:
+        return None
+    try:
+        if datetime.utcnow() > datetime.fromisoformat(entry['expires']):
+            del data[token]
+            _cub_save_remembered(data)
+            return None
+    except Exception:
+        return None
+    return entry['user']
+
+def _cub_revoke_remember_token(token):
+    data = _cub_load_remembered()
+    if token in data:
+        del data[token]
+        _cub_save_remembered(data)
+
+def _safe_next_url(url):
+    """Only allow relative URLs to prevent open redirect"""
+    if not url or '://' in url or url.startswith('//'):
+        return '/'
+    return url if url.startswith('/') else '/'
+
+@app.before_request
+def _cub_restore_session():
+    """Restore unified session from remember cookie when Flask session expires"""
+    if session.get('cub_user'):
+        return
+    token = request.cookies.get(CUB_REMEMBER_COOKIE)
+    if token:
+        user_data = _cub_validate_remember_token(token)
+        if user_data:
+            session.permanent = True
+            session['cub_user'] = user_data
+
+@app.before_request
+def _cub_bridge_session():
+    """Populate legacy per-app session keys from the unified cub_user so existing tools work"""
+    cub = session.get('cub_user')
+    if not cub:
+        return
+    provider = cub.get('provider')
+    base = {'id': cub['id'], 'username': cub['username'], 'avatar': cub['avatar']}
+
+    if provider == 'discord':
+        if not session.get('cubreactive_user'):
+            session['cubreactive_user'] = {**base, 'authenticated_at': cub.get('authenticated_at', time.time())}
+        if not session.get('cleanme_user'):
+            session['cleanme_user'] = {**base, 'guilds': []}
+        if not session.get('affiliate_user'):
+            session['affiliate_user'] = base.copy()
+        if not session.get('cubdeck_user'):
+            session['cubdeck_user'] = base.copy()
+        if not session.get('overlay_user'):
+            session['overlay_user'] = {**base, 'login_type': 'discord'}
+
+    elif provider == 'twitch':
+        if not session.get('cubsoftware_user'):
+            # CubAssist checks cubsoftware_user as a fallback in _authed()
+            session['cubsoftware_user'] = {
+                **base,
+                'login': cub.get('login', cub['username']),
+                'display_name': cub['username'],
+                'profile_image': cub['avatar'],
+            }
+        if not session.get('overlay_user'):
+            session['overlay_user'] = {**base, 'login_type': 'twitch'}
+
+# ---- Unified login/logout routes ----
+
+@app.route('/login')
+def cub_login_page():
+    next_url = _safe_next_url(request.args.get('next', ''))
+    if session.get('cub_user'):
+        return redirect(next_url or '/')
+    error_map = {
+        'auth_cancelled': 'Login was cancelled.',
+        'invalid_state':  'Security check failed. Please try again.',
+        'token_failed':   'Could not complete login. Please try again.',
+        'user_failed':    'Could not retrieve your profile. Please try again.',
+        'server_error':   'A server error occurred. Please try again.',
+    }
+    error = error_map.get(request.args.get('error', ''), '')
+    return render_template('login.html', next=next_url, error=error, v=STATIC_VERSION)
+
+@app.route('/logout')
+def cub_logout():
+    token = request.cookies.get(CUB_REMEMBER_COOKIE)
+    if token:
+        _cub_revoke_remember_token(token)
+    session.clear()
+    resp = redirect(request.referrer or '/')
+    resp.delete_cookie(CUB_REMEMBER_COOKIE)
+    return resp
+
+# ---- Discord OAuth ----
+
+@app.route('/login/discord')
+def cub_login_discord():
+    next_url = _safe_next_url(request.args.get('next', ''))
+    state = secrets.token_urlsafe(32)
+    session['cub_login_state'] = state
+    session['cub_login_next'] = next_url
+    config = load_pm2_config()
+    params = {
+        'client_id': config.get('discord_client_id') or os.environ.get('DISCORD_CLIENT_ID', ''),
+        'redirect_uri': CUB_LOGIN_DISCORD_REDIRECT,
+        'response_type': 'code',
+        'scope': 'identify',
+        'state': state,
+    }
+    return redirect('https://discord.com/api/oauth2/authorize?' + urllib.parse.urlencode(params))
+
+@app.route('/login/discord/callback')
+@rate_limit('oauth')
+def cub_login_discord_callback():
+    if request.args.get('error'):
+        return redirect('/login?error=auth_cancelled')
+    code = request.args.get('code')
+    state = request.args.get('state')
+    if not code or state != session.get('cub_login_state'):
+        return redirect('/login?error=invalid_state')
+    next_url = _safe_next_url(session.pop('cub_login_next', ''))
+    session.pop('cub_login_state', None)
+    config = load_pm2_config()
+    try:
+        token_resp = requests.post('https://discord.com/api/oauth2/token', data={
+            'client_id': config.get('discord_client_id') or os.environ.get('DISCORD_CLIENT_ID', ''),
+            'client_secret': config.get('discord_client_secret') or os.environ.get('DISCORD_CLIENT_SECRET', ''),
+            'grant_type': 'authorization_code',
+            'code': code,
+            'redirect_uri': CUB_LOGIN_DISCORD_REDIRECT,
+        }, headers={'Content-Type': 'application/x-www-form-urlencoded'}, timeout=10)
+        if token_resp.status_code != 200:
+            return redirect('/login?error=token_failed')
+        access_token = token_resp.json().get('access_token')
+        user_resp = requests.get('https://discord.com/api/users/@me',
+            headers={'Authorization': f'Bearer {access_token}'}, timeout=10)
+        if user_resp.status_code != 200:
+            return redirect('/login?error=user_failed')
+        u = user_resp.json()
+        avatar_hash = u.get('avatar')
+        if avatar_hash:
+            avatar_url = f"https://cdn.discordapp.com/avatars/{u['id']}/{avatar_hash}.png?size=256"
+        else:
+            avatar_url = f"https://cdn.discordapp.com/embed/avatars/{int(u.get('discriminator', '0') or '0') % 5}.png"
+        cub_user = {
+            'id': u['id'],
+            'provider': 'discord',
+            'username': u.get('global_name') or u.get('username'),
+            'avatar': avatar_url,
+            'authenticated_at': time.time(),
+        }
+        session.permanent = True
+        session['cub_user'] = cub_user
+        token = _cub_create_remember_token(cub_user)
+        resp = redirect(next_url or '/')
+        resp.set_cookie(CUB_REMEMBER_COOKIE, token,
+                        max_age=CUB_REMEMBER_DAYS * 24 * 3600,
+                        httponly=True, samesite='Lax', secure=not IS_DEV)
+        return resp
+    except Exception as e:
+        app.logger.error(f'Unified Discord login error: {e}')
+        return redirect('/login?error=server_error')
+
+# ---- Twitch OAuth ----
+
+@app.route('/login/twitch')
+def cub_login_twitch():
+    next_url = _safe_next_url(request.args.get('next', ''))
+    state = secrets.token_urlsafe(32)
+    session['cub_login_state'] = state
+    session['cub_login_next'] = next_url
+    params = {
+        'client_id': os.environ.get('TWITCH_CLIENT_ID', ''),
+        'redirect_uri': CUB_LOGIN_TWITCH_REDIRECT,
+        'response_type': 'code',
+        'scope': '',
+        'state': state,
+        'force_verify': 'false',
+    }
+    return redirect('https://id.twitch.tv/oauth2/authorize?' + urllib.parse.urlencode(params))
+
+@app.route('/login/twitch/callback')
+@rate_limit('oauth')
+def cub_login_twitch_callback():
+    if request.args.get('error'):
+        return redirect('/login?error=auth_cancelled')
+    code = request.args.get('code')
+    state = request.args.get('state')
+    if not code or state != session.get('cub_login_state'):
+        return redirect('/login?error=invalid_state')
+    next_url = _safe_next_url(session.pop('cub_login_next', ''))
+    session.pop('cub_login_state', None)
+    try:
+        token_resp = requests.post('https://id.twitch.tv/oauth2/token', data={
+            'client_id': os.environ.get('TWITCH_CLIENT_ID', ''),
+            'client_secret': os.environ.get('TWITCH_CLIENT_SECRET', ''),
+            'grant_type': 'authorization_code',
+            'code': code,
+            'redirect_uri': CUB_LOGIN_TWITCH_REDIRECT,
+        }, timeout=10)
+        if token_resp.status_code != 200:
+            return redirect('/login?error=token_failed')
+        access_token = token_resp.json().get('access_token')
+        user_resp = requests.get('https://api.twitch.tv/helix/users',
+            headers={
+                'Authorization': f'Bearer {access_token}',
+                'Client-Id': os.environ.get('TWITCH_CLIENT_ID', ''),
+            }, timeout=10)
+        if user_resp.status_code != 200:
+            return redirect('/login?error=user_failed')
+        users = user_resp.json().get('data', [])
+        if not users:
+            return redirect('/login?error=user_failed')
+        u = users[0]
+        cub_user = {
+            'id': u['id'],
+            'provider': 'twitch',
+            'login': u['login'],
+            'username': u.get('display_name') or u['login'],
+            'avatar': u.get('profile_image_url', ''),
+            'authenticated_at': time.time(),
+        }
+        session.permanent = True
+        session['cub_user'] = cub_user
+        token = _cub_create_remember_token(cub_user)
+        resp = redirect(next_url or '/')
+        resp.set_cookie(CUB_REMEMBER_COOKIE, token,
+                        max_age=CUB_REMEMBER_DAYS * 24 * 3600,
+                        httponly=True, samesite='Lax', secure=not IS_DEV)
+        return resp
+    except Exception as e:
+        app.logger.error(f'Unified Twitch login error: {e}')
+        return redirect('/login?error=server_error')
+
+# ---- Auth status API ----
+
+@app.route('/api/auth/me')
+def cub_auth_me():
+    cub = session.get('cub_user')
+    if cub:
+        return jsonify({'logged_in': True, 'user': {k: v for k, v in cub.items() if k != 'authenticated_at'}})
+    return jsonify({'logged_in': False})
+
 # ==================== MAIN WEBSITE ROUTES ====================
 
 @app.route('/')
@@ -1458,7 +1738,7 @@ def cubreactive_auth_required(f):
         if 'cubreactive_user' not in session:
             if request.is_json or request.path.startswith('/api/cubreactive/'):
                 return jsonify({'error': 'Authentication required'}), 401
-            return redirect(url_for('cubreactive_auth'))
+            return redirect(f'/login?next={urllib.parse.quote(request.path)}')
         ip = get_client_ip()
         allowed, retry_after = check_rate_limit(ip, 'dashboard')
         if not allowed:
@@ -2389,7 +2669,7 @@ def cleanme_auth_required(f):
         if 'cleanme_user' not in session:
             if request.is_json or request.path.startswith('/cleanme/api/'):
                 return jsonify({'error': 'Authentication required'}), 401
-            return redirect(url_for('cleanme_auth'))
+            return redirect(f'/login?next={urllib.parse.quote(request.path)}')
         ip = get_client_ip()
         allowed, retry_after = check_rate_limit(ip, 'dashboard')
         if not allowed:
@@ -15867,7 +16147,7 @@ def affiliate_auth_required(f):
     def decorated_function(*args, **kwargs):
         user = session.get('affiliate_user')
         if not user:
-            return redirect('/affiliate/auth/discord')
+            return redirect(f'/login?next={urllib.parse.quote(request.path)}')
         aff = get_affiliate_by_discord_id(user['id'])
         if not aff:
             return render_template('affiliate-login.html', user=user, not_registered=True)

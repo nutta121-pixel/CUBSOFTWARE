@@ -22,6 +22,7 @@ from bot_core import (
     load_channel_config, save_channel_config,
     register_channel, unregister_channel, get_channels,
     load_config,
+    _DEFAULT_DISABLED,
     _load_watchtime, _load_warnings, _save_warnings,
     _load_user_notes, _save_user_notes,
     _load_counters, _save_counters,
@@ -2095,46 +2096,66 @@ def api_live_state():
 
 # All built-in commands that can be toggled — grouped for the dashboard
 _FEATURE_GROUPS = {
-    'Games': [
-        'blackjack', 'hit', 'stand', 'double', 'dice',
-        'highlow', 'hl', 'wordchain', 'typerace', 'wheel',
-        'trivia', 'anagram', 'hangman', 'numguess', 'chatr',
-        'rps', 'challenge', 'accept', 'reject',
-        'boss', 'joinboss',
+    'Basic': [
+        'commands', 'uptime', 'game', 'title',
+        'followage', 'accountage', 'lurk', 'unlurk', 'lurkers',
+        'mystats', 'clip', 'weather', 'timestamp',
+        'alias', 'shoutout', 'so',
+    ],
+    'Fun': [
+        'hug', 'slap', 'love', 'roulette', 'fight',
+        '8ball', 'coinflip', 'gamble', 'slots', 'fish',
+        'daily', 'bingo', 'claim', 'goal', 'contribute',
+        'dice', 'highlow', 'hl',
+        'blackjack', 'hit', 'stand', 'double',
+        'challenge', 'accept', 'decline',
+        'numguess', 'race',
+        'trivia', 'anagram', 'hangman', 'guess',
+        'wordchain', 'typerace', 'wheel',
+        'boss', 'heist', 'duel',
+    ],
+    'Custom Commands': [
+        'addcom', 'editcom', 'delcom', 'permit',
+        'setvar', 'delvar',
+        'addquote', 'delquote', 'quote',
+        'chatmode', 'marker', 'overlay',
+    ],
+    'Scores & Counters': [
+        'counter', 'wl', 'score', 'setscore',
+        'deaths', 'adddeaths', 'setdeaths', 'resetdeaths',
+        'wins', 'addwins', 'losses', 'addlosses',
+        'recap', 'bitleaderboard', 'sublists',
     ],
     'Economy': [
-        'points', 'rank', 'leaderboard', 'give', 'rob',
+        'points', 'addpoints', 'removepoints', 'rank', 'top', 'leaderboard',
+        'gift', 'redeem', 'rob',
+        'shop', 'bank', 'deposit', 'withdraw', 'prestige',
         'lottery', 'lottodraw', 'auction', 'bid',
         'coinrain', 'grab', 'bounty',
-        'bank', 'deposit', 'withdraw', 'prestige',
-        'shop', 'buy', 'myrewards',
-        'duel', 'heist',
     ],
     'Community': [
-        'watchstreak', 'suggest', 'suggestions', 'approve', 'deny',
-        'spotlight', 'birthday', 'birthdays', 'hype', 'team',
-        'giveaway', 'enter', 'pick',
-        'poll', 'vote', 'endpoll',
-        'lore', 'addlore', 'dellore',
+        'giveaway', 'enter',
+        'poll', 'vote',
+        'watchtime', 'watchstreak',
+        'suggest', 'suggestions', 'approve', 'deny',
+        'spotlight', 'birthday', 'birthdays',
+        'hype', 'team', 'lore',
+        'vip', 'unvip',
     ],
     'Stream Tools': [
+        'sr', 'song', 'nextsong', 'skipsong', 'clearsongs',
+        'queue',
         'schedule', 'socials', 'streamnote', 'streamnotes',
         'raidqueue', 'subgoal', 'bitsgoal', 'cliplast',
-        'watchtime', 'wt',
-        'queue', 'openqueue', 'closequeue', 'removequeue', 'clearqueue',
-        'songrequest', 'sr', 'skipsong', 'currentsong', 'songsopen', 'songsclose',
     ],
     'Mod Tools': [
-        'cmdstats', 'banreason', 'lastseen', 'tts', 'alert',
-        'emotecount', 'chatalert', 'raidshield', 'autoban',
-        'shadowwarn', 'chatexport', 'temprole', 'multiwin',
-        'vip', 'unvip',
-        'warn', 'timeout', 'ban', 'unban', 'untimeout',
-        'permit', 'trusted',
-    ],
-    'Info': [
-        'commands', 'uptime', 'game', 'title', 'followage',
-        'watchtime', 'points', 'rank', 'quote',
+        'warn', 'warnings', 'clearwarnings', 'note', 'notes',
+        'watchlist', 'addwatch', 'delwatch',
+        'trust', 'untrust', 'trusted',
+        'cmdstats', 'banreason', 'lastseen',
+        'tts', 'alert', 'emotecount', 'chatalert',
+        'raidshield', 'autoban', 'shadowwarn',
+        'chatexport', 'temprole', 'multiwin',
     ],
 }
 
@@ -2152,6 +2173,7 @@ def api_enabled_commands():
         save_channel_config(channel, cfg)
         return jsonify({'ok': True})
     return jsonify({
-        'enabled': cfg.get('enabled_commands', {}),
-        'groups':  _FEATURE_GROUPS,
+        'enabled':          cfg.get('enabled_commands', {}),
+        'groups':           _FEATURE_GROUPS,
+        'default_disabled': list(_DEFAULT_DISABLED),
     })

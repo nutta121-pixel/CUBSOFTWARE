@@ -2850,9 +2850,11 @@ class CubBot:
                 'user_level': user_level,
                 '_state_ref': state,
             }
-            response = resolve_vars(custom.get('response', ''), ctx)
+            response = resolve_vars(custom.get('response', ''), ctx).strip()
             if response:
                 self.send(response, channel)
+            else:
+                logger.warning(f'Custom command !{cmd_name} in #{channel} produced empty response (raw: {repr(custom.get("response",""))})')
             save_channel_config(channel, cfg)
             return
 

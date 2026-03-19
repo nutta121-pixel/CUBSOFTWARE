@@ -432,7 +432,7 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
                 <span class="ni">🔒</span> <span>Safety Tools</span>
             </div>
             <div class="nav-item" onclick="openTab('featureflags')" data-tab="featureflags">
-                <span class="ni">🔧</span> <span>Feature Flags</span>
+                <span class="ni">🔧</span> <span>Built-in Cmds</span>
             </div>
             <div class="nav-divider"></div>
             <div class="nav-item" onclick="openTab('analytics')" data-tab="analytics">
@@ -1629,8 +1629,8 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
             <!-- Feature Flags tab -->
             <div class="tab" id="tab-featureflags">
                 <div class="card">
-                    <div class="card-title">🔧 Feature Flags — Command Enable/Disable</div>
-                    <p class="hint" style="margin-bottom:16px">All built-in commands are <strong style="color:var(--danger)">disabled by default</strong>. Toggle each command on to enable it for your channel. Changes take effect immediately.</p>
+                    <div class="card-title">🔧 Built-in Commands</div>
+                    <p class="hint" style="margin-bottom:16px">Toggle built-in commands on or off for your channel. <strong style="color:var(--success)">Green</strong> = enabled, <strong style="color:var(--text-sec)">grey</strong> = disabled. Commands marked with a dot are off by default — enable them when you're ready to use them.</p>
                     <div id="featureFlagsContainer">
                         <p class="hint">Loading...</p>
                     </div>
@@ -3173,17 +3173,25 @@ async function removeChatAlert(kw) {
 }
 
 // ── Feature Flags ──────────────────────────────────────────────────────────────
-let _featureEnabled = {};
-let _featureGroups  = {};
+let _featureEnabled  = {};
+let _featureGroups   = {};
+let _defaultDisabled = new Set();
 
 async function loadFeatureFlags() {
     try {
         const r = await fetch('/cubassist/api/enabled-commands');
         const data = await r.json();
-        _featureEnabled = data.enabled || {};
-        _featureGroups  = data.groups  || {};
+        _featureEnabled  = data.enabled          || {};
+        _featureGroups   = data.groups            || {};
+        _defaultDisabled = new Set(data.default_disabled || []);
         renderFeatureFlags();
     } catch(e) {}
+}
+
+function _cmdIsOn(cmd) {
+    // If user has explicitly set a value, use it; otherwise use the bot's actual default
+    if (_featureEnabled.hasOwnProperty(cmd)) return _featureEnabled[cmd];
+    return !_defaultDisabled.has(cmd);
 }
 
 function renderFeatureFlags() {
@@ -3197,10 +3205,12 @@ function renderFeatureFlags() {
             <div style="font-size:13px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)">${escHtml(groupName)}</div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">`;
         for (const cmd of cmds) {
-            const isOn = _featureEnabled.hasOwnProperty(cmd) ? _featureEnabled[cmd] : false;
+            const isOn = _cmdIsOn(cmd);
+            const isOptIn = _defaultDisabled.has(cmd);
             html += `<label class="toggle-row" style="cursor:pointer;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border);margin:0">
                 <div class="toggle-info" style="flex:1">
                     <strong style="font-size:13px;font-family:'Fira Code',monospace;color:${isOn ? 'var(--success)' : 'var(--text-sec)'}">!${escHtml(cmd)}</strong>
+                    ${isOptIn ? '<span style="font-size:9px;color:var(--text-sec);margin-left:4px">opt-in</span>' : ''}
                 </div>
                 <label class="toggle">
                     <input type="checkbox" ${isOn ? 'checked' : ''} onchange="toggleFeature('${escHtml(cmd)}', this.checked)">

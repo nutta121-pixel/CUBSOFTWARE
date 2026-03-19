@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, SlashCommandBuilder, REST, Routes, EmbedBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
-const { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus, entersState } = require('@discordjs/voice');
+const { joinVoiceChannel, getVoiceConnection, VoiceConnectionStatus, entersState, EndBehaviorType } = require('@discordjs/voice');
 const DiscordTerminal = require('../../shared/discord-terminal');
 const express = require('express');
 const axios = require('axios');
@@ -171,6 +171,8 @@ const overlayConnections = new Map();
 const channelMembers = new Map();
 // Track active voice connections: { channelId: VoiceConnection }
 const activeVoiceConnections = new Map();
+// Track active audio subscriptions for speaking detection: { channelId: Map(userId -> AudioReceiveStream) }
+const activeSubscriptions = new Map();
 // Track which channels have overlay users: { channelId: Set(userId) }
 const overlayChannels = new Map();
 
@@ -347,6 +349,10 @@ async function joinChannelForSpeaking(channelId, guildId) {
             // Re-scan and broadcast in case members changed during connection
             scanChannelMembers(channel);
             broadcastChannelUpdate(channelId);
+            // Subscribe to all current members so speaking events fire reliably
+            channel.members.forEach(member => {
+                if (!member.user.bot) subscribeForSpeaking(connection, member.id, channelId);
+            });
         });
 
         // Listen for speaking events
@@ -416,6 +422,7 @@ async function joinChannelForSpeaking(channelId, guildId) {
 
         connection.on(VoiceConnectionStatus.Destroyed, () => {
             activeVoiceConnections.delete(channelId);
+            unsubscribeAllFromChannel(channelId);
         });
 
         // Catch any errors on the connection
@@ -429,11 +436,52 @@ async function joinChannelForSpeaking(channelId, guildId) {
     }
 }
 
+// Subscribe to a user's audio stream so @discordjs/voice triggers speaking events
+// Newer versions of the library require at least one active subscription per user
+function subscribeForSpeaking(connection, userId, channelId) {
+    const channelSubs = activeSubscriptions.get(channelId);
+    if (channelSubs && channelSubs.has(userId)) return; // Already subscribed
+
+    try {
+        const stream = connection.receiver.subscribe(userId, {
+            end: { behavior: EndBehaviorType.Manual }
+        });
+        // Drain without processing — we only need speaking events, not the audio
+        stream.on('data', () => {});
+        stream.on('error', () => {});
+
+        if (!activeSubscriptions.has(channelId)) activeSubscriptions.set(channelId, new Map());
+        activeSubscriptions.get(channelId).set(userId, stream);
+        console.log(`[CubReactive] Subscribed for speaking: ${userId} in ${channelId}`);
+    } catch (e) {
+        console.error(`[CubReactive] Subscribe failed for ${userId}:`, e.message);
+    }
+}
+
+function unsubscribeFromSpeaking(userId, channelId) {
+    const channelSubs = activeSubscriptions.get(channelId);
+    if (!channelSubs) return;
+    const stream = channelSubs.get(userId);
+    if (stream) {
+        try { stream.destroy(); } catch (_) {}
+        channelSubs.delete(userId);
+    }
+    if (channelSubs.size === 0) activeSubscriptions.delete(channelId);
+}
+
+function unsubscribeAllFromChannel(channelId) {
+    const channelSubs = activeSubscriptions.get(channelId);
+    if (!channelSubs) return;
+    channelSubs.forEach((stream) => { try { stream.destroy(); } catch (_) {} });
+    activeSubscriptions.delete(channelId);
+}
+
 // Leave a voice channel when no more overlay users need it
 function leaveChannelIfUnneeded(channelId) {
     const overlayUsers = overlayChannels.get(channelId);
     if (!overlayUsers || overlayUsers.size === 0) {
         overlayChannels.delete(channelId);
+        unsubscribeAllFromChannel(channelId);
         const connection = activeVoiceConnections.get(channelId);
         if (connection) {
             console.log(`[CubReactive] Leaving voice channel: ${channelId} (no overlay users)`);
@@ -1755,7 +1803,17 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         if (overlayConnections.has(userId)) {
             trackOverlayUser(userId, newChannelId, guildId);
         }
+        // If the bot is already in this channel, subscribe to the new user for speaking detection
+        const existingConnection = activeVoiceConnections.get(newChannelId);
+        if (existingConnection) {
+            subscribeForSpeaking(existingConnection, userId, newChannelId);
+        }
         broadcastChannelUpdate(newChannelId);
+    }
+
+    // Unsubscribe from old channel when user leaves
+    if (oldChannelId && oldChannelId !== newChannelId) {
+        unsubscribeFromSpeaking(userId, oldChannelId);
     }
 });
 

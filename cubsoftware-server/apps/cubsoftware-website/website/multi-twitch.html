@@ -55,13 +55,10 @@
                             <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
                         </svg>
                         <div class="auth-text">
-                            <span class="auth-title">Not logged in</span>
-                            <span class="auth-hint">Login to send messages</span>
+                            <span class="auth-title" id="authStateTitle">Not logged in</span>
+                            <span class="auth-hint" id="authStateHint">Login to send messages</span>
                         </div>
-                        <button class="btn-twitch-login" id="twitchLoginBtn">
-                            <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
-                            Login with Twitch
-                        </button>
+                        <a class="btn-twitch-login" id="authActionBtn" href="/login?next=/apps/multi-twitch">Login to chat</a>
                     </div>
                     <div class="auth-logged-in" id="authLoggedIn" style="display:none">
                         <img class="auth-avatar" id="authAvatar" src="" alt="">
@@ -69,7 +66,7 @@
                             <span class="auth-title">Chatting as</span>
                             <span class="auth-username" id="authUsername"></span>
                         </div>
-                        <button class="btn-logout" id="twitchLogoutBtn">Logout</button>
+                        <a href="/logout" class="btn-logout">Logout</a>
                     </div>
                 </div>
 
@@ -91,10 +88,6 @@
     {% include 'footer.html' %}
 
     <script src="https://player.twitch.tv/js/embed/v1.js"></script>
-    <script>
-        window.TWITCH_CLIENT_ID = "{{ twitch_client_id }}";
-        window.TWITCH_REDIRECT_URI = "{{ twitch_redirect_uri }}";
-    </script>
     <script src="/static/js/multi-twitch.js?v={{ v }}"></script>
 </body>
 </html>

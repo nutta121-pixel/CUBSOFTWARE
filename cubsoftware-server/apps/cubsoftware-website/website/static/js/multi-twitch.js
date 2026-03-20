@@ -1,7 +1,5 @@
 /* Multi-Twitch - Watch multiple Twitch streams with live chat */
 
-const TWITCH_CLIENT_ID = window.TWITCH_CLIENT_ID || '';
-const TWITCH_REDIRECT_URI = window.TWITCH_REDIRECT_URI || window.location.origin + '/apps/multi-twitch';
 const PARENT_DOMAIN = window.location.hostname;
 const MAX_STREAMS = 6;
 
@@ -10,7 +8,8 @@ const state = {
     ircs: {},
     players: {},
     twitchUser: null,
-    chatsHidden: false
+    chatsHidden: false,
+    authReason: 'login'
 };
 
 // Stable reference to the empty state node so getElementById never returns null after removal
@@ -95,38 +94,28 @@ class TwitchIRC {
     }
 }
 
-/* ─── Auth ─── */
-function loginWithTwitch() {
-    if (!TWITCH_CLIENT_ID) {
-        alert('Twitch login is not configured on this server. Contact the admin.');
-        return;
-    }
-    const scopes = 'chat:read+chat:edit+user:read:email';
-    const url = `https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${encodeURIComponent(TWITCH_REDIRECT_URI)}&response_type=token&scope=${scopes}`;
-    window.location.href = url;
-}
-
-async function verifyToken(token) {
+/* ─── Auth (unified CUB SOFTWARE login) ─── */
+async function initAuth() {
     try {
-        const res = await fetch('https://id.twitch.tv/oauth2/validate', {
-            headers: { 'Authorization': `OAuth ${token}` }
-        });
-        if (!res.ok) return null;
+        const res = await fetch('/api/multi-twitch/chat-token');
         const data = await res.json();
-        const userRes = await fetch(`https://api.twitch.tv/helix/users?login=${data.login}`, {
-            headers: { 'Authorization': `Bearer ${token}`, 'Client-Id': TWITCH_CLIENT_ID }
-        });
-        const userData = await userRes.json();
-        const pfp = userData.data?.[0]?.profile_image_url || '';
-        return { login: data.login, display_name: data.login, profile_image_url: pfp, token };
-    } catch { return null; }
-}
-
-function logoutTwitch() {
-    sessionStorage.removeItem('twitch_token');
-    state.twitchUser = null;
+        if (data.authenticated) {
+            state.twitchUser = {
+                login: data.login,
+                display_name: data.display_name,
+                profile_image_url: data.avatar,
+                token: data.token,
+            };
+            state.authReason = null;
+        } else {
+            state.twitchUser = null;
+            state.authReason = data.reason || 'login';
+        }
+    } catch {
+        state.twitchUser = null;
+        state.authReason = 'login';
+    }
     updateAuthUI();
-    for (const ch of state.channels) reconnectIRC(ch);
 }
 
 function updateAuthUI() {
@@ -146,6 +135,18 @@ function updateAuthUI() {
     } else {
         loggedOut.style.display = 'flex';
         loggedIn.style.display = 'none';
+        const title = document.getElementById('authStateTitle');
+        const hint = document.getElementById('authStateHint');
+        const btn = document.getElementById('authActionBtn');
+        if (state.authReason === 'link_twitch' || state.authReason === 'reauth_twitch') {
+            if (title) title.textContent = 'Twitch not linked';
+            if (hint) hint.textContent = 'Link Twitch to send messages';
+            if (btn) { btn.textContent = 'Link Twitch'; btn.href = '/login/twitch?link=1&next=/apps/multi-twitch'; }
+        } else {
+            if (title) title.textContent = 'Not logged in';
+            if (hint) hint.textContent = 'Login to send messages';
+            if (btn) { btn.textContent = 'Login to chat'; btn.href = '/login?next=/apps/multi-twitch'; }
+        }
     }
     for (const ch of state.channels) updateChatInputState(ch);
 }
@@ -241,7 +242,13 @@ function updateChatInputState(channel) {
         input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
         btn.addEventListener('click', send);
     } else {
-        area.innerHTML = `<div class="chat-login-prompt"><button class="btn-chat-login" onclick="loginWithTwitch()">Login with Twitch to chat</button></div>`;
+        const href = (state.authReason === 'link_twitch' || state.authReason === 'reauth_twitch')
+            ? '/login/twitch?link=1&next=/apps/multi-twitch'
+            : '/login?next=/apps/multi-twitch';
+        const label = (state.authReason === 'link_twitch' || state.authReason === 'reauth_twitch')
+            ? 'Link Twitch to chat'
+            : 'Login to chat';
+        area.innerHTML = `<div class="chat-login-prompt"><a class="btn-chat-login" href="${href}">${label}</a></div>`;
     }
 }
 
@@ -407,26 +414,7 @@ async function init() {
     toggleBtn.addEventListener('click', toggleChats);
     topbarCenter.appendChild(toggleBtn);
 
-    // Check for OAuth token in URL hash
-    const hash = new URLSearchParams(window.location.hash.slice(1));
-    const hashToken = hash.get('access_token');
-    if (hashToken) {
-        sessionStorage.setItem('twitch_token', hashToken);
-        history.replaceState(null, '', window.location.pathname);
-    }
-
-    // Check stored token
-    const storedToken = sessionStorage.getItem('twitch_token');
-    if (storedToken) {
-        const user = await verifyToken(storedToken);
-        if (user) {
-            state.twitchUser = user;
-        } else {
-            sessionStorage.removeItem('twitch_token');
-        }
-    }
-
-    updateAuthUI();
+    await initAuth();
 
     document.getElementById('addChannelBtn').addEventListener('click', () => {
         const input = document.getElementById('channelInput');
@@ -442,9 +430,6 @@ async function init() {
         }
     });
 
-    document.getElementById('twitchLoginBtn').addEventListener('click', loginWithTwitch);
-    document.getElementById('twitchLogoutBtn').addEventListener('click', logoutTwitch);
-
     // Load channels from URL ?streams=ch1,ch2
     const params = new URLSearchParams(window.location.search);
     const streams = params.get('streams');
@@ -453,5 +438,4 @@ async function init() {
     }
 }
 
-window.loginWithTwitch = loginWithTwitch;
 document.addEventListener('DOMContentLoaded', init);

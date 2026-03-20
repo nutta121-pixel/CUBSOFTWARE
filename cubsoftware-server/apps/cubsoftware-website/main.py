@@ -578,7 +578,7 @@ def _cub_bridge_session():
                 'login': linked.get('login', linked['username']),
                 'display_name': linked['username'],
                 'profile_image': linked['avatar'],
-                'access_token': '',
+                'access_token': linked.get('access_token', ''),
             }
         elif linked_prov == 'discord':
             if not session.get('cubreactive_user'):
@@ -807,7 +807,7 @@ def cub_login_twitch():
         'client_id': os.environ.get('TWITCH_CLIENT_ID', ''),
         'redirect_uri': CUB_LOGIN_TWITCH_REDIRECT,
         'response_type': 'code',
-        'scope': 'user:read:email user:write:chat moderation:read channel:bot',
+        'scope': 'user:read:email user:write:chat chat:edit moderation:read channel:bot',
         'state': state,
         'force_verify': 'false',
     }
@@ -871,6 +871,7 @@ def cub_login_twitch_callback():
                     'username': twitch_user_data['username'],
                     'avatar': twitch_user_data['avatar'],
                     'login': twitch_user_data['login'],
+                    'access_token': access_token,
                 }
                 session['cub_user'] = current_user
                 return redirect(next_url or '/account')
@@ -1815,17 +1816,43 @@ def audio_trimmer():
     """Audio Trimmer - Trim, cut, and edit audio files"""
     return render_template('audio-trimmer.html')
 
+@app.route('/api/multi-twitch/chat-token')
+def multi_twitch_chat_token():
+    """Return Twitch chat token for the logged-in user, if available."""
+    cub = session.get('cub_user')
+    if not cub:
+        return jsonify({'authenticated': False, 'reason': 'login'})
+    if cub.get('provider') == 'twitch':
+        token = cub.get('access_token')
+        if token:
+            return jsonify({
+                'authenticated': True,
+                'login': cub.get('login', cub.get('username', '')),
+                'display_name': cub.get('username', ''),
+                'avatar': cub.get('avatar', ''),
+                'token': token,
+            })
+    linked = cub.get('linked_account', {})
+    if linked and linked.get('provider') == 'twitch':
+        token = linked.get('access_token')
+        if token:
+            return jsonify({
+                'authenticated': True,
+                'login': linked.get('login', linked.get('username', '')),
+                'display_name': linked.get('username', ''),
+                'avatar': linked.get('avatar', ''),
+                'token': token,
+            })
+        return jsonify({'authenticated': False, 'reason': 'reauth_twitch',
+                        'login': linked.get('login', '')})
+    return jsonify({'authenticated': False, 'reason': 'link_twitch'})
+
 @app.route('/apps/multi-twitch')
 @app.route('/apps/multi-twitch/')
 @check_feature_enabled('multi-twitch')
 def multi_twitch():
     """Multi-Twitch - Watch multiple Twitch streams at once"""
-    twitch_client_id = os.environ.get('TWITCH_CLIENT_ID', '9n9yjc79p44kpsluv81kvvh6h9bxvu')
-    twitch_redirect_uri = os.environ.get('TWITCH_REDIRECT_URI', 'https://cubsoftware.site/apps/multi-twitch')
-    return render_template('multi-twitch.html',
-        twitch_client_id=twitch_client_id,
-        twitch_redirect_uri=twitch_redirect_uri
-    )
+    return render_template('multi-twitch.html')
 
 # ==================== STICKY BOARD ====================
 

@@ -386,7 +386,16 @@ a:hover {
     z-index: 1000;
 }
 
-.header-container,
+.header-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 30px;
+    position: relative;
+}
+
 .header-top {
     display: flex;
     align-items: center;
@@ -606,6 +615,15 @@ a:hover {
     z-index: 9999;
     display: flex;
     align-items: center;
+}
+
+/* When nav-auth lives inside the standard header-container, pull it into the grid */
+.header-container .nav-auth {
+    position: static;
+    justify-self: end;
+    z-index: auto;
+    top: auto;
+    right: auto;
 }
 
 .nav-login-btn {
@@ -887,7 +905,12 @@ a:hover {
         padding: 12px 20px;
     }
 
-    .header-container,
+    .header-container {
+        display: flex;
+        justify-content: space-between;
+        padding-right: 75px; /* leave room for absolute-positioned hamburger */
+    }
+
     .header-top {
         flex-wrap: wrap;
     }

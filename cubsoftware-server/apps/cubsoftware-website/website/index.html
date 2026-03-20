@@ -53,6 +53,12 @@
             -webkit-backdrop-filter: blur(6px);
         }
 
+        .welcome-text-login {
+            border-left: 2px solid rgba(124, 58, 237, 0.5);
+            padding-left: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
         .welcome-overlay.welcome-fade-out {
             animation: welcomeFadeOut 0.4s ease forwards;
         }
@@ -315,6 +321,9 @@
                 <p class="welcome-text">
                     If you enjoy what we've built, <a href="https://buymeacoffee.com/cubsoftware" target="_blank" rel="noopener" class="welcome-link welcome-link-coffee">☕ buying us a coffee</a> goes a long way. It fuels late nights and makes new features possible. But honestly? Just being here means everything to us.
                 </p>
+                <p class="welcome-text welcome-text-login">
+                    <strong>Some of our software requires a login.</strong> Tools like <strong>CleanMe</strong>, <strong>CUB Protector</strong>, and <strong>Stream Overlays</strong> connect directly to your Discord or Twitch account — this lets us tie your servers, settings, and data securely to you without storing a separate username and password. We only request the minimum permissions needed, and we never post on your behalf.
+                </p>
                 <p class="welcome-thanks">Thank you for visiting. Seriously. — <em>The CUB SOFTWARE Team</em></p>
 
                 <div class="welcome-actions">
@@ -359,6 +368,8 @@
                 return;
             }
 
+            document.body.style.overflow = 'hidden';
+
             const DURATION = 60;
             const progress = document.getElementById('welcomeProgress');
             const countdown = document.getElementById('welcomeCountdown');
@@ -366,6 +377,7 @@
             function dismiss() {
                 overlay.classList.add('welcome-fade-out');
                 setTimeout(function() { overlay.style.display = 'none'; }, 400);
+                document.body.style.overflow = '';
                 sessionStorage.setItem('welcomeDismissed', 'true');
             }
 

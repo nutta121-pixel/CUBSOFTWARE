@@ -421,8 +421,11 @@ def _cub_save_remembered(data):
 def _cub_create_remember_token(user_data):
     token = secrets.token_urlsafe(48)
     data = _cub_load_remembered()
+    # Never persist short-lived tokens or large datasets — only identity fields
+    _exclude = {'access_token', 'admin_guilds', 'raw_guilds'}
+    safe_user = {k: v for k, v in user_data.items() if k not in _exclude}
     data[token] = {
-        'user': user_data,
+        'user': safe_user,
         'expires': (datetime.utcnow() + timedelta(days=CUB_REMEMBER_DAYS)).isoformat()
     }
     _cub_save_remembered(data)
@@ -479,11 +482,44 @@ def _cub_bridge_session():
         if not session.get('cubreactive_user'):
             session['cubreactive_user'] = {**base, 'authenticated_at': cub.get('authenticated_at', time.time())}
         if not session.get('cleanme_user'):
-            session['cleanme_user'] = {**base, 'guilds': []}
+            session['cleanme_user'] = {**base, 'guilds': cub.get('admin_guilds', [])}
         if not session.get('affiliate_user'):
             session['affiliate_user'] = base.copy()
         if not session.get('cubdeck_user'):
             session['cubdeck_user'] = base.copy()
+        if not session.get('bot_dashboard_user'):
+            session['bot_dashboard_user'] = base.copy()
+        if not session.get('cub_protector_user'):
+            # CubProtector templates use avatar_url (not avatar) — match the key from the OAuth callback
+            session['cub_protector_user'] = {
+                'id': cub['id'], 'username': cub['username'],
+                'avatar_url': cub['avatar'], 'guilds': cub.get('admin_guilds', []),
+            }
+        if 'cub_protector_user_guilds' not in session and cub.get('raw_guilds'):
+            # Compute CubProtector guild list: user guilds intersected with bot guilds,
+            # filtered to guilds where user has admin/manage perms or is a bot master.
+            try:
+                bot_guilds = cub_protector_bot_request('/users/@me/guilds?with_counts=true') or []
+                custom_bots_data = _load_custom_bots()
+                all_covered = {g['id'] for g in bot_guilds} | {
+                    gid for gid, e in custom_bots_data.get('guilds', {}).items()
+                    if e.get('enabled') and e.get('token')
+                }
+                bot_masters_data = load_bot_masters()
+                user_id = cub['id']
+                session['cub_protector_user_guilds'] = [
+                    {'id': g['id'], 'name': g['name'], 'icon': g.get('icon'),
+                     'owner': g.get('owner', False), 'permissions': g.get('permissions', '0')}
+                    for g in cub['raw_guilds']
+                    if g['id'] in all_covered and (
+                        g.get('owner') or
+                        (int(g.get('permissions', 0)) & 0x8) == 0x8 or
+                        (int(g.get('permissions', 0)) & 0x20) == 0x20 or
+                        user_id in bot_masters_data.get(g['id'], [])
+                    )
+                ]
+            except Exception:
+                session['cub_protector_user_guilds'] = []
         if not session.get('overlay_user'):
             session['overlay_user'] = {**base, 'login_type': 'discord'}
 
@@ -495,6 +531,7 @@ def _cub_bridge_session():
                 'login': cub.get('login', cub['username']),
                 'display_name': cub['username'],
                 'profile_image': cub['avatar'],
+                'access_token': cub.get('access_token', ''),  # Pass through for CubAssist API calls
             }
         if not session.get('overlay_user'):
             session['overlay_user'] = {**base, 'login_type': 'twitch'}
@@ -539,7 +576,7 @@ def cub_login_discord():
         'client_id': config.get('discord_client_id') or os.environ.get('DISCORD_CLIENT_ID', ''),
         'redirect_uri': CUB_LOGIN_DISCORD_REDIRECT,
         'response_type': 'code',
-        'scope': 'identify',
+        'scope': 'identify guilds',
         'state': state,
     }
     return redirect('https://discord.com/api/oauth2/authorize?' + urllib.parse.urlencode(params))
@@ -567,8 +604,9 @@ def cub_login_discord_callback():
         if token_resp.status_code != 200:
             return redirect('/login?error=token_failed')
         access_token = token_resp.json().get('access_token')
+        auth_headers = {'Authorization': f'Bearer {access_token}'}
         user_resp = requests.get('https://discord.com/api/users/@me',
-            headers={'Authorization': f'Bearer {access_token}'}, timeout=10)
+            headers=auth_headers, timeout=10)
         if user_resp.status_code != 200:
             return redirect('/login?error=user_failed')
         u = user_resp.json()
@@ -577,16 +615,29 @@ def cub_login_discord_callback():
             avatar_url = f"https://cdn.discordapp.com/avatars/{u['id']}/{avatar_hash}.png?size=256"
         else:
             avatar_url = f"https://cdn.discordapp.com/embed/avatars/{int(u.get('discriminator', '0') or '0') % 5}.png"
+        # Fetch guilds (for CleanMe admin check + CubProtector guild management)
+        raw_guilds = []
+        admin_guilds = []
+        try:
+            guilds_resp = requests.get('https://discord.com/api/users/@me/guilds',
+                headers=auth_headers, timeout=10)
+            if guilds_resp.status_code == 200:
+                raw_guilds = guilds_resp.json()
+                admin_guilds = [g['id'] for g in raw_guilds if (g.get('permissions', 0) & 0x8) == 0x8]
+        except Exception:
+            pass
         cub_user = {
             'id': u['id'],
             'provider': 'discord',
             'username': u.get('global_name') or u.get('username'),
             'avatar': avatar_url,
             'authenticated_at': time.time(),
+            'admin_guilds': admin_guilds,   # Session-only — not persisted to remember cookie
+            'raw_guilds': raw_guilds,        # Session-only — not persisted to remember cookie
         }
         session.permanent = True
         session['cub_user'] = cub_user
-        token = _cub_create_remember_token(cub_user)
+        token = _cub_create_remember_token(cub_user)  # strips admin_guilds + raw_guilds before saving
         resp = redirect(next_url or '/')
         resp.set_cookie(CUB_REMEMBER_COOKIE, token,
                         max_age=CUB_REMEMBER_DAYS * 24 * 3600,
@@ -608,7 +659,7 @@ def cub_login_twitch():
         'client_id': os.environ.get('TWITCH_CLIENT_ID', ''),
         'redirect_uri': CUB_LOGIN_TWITCH_REDIRECT,
         'response_type': 'code',
-        'scope': '',
+        'scope': 'user:read:email user:write:chat moderation:read channel:bot',
         'state': state,
         'force_verify': 'false',
     }
@@ -654,10 +705,11 @@ def cub_login_twitch_callback():
             'username': u.get('display_name') or u['login'],
             'avatar': u.get('profile_image_url', ''),
             'authenticated_at': time.time(),
+            'access_token': access_token,  # Session-only, not persisted to remember cookie
         }
         session.permanent = True
         session['cub_user'] = cub_user
-        token = _cub_create_remember_token(cub_user)
+        token = _cub_create_remember_token(cub_user)  # strips access_token before saving
         resp = redirect(next_url or '/')
         resp.set_cookie(CUB_REMEMBER_COOKIE, token,
                         max_age=CUB_REMEMBER_DAYS * 24 * 3600,
@@ -1797,21 +1849,12 @@ def cubreactive_overlay_individual(user_id):
         cache_bust=int(time.time())
     )
 
-# CubReactive OAuth Routes
+# CubReactive OAuth Routes — redirect to unified login
 @app.route('/apps/cubreactive/auth/discord')
 def cubreactive_auth():
-    """Initiate Discord OAuth for CubReactive"""
-    config = load_pm2_config()
-    params = {
-        'client_id': config.get('discord_client_id', os.environ.get('DISCORD_CLIENT_ID', '')),
-        'redirect_uri': CUBREACTIVE_REDIRECT_URI,
-        'response_type': 'code',
-        'scope': 'identify',
-        'state': secrets.token_urlsafe(16)
-    }
-    session['cubreactive_oauth_state'] = params['state']
-    discord_url = f"https://discord.com/api/oauth2/authorize?{urllib.parse.urlencode(params)}"
-    return redirect(discord_url)
+    """Redirect to unified Discord login"""
+    next_url = _safe_next_url(request.args.get('next', '/apps/cubreactive/dashboard'))
+    return redirect(f'/login/discord?next={urllib.parse.quote(next_url)}')
 
 @app.route('/apps/cubreactive/auth/callback')
 @rate_limit('oauth')
@@ -1938,9 +1981,9 @@ def cubreactive_callback():
 
 @app.route('/apps/cubreactive/auth/logout')
 def cubreactive_logout():
-    """Logout from CubReactive"""
+    """Logout — delegates to unified logout"""
     session.pop('cubreactive_user', None)
-    return redirect('/apps/cubreactive')
+    return redirect('/logout')
 
 @app.route('/apps/cubreactive/auth/rpc')
 @cubreactive_auth_required
@@ -2813,10 +2856,15 @@ def cleanme_dashboard():
     """CleanMe - User dashboard"""
     return render_template('cleanme-dashboard.html')
 
-# CleanMe OAuth Routes
+# CleanMe OAuth Routes — redirect to unified login
 @app.route('/cleanme/auth/discord')
 def cleanme_auth():
-    """Initiate Discord OAuth for CleanMe"""
+    """Redirect to unified Discord login (includes guilds scope)"""
+    return redirect('/login/discord?next=/cleanme/dashboard')
+
+@app.route('/cleanme/auth/discord_legacy')
+def cleanme_auth_legacy():
+    """Original CleanMe-specific Discord OAuth (kept for reference, no longer used)"""
     config = load_pm2_config()
     params = {
         'client_id': config.get('discord_client_id', CLEANME_CLIENT_ID),
@@ -2917,10 +2965,10 @@ def cleanme_callback():
 
 @app.route('/cleanme/auth/logout')
 def cleanme_logout():
-    """Logout from CleanMe"""
+    """Logout — delegates to unified logout which clears all session data"""
     session.pop('cleanme_user', None)
     session.pop('cleanme_token', None)
-    response = redirect('/cleanme')
+    response = redirect('/logout')
     response.delete_cookie('cleanme_user')
     response.delete_cookie('cleanme_token')
     return response
@@ -5215,7 +5263,7 @@ def bot_dashboard_auth_required(f):
         if not user:
             if request.is_json or request.path.startswith('/api/bot-dashboard/'):
                 return jsonify({'error': 'Authentication required'}), 401
-            return redirect('/bot-dashboard/auth/discord')
+            return redirect(f'/login?next={urllib.parse.quote(request.path)}')
 
         # Check whitelist
         whitelist = load_bot_dashboard_whitelist()
@@ -5239,21 +5287,12 @@ def bot_dashboard_auth_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Bot Dashboard OAuth Routes
+# Bot Dashboard OAuth Routes — redirect to unified login
 @app.route('/bot-dashboard/auth/discord')
 def bot_dashboard_auth():
-    """Initiate Discord OAuth for Bot Dashboard"""
-    config = load_pm2_config()
-    params = {
-        'client_id': config.get('discord_client_id', os.environ.get('DISCORD_CLIENT_ID', '')),
-        'redirect_uri': BOT_DASHBOARD_REDIRECT_URI,
-        'response_type': 'code',
-        'scope': 'identify',
-        'state': secrets.token_urlsafe(16)
-    }
-    session['bot_dashboard_oauth_state'] = params['state']
-    discord_url = f"https://discord.com/api/oauth2/authorize?{urllib.parse.urlencode(params)}"
-    return redirect(discord_url)
+    """Redirect to unified Discord login"""
+    next_url = _safe_next_url(request.args.get('next', '/bot-dashboard'))
+    return redirect(f'/login/discord?next={urllib.parse.quote(next_url)}')
 
 @app.route('/bot-dashboard/auth/callback')
 @rate_limit('oauth')
@@ -5320,9 +5359,9 @@ def bot_dashboard_callback():
 
 @app.route('/bot-dashboard/auth/logout')
 def bot_dashboard_logout():
-    """Logout from Bot Dashboard"""
+    """Logout — delegates to unified logout"""
     session.pop('bot_dashboard_user', None)
-    return redirect('/bot-dashboard')
+    return redirect('/logout')
 
 # Bot Dashboard Main Routes
 @app.route('/bot-dashboard')
@@ -10412,7 +10451,7 @@ def cub_protector_auth_required(f):
         if not user:
             if request.is_json or request.path.startswith('/api/cub-protector/'):
                 return jsonify({'error': 'Authentication required'}), 401
-            return redirect('/cub-protector/auth/discord')
+            return redirect(f'/login?next={urllib.parse.quote(request.path)}')
         # Rate limit all CUB PROTECTOR API calls per authenticated IP
         ip = get_client_ip()
         allowed, retry_after = check_rate_limit(ip, 'dashboard')
@@ -10499,22 +10538,12 @@ def get_user_bot_guilds(user_guilds):
 
     return shared_guilds
 
-# CUB PROTECTOR OAuth Routes
+# CUB PROTECTOR OAuth Routes — redirect to unified login
 @app.route('/cub-protector/auth/discord')
 def cub_protector_auth():
-    """Initiate Discord OAuth for CUB PROTECTOR Dashboard"""
-    config = load_pm2_config()
-    params = {
-        'client_id': config.get('discord_client_id', os.environ.get('DISCORD_CLIENT_ID', '')),
-        'redirect_uri': CUB_PROTECTOR_REDIRECT_URI,
-        'response_type': 'code',
-        'scope': 'identify guilds',
-        'prompt': 'consent',
-        'state': secrets.token_urlsafe(16)
-    }
-    session['cub_protector_oauth_state'] = params['state']
-    discord_url = f"https://discord.com/api/oauth2/authorize?{urllib.parse.urlencode(params)}"
-    return redirect(discord_url)
+    """Redirect to unified Discord login (requests identify + guilds)"""
+    next_url = _safe_next_url(request.args.get('next', '/cub-protector'))
+    return redirect(f'/login/discord?next={urllib.parse.quote(next_url)}')
 
 @app.route('/cub-protector/auth/callback')
 @rate_limit('oauth')
@@ -10630,11 +10659,11 @@ def cub_protector_callback():
 
 @app.route('/cub-protector/auth/logout')
 def cub_protector_logout():
-    """Logout from CUB PROTECTOR Dashboard"""
+    """Logout — delegates to unified logout"""
     session.pop('cub_protector_user', None)
     session.pop('cub_protector_user_guilds', None)
     session.pop('cub_protector_shared_guild_ids', None)
-    return redirect('/cub-protector')
+    return redirect('/logout')
 
 # CUB PROTECTOR Landing Page + Dashboard
 @app.route('/cub-protector')
@@ -16300,18 +16329,9 @@ def affiliate_track(code):
 # Affiliate OAuth
 @app.route('/affiliate/auth/discord')
 def affiliate_auth():
-    """Initiate Discord OAuth for affiliate login"""
-    config = load_pm2_config()
-    params = {
-        'client_id': config.get('discord_client_id', os.environ.get('DISCORD_CLIENT_ID', '')),
-        'redirect_uri': AFFILIATE_REDIRECT_URI,
-        'response_type': 'code',
-        'scope': 'identify',
-        'state': secrets.token_urlsafe(16)
-    }
-    session['affiliate_oauth_state'] = params['state']
-    discord_url = f"https://discord.com/api/oauth2/authorize?{urllib.parse.urlencode(params)}"
-    return redirect(discord_url)
+    """Redirect to unified Discord login"""
+    next_url = _safe_next_url(request.args.get('next', '/affiliate/dashboard'))
+    return redirect(f'/login/discord?next={urllib.parse.quote(next_url)}')
 
 @app.route('/affiliate/auth/callback')
 @rate_limit('oauth')
@@ -16384,8 +16404,9 @@ def affiliate_callback():
 
 @app.route('/affiliate/auth/logout')
 def affiliate_logout():
+    """Logout — delegates to unified logout"""
     session.pop('affiliate_user', None)
-    return redirect('/affiliate')
+    return redirect('/logout')
 
 # Affiliate stream widget (public — OBS browser source)
 @app.route('/affiliate/widget/<code>')

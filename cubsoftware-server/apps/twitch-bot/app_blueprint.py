@@ -145,17 +145,8 @@ def _clean_states(d):
 def login():
     if _authed():
         return redirect('/cubassist/')
-    state = secrets.token_urlsafe(16)
-    _login_states[state] = time.time()
-    _clean_states(_login_states)
-    params = urllib.parse.urlencode({
-        'client_id':     TWITCH_CLIENT_ID,
-        'redirect_uri':  LOGIN_REDIRECT_URI,
-        'response_type': 'code',
-        'scope':         'user:write:chat moderation:read channel:bot',
-        'state':         state,
-    })
-    return redirect(f'https://id.twitch.tv/oauth2/authorize?{params}')
+    # Redirect to the unified login — it requests all required Twitch scopes
+    return redirect('/login?next=/cubassist/')
 
 @cubassist_bp.route('/login/callback')
 def login_callback():
@@ -239,14 +230,16 @@ def login_callback():
 
 @cubassist_bp.route('/logout')
 def logout():
-    # Clear persistent remember-me token
+    # Clear CubAssist-specific remember-me token (legacy, kept for backward compat)
     token = request.cookies.get(_REMEMBER_COOKIE)
     if token:
         remembered = _load_remembered()
         remembered.pop(token, None)
         _save_remembered(remembered)
     session.pop('cubassist_user', None)
-    resp = make_response(redirect('/cubassist/'))
+    session.pop('cubsoftware_user', None)
+    # Delegate to the unified logout to clear cub_user and cub_remember cookie
+    resp = make_response(redirect('/logout'))
     resp.delete_cookie(_REMEMBER_COOKIE)
     return resp
 
@@ -256,7 +249,7 @@ def logout():
 @cubassist_bp.route('')
 def dashboard():
     if not _authed():
-        return render_template('cubassist-login.html')
+        return redirect('/login?next=/cubassist/')
     bot     = get_bot()
     channel = _user_channel()
     cfg     = load_channel_config(channel) if channel else {}

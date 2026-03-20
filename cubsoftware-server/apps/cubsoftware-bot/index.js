@@ -343,19 +343,52 @@ async function joinChannelForSpeaking(channelId, guildId) {
         // Broadcast channel update now that we've scanned members
         broadcastChannelUpdate(channelId);
 
-        // Wait for ready state before setting up listeners
+        // Log all state transitions to diagnose why Ready might not fire
+        connection.on('stateChange', (oldState, newState) => {
+            console.log(`[CubReactive] Connection state: ${oldState.status} -> ${newState.status} (${channel.name})`);
+        });
+
+        // Subscribe immediately — don't wait for Ready, since Ready may be delayed or
+        // the connection may start receiving audio before the state machine reports Ready.
+        // subscribeForSpeaking deduplicates calls, so it's safe to call again in Ready.
+        channel.members.forEach(member => {
+            if (!member.user.bot) subscribeForSpeaking(connection, member.id, channelId);
+        });
+
         connection.on(VoiceConnectionStatus.Ready, () => {
             console.log(`[CubReactive] Voice connection ready in: ${channel.name}`);
             // Re-scan and broadcast in case members changed during connection
             scanChannelMembers(channel);
             broadcastChannelUpdate(channelId);
-            // Subscribe to all current members so speaking events fire reliably
+            // Re-subscribe for any members who joined between initial scan and Ready
             channel.members.forEach(member => {
                 if (!member.user.bot) subscribeForSpeaking(connection, member.id, channelId);
             });
         });
 
-        // Listen for speaking events
+        // If connection hasn't reached Ready within 25 seconds, destroy and retry.
+        // This handles transient UDP failures and version-compatibility hangs.
+        const readyTimeout = setTimeout(() => {
+            if (connection.state.status !== VoiceConnectionStatus.Ready) {
+                const overlayUsers = overlayChannels.get(channelId);
+                if (!overlayUsers || overlayUsers.size === 0) {
+                    console.log(`[CubReactive] Ready timeout in ${channel.name} — no overlay users, skipping retry`);
+                    try { connection.destroy(); } catch (_) {}
+                    activeVoiceConnections.delete(channelId);
+                    return;
+                }
+                console.log(`[CubReactive] Ready timeout in ${channel.name} — stuck in "${connection.state.status}", reconnecting…`);
+                try { connection.destroy(); } catch (_) {}
+                activeVoiceConnections.delete(channelId);
+                setTimeout(() => joinChannelForSpeaking(channelId, guildId), 3000);
+            }
+        }, 25000);
+
+        connection.on(VoiceConnectionStatus.Ready, () => clearTimeout(readyTimeout));
+        connection.on(VoiceConnectionStatus.Destroyed, () => clearTimeout(readyTimeout));
+
+        // Listen for speaking events (fires via SPEAKING opcode from voice gateway,
+        // which may work even before UDP is fully established)
         connection.receiver.speaking.on('start', async (userId) => {
             let state = voiceStates.get(userId);
             if (!state) {

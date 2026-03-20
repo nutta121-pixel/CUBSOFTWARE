@@ -217,7 +217,7 @@ function setupRawVoiceListeners() {
 async function openCustomVoiceWS(channelId, guildId, endpoint, token, sessionId) {
     // Strip port suffix if present (e.g. "us-east-1.discord.media:443" → "us-east-1.discord.media")
     const cleanEndpoint = endpoint.replace(/:(\d+)$/, '');
-    const wsUrl = `wss://${cleanEndpoint}/?v=8`;
+    const wsUrl = `wss://${cleanEndpoint}/?v=4`;
     console.log(`[CubReactive] Opening voice WS for: ${channelId}`);
 
     const ws = new WebSocket(wsUrl);
@@ -276,7 +276,6 @@ function handleVoiceWSMessage(channelId, guildId, msg, token, sessionId, state) 
                     user_id: client.user.id,
                     session_id: sessionId,
                     token,
-                    max_dave_protocol_version: 1, // Required for voice gateway v8 (DAVE E2EE audio)
                 }
             }));
             console.log(`[CubReactive] Voice WS identifying for ${channelId}`);
@@ -482,7 +481,8 @@ async function joinChannelForSpeaking(channelId, guildId) {
         activeVoiceConnections.set(channelId, { guildId, channelId, status: 'connecting', heartbeat: null, ws: null });
 
         // Register pending join — VOICE_SERVER_UPDATE handler will open the voice WS
-        pendingVoiceJoins.set(guildId, { channelId, guildId });
+        const joinId = Date.now();
+        pendingVoiceJoins.set(guildId, { channelId, guildId, joinId });
 
         // Tell Discord gateway we want to join this voice channel
         guild.shard.send({
@@ -491,8 +491,10 @@ async function joinChannelForSpeaking(channelId, guildId) {
         });
 
         // Timeout if VOICE_SERVER_UPDATE never arrives
+        // Use joinId so a retry's new pending entry is not cleared by this old timeout
         setTimeout(() => {
-            if (pendingVoiceJoins.has(guildId) && pendingVoiceJoins.get(guildId).channelId === channelId) {
+            const pending = pendingVoiceJoins.get(guildId);
+            if (pending && pending.channelId === channelId && pending.joinId === joinId) {
                 console.log(`[CubReactive] Timeout waiting for voice server for ${channel.name}`);
                 pendingVoiceJoins.delete(guildId);
                 activeVoiceConnections.delete(channelId);

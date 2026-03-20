@@ -399,6 +399,7 @@ def cleanme_logo_image():
 # ==================== UNIFIED LOGIN SYSTEM ====================
 
 CUB_REMEMBERED_USERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'cub_remembered_users.json')
+CUB_LINKED_ACCOUNTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'cub_linked_accounts.json')
 CUB_REMEMBER_COOKIE = 'cub_remember'
 CUB_REMEMBER_DAYS = 30
 CUB_LOGIN_DISCORD_REDIRECT = os.environ.get('CUB_LOGIN_DISCORD_REDIRECT', 'https://cubsoftware.site/login/discord/callback')
@@ -451,6 +452,56 @@ def _cub_revoke_remember_token(token):
         del data[token]
         _cub_save_remembered(data)
 
+# ---- Account Linking ----
+
+def _load_linked_accounts():
+    if os.path.exists(CUB_LINKED_ACCOUNTS_FILE):
+        try:
+            with open(CUB_LINKED_ACCOUNTS_FILE, 'r') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def _save_linked_accounts(data):
+    os.makedirs(os.path.dirname(CUB_LINKED_ACCOUNTS_FILE), exist_ok=True)
+    with open(CUB_LINKED_ACCOUNTS_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
+
+def _get_linked_account(provider, user_id):
+    """Return linked account entry for a given provider+id, or None."""
+    return _load_linked_accounts().get(f'{provider}:{user_id}')
+
+def _link_accounts(prov_a, id_a, user_a, prov_b, id_b, user_b):
+    """Link two accounts bidirectionally."""
+    data = _load_linked_accounts()
+    now = datetime.utcnow().isoformat()
+    data[f'{prov_a}:{id_a}'] = {
+        'linked_provider': prov_b, 'linked_id': id_b,
+        'linked_username': user_b.get('username', ''),
+        'linked_avatar': user_b.get('avatar', ''),
+        'linked_login': user_b.get('login', ''),
+        'linked_at': now,
+    }
+    data[f'{prov_b}:{id_b}'] = {
+        'linked_provider': prov_a, 'linked_id': id_a,
+        'linked_username': user_a.get('username', ''),
+        'linked_avatar': user_a.get('avatar', ''),
+        'linked_login': user_a.get('login', ''),
+        'linked_at': now,
+    }
+    _save_linked_accounts(data)
+
+def _unlink_account(provider, user_id):
+    """Remove both directions of a link."""
+    data = _load_linked_accounts()
+    key = f'{provider}:{user_id}'
+    entry = data.pop(key, None)
+    if entry:
+        other_key = f"{entry['linked_provider']}:{entry['linked_id']}"
+        data.pop(other_key, None)
+    _save_linked_accounts(data)
+
 def _safe_next_url(url):
     """Only allow relative URLs to prevent open redirect"""
     if not url or '://' in url or url.startswith('//'):
@@ -490,51 +541,72 @@ def _cub_bridge_session():
         if not session.get('bot_dashboard_user'):
             session['bot_dashboard_user'] = base.copy()
         if not session.get('cub_protector_user'):
-            # CubProtector templates use avatar_url (not avatar) — match the key from the OAuth callback
             session['cub_protector_user'] = {
                 'id': cub['id'], 'username': cub['username'],
                 'avatar_url': cub['avatar'], 'guilds': cub.get('admin_guilds', []),
             }
-        if 'cub_protector_user_guilds' not in session and cub.get('raw_guilds'):
-            # Compute CubProtector guild list: user guilds intersected with bot guilds,
-            # filtered to guilds where user has admin/manage perms or is a bot master.
-            try:
-                bot_guilds = cub_protector_bot_request('/users/@me/guilds?with_counts=true') or []
-                custom_bots_data = _load_custom_bots()
-                all_covered = {g['id'] for g in bot_guilds} | {
-                    gid for gid, e in custom_bots_data.get('guilds', {}).items()
-                    if e.get('enabled') and e.get('token')
-                }
-                bot_masters_data = load_bot_masters()
-                user_id = cub['id']
-                session['cub_protector_user_guilds'] = [
-                    {'id': g['id'], 'name': g['name'], 'icon': g.get('icon'),
-                     'owner': g.get('owner', False), 'permissions': g.get('permissions', '0')}
-                    for g in cub['raw_guilds']
-                    if g['id'] in all_covered and (
-                        g.get('owner') or
-                        (int(g.get('permissions', 0)) & 0x8) == 0x8 or
-                        (int(g.get('permissions', 0)) & 0x20) == 0x20 or
-                        user_id in bot_masters_data.get(g['id'], [])
-                    )
-                ]
-            except Exception:
-                session['cub_protector_user_guilds'] = []
+        # cub_protector_user_guilds is computed at login time; fall back to [] if missing
+        if 'cub_protector_user_guilds' not in session:
+            session['cub_protector_user_guilds'] = []
         if not session.get('overlay_user'):
             session['overlay_user'] = {**base, 'login_type': 'discord'}
+        if not session.get('ban_appeal_user'):
+            session['ban_appeal_user'] = {'id': cub['id'], 'username': cub['username'], 'avatar_url': cub['avatar']}
+        if not session.get('pm2_user') and is_user_whitelisted(cub['id']):
+            session['pm2_user'] = {'id': cub['id'], 'username': cub['username'], 'discriminator': '0', 'avatar_url': cub['avatar']}
 
     elif provider == 'twitch':
         if not session.get('cubsoftware_user'):
-            # CubAssist checks cubsoftware_user as a fallback in _authed()
             session['cubsoftware_user'] = {
                 **base,
                 'login': cub.get('login', cub['username']),
                 'display_name': cub['username'],
                 'profile_image': cub['avatar'],
-                'access_token': cub.get('access_token', ''),  # Pass through for CubAssist API calls
+                'access_token': cub.get('access_token', ''),
             }
         if not session.get('overlay_user'):
             session['overlay_user'] = {**base, 'login_type': 'twitch'}
+
+    # Inject linked account sessions (when the other provider is linked)
+    linked = cub.get('linked_account')
+    if linked:
+        linked_prov = linked.get('provider')
+        linked_base = {'id': linked['id'], 'username': linked['username'], 'avatar': linked['avatar']}
+        if linked_prov == 'twitch' and not session.get('cubsoftware_user'):
+            session['cubsoftware_user'] = {
+                **linked_base,
+                'login': linked.get('login', linked['username']),
+                'display_name': linked['username'],
+                'profile_image': linked['avatar'],
+                'access_token': '',
+            }
+        elif linked_prov == 'discord':
+            if not session.get('cubreactive_user'):
+                session['cubreactive_user'] = {**linked_base, 'authenticated_at': time.time()}
+            if not session.get('cleanme_user'):
+                session['cleanme_user'] = {**linked_base, 'guilds': []}
+            if not session.get('affiliate_user'):
+                session['affiliate_user'] = linked_base.copy()
+            if not session.get('cubdeck_user'):
+                session['cubdeck_user'] = linked_base.copy()
+            if not session.get('bot_dashboard_user'):
+                session['bot_dashboard_user'] = linked_base.copy()
+            if not session.get('cub_protector_user'):
+                session['cub_protector_user'] = {
+                    'id': linked['id'], 'username': linked['username'],
+                    'avatar_url': linked['avatar'], 'guilds': [],
+                }
+            if 'cub_protector_user_guilds' not in session:
+                session['cub_protector_user_guilds'] = []
+            if not session.get('ban_appeal_user'):
+                session['ban_appeal_user'] = {'id': linked['id'], 'username': linked['username'], 'avatar_url': linked['avatar']}
+            if not session.get('pm2_user') and is_user_whitelisted(linked['id']):
+                session['pm2_user'] = {'id': linked['id'], 'username': linked['username'], 'discriminator': '0', 'avatar_url': linked['avatar']}
+
+@app.context_processor
+def _inject_cub_user():
+    """Inject cub_user into every template so header.html can show login state."""
+    return {'cub_user': session.get('cub_user')}
 
 # ---- Unified login/logout routes ----
 
@@ -544,11 +616,13 @@ def cub_login_page():
     if session.get('cub_user'):
         return redirect(next_url or '/')
     error_map = {
-        'auth_cancelled': 'Login was cancelled.',
-        'invalid_state':  'Security check failed. Please try again.',
-        'token_failed':   'Could not complete login. Please try again.',
-        'user_failed':    'Could not retrieve your profile. Please try again.',
-        'server_error':   'A server error occurred. Please try again.',
+        'auth_cancelled':      'Login was cancelled.',
+        'invalid_state':       'Security check failed. Please try again.',
+        'token_failed':        'Could not complete login. Please try again.',
+        'user_failed':         'Could not retrieve your profile. Please try again.',
+        'server_error':        'A server error occurred. Please try again.',
+        'link_require_login':  'You must be logged in to link an account.',
+        'already_linked':      'That account is already linked to another user.',
     }
     error = error_map.get(request.args.get('error', ''), '')
     return render_template('login.html', next=next_url, error=error, v=STATIC_VERSION)
@@ -568,9 +642,14 @@ def cub_logout():
 @app.route('/login/discord')
 def cub_login_discord():
     next_url = _safe_next_url(request.args.get('next', ''))
+    link_mode = request.args.get('link') == '1'
+    if link_mode and not session.get('cub_user'):
+        return redirect('/login?error=link_require_login')
     state = secrets.token_urlsafe(32)
     session['cub_login_state'] = state
     session['cub_login_next'] = next_url
+    if link_mode:
+        session['cub_link_mode'] = 'discord'
     config = load_pm2_config()
     params = {
         'client_id': config.get('discord_client_id') or os.environ.get('DISCORD_CLIENT_ID', ''),
@@ -584,6 +663,7 @@ def cub_login_discord():
 @app.route('/login/discord/callback')
 @rate_limit('oauth')
 def cub_login_discord_callback():
+    link_mode = session.pop('cub_link_mode', None)
     if request.args.get('error'):
         return redirect('/login?error=auth_cancelled')
     code = request.args.get('code')
@@ -615,7 +695,7 @@ def cub_login_discord_callback():
             avatar_url = f"https://cdn.discordapp.com/avatars/{u['id']}/{avatar_hash}.png?size=256"
         else:
             avatar_url = f"https://cdn.discordapp.com/embed/avatars/{int(u.get('discriminator', '0') or '0') % 5}.png"
-        # Fetch guilds (for CleanMe admin check + CubProtector guild management)
+        # Fetch guilds (compact admin list + raw for protector computation)
         raw_guilds = []
         admin_guilds = []
         try:
@@ -626,18 +706,81 @@ def cub_login_discord_callback():
                 admin_guilds = [g['id'] for g in raw_guilds if (g.get('permissions', 0) & 0x8) == 0x8]
         except Exception:
             pass
+        discord_user_data = {
+            'id': u['id'],
+            'username': u.get('global_name') or u.get('username'),
+            'avatar': avatar_url,
+        }
+
+        # ── LINK MODE: attach Discord to an existing Twitch login ──────────────
+        if link_mode == 'discord':
+            current_user = session.get('cub_user')
+            if current_user and current_user.get('provider') == 'twitch':
+                # Prevent linking if Discord ID already linked elsewhere
+                existing = _get_linked_account('discord', u['id'])
+                if existing and existing['linked_id'] != current_user['id']:
+                    return redirect('/login?error=already_linked')
+                _link_accounts(
+                    'twitch', current_user['id'],
+                    {'username': current_user['username'], 'avatar': current_user['avatar']},
+                    'discord', u['id'], discord_user_data,
+                )
+                current_user['linked_account'] = {
+                    'provider': 'discord', 'id': u['id'],
+                    'username': discord_user_data['username'],
+                    'avatar': discord_user_data['avatar'],
+                }
+                session['cub_user'] = current_user
+                return redirect(next_url or '/account')
+
+        # ── NORMAL LOGIN ────────────────────────────────────────────────────────
+        # Compute protector guilds at login time — avoids storing raw_guilds in cookie
+        protector_guilds = []
+        try:
+            bot_guilds = cub_protector_bot_request('/users/@me/guilds?with_counts=true') or []
+            custom_bots_data = _load_custom_bots()
+            all_covered = {g['id'] for g in bot_guilds} | {
+                gid for gid, e in custom_bots_data.get('guilds', {}).items()
+                if e.get('enabled') and e.get('token')
+            }
+            bot_masters_data = load_bot_masters()
+            user_id = u['id']
+            protector_guilds = [
+                {'id': g['id'], 'name': g['name'], 'icon': g.get('icon'),
+                 'owner': g.get('owner', False), 'permissions': g.get('permissions', '0')}
+                for g in raw_guilds
+                if g['id'] in all_covered and (
+                    g.get('owner') or
+                    (int(g.get('permissions', 0)) & 0x8) == 0x8 or
+                    (int(g.get('permissions', 0)) & 0x20) == 0x20 or
+                    user_id in bot_masters_data.get(g['id'], [])
+                )
+            ]
+        except Exception:
+            pass
+        # Check for existing linked Twitch account
+        linked = _get_linked_account('discord', u['id'])
+        linked_account = None
+        if linked:
+            linked_account = {
+                'provider': linked['linked_provider'], 'id': linked['linked_id'],
+                'username': linked['linked_username'], 'avatar': linked['linked_avatar'],
+                'login': linked.get('linked_login', ''),
+            }
         cub_user = {
             'id': u['id'],
             'provider': 'discord',
-            'username': u.get('global_name') or u.get('username'),
+            'username': discord_user_data['username'],
             'avatar': avatar_url,
             'authenticated_at': time.time(),
-            'admin_guilds': admin_guilds,   # Session-only — not persisted to remember cookie
-            'raw_guilds': raw_guilds,        # Session-only — not persisted to remember cookie
+            'admin_guilds': admin_guilds,  # Compact ID list only — no raw guild objects
         }
+        if linked_account:
+            cub_user['linked_account'] = linked_account
         session.permanent = True
         session['cub_user'] = cub_user
-        token = _cub_create_remember_token(cub_user)  # strips admin_guilds + raw_guilds before saving
+        session['cub_protector_user_guilds'] = protector_guilds
+        token = _cub_create_remember_token(cub_user)
         resp = redirect(next_url or '/')
         resp.set_cookie(CUB_REMEMBER_COOKIE, token,
                         max_age=CUB_REMEMBER_DAYS * 24 * 3600,
@@ -652,9 +795,14 @@ def cub_login_discord_callback():
 @app.route('/login/twitch')
 def cub_login_twitch():
     next_url = _safe_next_url(request.args.get('next', ''))
+    link_mode = request.args.get('link') == '1'
+    if link_mode and not session.get('cub_user'):
+        return redirect('/login?error=link_require_login')
     state = secrets.token_urlsafe(32)
     session['cub_login_state'] = state
     session['cub_login_next'] = next_url
+    if link_mode:
+        session['cub_link_mode'] = 'twitch'
     params = {
         'client_id': os.environ.get('TWITCH_CLIENT_ID', ''),
         'redirect_uri': CUB_LOGIN_TWITCH_REDIRECT,
@@ -668,6 +816,7 @@ def cub_login_twitch():
 @app.route('/login/twitch/callback')
 @rate_limit('oauth')
 def cub_login_twitch_callback():
+    link_mode = session.pop('cub_link_mode', None)
     if request.args.get('error'):
         return redirect('/login?error=auth_cancelled')
     code = request.args.get('code')
@@ -698,18 +847,56 @@ def cub_login_twitch_callback():
         if not users:
             return redirect('/login?error=user_failed')
         u = users[0]
+        twitch_user_data = {
+            'id': u['id'],
+            'username': u.get('display_name') or u['login'],
+            'avatar': u.get('profile_image_url', ''),
+            'login': u['login'],
+        }
+
+        # ── LINK MODE: attach Twitch to an existing Discord login ──────────────
+        if link_mode == 'twitch':
+            current_user = session.get('cub_user')
+            if current_user and current_user.get('provider') == 'discord':
+                existing = _get_linked_account('twitch', u['id'])
+                if existing and existing['linked_id'] != current_user['id']:
+                    return redirect('/login?error=already_linked')
+                _link_accounts(
+                    'discord', current_user['id'],
+                    {'username': current_user['username'], 'avatar': current_user['avatar']},
+                    'twitch', u['id'], twitch_user_data,
+                )
+                current_user['linked_account'] = {
+                    'provider': 'twitch', 'id': u['id'],
+                    'username': twitch_user_data['username'],
+                    'avatar': twitch_user_data['avatar'],
+                    'login': twitch_user_data['login'],
+                }
+                session['cub_user'] = current_user
+                return redirect(next_url or '/account')
+
+        # ── NORMAL LOGIN ────────────────────────────────────────────────────────
+        linked = _get_linked_account('twitch', u['id'])
+        linked_account = None
+        if linked:
+            linked_account = {
+                'provider': linked['linked_provider'], 'id': linked['linked_id'],
+                'username': linked['linked_username'], 'avatar': linked['linked_avatar'],
+            }
         cub_user = {
             'id': u['id'],
             'provider': 'twitch',
             'login': u['login'],
-            'username': u.get('display_name') or u['login'],
-            'avatar': u.get('profile_image_url', ''),
+            'username': twitch_user_data['username'],
+            'avatar': twitch_user_data['avatar'],
             'authenticated_at': time.time(),
             'access_token': access_token,  # Session-only, not persisted to remember cookie
         }
+        if linked_account:
+            cub_user['linked_account'] = linked_account
         session.permanent = True
         session['cub_user'] = cub_user
-        token = _cub_create_remember_token(cub_user)  # strips access_token before saving
+        token = _cub_create_remember_token(cub_user)
         resp = redirect(next_url or '/')
         resp.set_cookie(CUB_REMEMBER_COOKIE, token,
                         max_age=CUB_REMEMBER_DAYS * 24 * 3600,
@@ -727,6 +914,29 @@ def cub_auth_me():
     if cub:
         return jsonify({'logged_in': True, 'user': {k: v for k, v in cub.items() if k != 'authenticated_at'}})
     return jsonify({'logged_in': False})
+
+# ---- Account management ----
+
+@app.route('/account')
+def cub_account():
+    cub = session.get('cub_user')
+    if not cub:
+        return redirect('/login?next=/account')
+    return render_template('account.html', v=STATIC_VERSION)
+
+@app.route('/account/unlink', methods=['POST'])
+def cub_account_unlink():
+    cub = session.get('cub_user')
+    if not cub:
+        return jsonify({'error': 'Not logged in'}), 401
+    _unlink_account(cub['provider'], cub['id'])
+    cub.pop('linked_account', None)
+    session['cub_user'] = cub
+    # Clear linked app sessions so bridge re-populates cleanly next request
+    for key in ('cubsoftware_user', 'cubreactive_user', 'cleanme_user', 'affiliate_user',
+                'cubdeck_user', 'bot_dashboard_user', 'cub_protector_user', 'ban_appeal_user', 'pm2_user'):
+        session.pop(key, None)
+    return jsonify({'ok': True})
 
 # ==================== MAIN WEBSITE ROUTES ====================
 
@@ -1881,132 +2091,13 @@ def cubreactive_overlay_individual(user_id):
 # CubReactive OAuth Routes — redirect to unified login
 @app.route('/apps/cubreactive/auth/discord')
 def cubreactive_auth():
-    """Redirect to unified Discord login"""
-    next_url = _safe_next_url(request.args.get('next', '/apps/cubreactive/dashboard'))
-    return redirect(f'/login/discord?next={urllib.parse.quote(next_url)}')
+    """Redirect to unified login page"""
+    return redirect('/login?next=/apps/cubreactive/dashboard')
 
 @app.route('/apps/cubreactive/auth/callback')
-@rate_limit('oauth')
 def cubreactive_callback():
-    """Discord OAuth callback for CubReactive"""
-    error = request.args.get('error')
-    if error:
-        return redirect('/apps/cubreactive?error=auth_failed')
-
-    code = request.args.get('code')
-    state = request.args.get('state')
-
-    # Verify state
-    if state != session.get('cubreactive_oauth_state'):
-        return redirect('/apps/cubreactive?error=invalid_state')
-
-    # Exchange code for token
-    config = load_pm2_config()
-    try:
-        token_response = requests.post('https://discord.com/api/oauth2/token', data={
-            'client_id': config.get('discord_client_id', os.environ.get('DISCORD_CLIENT_ID', '')),
-            'client_secret': config.get('discord_client_secret', os.environ.get('DISCORD_CLIENT_SECRET', '')),
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': CUBREACTIVE_REDIRECT_URI
-        }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-
-        if token_response.status_code != 200:
-            app.logger.error(f'CubReactive token exchange failed: {token_response.status_code} {token_response.text}')
-            return redirect('/apps/cubreactive?error=token_failed')
-
-        tokens = token_response.json()
-        access_token = tokens.get('access_token')
-
-        # Get user info
-        user_response = requests.get('https://discord.com/api/users/@me',
-            headers={'Authorization': f'Bearer {access_token}'})
-
-        if user_response.status_code != 200:
-            return redirect('/apps/cubreactive?error=user_failed')
-
-        user_data = user_response.json()
-
-        # Build avatar URL
-        avatar_hash = user_data.get('avatar')
-        if avatar_hash:
-            avatar_url = f"https://cdn.discordapp.com/avatars/{user_data['id']}/{avatar_hash}.png?size=256"
-        else:
-            # Default avatar
-            discriminator = int(user_data.get('discriminator', '0') or '0')
-            avatar_url = f"https://cdn.discordapp.com/embed/avatars/{discriminator % 5}.png"
-
-        # Store in session
-        session['cubreactive_user'] = {
-            'id': user_data['id'],
-            'username': user_data.get('global_name') or user_data.get('username'),
-            'avatar': avatar_url,
-            'authenticated_at': time.time()
-        }
-
-        # Initialize or update user config
-        users = load_cubreactive_users()
-        if user_data['id'] not in users:
-            users[user_data['id']] = {
-                'username': user_data.get('global_name') or user_data.get('username'),
-                'avatar_url': avatar_url,
-                'enabled': True,
-                'images': {
-                    'speaking': None,
-                    'idle': None,
-                    'muted': None,
-                    'deafened': None
-                },
-                'settings': {
-                    'bounce_on_speak': True,
-                    'dim_when_idle': False,
-                    'show_name': True,
-                    'overlay_position': 'bottom',
-                    'animation_style': 'bounce',
-                    'avatar_shape': 'rounded',
-                    'avatar_size': 180,
-                    'border_enabled': False,
-                    'border_color': '#5865f2',
-                    'border_width': 3,
-                    'glow_enabled': False,
-                    'glow_color': '#5865f2',
-                    'name_color': '#ffffff',
-                    'name_size': 14,
-                    'background_color': 'transparent',
-                    'spacing': 20,
-                    'grayscale_muted': True,
-                    'grayscale_deafened': True,
-                    'transition_style': 'fade',
-                    'transition_duration': 200,
-                    'shadow_enabled': False,
-                    'shadow_color': '#000000',
-                    'shadow_blur': 10,
-                    'speaking_ring_enabled': True,
-                    'speaking_ring_color': '#57f287',
-                    'speaking_ring_width': 4,
-                    'show_status_icons': True,
-                    'overlay_background': 'transparent',
-                    'name_background_enabled': False,
-                    'name_background_color': 'rgba(0,0,0,0.5)',
-                    'flip_horizontal': False,
-                    'max_participants': 0,
-                    'hide_self': False,
-                    'idle_opacity': 100,
-                    'theme': 'custom'
-                },
-                'created': time.time()
-            }
-        else:
-            # Always update avatar_url and username on login so they stay fresh
-            users[user_data['id']]['avatar_url'] = avatar_url
-            users[user_data['id']]['username'] = user_data.get('global_name') or user_data.get('username')
-        save_cubreactive_users(users)
-
-        return redirect('/apps/cubreactive')
-
-    except Exception as e:
-        print(f"CubReactive OAuth error: {e}")
-        return redirect('/apps/cubreactive?error=auth_error')
+    """Legacy callback — no longer used. Unified login handles all Discord OAuth."""
+    return redirect('/login?next=/apps/cubreactive/dashboard')
 
 @app.route('/apps/cubreactive/auth/logout')
 def cubreactive_logout():
@@ -2991,122 +3082,20 @@ def cleanme_dashboard():
     """CleanMe - User dashboard"""
     return render_template('cleanme-dashboard.html')
 
-# CleanMe OAuth Routes — redirect to unified login
+# CleanMe OAuth Routes — all redirected to unified login
 @app.route('/cleanme/auth/discord')
-def cleanme_auth():
-    """Redirect to unified Discord login (includes guilds scope)"""
-    return redirect('/login/discord?next=/cleanme/dashboard')
-
 @app.route('/cleanme/auth/discord_legacy')
-def cleanme_auth_legacy():
-    """Original CleanMe-specific Discord OAuth (kept for reference, no longer used)"""
-    config = load_pm2_config()
-    params = {
-        'client_id': config.get('discord_client_id', CLEANME_CLIENT_ID),
-        'redirect_uri': CLEANME_REDIRECT_URI,
-        'response_type': 'code',
-        'scope': 'identify guilds',
-        'state': secrets.token_urlsafe(16)
-    }
-    session['cleanme_oauth_state'] = params['state']
-    discord_url = f"https://discord.com/api/oauth2/authorize?{urllib.parse.urlencode(params)}"
-    return redirect(discord_url)
+def cleanme_auth():
+    return redirect('/login?next=/cleanme/dashboard')
 
 @app.route('/cleanme/auth/callback')
-@rate_limit('oauth')
 def cleanme_callback():
-    """Discord OAuth callback for CleanMe"""
-    error = request.args.get('error')
-    if error:
-        return redirect('/cleanme?error=auth_failed')
-
-    code = request.args.get('code')
-    state = request.args.get('state')
-
-    if state != session.get('cleanme_oauth_state'):
-        return redirect('/cleanme?error=invalid_state')
-
-    config = load_pm2_config()
-
-    try:
-        # Exchange code for access token
-        token_response = requests.post('https://discord.com/api/oauth2/token', data={
-            'client_id': config.get('discord_client_id', CLEANME_CLIENT_ID),
-            'client_secret': config.get('discord_client_secret', CLEANME_CLIENT_SECRET),
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': CLEANME_REDIRECT_URI
-        }, headers={
-            'Content-Type': 'application/x-www-form-urlencoded'
-        })
-
-        if token_response.status_code != 200:
-            return redirect('/cleanme?error=auth_failed')
-
-        token_data = token_response.json()
-        access_token = token_data['access_token']
-
-        # Get user info
-        user_response = requests.get('https://discord.com/api/users/@me', headers={
-            'Authorization': f'Bearer {access_token}'
-        })
-
-        if user_response.status_code != 200:
-            return redirect('/cleanme?error=auth_failed')
-
-        user_data = user_response.json()
-
-        # Get user's guilds (for ownership verification)
-        guilds_response = requests.get('https://discord.com/api/users/@me/guilds', headers={
-            'Authorization': f'Bearer {access_token}'
-        })
-
-        guilds = []
-        if guilds_response.status_code == 200:
-            guilds = guilds_response.json()
-
-        # Build avatar URL
-        avatar_hash = user_data.get('avatar')
-        if avatar_hash:
-            avatar_url = f"https://cdn.discordapp.com/avatars/{user_data['id']}/{avatar_hash}.png"
-        else:
-            avatar_url = "https://cdn.discordapp.com/embed/avatars/0.png"
-
-        # Store user in session
-        user_info = {
-            'id': user_data['id'],
-            'username': user_data['username'],
-            'discriminator': user_data.get('discriminator', '0'),
-            'avatar': avatar_url,
-            'guilds': [g['id'] for g in guilds if (g.get('permissions', 0) & 0x8) == 0x8]  # Admin guilds
-        }
-
-        session['cleanme_user'] = user_info
-        session['cleanme_token'] = access_token
-
-        # Set cookie for frontend
-        response = redirect('/cleanme/dashboard')
-        response.set_cookie('cleanme_user', urllib.parse.quote(json.dumps({
-            'id': user_info['id'],
-            'username': user_info['username'],
-            'avatar': user_info['avatar']
-        })), max_age=7*24*60*60, httponly=False, samesite='Lax')
-
-        return response
-
-    except Exception as e:
-        print(f"CleanMe OAuth error: {e}")
-        return redirect('/cleanme?error=auth_failed')
+    """Legacy callback — no longer used."""
+    return redirect('/login?next=/cleanme/dashboard')
 
 @app.route('/cleanme/auth/logout')
 def cleanme_logout():
-    """Logout — delegates to unified logout which clears all session data"""
-    session.pop('cleanme_user', None)
-    session.pop('cleanme_token', None)
-    response = redirect('/logout')
-    response.delete_cookie('cleanme_user')
-    response.delete_cookie('cleanme_token')
-    return response
+    return redirect('/logout')
 
 # CleanMe API Routes
 @app.route('/cleanme/api/servers/featured')
@@ -4315,114 +4304,20 @@ def verify_oauth_state(state):
 @app.route('/dashboard/login')
 @app.route('/apps/pm2-dashboard/login')
 def pm2_login():
-    """PM2 Dashboard Login Page"""
-    config = load_pm2_config()
-    error = request.args.get('error')
-    error_messages = {
-        'not_whitelisted': 'Your Discord account is not whitelisted for dashboard access.',
-        'auth_failed': 'Discord authentication failed. Please try again.',
-        'invalid_state': 'Invalid authentication state. Please try again.'
-    }
-
-    # Build Discord OAuth URL
-    state = secrets.token_urlsafe(16)
-    params = {
-        'client_id': config.get('discord_client_id', ''),
-        'redirect_uri': config.get('discord_redirect_uri', 'https://cubsoftware.site/dashboard/callback'),
-        'response_type': 'code',
-        'scope': 'identify',
-        'state': state
-    }
-
-    # Store state in both session and file (fallback)
-    session['oauth_state'] = state
-    save_oauth_state(state)
-
-    discord_url = f"https://discord.com/api/oauth2/authorize?{urllib.parse.urlencode(params)}"
-
-    return render_template('pm2-login.html',
-                          discord_url=discord_url,
-                          error=error_messages.get(error))
+    """Redirect to unified login — bridge auto-populates pm2_user for whitelisted users."""
+    return redirect('/login?next=/dashboard')
 
 @app.route('/dashboard/callback')
 @app.route('/apps/pm2-dashboard/callback')
 def pm2_callback():
-    """Discord OAuth callback for PM2 Dashboard"""
-    error = request.args.get('error')
-    if error:
-        return redirect(url_for('pm2_login', error='auth_failed'))
-
-    code = request.args.get('code')
-    state = request.args.get('state')
-
-    # Verify state (check session first, then file-based fallback)
-    session_state = session.get('oauth_state')
-    if state != session_state and not verify_oauth_state(state):
-        return redirect(url_for('pm2_login', error='invalid_state'))
-
-    # Clear session state
-    session.pop('oauth_state', None)
-
-    config = load_pm2_config()
-
-    # Exchange code for access token
-    try:
-        token_response = requests.post('https://discord.com/api/oauth2/token', data={
-            'client_id': config['discord_client_id'],
-            'client_secret': config['discord_client_secret'],
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': config['discord_redirect_uri']
-        }, headers={
-            'Content-Type': 'application/x-www-form-urlencoded'
-        })
-
-        if token_response.status_code != 200:
-            return redirect(url_for('pm2_login', error='auth_failed'))
-
-        token_data = token_response.json()
-        access_token = token_data['access_token']
-
-        # Get user info
-        user_response = requests.get('https://discord.com/api/users/@me', headers={
-            'Authorization': f'Bearer {access_token}'
-        })
-
-        if user_response.status_code != 200:
-            return redirect(url_for('pm2_login', error='auth_failed'))
-
-        user_data = user_response.json()
-
-        # Check whitelist
-        if not is_user_whitelisted(user_data['id']):
-            return redirect(url_for('pm2_login', error='not_whitelisted'))
-
-        # Store user in session
-        avatar_hash = user_data.get('avatar')
-        if avatar_hash:
-            avatar_url = f"https://cdn.discordapp.com/avatars/{user_data['id']}/{avatar_hash}.png"
-        else:
-            avatar_url = "https://cdn.discordapp.com/embed/avatars/0.png"
-
-        session['pm2_user'] = {
-            'id': user_data['id'],
-            'username': user_data['username'],
-            'discriminator': user_data.get('discriminator', '0'),
-            'avatar_url': avatar_url
-        }
-
-        return redirect(url_for('pm2_dashboard'))
-
-    except Exception as e:
-        print(f"PM2 OAuth error: {e}")
-        return redirect(url_for('pm2_login', error='auth_failed'))
+    """Legacy callback — no longer used."""
+    return redirect('/login?next=/dashboard')
 
 @app.route('/dashboard/logout')
 @app.route('/apps/pm2-dashboard/logout')
 def pm2_logout():
-    """Logout from PM2 Dashboard"""
     session.pop('pm2_user', None)
-    return redirect(url_for('pm2_login'))
+    return redirect('/logout')
 
 # PM2 API Endpoints
 @app.route('/api/pm2/processes')
@@ -5251,8 +5146,11 @@ def admin_api_status():
 @app.before_request
 def enforce_ip_bans():
     """Check if the requesting IP is banned before processing"""
-    # Skip for static files, admin API (so admins can unban), report page, and ban appeal page
-    if request.path.startswith('/static/') or request.path.startswith('/api/admin/') or request.path.startswith('/api/pm2/') or request.path.startswith('/report') or request.path.startswith('/ban-appeal'):
+    # Skip for: static files, admin API (so admins can unban), report page, ban appeal,
+    # account management, and login/logout (so banned users can only reach ban page + account)
+    _ban_allowed = ('/static/', '/api/admin/', '/api/pm2/', '/report', '/ban-appeal',
+                    '/account', '/logout', '/login')
+    if any(request.path.startswith(p) for p in _ban_allowed):
         return None
 
     maybe_clean_bans()
@@ -5422,79 +5320,18 @@ def bot_dashboard_auth_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# Bot Dashboard OAuth Routes — redirect to unified login
+# Bot Dashboard OAuth — unified login handles everything
 @app.route('/bot-dashboard/auth/discord')
 def bot_dashboard_auth():
-    """Redirect to unified Discord login"""
-    next_url = _safe_next_url(request.args.get('next', '/bot-dashboard'))
-    return redirect(f'/login/discord?next={urllib.parse.quote(next_url)}')
+    return redirect('/login?next=/bot-dashboard')
 
 @app.route('/bot-dashboard/auth/callback')
-@rate_limit('oauth')
 def bot_dashboard_callback():
-    """Discord OAuth callback for Bot Dashboard"""
-    error = request.args.get('error')
-    if error:
-        return redirect('/bot-dashboard?error=auth_failed')
-
-    code = request.args.get('code')
-    state = request.args.get('state')
-
-    # Verify state
-    if state != session.get('bot_dashboard_oauth_state'):
-        return redirect('/bot-dashboard?error=invalid_state')
-
-    # Exchange code for token
-    config = load_pm2_config()
-    try:
-        token_response = requests.post('https://discord.com/api/oauth2/token', data={
-            'client_id': config.get('discord_client_id', os.environ.get('DISCORD_CLIENT_ID', '')),
-            'client_secret': config.get('discord_client_secret', os.environ.get('DISCORD_CLIENT_SECRET', '')),
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': BOT_DASHBOARD_REDIRECT_URI
-        }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-
-        if token_response.status_code != 200:
-            return redirect('/bot-dashboard?error=token_failed')
-
-        tokens = token_response.json()
-        access_token = tokens.get('access_token')
-
-        # Get user info
-        user_response = requests.get('https://discord.com/api/users/@me',
-            headers={'Authorization': f'Bearer {access_token}'})
-
-        if user_response.status_code != 200:
-            return redirect('/bot-dashboard?error=user_failed')
-
-        user_data = user_response.json()
-
-        # Build avatar URL
-        avatar_hash = user_data.get('avatar')
-        if avatar_hash:
-            avatar_url = f"https://cdn.discordapp.com/avatars/{user_data['id']}/{avatar_hash}.png?size=256"
-        else:
-            discriminator = int(user_data.get('discriminator', '0') or '0')
-            avatar_url = f"https://cdn.discordapp.com/embed/avatars/{discriminator % 5}.png"
-
-        # Store in session
-        session['bot_dashboard_user'] = {
-            'id': user_data['id'],
-            'username': user_data.get('global_name') or user_data.get('username'),
-            'avatar': avatar_url,
-            'authenticated_at': time.time()
-        }
-
-        return redirect('/bot-dashboard')
-
-    except Exception as e:
-        app.logger.error(f'Bot Dashboard OAuth error: {e}')
-        return redirect('/bot-dashboard?error=auth_error')
+    """Legacy callback — no longer used."""
+    return redirect('/login?next=/bot-dashboard')
 
 @app.route('/bot-dashboard/auth/logout')
 def bot_dashboard_logout():
-    """Logout — delegates to unified logout"""
     session.pop('bot_dashboard_user', None)
     return redirect('/logout')
 
@@ -10673,128 +10510,18 @@ def get_user_bot_guilds(user_guilds):
 
     return shared_guilds
 
-# CUB PROTECTOR OAuth Routes — redirect to unified login
+# CUB PROTECTOR OAuth — unified login handles everything
 @app.route('/cub-protector/auth/discord')
 def cub_protector_auth():
-    """Redirect to unified Discord login (requests identify + guilds)"""
-    next_url = _safe_next_url(request.args.get('next', '/cub-protector'))
-    return redirect(f'/login/discord?next={urllib.parse.quote(next_url)}')
+    return redirect('/login?next=/cub-protector')
 
 @app.route('/cub-protector/auth/callback')
-@rate_limit('oauth')
 def cub_protector_callback():
-    """Discord OAuth callback for CUB PROTECTOR Dashboard"""
-    error = request.args.get('error')
-    if error:
-        return redirect('/cub-protector?error=auth_failed')
-
-    code = request.args.get('code')
-    state = request.args.get('state')
-
-    if state != session.get('cub_protector_oauth_state'):
-        return redirect('/cub-protector?error=invalid_state')
-
-    config = load_pm2_config()
-    try:
-        # Exchange code for token
-        token_response = requests.post('https://discord.com/api/oauth2/token', data={
-            'client_id': config.get('discord_client_id', os.environ.get('DISCORD_CLIENT_ID', '')),
-            'client_secret': config.get('discord_client_secret', os.environ.get('DISCORD_CLIENT_SECRET', '')),
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': CUB_PROTECTOR_REDIRECT_URI
-        }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-
-        if token_response.status_code != 200:
-            print(f'[CUB PROTECTOR] Token exchange failed: {token_response.status_code} - {token_response.text}')
-            # Auto-retry once (common with Discord app redirects)
-            retry_count = session.get('cub_protector_auth_retries', 0)
-            if retry_count < 1:
-                session['cub_protector_auth_retries'] = retry_count + 1
-                return redirect('/cub-protector/auth/discord')
-            session.pop('cub_protector_auth_retries', None)
-            return redirect('/cub-protector?error=token_failed')
-
-        tokens = token_response.json()
-        access_token = tokens.get('access_token')
-
-        # Get user info
-        user_response = requests.get('https://discord.com/api/users/@me',
-            headers={'Authorization': f'Bearer {access_token}'})
-
-        if user_response.status_code != 200:
-            return redirect('/cub-protector?error=user_failed')
-
-        user_data = user_response.json()
-
-        # Get user's guilds
-        guilds_response = requests.get('https://discord.com/api/users/@me/guilds',
-            headers={'Authorization': f'Bearer {access_token}'})
-
-        user_guilds = guilds_response.json() if guilds_response.status_code == 200 else []
-
-        # Build avatar URL
-        avatar_hash = user_data.get('avatar')
-        if avatar_hash:
-            avatar_url = f"https://cdn.discordapp.com/avatars/{user_data['id']}/{avatar_hash}.png?size=256"
-        else:
-            discriminator = int(user_data.get('discriminator', '0') or '0')
-            avatar_url = f"https://cdn.discordapp.com/embed/avatars/{discriminator % 5}.png"
-
-        # Store in session
-        session['cub_protector_user'] = {
-            'id': user_data['id'],
-            'username': user_data.get('global_name') or user_data.get('username'),
-            'avatar_url': avatar_url,
-            'authenticated_at': time.time()
-        }
-        # Pre-filter: only shared guilds where user is owner, admin, or bot master (keeps session cookie under 4KB)
-        # Always fetch fresh (bypass_cache=True) so newly-added servers appear immediately.
-        # Paginate to handle bots in 200+ servers.
-        bot_guilds = []
-        after = None
-        while True:
-            pparams = {'limit': 200}
-            if after:
-                pparams['after'] = after
-            page = cub_protector_bot_request('/users/@me/guilds', params=pparams, bypass_cache=True)
-            if not page:
-                break
-            bot_guilds.extend(page)
-            if len(page) < 200:
-                break
-            after = page[-1]['id']
-        bot_guild_ids = {g['id'] for g in bot_guilds}
-        # Also include guilds running an enabled custom bot — they act as the main bot
-        custom_bots_data = _load_custom_bots()
-        custom_bot_guild_ids = {
-            gid for gid, entry in custom_bots_data.get('guilds', {}).items()
-            if entry.get('enabled') and entry.get('token')
-        }
-        all_covered_guild_ids = bot_guild_ids | custom_bot_guild_ids
-        bot_masters_data = load_bot_masters()
-        user_id = user_data['id']
-        session['cub_protector_user_guilds'] = [
-            {'id': g['id'], 'name': g['name'], 'icon': g.get('icon'), 'owner': g.get('owner', False), 'permissions': g.get('permissions', '0')}
-            for g in user_guilds
-            if g['id'] in all_covered_guild_ids and (
-                g.get('owner', False) or
-                (int(g.get('permissions', 0)) & 0x8) == 0x8 or
-                (int(g.get('permissions', 0)) & 0x20) == 0x20 or
-                user_id in bot_masters_data.get(g['id'], [])
-            )
-        ]
-        session.pop('cub_protector_auth_retries', None)
-
-        return redirect('/cub-protector')
-
-    except Exception as e:
-        app.logger.error(f'CUB PROTECTOR OAuth error: {e}')
-        return redirect('/cub-protector?error=auth_error')
+    """Legacy callback — no longer used."""
+    return redirect('/login?next=/cub-protector')
 
 @app.route('/cub-protector/auth/logout')
 def cub_protector_logout():
-    """Logout — delegates to unified logout"""
     session.pop('cub_protector_user', None)
     session.pop('cub_protector_user_guilds', None)
     session.pop('cub_protector_shared_guild_ids', None)
@@ -15756,75 +15483,13 @@ def ban_appeal_page():
 
 @app.route('/ban-appeal/auth/discord')
 def ban_appeal_auth():
-    """Initiate Discord OAuth for ban appeal identity verification"""
-    config = load_pm2_config()
-    params = {
-        'client_id': config.get('discord_client_id', os.environ.get('DISCORD_CLIENT_ID', '')),
-        'redirect_uri': BAN_APPEAL_REDIRECT_URI,
-        'response_type': 'code',
-        'scope': 'identify',
-        'prompt': 'consent',
-        'state': secrets.token_urlsafe(16)
-    }
-    session['ban_appeal_oauth_state'] = params['state']
-    discord_url = f"https://discord.com/api/oauth2/authorize?{urllib.parse.urlencode(params)}"
-    return redirect(discord_url)
+    """Redirect to unified login — bridge auto-populates ban_appeal_user."""
+    return redirect('/login?next=/ban-appeal')
 
 @app.route('/ban-appeal/auth/callback')
-@rate_limit('oauth')
 def ban_appeal_callback():
-    """Discord OAuth callback for ban appeal"""
-    error = request.args.get('error')
-    if error:
-        return redirect('/ban-appeal?error=auth_failed')
-
-    code = request.args.get('code')
-    state = request.args.get('state')
-
-    if state != session.get('ban_appeal_oauth_state'):
-        return redirect('/ban-appeal?error=auth_failed')
-
-    config = load_pm2_config()
-    try:
-        token_response = requests.post('https://discord.com/api/oauth2/token', data={
-            'client_id': config.get('discord_client_id', os.environ.get('DISCORD_CLIENT_ID', '')),
-            'client_secret': config.get('discord_client_secret', os.environ.get('DISCORD_CLIENT_SECRET', '')),
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': BAN_APPEAL_REDIRECT_URI
-        }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-
-        if token_response.status_code != 200:
-            return redirect('/ban-appeal?error=auth_failed')
-
-        tokens = token_response.json()
-        access_token = tokens.get('access_token')
-
-        user_response = requests.get('https://discord.com/api/users/@me',
-            headers={'Authorization': f'Bearer {access_token}'})
-
-        if user_response.status_code != 200:
-            return redirect('/ban-appeal?error=auth_failed')
-
-        user_data = user_response.json()
-        avatar_hash = user_data.get('avatar')
-        if avatar_hash:
-            avatar_url = f"https://cdn.discordapp.com/avatars/{user_data['id']}/{avatar_hash}.png?size=128"
-        else:
-            discriminator = int(user_data.get('discriminator', '0') or '0')
-            avatar_url = f"https://cdn.discordapp.com/embed/avatars/{discriminator % 5}.png"
-
-        session['ban_appeal_user'] = {
-            'id': user_data['id'],
-            'username': user_data.get('global_name') or user_data.get('username'),
-            'avatar_url': avatar_url
-        }
-
-        return redirect('/ban-appeal')
-
-    except Exception as e:
-        app.logger.error(f'Ban appeal OAuth error: {e}')
-        return redirect('/ban-appeal?error=auth_error')
+    """Legacy callback — no longer used."""
+    return redirect('/login?next=/ban-appeal')
 
 BAN_APPEAL_TEST_CODE = 'CUBAPI'
 BAN_APPEAL_TEST_CHANNEL_ID = '1473606792264155136'
@@ -16461,85 +16126,18 @@ def affiliate_track(code):
         resp.set_cookie('__cub_vid', visitor_id, max_age=365 * 24 * 3600, httponly=True, samesite='Lax')
     return resp
 
-# Affiliate OAuth
+# Affiliate OAuth — unified login handles everything
 @app.route('/affiliate/auth/discord')
 def affiliate_auth():
-    """Redirect to unified Discord login"""
-    next_url = _safe_next_url(request.args.get('next', '/affiliate/dashboard'))
-    return redirect(f'/login/discord?next={urllib.parse.quote(next_url)}')
+    return redirect('/login?next=/affiliate/dashboard')
 
 @app.route('/affiliate/auth/callback')
-@rate_limit('oauth')
 def affiliate_callback():
-    """Discord OAuth callback for affiliates"""
-    error = request.args.get('error')
-    if error:
-        return redirect('/affiliate/dashboard?error=auth_failed')
-
-    code = request.args.get('code')
-    state = request.args.get('state')
-
-    if state != session.get('affiliate_oauth_state'):
-        return redirect('/affiliate/dashboard?error=invalid_state')
-
-    config = load_pm2_config()
-    try:
-        token_response = requests.post('https://discord.com/api/oauth2/token', data={
-            'client_id': config.get('discord_client_id', os.environ.get('DISCORD_CLIENT_ID', '')),
-            'client_secret': config.get('discord_client_secret', os.environ.get('DISCORD_CLIENT_SECRET', '')),
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': AFFILIATE_REDIRECT_URI
-        }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-
-        if token_response.status_code != 200:
-            return redirect('/affiliate/dashboard?error=token_failed')
-
-        tokens = token_response.json()
-        access_token = tokens.get('access_token')
-
-        user_response = requests.get('https://discord.com/api/users/@me',
-            headers={'Authorization': f'Bearer {access_token}'})
-
-        if user_response.status_code != 200:
-            return redirect('/affiliate/dashboard?error=user_failed')
-
-        user_data = user_response.json()
-        avatar_hash = user_data.get('avatar')
-        if avatar_hash:
-            avatar_url = f"https://cdn.discordapp.com/avatars/{user_data['id']}/{avatar_hash}.png?size=256"
-        else:
-            discriminator = int(user_data.get('discriminator', '0') or '0')
-            avatar_url = f"https://cdn.discordapp.com/embed/avatars/{discriminator % 5}.png"
-
-        discord_id = user_data['id']
-        discord_username = user_data.get('global_name') or user_data.get('username')
-
-        session['affiliate_user'] = {
-            'id': discord_id,
-            'username': discord_username,
-            'avatar': avatar_url,
-            'authenticated_at': time.time()
-        }
-
-        # Update stored affiliate record with latest avatar and username
-        aff_data = load_affiliates()
-        for aff in aff_data['affiliates'].values():
-            if aff.get('discord_id') == discord_id:
-                aff['discord_avatar'] = avatar_url
-                aff['discord_username'] = discord_username
-                save_affiliates(aff_data)
-                break
-
-        return redirect('/affiliate/dashboard')
-
-    except Exception as e:
-        app.logger.error(f'Affiliate OAuth error: {e}')
-        return redirect('/affiliate/dashboard?error=auth_error')
+    """Legacy callback — no longer used."""
+    return redirect('/login?next=/affiliate/dashboard')
 
 @app.route('/affiliate/auth/logout')
 def affiliate_logout():
-    """Logout — delegates to unified logout"""
     session.pop('affiliate_user', None)
     return redirect('/logout')
 

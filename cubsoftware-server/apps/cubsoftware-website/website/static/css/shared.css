@@ -390,9 +390,9 @@ a:hover {
 .header-top {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 50px;
-    max-width: 900px;
+    justify-content: space-between;
+    gap: 20px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 0 30px;
     position: relative;
@@ -521,7 +521,7 @@ a:hover {
 }
 
 .nav-dropdown:hover .dropdown-toggle svg,
-.nav-dropdown.active .dropdown-toggle svg {
+.nav-dropdown.open .dropdown-toggle svg {
     transform: rotate(180deg);
 }
 
@@ -542,7 +542,8 @@ a:hover {
     z-index: 1001;
 }
 
-.nav-dropdown:hover .dropdown-menu {
+.nav-dropdown:hover .dropdown-menu,
+.nav-dropdown.open .dropdown-menu {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
@@ -595,6 +596,175 @@ a:hover {
 
 .mobile-menu-btn.active span:nth-child(3) {
     transform: rotate(-45deg) translate(5px, -5px);
+}
+
+/* ==================== NAV AUTH WIDGET ==================== */
+.nav-auth {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+.nav-login-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    background: linear-gradient(135deg, var(--primary, #5865f2) 0%, #7c3aed 100%);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s ease, transform 0.15s ease;
+    white-space: nowrap;
+}
+
+.nav-login-btn:hover {
+    opacity: 0.85;
+    transform: translateY(-1px);
+}
+
+.nav-user-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    padding: 5px 10px 5px 6px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s, border-color 0.2s;
+    color: var(--text-light, #fff);
+}
+
+.nav-user-btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.18);
+}
+
+.nav-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.nav-avatar-main {
+    margin-right: -6px;
+    position: relative;
+    z-index: 1;
+}
+
+.nav-provider-icons {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.nav-provider-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.nav-provider-badge svg {
+    width: 10px;
+    height: 10px;
+}
+
+.nav-badge-discord {
+    background: #5865f2;
+    margin-left: 2px;
+}
+
+.nav-badge-twitch {
+    background: #9146ff;
+    margin-left: 2px;
+}
+
+.nav-badge-linked {
+    background: rgba(255,255,255,0.15);
+    margin-left: 3px;
+}
+
+.nav-badge-linked svg {
+    width: 9px;
+    height: 9px;
+    stroke: rgba(255,255,255,0.7);
+}
+
+.nav-username {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--text-light, #fff);
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-username-sep {
+    color: rgba(255,255,255,0.35);
+    margin: 0 2px;
+}
+
+.nav-chevron {
+    opacity: 0.5;
+    transition: transform 0.2s;
+}
+
+.nav-user-widget.open .nav-chevron {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu-right {
+    left: auto;
+    right: 0;
+    min-width: 170px;
+}
+
+.nav-user-widget .dropdown-menu {
+    display: none;
+}
+
+.nav-user-widget.open .dropdown-menu {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--border-color, rgba(255,255,255,0.08));
+    margin: 4px 0;
+}
+
+.dropdown-section-label {
+    display: block;
+    padding: 4px 14px 2px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted, rgba(255,255,255,0.35));
+    pointer-events: none;
+}
+
+.dropdown-danger {
+    color: #f87171 !important;
+}
+
+.dropdown-danger:hover {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #fca5a5 !important;
 }
 
 /* ==================== FOOTER ==================== */

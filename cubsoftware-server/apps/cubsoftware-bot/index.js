@@ -169,12 +169,149 @@ const voiceStates = new Map();
 const overlayConnections = new Map();
 // Store channel members: { channelId: Set(userId1, userId2, ...) }
 const channelMembers = new Map();
-// Track active voice connections: { channelId: VoiceConnection }
+// Track active voice connections: { channelId: { ws, guildId, channelId, heartbeat } }
 const activeVoiceConnections = new Map();
-// Track active audio subscriptions for speaking detection: { channelId: Map(userId -> AudioReceiveStream) }
-const activeSubscriptions = new Map();
 // Track which channels have overlay users: { channelId: Set(userId) }
 const overlayChannels = new Map();
+
+// Custom voice WebSocket infrastructure (bypasses @discordjs/voice UDP requirement)
+// Discord sends SPEAKING events over the voice WebSocket (TCP), not UDP audio.
+// We open the voice WS, complete the handshake, and receive SPEAKING opcodes directly.
+let serverPublicIP = '0.0.0.0';
+const botVoiceSessionIds = new Map(); // guildId -> sessionId
+const pendingVoiceJoins = new Map();  // guildId -> { channelId }
+
+async function fetchServerPublicIP() {
+    try {
+        const resp = await axios.get('https://api.ipify.org', { timeout: 5000 });
+        serverPublicIP = resp.data.trim();
+        console.log('[CubReactive] Server public IP:', serverPublicIP);
+    } catch (_) {
+        console.warn('[CubReactive] Could not fetch public IP, using fallback');
+    }
+}
+
+function setupRawVoiceListeners() {
+    client.on('raw', (packet) => {
+        // Track our bot's voice session ID (required for voice WS Identify)
+        if (packet.t === 'VOICE_STATE_UPDATE' && packet.d.user_id === client.user?.id) {
+            if (packet.d.session_id) {
+                botVoiceSessionIds.set(packet.d.guild_id, packet.d.session_id);
+            }
+        }
+
+        // When Discord assigns us a voice server, open the voice WebSocket
+        if (packet.t === 'VOICE_SERVER_UPDATE') {
+            const { token, endpoint, guild_id } = packet.d;
+            if (!endpoint) return;
+            const pending = pendingVoiceJoins.get(guild_id);
+            if (!pending) return;
+            const sessionId = botVoiceSessionIds.get(guild_id);
+            if (!sessionId) { console.warn('[CubReactive] Missing session ID for guild', guild_id); return; }
+            pendingVoiceJoins.delete(guild_id);
+            openCustomVoiceWS(pending.channelId, guild_id, endpoint, token, sessionId);
+        }
+    });
+}
+
+async function openCustomVoiceWS(channelId, guildId, endpoint, token, sessionId) {
+    const wsUrl = `wss://${endpoint}/?v=8`;
+    console.log(`[CubReactive] Opening voice WS for: ${channelId}`);
+
+    const ws = new WebSocket(wsUrl);
+    const state = { ws, guildId, channelId, heartbeat: null };
+    activeVoiceConnections.set(channelId, state);
+
+    ws.on('message', (raw) => {
+        try {
+            const msg = JSON.parse(raw.toString());
+            handleVoiceWSMessage(channelId, guildId, msg, token, sessionId, state);
+        } catch (_) {}
+    });
+
+    ws.on('close', (code) => {
+        console.log(`[CubReactive] Voice WS closed for ${channelId} (code ${code})`);
+        clearInterval(state.heartbeat);
+        activeVoiceConnections.delete(channelId);
+
+        // Retry if overlay users still need it
+        const overlayUsers = overlayChannels.get(channelId);
+        if (overlayUsers && overlayUsers.size > 0) {
+            console.log(`[CubReactive] Retrying voice join for ${channelId} in 5s…`);
+            setTimeout(() => {
+                if (!activeVoiceConnections.has(channelId)) {
+                    joinChannelForSpeaking(channelId, guildId);
+                }
+            }, 5000);
+        }
+    });
+
+    ws.on('error', (e) => {
+        console.error(`[CubReactive] Voice WS error for ${channelId}:`, e.message);
+    });
+}
+
+function handleVoiceWSMessage(channelId, guildId, msg, token, sessionId, state) {
+    const { op, d } = msg;
+    switch (op) {
+        case 8: { // HELLO — start heartbeat, then identify
+            state.heartbeat = setInterval(() => {
+                if (state.ws.readyState === WebSocket.OPEN) {
+                    state.ws.send(JSON.stringify({ op: 3, d: Date.now() }));
+                }
+            }, d.heartbeat_interval * 0.75);
+            state.ws.send(JSON.stringify({
+                op: 0, // IDENTIFY
+                d: { server_id: guildId, user_id: client.user.id, session_id: sessionId, token }
+            }));
+            console.log(`[CubReactive] Voice WS identifying for ${channelId}`);
+            break;
+        }
+        case 2: { // READY — send SelectProtocol with our public IP
+            // UDP to the provided port won't complete (firewall), but the voice WS stays
+            // alive and Discord will still send us SPEAKING events via this TCP connection.
+            const mode = (d.modes || []).includes('xsalsa20_poly1305_lite')
+                ? 'xsalsa20_poly1305_lite' : (d.modes?.[0] || 'xsalsa20_poly1305');
+            state.ws.send(JSON.stringify({
+                op: 1, // SELECT_PROTOCOL
+                d: { protocol: 'udp', data: {
+                    address: serverPublicIP,
+                    port: 50000 + Math.floor(Math.random() * 5000),
+                    mode,
+                }}
+            }));
+            console.log(`[CubReactive] Voice WS READY → sent SelectProtocol for ${channelId}`);
+            break;
+        }
+        case 4: { // SESSION_DESCRIPTION — handshake done, SPEAKING events will now arrive
+            console.log(`[CubReactive] Voice WS session active for ${channelId} — speaking detection ready!`);
+            const guild = client.guilds.cache.get(guildId);
+            const channel = guild?.channels.cache.get(channelId);
+            if (channel) { scanChannelMembers(channel); broadcastChannelUpdate(channelId); }
+            break;
+        }
+        case 5: { // SPEAKING — user started or stopped speaking
+            const { user_id, speaking: flags } = d;
+            if (!user_id || user_id === client.user.id) break;
+            const isSpeaking = (flags & 1) !== 0; // bit 0 = microphone
+            console.log(`[CubReactive] Speaking ${isSpeaking ? 'start' : 'end'}: ${user_id}`);
+            const vs = voiceStates.get(user_id);
+            if (vs) {
+                vs.speaking = isSpeaking;
+                voiceStates.set(user_id, vs);
+                broadcastVoiceUpdate(user_id, vs);
+            }
+            break;
+        }
+        case 6: break; // HEARTBEAT_ACK
+        case 9: console.log(`[CubReactive] Voice WS resumed for ${channelId}`); break;
+        case 13: { // CLIENT_DISCONNECT
+            const vs = d?.user_id && voiceStates.get(d.user_id);
+            if (vs) { vs.speaking = false; broadcastVoiceUpdate(d.user_id, vs); }
+            break;
+        }
+    }
+}
 
 // CubReactive data file path
 const CUBREACTIVE_USERS_FILE = path.join(__dirname, '..', 'cubsoftware-website', 'data', 'cubreactive_users.json');
@@ -290,180 +427,59 @@ function scanChannelMembers(channel) {
     });
 }
 
-// Join a voice channel to detect speaking
+// Join a voice channel for speaking detection.
+// Uses a custom voice WebSocket (TCP) instead of @discordjs/voice (UDP).
+// The server is behind NAT so UDP responses from Discord can't get back,
+// but the TCP voice WebSocket works fine and delivers SPEAKING events.
 async function joinChannelForSpeaking(channelId, guildId) {
     if (activeVoiceConnections.has(channelId)) {
-        // Already connected, but still scan for members we might have missed
+        // Already connected or connecting — scan members we might have missed
         const guild = client.guilds.cache.get(guildId);
         const channel = guild?.channels.cache.get(channelId);
-        if (channel) {
-            scanChannelMembers(channel);
-            broadcastChannelUpdate(channelId);
-        }
+        if (channel) { scanChannelMembers(channel); broadcastChannelUpdate(channelId); }
         return;
     }
 
     try {
         const guild = client.guilds.cache.get(guildId);
-        if (!guild) {
-            console.log(`[CubReactive] Guild ${guildId} not found, skipping voice join`);
-            return;
-        }
+        if (!guild) { console.log(`[CubReactive] Guild ${guildId} not found`); return; }
 
         const channel = guild.channels.cache.get(channelId);
-        if (!channel) {
-            console.log(`[CubReactive] Channel ${channelId} not found, skipping voice join`);
-            return;
-        }
+        if (!channel) { console.log(`[CubReactive] Channel ${channelId} not found`); return; }
 
-        // Scan existing members BEFORE joining
-        scanChannelMembers(channel);
-
-        // Check bot has permission to connect
         const permissions = channel.permissionsFor(guild.members.me);
         if (!permissions || !permissions.has('Connect')) {
-            console.log(`[CubReactive] No Connect permission for channel: ${channel.name}`);
-            // Still broadcast what we found from scanning
+            console.log(`[CubReactive] No Connect permission for: ${channel.name}`);
             broadcastChannelUpdate(channelId);
             return;
         }
+
+        // Scan members before joining so the overlay gets immediate state
+        scanChannelMembers(channel);
+        broadcastChannelUpdate(channelId);
 
         console.log(`[CubReactive] Joining voice channel: ${channel.name} (${channelId})`);
 
-        const connection = joinVoiceChannel({
-            channelId: channelId,
-            guildId: guildId,
-            adapterCreator: guild.voiceAdapterCreator,
-            selfDeaf: false,  // Must be false — selfDeaf stops RTP packets, breaking receiver.speaking
-            selfMute: true
+        // Mark as connecting so duplicate calls are blocked
+        activeVoiceConnections.set(channelId, { guildId, channelId, status: 'connecting', heartbeat: null, ws: null });
+
+        // Register pending join — VOICE_SERVER_UPDATE handler will open the voice WS
+        pendingVoiceJoins.set(guildId, { channelId, guildId });
+
+        // Tell Discord gateway we want to join this voice channel
+        guild.shard.send({
+            op: 4, // VOICE_STATE_UPDATE
+            d: { guild_id: guildId, channel_id: channelId, self_mute: true, self_deaf: false }
         });
 
-        activeVoiceConnections.set(channelId, connection);
-
-        // Broadcast channel update now that we've scanned members
-        broadcastChannelUpdate(channelId);
-
-        // Log all state transitions to diagnose why Ready might not fire
-        connection.on('stateChange', (oldState, newState) => {
-            console.log(`[CubReactive] Connection state: ${oldState.status} -> ${newState.status} (${channel.name})`);
-        });
-
-        // Subscribe immediately — don't wait for Ready, since Ready may be delayed or
-        // the connection may start receiving audio before the state machine reports Ready.
-        // subscribeForSpeaking deduplicates calls, so it's safe to call again in Ready.
-        channel.members.forEach(member => {
-            if (!member.user.bot) subscribeForSpeaking(connection, member.id, channelId);
-        });
-
-        connection.on(VoiceConnectionStatus.Ready, () => {
-            console.log(`[CubReactive] Voice connection ready in: ${channel.name}`);
-            // Re-scan and broadcast in case members changed during connection
-            scanChannelMembers(channel);
-            broadcastChannelUpdate(channelId);
-            // Re-subscribe for any members who joined between initial scan and Ready
-            channel.members.forEach(member => {
-                if (!member.user.bot) subscribeForSpeaking(connection, member.id, channelId);
-            });
-        });
-
-        // If connection hasn't reached Ready within 25 seconds, destroy and retry.
-        // This handles transient UDP failures and version-compatibility hangs.
-        const readyTimeout = setTimeout(() => {
-            if (connection.state.status !== VoiceConnectionStatus.Ready) {
-                const overlayUsers = overlayChannels.get(channelId);
-                if (!overlayUsers || overlayUsers.size === 0) {
-                    console.log(`[CubReactive] Ready timeout in ${channel.name} — no overlay users, skipping retry`);
-                    try { connection.destroy(); } catch (_) {}
-                    activeVoiceConnections.delete(channelId);
-                    return;
-                }
-                console.log(`[CubReactive] Ready timeout in ${channel.name} — stuck in "${connection.state.status}", reconnecting…`);
-                try { connection.destroy(); } catch (_) {}
+        // Timeout if VOICE_SERVER_UPDATE never arrives
+        setTimeout(() => {
+            if (pendingVoiceJoins.has(guildId) && pendingVoiceJoins.get(guildId).channelId === channelId) {
+                console.log(`[CubReactive] Timeout waiting for voice server for ${channel.name}`);
+                pendingVoiceJoins.delete(guildId);
                 activeVoiceConnections.delete(channelId);
-                setTimeout(() => joinChannelForSpeaking(channelId, guildId), 3000);
             }
-        }, 25000);
-
-        connection.on(VoiceConnectionStatus.Ready, () => clearTimeout(readyTimeout));
-        connection.on(VoiceConnectionStatus.Destroyed, () => clearTimeout(readyTimeout));
-
-        // Listen for speaking events (fires via SPEAKING opcode from voice gateway,
-        // which may work even before UDP is fully established)
-        connection.receiver.speaking.on('start', async (userId) => {
-            console.log(`[CubReactive] SPEAKING opcode received: start for ${userId} in ${channel.name}`);
-            let state = voiceStates.get(userId);
-            if (!state) {
-                // User not in voiceStates yet - try to add them
-                try {
-                    const member = await guild.members.fetch(userId);
-                    if (member && !member.user.bot) {
-                        const avatar = member.user.avatarURL({ size: 256 }) ||
-                                      `https://cdn.discordapp.com/embed/avatars/${parseInt(member.user.discriminator || '0') % 5}.png`;
-                        state = {
-                            channelId: channelId,
-                            guildId: guildId,
-                            username: member.displayName || member.user.username || 'Unknown',
-                            avatar: avatar,
-                            muted: member.voice?.selfMute || member.voice?.serverMute || false,
-                            deafened: member.voice?.selfDeaf || member.voice?.serverDeaf || false,
-                            speaking: true,
-                            streaming: member.voice?.streaming || false,
-                            video: member.voice?.selfVideo || false
-                        };
-                        voiceStates.set(userId, state);
-                        if (!channelMembers.has(channelId)) {
-                            channelMembers.set(channelId, new Set());
-                        }
-                        channelMembers.get(channelId).add(userId);
-                        console.log(`[CubReactive] Added speaking user to state: ${state.username} (${userId})`);
-                        broadcastVoiceUpdate(userId, state);
-                        broadcastChannelUpdate(channelId);
-                    }
-                } catch (e) {
-                    console.log(`[CubReactive] Could not fetch member ${userId}: ${e.message}`);
-                }
-            } else {
-                state.speaking = true;
-                voiceStates.set(userId, state);
-                broadcastVoiceUpdate(userId, state);
-            }
-        });
-
-        connection.receiver.speaking.on('end', (userId) => {
-            console.log(`[CubReactive] SPEAKING opcode received: end for ${userId} in ${channel.name}`);
-            const state = voiceStates.get(userId);
-            if (state) {
-                state.speaking = false;
-                voiceStates.set(userId, state);
-                broadcastVoiceUpdate(userId, state);
-            }
-        });
-
-        // Handle disconnection
-        connection.on(VoiceConnectionStatus.Disconnected, async () => {
-            try {
-                await Promise.race([
-                    entersState(connection, VoiceConnectionStatus.Signalling, 5000),
-                    entersState(connection, VoiceConnectionStatus.Connecting, 5000),
-                ]);
-                // Reconnecting
-            } catch (e) {
-                // Truly disconnected
-                try { connection.destroy(); } catch (_) {}
-                activeVoiceConnections.delete(channelId);
-                console.log(`[CubReactive] Disconnected from channel: ${channelId}`);
-            }
-        });
-
-        connection.on(VoiceConnectionStatus.Destroyed, () => {
-            activeVoiceConnections.delete(channelId);
-            unsubscribeAllFromChannel(channelId);
-        });
-
-        // Catch any errors on the connection
-        connection.on('error', (err) => {
-            console.error(`[CubReactive] Voice connection error in ${channelId}:`, err.message);
-        });
+        }, 10000);
 
     } catch (e) {
         console.error(`[CubReactive] Failed to join voice channel ${channelId}:`, e.message);
@@ -471,83 +487,33 @@ async function joinChannelForSpeaking(channelId, guildId) {
     }
 }
 
-// Subscribe to a user's audio stream and detect speaking from packet timing.
-// This bypasses receiver.speaking (unreliable in @discordjs/voice 0.16+) and
-// instead uses raw data arrival: packets arriving = speaking, 250ms silence = stopped.
-function subscribeForSpeaking(connection, userId, channelId) {
-    const channelSubs = activeSubscriptions.get(channelId);
-    if (channelSubs && channelSubs.has(userId)) return; // Already subscribed
-
-    try {
-        const stream = connection.receiver.subscribe(userId, {
-            end: { behavior: EndBehaviorType.Manual }
-        });
-
-        let speakTimeout = null;
-        let currentlySpeaking = false;
-
-        const setSpeaking = (value) => {
-            if (currentlySpeaking === value) return;
-            currentlySpeaking = value;
-            const state = voiceStates.get(userId);
-            if (state) {
-                state.speaking = value;
-                voiceStates.set(userId, state);
-                broadcastVoiceUpdate(userId, state);
-                console.log(`[CubReactive] Speaking ${value ? 'start' : 'end'}: ${state.username} (${userId})`);
-            }
-        };
-
-        stream.on('data', () => {
-            setSpeaking(true);
-            clearTimeout(speakTimeout);
-            speakTimeout = setTimeout(() => setSpeaking(false), 250);
-        });
-
-        stream.on('error', () => {});
-
-        stream.on('close', () => {
-            clearTimeout(speakTimeout);
-            setSpeaking(false);
-        });
-
-        if (!activeSubscriptions.has(channelId)) activeSubscriptions.set(channelId, new Map());
-        activeSubscriptions.get(channelId).set(userId, stream);
-        console.log(`[CubReactive] Subscribed for speaking: ${userId} in ${channelId}`);
-    } catch (e) {
-        console.error(`[CubReactive] Subscribe failed for ${userId}:`, e.message);
-    }
-}
-
-function unsubscribeFromSpeaking(userId, channelId) {
-    const channelSubs = activeSubscriptions.get(channelId);
-    if (!channelSubs) return;
-    const stream = channelSubs.get(userId);
-    if (stream) {
-        try { stream.destroy(); } catch (_) {}
-        channelSubs.delete(userId);
-    }
-    if (channelSubs.size === 0) activeSubscriptions.delete(channelId);
-}
-
-function unsubscribeAllFromChannel(channelId) {
-    const channelSubs = activeSubscriptions.get(channelId);
-    if (!channelSubs) return;
-    channelSubs.forEach((stream) => { try { stream.destroy(); } catch (_) {} });
-    activeSubscriptions.delete(channelId);
-}
+// No-ops — speaking is now detected via voice WebSocket SPEAKING opcode (TCP),
+// not via UDP audio stream subscriptions. These stubs remain to avoid reference errors.
+function subscribeForSpeaking() {}
+function unsubscribeFromSpeaking() {}
+function unsubscribeAllFromChannel() {}
 
 // Leave a voice channel when no more overlay users need it
 function leaveChannelIfUnneeded(channelId) {
     const overlayUsers = overlayChannels.get(channelId);
     if (!overlayUsers || overlayUsers.size === 0) {
         overlayChannels.delete(channelId);
-        unsubscribeAllFromChannel(channelId);
-        const connection = activeVoiceConnections.get(channelId);
-        if (connection) {
+        const state = activeVoiceConnections.get(channelId);
+        if (state) {
             console.log(`[CubReactive] Leaving voice channel: ${channelId} (no overlay users)`);
-            connection.destroy();
+            clearInterval(state.heartbeat);
+            try { if (state.ws) state.ws.close(); } catch (_) {}
             activeVoiceConnections.delete(channelId);
+            // Tell Discord gateway to leave the voice channel
+            try {
+                const guild = client.guilds.cache.get(state.guildId);
+                if (guild) {
+                    guild.shard.send({
+                        op: 4,
+                        d: { guild_id: state.guildId, channel_id: null, self_mute: false, self_deaf: false }
+                    });
+                }
+            } catch (_) {}
         }
     }
 }
@@ -1864,11 +1830,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         if (overlayConnections.has(userId)) {
             trackOverlayUser(userId, newChannelId, guildId);
         }
-        // If the bot is already in this channel, subscribe to the new user for speaking detection
-        const existingConnection = activeVoiceConnections.get(newChannelId);
-        if (existingConnection) {
-            subscribeForSpeaking(existingConnection, userId, newChannelId);
-        }
+        // Speaking detection for new joiners is automatic via the voice WS SPEAKING opcode
         broadcastChannelUpdate(newChannelId);
     }
 
@@ -2017,6 +1979,11 @@ client.once('ready', () => {
     terminal.init();
     registerCommands();
     startLogServer();
+
+    // Fetch server public IP for voice WS SelectProtocol
+    fetchServerPublicIP();
+    // Set up raw gateway listeners for voice WS (VOICE_STATE_UPDATE / VOICE_SERVER_UPDATE)
+    setupRawVoiceListeners();
 
     // Scan BEFORE starting WebSocket server so voiceStates is populated
     // when OBS overlay reconnects immediately after bot restart
@@ -2225,13 +2192,13 @@ function startLogServer() {
     app.get('/cubreactive/status', (req, res) => {
         const voiceConns = [];
         activeVoiceConnections.forEach((conn, channelId) => {
-            voiceConns.push({ channelId, status: conn.state?.status || 'unknown' });
+            voiceConns.push({
+                channelId,
+                status: conn.status || (conn.ws ? (conn.ws.readyState === WebSocket.OPEN ? 'connected' : 'closed') : 'unknown')
+            });
         });
 
-        const subscriptions = [];
-        activeSubscriptions.forEach((subs, channelId) => {
-            subscriptions.push({ channelId, users: [...subs.keys()] });
-        });
+        const subscriptions = []; // Legacy field — kept for API compat
 
         const states = [];
         voiceStates.forEach((state, userId) => {

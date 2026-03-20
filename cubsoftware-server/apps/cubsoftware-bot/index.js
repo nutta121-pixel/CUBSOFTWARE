@@ -215,7 +215,9 @@ function setupRawVoiceListeners() {
 }
 
 async function openCustomVoiceWS(channelId, guildId, endpoint, token, sessionId) {
-    const wsUrl = `wss://${endpoint}/?v=8`;
+    // Strip port suffix if present (e.g. "us-east-1.discord.media:443" → "us-east-1.discord.media")
+    const cleanEndpoint = endpoint.replace(/:(\d+)$/, '');
+    const wsUrl = `wss://${cleanEndpoint}/?v=8`;
     console.log(`[CubReactive] Opening voice WS for: ${channelId}`);
 
     const ws = new WebSocket(wsUrl);
@@ -238,6 +240,13 @@ async function openCustomVoiceWS(channelId, guildId, endpoint, token, sessionId)
         const overlayUsers = overlayChannels.get(channelId);
         if (overlayUsers && overlayUsers.size > 0) {
             console.log(`[CubReactive] Retrying voice join for ${channelId} in 5s…`);
+            // Must leave the channel first so Discord issues a fresh VOICE_SERVER_UPDATE.
+            // Without this, Discord sees the bot already joined and skips the update,
+            // causing a "Timeout waiting for voice server" on the retry.
+            const guild = client.guilds.cache.get(guildId);
+            if (guild) {
+                guild.shard.send({ op: 4, d: { guild_id: guildId, channel_id: null, self_mute: false, self_deaf: false } });
+            }
             setTimeout(() => {
                 if (!activeVoiceConnections.has(channelId)) {
                     joinChannelForSpeaking(channelId, guildId);
@@ -262,7 +271,13 @@ function handleVoiceWSMessage(channelId, guildId, msg, token, sessionId, state) 
             }, d.heartbeat_interval * 0.75);
             state.ws.send(JSON.stringify({
                 op: 0, // IDENTIFY
-                d: { server_id: guildId, user_id: client.user.id, session_id: sessionId, token }
+                d: {
+                    server_id: guildId,
+                    user_id: client.user.id,
+                    session_id: sessionId,
+                    token,
+                    max_dave_protocol_version: 1, // Required for voice gateway v8 (DAVE E2EE audio)
+                }
             }));
             console.log(`[CubReactive] Voice WS identifying for ${channelId}`);
             break;
@@ -305,6 +320,9 @@ function handleVoiceWSMessage(channelId, guildId, msg, token, sessionId, state) 
         }
         case 6: break; // HEARTBEAT_ACK
         case 9: console.log(`[CubReactive] Voice WS resumed for ${channelId}`); break;
+        // DAVE (Discord Audio Video Encryption) protocol opcodes — acknowledge but ignore
+        case 21: case 22: case 23: case 24: case 25:
+        case 26: case 27: case 28: case 29: case 30: break;
         case 13: { // CLIENT_DISCONNECT
             const vs = d?.user_id && voiceStates.get(d.user_id);
             if (vs) { vs.speaking = false; broadcastVoiceUpdate(d.user_id, vs); }

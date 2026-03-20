@@ -195,6 +195,7 @@ function setupRawVoiceListeners() {
     client.on('raw', (packet) => {
         // Track our bot's voice session ID (required for voice WS Identify)
         if (packet.t === 'VOICE_STATE_UPDATE' && packet.d.user_id === client.user?.id) {
+            console.log(`[CubReactive] Bot VOICE_STATE_UPDATE: session_id=${packet.d.session_id} channel=${packet.d.channel_id}`);
             if (packet.d.session_id) {
                 botVoiceSessionIds.set(packet.d.guild_id, packet.d.session_id);
             }
@@ -203,11 +204,13 @@ function setupRawVoiceListeners() {
         // When Discord assigns us a voice server, open the voice WebSocket
         if (packet.t === 'VOICE_SERVER_UPDATE') {
             const { token, endpoint, guild_id } = packet.d;
+            console.log(`[CubReactive] VOICE_SERVER_UPDATE: guild=${guild_id} endpoint=${endpoint} token_prefix=${token?.slice(0,10)}`);
             if (!endpoint) return;
             const pending = pendingVoiceJoins.get(guild_id);
             if (!pending) return;
             const sessionId = botVoiceSessionIds.get(guild_id);
             if (!sessionId) { console.warn('[CubReactive] Missing session ID for guild', guild_id); return; }
+            console.log(`[CubReactive] Opening voice WS: session=${sessionId?.slice(0,8)} token_prefix=${token?.slice(0,10)}`);
             pendingVoiceJoins.delete(guild_id);
             openCustomVoiceWS(pending.channelId, guild_id, endpoint, token, sessionId);
         }
@@ -264,21 +267,20 @@ function handleVoiceWSMessage(channelId, guildId, msg, token, sessionId, state) 
     const { op, d } = msg;
     switch (op) {
         case 8: { // HELLO — start heartbeat, then identify
+            console.log(`[CubReactive] Voice WS HELLO: heartbeat=${d.heartbeat_interval}ms, v=${d.v}`);
             state.heartbeat = setInterval(() => {
                 if (state.ws.readyState === WebSocket.OPEN) {
                     state.ws.send(JSON.stringify({ op: 3, d: Date.now() }));
                 }
             }, d.heartbeat_interval * 0.75);
-            state.ws.send(JSON.stringify({
-                op: 0, // IDENTIFY
-                d: {
-                    server_id: guildId,
-                    user_id: client.user.id,
-                    session_id: sessionId,
-                    token,
-                }
-            }));
-            console.log(`[CubReactive] Voice WS identifying for ${channelId}`);
+            const identifyPayload = {
+                server_id: guildId,
+                user_id: client.user.id,
+                session_id: sessionId,
+                token,
+            };
+            console.log(`[CubReactive] Voice WS identifying for ${channelId}: server=${guildId} user=${client.user.id} session=${sessionId?.slice(0,8)} token_prefix=${token?.slice(0,10)}`);
+            state.ws.send(JSON.stringify({ op: 0, d: identifyPayload }));
             break;
         }
         case 2: { // READY — send SelectProtocol with our public IP
@@ -319,14 +321,17 @@ function handleVoiceWSMessage(channelId, guildId, msg, token, sessionId, state) 
         }
         case 6: break; // HEARTBEAT_ACK
         case 9: console.log(`[CubReactive] Voice WS resumed for ${channelId}`); break;
-        // DAVE (Discord Audio Video Encryption) protocol opcodes — acknowledge but ignore
         case 21: case 22: case 23: case 24: case 25:
-        case 26: case 27: case 28: case 29: case 30: break;
+        case 26: case 27: case 28: case 29: case 30:
+            console.log(`[CubReactive] Voice WS DAVE opcode ${op} received for ${channelId}`);
+            break;
         case 13: { // CLIENT_DISCONNECT
             const vs = d?.user_id && voiceStates.get(d.user_id);
             if (vs) { vs.speaking = false; broadcastVoiceUpdate(d.user_id, vs); }
             break;
         }
+        default:
+            console.log(`[CubReactive] Voice WS unknown opcode ${op} for ${channelId}:`, JSON.stringify(d)?.slice(0, 200));
     }
 }
 

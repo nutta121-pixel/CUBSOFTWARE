@@ -1,0 +1,64 @@
+<!-- Fixed account/login widget — included on pages with custom headers -->
+<div class="nav-auth" id="navAuth">
+    {% if cub_user %}
+    <div class="nav-dropdown">
+        <button class="nav-link dropdown-toggle" aria-label="Account menu">
+            Account
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </button>
+        <div class="dropdown-menu dropdown-menu-right">
+            <a href="/account">My Account</a>
+
+            {% if not cub_user.get('linked_account') %}
+            <div class="dropdown-divider"></div>
+            <span class="dropdown-section-label">Link Accounts</span>
+            {% if cub_user.provider == 'discord' %}
+            <a href="/login/twitch?link=1&next=/account">Link Twitch</a>
+            {% else %}
+            <a href="/login/discord?link=1&next=/account">Link Discord</a>
+            {% endif %}
+            {% endif %}
+
+            <div class="dropdown-divider"></div>
+            <span class="dropdown-section-label">Dashboards</span>
+            <a href="/apps/cubreactive/dashboard">CubReactive</a>
+            <a href="/cub-protector">CUB Protector</a>
+            <a href="/cleanme">CleanMe</a>
+
+            <div class="dropdown-divider"></div>
+            <a href="/logout" class="dropdown-danger">Sign Out</a>
+        </div>
+    </div>
+    {% else %}
+    <a href="/login?next={{ request.path | urlencode }}" class="nav-login-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+        </svg>
+        Login
+    </a>
+    {% endif %}
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var authDropdowns = document.querySelectorAll('#navAuth .dropdown-toggle');
+    authDropdowns.forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            var parent = this.parentElement;
+            document.querySelectorAll('.nav-dropdown.open').forEach(function(d) {
+                if (d !== parent) d.classList.remove('open');
+            });
+            parent.classList.toggle('open');
+            e.stopPropagation();
+        });
+    });
+    document.addEventListener('click', function() {
+        document.querySelectorAll('#navAuth .nav-dropdown.open').forEach(function(d) {
+            d.classList.remove('open');
+        });
+    });
+});
+</script>

@@ -674,7 +674,7 @@ def overlays_auth_required(f):
         if 'overlay_user' not in session:
             if request.is_json:
                 return jsonify({'error': 'Authentication required'}), 401
-            return redirect('/overlays')
+            return redirect('/login?next=/overlays')
         return f(*args, **kwargs)
     return decorated
 
@@ -694,86 +694,22 @@ def can_edit_scene(scene, user_id):
 
 @overlays_bp.route('/auth/discord')
 def auth_discord():
-    client_id = current_app.config.get('DISCORD_CLIENT_ID', '')
-    if not client_id:
-        return redirect('/overlays?error=oauth_not_configured')
-    params = {
-        'client_id': client_id,
-        'redirect_uri': OVERLAY_DISCORD_REDIRECT,
-        'response_type': 'code',
-        'scope': 'identify',
-        'state': secrets.token_urlsafe(16)
-    }
-    session['overlay_oauth_state'] = params['state']
-    return redirect(f"https://discord.com/api/oauth2/authorize?{urllib.parse.urlencode(params)}")
+    return redirect('/login?next=/overlays')
 
 @overlays_bp.route('/auth/callback')
 def auth_callback():
-    error = request.args.get('error')
-    if error:
-        return redirect('/overlays?error=auth_failed')
-
-    code = request.args.get('code')
-    state = request.args.get('state')
-
-    if state != session.get('overlay_oauth_state'):
-        return redirect('/overlays?error=invalid_state')
-
-    try:
-        token_res = http_requests.post('https://discord.com/api/oauth2/token', data={
-            'client_id': current_app.config.get('DISCORD_CLIENT_ID', ''),
-            'client_secret': current_app.config.get('DISCORD_CLIENT_SECRET', ''),
-            'grant_type': 'authorization_code',
-            'code': code,
-            'redirect_uri': OVERLAY_DISCORD_REDIRECT
-        }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-
-        if token_res.status_code != 200:
-            current_app.logger.error(f'Discord token exchange failed: {token_res.status_code} {token_res.text}')
-            return redirect('/overlays?error=token_failed')
-
-        access_token = token_res.json().get('access_token')
-        user_res = http_requests.get('https://discord.com/api/users/@me',
-                                     headers={'Authorization': f'Bearer {access_token}'})
-        if user_res.status_code != 200:
-            return redirect('/overlays?error=user_failed')
-
-        user = user_res.json()
-        session['overlay_user'] = {
-            'id': user['id'],
-            'username': user.get('global_name') or user.get('username', 'User'),
-            'discriminator': user.get('discriminator', '0'),
-            'avatar': f"https://cdn.discordapp.com/avatars/{user['id']}/{user.get('avatar')}.png"
-                      if user.get('avatar') else f"https://cdn.discordapp.com/embed/avatars/{int(user.get('discriminator', 0)) % 5}.png"
-        }
-        session.permanent = True
-        return redirect('/overlays')
-    except Exception:
-        return redirect('/overlays?error=auth_error')
+    """Legacy callback — no longer used. Unified login handles OAuth."""
+    return redirect('/login?next=/overlays')
 
 @overlays_bp.route('/auth/logout')
 def auth_logout():
-    session.pop('overlay_user', None)
-    session.pop('overlay_oauth_state', None)
-    return redirect('/overlays')
+    return redirect('/logout')
 
 # ==================== TWITCH LOGIN ====================
 
 @overlays_bp.route('/auth/twitch')
 def auth_twitch_login():
-    if not TWITCH_CLIENT_ID:
-        return redirect('/overlays?error=twitch_not_configured')
-    state = secrets.token_urlsafe(16)
-    session['overlay_twitch_login_state'] = state
-    params = {
-        'client_id': TWITCH_CLIENT_ID,
-        'redirect_uri': TWITCH_LOGIN_REDIRECT_URI,
-        'response_type': 'code',
-        # Full scope: identity + alerts so login also auto-connects Twitch alerts
-        'scope': 'user:read:email channel:read:subscriptions channel:read:redemptions bits:read moderator:read:followers',
-        'state': state,
-    }
-    return redirect(f"https://id.twitch.tv/oauth2/authorize?{urllib.parse.urlencode(params)}")
+    return redirect('/login?next=/overlays')
 
 @overlays_bp.route('/auth/twitch/callback')
 def auth_twitch_callback():

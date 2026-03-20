@@ -633,7 +633,7 @@ def cub_logout():
     if token:
         _cub_revoke_remember_token(token)
     session.clear()
-    resp = redirect(request.referrer or '/')
+    resp = redirect('/login')
     resp.delete_cookie(CUB_REMEMBER_COOKIE)
     return resp
 

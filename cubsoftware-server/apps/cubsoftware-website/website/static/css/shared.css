@@ -600,29 +600,67 @@ a:hover {
 
 /* ==================== NAV AUTH WIDGET ==================== */
 .nav-auth {
+    position: fixed;
+    top: 14px;
+    right: 20px;
+    z-index: 9999;
     display: flex;
     align-items: center;
-    margin-left: auto;
 }
 
 .nav-login-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 7px 16px;
-    background: linear-gradient(135deg, var(--primary, #5865f2) 0%, #7c3aed 100%);
+    gap: 7px;
+    padding: 8px 18px;
+    background: transparent;
+    border: 1.5px solid rgba(124, 58, 237, 0.7);
     border-radius: 8px;
-    color: #fff;
-    font-size: 0.88rem;
+    color: #c4b5fd;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
     font-weight: 600;
+    letter-spacing: 0.03em;
     text-decoration: none;
-    transition: opacity 0.2s ease, transform 0.15s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
     white-space: nowrap;
+    backdrop-filter: blur(4px);
 }
 
 .nav-login-btn:hover {
-    opacity: 0.85;
+    background: rgba(124, 58, 237, 0.18);
+    border-color: #7c3aed;
+    color: #e9d5ff;
     transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
+}
+
+/* Account dropdown trigger — matches login button style */
+.nav-auth .nav-link.dropdown-toggle {
+    padding: 8px 18px;
+    background: transparent;
+    border: 1.5px solid rgba(124, 58, 237, 0.7);
+    border-radius: 8px;
+    color: #c4b5fd;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.nav-auth .nav-link.dropdown-toggle:hover,
+.nav-auth .nav-dropdown.open .nav-link.dropdown-toggle {
+    background: rgba(124, 58, 237, 0.18);
+    border-color: #7c3aed;
+    color: #e9d5ff;
+    box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
 }
 
 .nav-user-btn {

@@ -38,6 +38,223 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
     <link rel="stylesheet" href="/static/css/index.css?v={{ v }}">
+    <style>
+        /* ── Welcome Overlay ──────────────────────────────── */
+        .welcome-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: rgba(4, 3, 18, 0.6);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+
+        .welcome-overlay.welcome-fade-out {
+            animation: welcomeFadeOut 0.4s ease forwards;
+        }
+
+        @keyframes welcomeFadeOut {
+            to { opacity: 0; }
+        }
+
+        .welcome-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 520px;
+            width: 100%;
+            background: rgba(10, 7, 35, 0.82);
+            border: 1px solid rgba(124, 58, 237, 0.35);
+            border-radius: 24px;
+            box-shadow: 0 0 60px rgba(88, 101, 242, 0.18), 0 24px 64px rgba(0,0,0,0.55);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            overflow: hidden;
+            animation: welcomeSlideIn 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes welcomeSlideIn {
+            from { opacity: 0; transform: translateY(24px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .welcome-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 6px;
+            color: rgba(255,255,255,0.55);
+            font-size: 1.1rem;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            line-height: 1;
+            z-index: 2;
+        }
+        .welcome-close:hover { background: rgba(239,68,68,0.2); color: #f87171; }
+
+        .welcome-mascot-wrap {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 28px 20px 0;
+        }
+
+        .welcome-mascot {
+            height: 120px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 8px 24px rgba(88, 101, 242, 0.4));
+            animation: mascotFloat 3.5s ease-in-out infinite;
+        }
+
+        @keyframes mascotFloat {
+            0%, 100% { transform: translateY(0); }
+            50%       { transform: translateY(-8px); }
+        }
+
+        .welcome-body {
+            padding: 18px 28px 20px;
+            text-align: center;
+        }
+
+        .welcome-badge {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #fbbf24;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+        }
+
+        .welcome-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.55rem;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            margin: 0 0 4px;
+            line-height: 1.1;
+        }
+        .welcome-cub    { background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .welcome-soft   { color: rgba(255,255,255,0.9); }
+
+        .welcome-tagline {
+            color: #a78bfa;
+            font-size: 0.92rem;
+            font-weight: 500;
+            margin: 0 0 14px;
+            font-style: italic;
+        }
+
+        .welcome-text {
+            color: rgba(255,255,255,0.72);
+            font-size: 0.88rem;
+            line-height: 1.65;
+            margin: 0 0 10px;
+        }
+
+        .welcome-text strong { color: rgba(255,255,255,0.92); }
+
+        .welcome-link {
+            color: #818cf8;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(129,140,248,0.35);
+            transition: color 0.15s, border-color 0.15s;
+        }
+        .welcome-link:hover { color: #a5b4fc; border-color: #a5b4fc; }
+        .welcome-link-coffee { color: #fbbf24; border-color: rgba(251,191,36,0.35); }
+        .welcome-link-coffee:hover { color: #fde68a; border-color: #fde68a; }
+
+        .welcome-thanks {
+            color: rgba(255,255,255,0.45);
+            font-size: 0.82rem;
+            margin: 12px 0 18px;
+            font-style: italic;
+        }
+
+        .welcome-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .welcome-btn-coffee {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 20px;
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.15s;
+        }
+        .welcome-btn-coffee:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        .welcome-btn-close {
+            display: inline-flex;
+            align-items: center;
+            padding: 9px 20px;
+            background: rgba(124,58,237,0.15);
+            border: 1.5px solid rgba(124,58,237,0.5);
+            border-radius: 10px;
+            color: #c4b5fd;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, transform 0.15s;
+        }
+        .welcome-btn-close:hover { background: rgba(124,58,237,0.25); border-color: #7c3aed; transform: translateY(-1px); }
+
+        .welcome-progress-wrap {
+            width: 100%;
+            height: 3px;
+            background: rgba(255,255,255,0.06);
+        }
+
+        .welcome-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #5865f2 0%, #7c3aed 100%);
+            transition: width 1s linear;
+            width: 100%;
+        }
+
+        .welcome-countdown {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.25);
+            margin: 6px 0 10px;
+            letter-spacing: 0.04em;
+        }
+
+        @media (max-width: 480px) {
+            .welcome-card { border-radius: 18px; }
+            .welcome-body { padding: 14px 18px 16px; }
+            .welcome-mascot { height: 90px; }
+            .welcome-title { font-size: 1.25rem; }
+        }
+    </style>
 </head>
 <body>
     <!-- Navigation Header -->
@@ -73,26 +290,43 @@
             </button>
         </div>
     </header>
+    {% include 'nav_auth.html' %}
 
-    <!-- Buy Me a Coffee Banner -->
-    <div class="bmac-banner" id="bmacBanner">
-        <div class="bmac-banner-content">
-            <span class="bmac-emoji">☕</span>
-            <p>Enjoying CUB SOFTWARE? <a href="https://buymeacoffee.com/cubsoftware" target="_blank" rel="noopener">Buy us a coffee</a> — it keeps everything free and directly supports the developers!</p>
-            <button class="bmac-banner-close" id="bmacBannerClose" aria-label="Dismiss">&times;</button>
-        </div>
-    </div>
+    <!-- Welcome Overlay -->
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-card">
+            <button class="welcome-close" id="welcomeClose" aria-label="Close">&times;</button>
 
-    <!-- Beta Banner -->
-    <div class="beta-banner" id="betaBanner">
-        <div class="beta-banner-content">
-            <svg class="beta-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            <p><strong>BETA:</strong> Some features may not work as intended. <a href="/report">Report issues here</a>.</p>
-            <button class="beta-banner-close" id="betaBannerClose" aria-label="Dismiss">&times;</button>
+            <div class="welcome-mascot-wrap">
+                <img src="/static/images/CUB/CUBSOFTWARE%20MASCOT%20-%20TRANSPARENT%20BACKGROUND.png" alt="CUB SOFTWARE Mascot" class="welcome-mascot">
+            </div>
+
+            <div class="welcome-body">
+                <div class="welcome-badge">BETA</div>
+                <h2 class="welcome-title"><span class="welcome-cub">CUB</span><span class="welcome-soft">SOFTWARE</span></h2>
+                <p class="welcome-tagline">We build the tools the internet forgot to make free.</p>
+
+                <p class="welcome-text">
+                    Everything here has always been — and <strong>always will be</strong> — completely free. No accounts forced on you, no ads, no paywalls, no catches. Just tools that work.
+                </p>
+                <p class="welcome-text">
+                    We're still in <strong>BETA</strong>, growing fast and polishing things daily. If you spot a bug or something feels off, <a href="/report" class="welcome-link">let us know</a> — you're helping shape what this becomes.
+                </p>
+                <p class="welcome-text">
+                    If you enjoy what we've built, <a href="https://buymeacoffee.com/cubsoftware" target="_blank" rel="noopener" class="welcome-link welcome-link-coffee">☕ buying us a coffee</a> goes a long way. It fuels late nights and makes new features possible. But honestly? Just being here means everything to us.
+                </p>
+                <p class="welcome-thanks">Thank you for visiting. Seriously. — <em>The CUB SOFTWARE Team</em></p>
+
+                <div class="welcome-actions">
+                    <a href="https://buymeacoffee.com/cubsoftware" target="_blank" rel="noopener" class="welcome-btn-coffee">☕ Buy us a coffee</a>
+                    <button class="welcome-btn-close" id="welcomeClosBtn">Got it, let's go</button>
+                </div>
+            </div>
+
+            <div class="welcome-progress-wrap">
+                <div class="welcome-progress-bar" id="welcomeProgress"></div>
+            </div>
+            <p class="welcome-countdown" id="welcomeCountdown">Closing in 60s</p>
         </div>
     </div>
 
@@ -116,31 +350,41 @@
             });
         });
 
-        // Beta banner dismiss (uses sessionStorage so it reappears on new sessions)
-        const betaBanner = document.getElementById('betaBanner');
-        const betaCloseBtn = document.getElementById('betaBannerClose');
-        if (betaBanner && betaCloseBtn) {
-            if (sessionStorage.getItem('betaBannerDismissed') === 'true') {
-                betaBanner.style.display = 'none';
+        // Welcome overlay — show once per session
+        (function initWelcomeOverlay() {
+            const overlay = document.getElementById('welcomeOverlay');
+            if (!overlay) return;
+            if (sessionStorage.getItem('welcomeDismissed') === 'true') {
+                overlay.style.display = 'none';
+                return;
             }
-            betaCloseBtn.addEventListener('click', function() {
-                betaBanner.style.display = 'none';
-                sessionStorage.setItem('betaBannerDismissed', 'true');
-            });
-        }
 
-        // BMaC banner dismiss (sessionStorage — reappears on new tab/session)
-        const bmacBanner = document.getElementById('bmacBanner');
-        const bmacCloseBtn = document.getElementById('bmacBannerClose');
-        if (bmacBanner && bmacCloseBtn) {
-            if (sessionStorage.getItem('bmacBannerDismissed') === 'true') {
-                bmacBanner.style.display = 'none';
+            const DURATION = 60;
+            const progress = document.getElementById('welcomeProgress');
+            const countdown = document.getElementById('welcomeCountdown');
+
+            function dismiss() {
+                overlay.classList.add('welcome-fade-out');
+                setTimeout(function() { overlay.style.display = 'none'; }, 400);
+                sessionStorage.setItem('welcomeDismissed', 'true');
             }
-            bmacCloseBtn.addEventListener('click', function() {
-                bmacBanner.style.display = 'none';
-                sessionStorage.setItem('bmacBannerDismissed', 'true');
-            });
-        }
+
+            document.getElementById('welcomeClose').addEventListener('click', dismiss);
+            document.getElementById('welcomeClosBtn').addEventListener('click', dismiss);
+
+            let remaining = DURATION;
+            if (progress) progress.style.width = '100%';
+
+            const timer = setInterval(function() {
+                remaining--;
+                if (countdown) countdown.textContent = 'Closing in ' + remaining + 's';
+                if (progress) progress.style.width = (remaining / DURATION * 100) + '%';
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    dismiss();
+                }
+            }, 1000);
+        })();
 
         // Supporter stickers — fetch last 5 donors and float them around the hero
         (function loadSupporterStickers() {

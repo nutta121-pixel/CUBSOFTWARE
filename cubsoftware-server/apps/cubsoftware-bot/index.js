@@ -392,8 +392,8 @@ async function joinChannelForSpeaking(channelId, guildId) {
                 wireNetworkingWs(newNetworking);
             }
             if (newState.status === 'ready' && oldState.status !== 'ready') {
-                // Reset all speaking states: SPEAKING packets during the handshake are SSRC
-                // announcements (not real speaking events) and leave users stuck as "speaking".
+                // Reset all speaking states: SPEAKING op5 packets during the handshake are SSRC
+                // announcements that set speaking=true, but Discord never sends speaking=false after them.
                 const members = channelMembers.get(channelId);
                 if (members) {
                     members.forEach(uid => {
@@ -405,6 +405,31 @@ async function joinChannelForSpeaking(channelId, guildId) {
                         }
                     });
                 }
+                // Switch to audio-packet-based speaking detection via receiver.speaking.
+                // This fires 'start' when audio arrives and 'end' 100ms after audio stops —
+                // reliable stop detection that the SPEAKING WS opcode alone doesn't provide.
+                connection.receiver.speaking.removeAllListeners('start');
+                connection.receiver.speaking.removeAllListeners('end');
+                connection.receiver.speaking.on('start', uid => {
+                    if (uid === client.user?.id) return;
+                    const vs = voiceStates.get(uid);
+                    if (vs && !vs.speaking) {
+                        vs.speaking = true;
+                        voiceStates.set(uid, vs);
+                        broadcastVoiceUpdate(uid, vs);
+                        console.log(`[CubReactive] Speaking start: ${uid}`);
+                    }
+                });
+                connection.receiver.speaking.on('end', uid => {
+                    if (uid === client.user?.id) return;
+                    const vs = voiceStates.get(uid);
+                    if (vs?.speaking) {
+                        vs.speaking = false;
+                        voiceStates.set(uid, vs);
+                        broadcastVoiceUpdate(uid, vs);
+                        console.log(`[CubReactive] Speaking end: ${uid}`);
+                    }
+                });
             }
             if (newState.status === 'destroyed') {
                 if (wiredWs) { wiredWs.removeListener('packet', onSpeakingPacket); wiredWs = null; }

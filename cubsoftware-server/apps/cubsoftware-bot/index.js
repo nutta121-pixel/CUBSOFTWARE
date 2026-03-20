@@ -174,142 +174,15 @@ const activeVoiceConnections = new Map();
 // Track which channels have overlay users: { channelId: Set(userId) }
 const overlayChannels = new Map();
 
-// Custom voice WebSocket infrastructure (bypasses @discordjs/voice UDP requirement)
-// Discord sends SPEAKING events over the voice WebSocket (TCP), not UDP audio.
-// We open the voice WS, complete the handshake, and receive SPEAKING opcodes directly.
-let serverPublicIP = '0.0.0.0';
-const botVoiceSessionIds = new Map(); // guildId -> sessionId
-const pendingVoiceJoins = new Map();  // guildId -> { channelId }
-
-async function fetchServerPublicIP() {
-    try {
-        const resp = await axios.get('https://api.ipify.org', { timeout: 5000 });
-        serverPublicIP = resp.data.trim();
-        console.log('[CubReactive] Server public IP:', serverPublicIP);
-    } catch (_) {
-        console.warn('[CubReactive] Could not fetch public IP, using fallback');
-    }
-}
-
-function setupRawVoiceListeners() {
-    client.on('raw', (packet) => {
-        // Track our bot's voice session ID (required for voice WS Identify)
-        if (packet.t === 'VOICE_STATE_UPDATE' && packet.d.user_id === client.user?.id) {
-            console.log(`[CubReactive] Bot VOICE_STATE_UPDATE: session_id=${packet.d.session_id} channel=${packet.d.channel_id}`);
-            if (packet.d.session_id) {
-                botVoiceSessionIds.set(packet.d.guild_id, packet.d.session_id);
-            }
-        }
-
-        // When Discord assigns us a voice server, open the voice WebSocket
-        if (packet.t === 'VOICE_SERVER_UPDATE') {
-            const { token, endpoint, guild_id } = packet.d;
-            console.log(`[CubReactive] VOICE_SERVER_UPDATE: guild=${guild_id} endpoint=${endpoint} token_prefix=${token?.slice(0,10)}`);
-            if (!endpoint) return;
-            const pending = pendingVoiceJoins.get(guild_id);
-            if (!pending) return;
-            const sessionId = botVoiceSessionIds.get(guild_id);
-            if (!sessionId) { console.warn('[CubReactive] Missing session ID for guild', guild_id); return; }
-            console.log(`[CubReactive] Opening voice WS: session=${sessionId?.slice(0,8)} token_prefix=${token?.slice(0,10)}`);
-            pendingVoiceJoins.delete(guild_id);
-            openCustomVoiceWS(pending.channelId, guild_id, endpoint, token, sessionId);
-        }
-    });
-}
-
-async function openCustomVoiceWS(channelId, guildId, endpoint, token, sessionId) {
-    // Strip port suffix if present (e.g. "us-east-1.discord.media:443" → "us-east-1.discord.media")
-    const cleanEndpoint = endpoint.replace(/:(\d+)$/, '');
-    const wsUrl = `wss://${cleanEndpoint}/?v=4`;
-    console.log(`[CubReactive] Opening voice WS for: ${channelId}`);
-
-    const ws = new WebSocket(wsUrl);
-    const state = { ws, guildId, channelId, heartbeat: null };
-    activeVoiceConnections.set(channelId, state);
-
-    ws.on('message', (raw) => {
-        try {
-            const msg = JSON.parse(raw.toString());
-            handleVoiceWSMessage(channelId, guildId, msg, token, sessionId, state);
-        } catch (_) {}
-    });
-
-    ws.on('close', (code) => {
-        console.log(`[CubReactive] Voice WS closed for ${channelId} (code ${code})`);
-        clearInterval(state.heartbeat);
-        activeVoiceConnections.delete(channelId);
-
-        // Retry if overlay users still need it
-        const overlayUsers = overlayChannels.get(channelId);
-        if (overlayUsers && overlayUsers.size > 0) {
-            console.log(`[CubReactive] Retrying voice join for ${channelId} in 5s…`);
-            // Must leave the channel first so Discord issues a fresh VOICE_SERVER_UPDATE.
-            // Without this, Discord sees the bot already joined and skips the update,
-            // causing a "Timeout waiting for voice server" on the retry.
-            const guild = client.guilds.cache.get(guildId);
-            if (guild) {
-                guild.shard.send({ op: 4, d: { guild_id: guildId, channel_id: null, self_mute: false, self_deaf: false } });
-            }
-            setTimeout(() => {
-                if (!activeVoiceConnections.has(channelId)) {
-                    joinChannelForSpeaking(channelId, guildId);
-                }
-            }, 5000);
-        }
-    });
-
-    ws.on('error', (e) => {
-        console.error(`[CubReactive] Voice WS error for ${channelId}:`, e.message);
-    });
-}
-
-function handleVoiceWSMessage(channelId, guildId, msg, token, sessionId, state) {
-    const { op, d } = msg;
-    switch (op) {
-        case 8: { // HELLO — start heartbeat, then identify
-            console.log(`[CubReactive] Voice WS HELLO: heartbeat=${d.heartbeat_interval}ms, v=${d.v}`);
-            state.heartbeat = setInterval(() => {
-                if (state.ws.readyState === WebSocket.OPEN) {
-                    state.ws.send(JSON.stringify({ op: 3, d: Date.now() }));
-                }
-            }, d.heartbeat_interval * 0.75);
-            const identifyPayload = {
-                server_id: guildId,
-                user_id: client.user.id,
-                session_id: sessionId,
-                token,
-            };
-            console.log(`[CubReactive] Voice WS identifying for ${channelId}: server=${guildId} user=${client.user.id} session=${sessionId?.slice(0,8)} token_prefix=${token?.slice(0,10)}`);
-            state.ws.send(JSON.stringify({ op: 0, d: identifyPayload }));
-            break;
-        }
-        case 2: { // READY — send SelectProtocol with our public IP
-            // UDP to the provided port won't complete (firewall), but the voice WS stays
-            // alive and Discord will still send us SPEAKING events via this TCP connection.
-            const mode = (d.modes || []).includes('xsalsa20_poly1305_lite')
-                ? 'xsalsa20_poly1305_lite' : (d.modes?.[0] || 'xsalsa20_poly1305');
-            state.ws.send(JSON.stringify({
-                op: 1, // SELECT_PROTOCOL
-                d: { protocol: 'udp', data: {
-                    address: serverPublicIP,
-                    port: 50000 + Math.floor(Math.random() * 5000),
-                    mode,
-                }}
-            }));
-            console.log(`[CubReactive] Voice WS READY → sent SelectProtocol for ${channelId}`);
-            break;
-        }
-        case 4: { // SESSION_DESCRIPTION — handshake done, SPEAKING events will now arrive
-            console.log(`[CubReactive] Voice WS session active for ${channelId} — speaking detection ready!`);
-            const guild = client.guilds.cache.get(guildId);
-            const channel = guild?.channels.cache.get(channelId);
-            if (channel) { scanChannelMembers(channel); broadcastChannelUpdate(channelId); }
-            break;
-        }
-        case 5: { // SPEAKING — user started or stopped speaking
-            const { user_id, speaking: flags } = d;
-            if (!user_id || user_id === client.user.id) break;
-            const isSpeaking = (flags & 1) !== 0; // bit 0 = microphone
+// Speaking packet handler: wired to the @discordjs/voice networking WebSocket.
+// SPEAKING events (op 5) arrive via the voice WS (TCP) so they work even when UDP is blocked.
+// @discordjs/voice handles DAVE protocol automatically (requires @snazzah/davey to be installed).
+function makeSpeakingPacketHandler(channelId, guildId) {
+    return function onSpeakingPacket(packet) {
+        if (packet.op === 5) { // SPEAKING
+            const { user_id, speaking: flags } = packet.d;
+            if (!user_id || user_id === client.user?.id) return;
+            const isSpeaking = (flags & 1) !== 0;
             console.log(`[CubReactive] Speaking ${isSpeaking ? 'start' : 'end'}: ${user_id}`);
             const vs = voiceStates.get(user_id);
             if (vs) {
@@ -317,22 +190,13 @@ function handleVoiceWSMessage(channelId, guildId, msg, token, sessionId, state) 
                 voiceStates.set(user_id, vs);
                 broadcastVoiceUpdate(user_id, vs);
             }
-            break;
+        } else if (packet.op === 4) { // SESSION_DESCRIPTION — handshake complete
+            console.log(`[CubReactive] Voice WS session active for ${channelId} — speaking detection ready!`);
+            const guild = client.guilds.cache.get(guildId);
+            const channel = guild?.channels.cache.get(channelId);
+            if (channel) { scanChannelMembers(channel); broadcastChannelUpdate(channelId); }
         }
-        case 6: break; // HEARTBEAT_ACK
-        case 9: console.log(`[CubReactive] Voice WS resumed for ${channelId}`); break;
-        case 21: case 22: case 23: case 24: case 25:
-        case 26: case 27: case 28: case 29: case 30:
-            console.log(`[CubReactive] Voice WS DAVE opcode ${op} received for ${channelId}`);
-            break;
-        case 13: { // CLIENT_DISCONNECT
-            const vs = d?.user_id && voiceStates.get(d.user_id);
-            if (vs) { vs.speaking = false; broadcastVoiceUpdate(d.user_id, vs); }
-            break;
-        }
-        default:
-            console.log(`[CubReactive] Voice WS unknown opcode ${op} for ${channelId}:`, JSON.stringify(d)?.slice(0, 200));
-    }
+    };
 }
 
 // CubReactive data file path
@@ -449,10 +313,10 @@ function scanChannelMembers(channel) {
     });
 }
 
-// Join a voice channel for speaking detection.
-// Uses a custom voice WebSocket (TCP) instead of @discordjs/voice (UDP).
-// The server is behind NAT so UDP responses from Discord can't get back,
-// but the TCP voice WebSocket works fine and delivers SPEAKING events.
+// Join a voice channel for speaking detection using @discordjs/voice.
+// @discordjs/voice handles DAVE protocol (with @snazzah/davey installed), which resolves
+// the 4017 voice WS rejection. UDP won't complete (server is behind NAT), but SPEAKING
+// events (op 5) arrive via TCP voice WebSocket and work without UDP.
 async function joinChannelForSpeaking(channelId, guildId) {
     if (activeVoiceConnections.has(channelId)) {
         // Already connected or connecting — scan members we might have missed
@@ -482,41 +346,76 @@ async function joinChannelForSpeaking(channelId, guildId) {
 
         console.log(`[CubReactive] Joining voice channel: ${channel.name} (${channelId})`);
 
-        // Mark as connecting so duplicate calls are blocked
-        activeVoiceConnections.set(channelId, { guildId, channelId, status: 'connecting', heartbeat: null, ws: null });
-
-        // Register pending join — VOICE_SERVER_UPDATE handler will open the voice WS
-        const joinId = Date.now();
-        pendingVoiceJoins.set(guildId, { channelId, guildId, joinId });
-
-        // Tell Discord gateway we want to join this voice channel
-        guild.shard.send({
-            op: 4, // VOICE_STATE_UPDATE
-            d: { guild_id: guildId, channel_id: channelId, self_mute: true, self_deaf: false }
+        // Join using @discordjs/voice — it handles DAVE + the full WS handshake
+        const connection = joinVoiceChannel({
+            channelId,
+            guildId,
+            adapterCreator: guild.voiceAdapterCreator,
+            selfMute: true,
+            selfDeaf: true,
         });
 
-        // Timeout if VOICE_SERVER_UPDATE never arrives
-        // Use joinId so a retry's new pending entry is not cleared by this old timeout
-        setTimeout(() => {
-            const pending = pendingVoiceJoins.get(guildId);
-            if (pending && pending.channelId === channelId && pending.joinId === joinId) {
-                console.log(`[CubReactive] Timeout waiting for voice server for ${channel.name}`);
-                pendingVoiceJoins.delete(guildId);
-                activeVoiceConnections.delete(channelId);
+        activeVoiceConnections.set(channelId, { guildId, channelId, connection });
+
+        // Hook into the internal networking WebSocket to intercept SPEAKING (op 5) packets.
+        // We bind directly to the VoiceWebSocket 'packet' event — this fires for all WS messages
+        // including SPEAKING, which comes via TCP not UDP, so it works without UDP completing.
+        const onSpeakingPacket = makeSpeakingPacketHandler(channelId, guildId);
+        let wiredWs = null;
+
+        function wireNetworkingWs(networking) {
+            if (!networking) return;
+            // Wire current WS if one already exists on this networking instance
+            const currentWs = Reflect.get(networking.state, 'ws');
+            if (currentWs && currentWs !== wiredWs) {
+                currentWs.on('packet', onSpeakingPacket);
+                wiredWs = currentWs;
+                console.log(`[CubReactive] Voice WS wired for speaking: ${channelId}`);
             }
-        }, 10000);
+            // Re-wire whenever the networking state changes (new WS after reconnect)
+            networking.on('stateChange', (_old, newNetState) => {
+                const newWs = Reflect.get(newNetState, 'ws');
+                if (newWs && newWs !== wiredWs) {
+                    if (wiredWs) wiredWs.removeListener('packet', onSpeakingPacket);
+                    newWs.on('packet', onSpeakingPacket);
+                    wiredWs = newWs;
+                    console.log(`[CubReactive] Voice WS re-wired for speaking: ${channelId}`);
+                }
+            });
+        }
+
+        connection.on('stateChange', (oldState, newState) => {
+            console.log(`[CubReactive] Connection state: ${oldState.status} → ${newState.status}`);
+            const oldNetworking = Reflect.get(oldState, 'networking');
+            const newNetworking = Reflect.get(newState, 'networking');
+            if (newNetworking && newNetworking !== oldNetworking) {
+                wireNetworkingWs(newNetworking);
+            }
+            if (newState.status === 'destroyed') {
+                if (wiredWs) { wiredWs.removeListener('packet', onSpeakingPacket); wiredWs = null; }
+                activeVoiceConnections.delete(channelId);
+                // Retry if overlay users still need voice
+                const overlayUsers = overlayChannels.get(channelId);
+                if (overlayUsers?.size > 0) {
+                    console.log(`[CubReactive] Connection destroyed, retrying in 5s: ${channelId}`);
+                    setTimeout(() => {
+                        if (!activeVoiceConnections.has(channelId)) {
+                            joinChannelForSpeaking(channelId, guildId);
+                        }
+                    }, 5000);
+                }
+            }
+        });
+
+        // Wire immediately if networking is already available (rare on fresh join)
+        const initialNetworking = Reflect.get(connection.state, 'networking');
+        if (initialNetworking) wireNetworkingWs(initialNetworking);
 
     } catch (e) {
         console.error(`[CubReactive] Failed to join voice channel ${channelId}:`, e.message);
         activeVoiceConnections.delete(channelId);
     }
 }
-
-// No-ops — speaking is now detected via voice WebSocket SPEAKING opcode (TCP),
-// not via UDP audio stream subscriptions. These stubs remain to avoid reference errors.
-function subscribeForSpeaking() {}
-function unsubscribeFromSpeaking() {}
-function unsubscribeAllFromChannel() {}
 
 // Leave a voice channel when no more overlay users need it
 function leaveChannelIfUnneeded(channelId) {
@@ -526,19 +425,8 @@ function leaveChannelIfUnneeded(channelId) {
         const state = activeVoiceConnections.get(channelId);
         if (state) {
             console.log(`[CubReactive] Leaving voice channel: ${channelId} (no overlay users)`);
-            clearInterval(state.heartbeat);
-            try { if (state.ws) state.ws.close(); } catch (_) {}
+            try { state.connection?.destroy(); } catch (_) {}
             activeVoiceConnections.delete(channelId);
-            // Tell Discord gateway to leave the voice channel
-            try {
-                const guild = client.guilds.cache.get(state.guildId);
-                if (guild) {
-                    guild.shard.send({
-                        op: 4,
-                        d: { guild_id: state.guildId, channel_id: null, self_mute: false, self_deaf: false }
-                    });
-                }
-            } catch (_) {}
         }
     }
 }
@@ -1859,9 +1747,10 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         broadcastChannelUpdate(newChannelId);
     }
 
-    // Unsubscribe from old channel when user leaves
+    // Speaking state is tracked per-user; clear it when they leave their old channel
     if (oldChannelId && oldChannelId !== newChannelId) {
-        unsubscribeFromSpeaking(userId, oldChannelId);
+        const vs = voiceStates.get(userId);
+        if (vs) { vs.speaking = false; voiceStates.set(userId, vs); }
     }
 });
 
@@ -2004,11 +1893,6 @@ client.once('ready', () => {
     terminal.init();
     registerCommands();
     startLogServer();
-
-    // Fetch server public IP for voice WS SelectProtocol
-    fetchServerPublicIP();
-    // Set up raw gateway listeners for voice WS (VOICE_STATE_UPDATE / VOICE_SERVER_UPDATE)
-    setupRawVoiceListeners();
 
     // Scan BEFORE starting WebSocket server so voiceStates is populated
     // when OBS overlay reconnects immediately after bot restart
@@ -2219,7 +2103,7 @@ function startLogServer() {
         activeVoiceConnections.forEach((conn, channelId) => {
             voiceConns.push({
                 channelId,
-                status: conn.status || (conn.ws ? (conn.ws.readyState === WebSocket.OPEN ? 'connected' : 'closed') : 'unknown')
+                status: conn.connection?.state?.status ?? 'unknown'
             });
         });
 

@@ -1636,6 +1636,7 @@
     cursor: pointer;
     transition: all 0.3s ease;
     position: relative; /* For positioned children (frame, outline, etc.) */
+    isolation: isolate; /* Create stacking context so z-index:-1 bg-effect stays within wrapper */
 }
 
 .preview-stage .avatar {

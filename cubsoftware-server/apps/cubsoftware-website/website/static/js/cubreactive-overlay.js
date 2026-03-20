@@ -137,7 +137,7 @@ class CubReactiveOverlay {
             case 'CONFIG_UPDATED':
                 const refreshId = data.userId || TARGET_USER_ID;
                 if (refreshId) {
-                    this.fetchUserConfig(refreshId).then(() => this.render());
+                    this.fetchUserConfig(refreshId, true).then(() => this.render());
                 }
                 break;
 

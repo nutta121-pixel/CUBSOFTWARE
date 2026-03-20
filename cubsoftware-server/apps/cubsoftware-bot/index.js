@@ -390,6 +390,7 @@ async function joinChannelForSpeaking(channelId, guildId) {
         // Listen for speaking events (fires via SPEAKING opcode from voice gateway,
         // which may work even before UDP is fully established)
         connection.receiver.speaking.on('start', async (userId) => {
+            console.log(`[CubReactive] SPEAKING opcode received: start for ${userId} in ${channel.name}`);
             let state = voiceStates.get(userId);
             if (!state) {
                 // User not in voiceStates yet - try to add them
@@ -429,6 +430,7 @@ async function joinChannelForSpeaking(channelId, guildId) {
         });
 
         connection.receiver.speaking.on('end', (userId) => {
+            console.log(`[CubReactive] SPEAKING opcode received: end for ${userId} in ${channel.name}`);
             const state = voiceStates.get(userId);
             if (state) {
                 state.speaking = false;
@@ -2217,6 +2219,65 @@ function startLogServer() {
 
         console.log(`[CubReactive] Config refresh for ${userId}: notified ${notified} overlay(s)`);
         res.json({ success: true, notified });
+    });
+
+    // CubReactive: debug status — shows current internal state (voice connections, subscriptions, etc.)
+    app.get('/cubreactive/status', (req, res) => {
+        const voiceConns = [];
+        activeVoiceConnections.forEach((conn, channelId) => {
+            voiceConns.push({ channelId, status: conn.state?.status || 'unknown' });
+        });
+
+        const subscriptions = [];
+        activeSubscriptions.forEach((subs, channelId) => {
+            subscriptions.push({ channelId, users: [...subs.keys()] });
+        });
+
+        const states = [];
+        voiceStates.forEach((state, userId) => {
+            states.push({ userId, channelId: state.channelId, username: state.username, speaking: state.speaking, muted: state.muted, deafened: state.deafened });
+        });
+
+        const overlays = [];
+        overlayConnections.forEach((conns, userId) => {
+            overlays.push({ userId, count: conns.filter(ws => ws.readyState === WebSocket.OPEN).length });
+        });
+
+        const overlayUserChannels = [];
+        overlayChannels.forEach((users, channelId) => {
+            overlayUserChannels.push({ channelId, users: [...users] });
+        });
+
+        res.json({
+            voiceConnections: voiceConns,
+            subscriptions,
+            voiceStates: states,
+            overlayConnections: overlays,
+            overlayChannels: overlayUserChannels,
+            wsClients: wss ? wss.clients.size : 0
+        });
+    });
+
+    // CubReactive: simulate speaking — sends a fake speaking event to overlay(s) for a user.
+    // Use this to test the overlay display pipeline without needing the voice connection to work.
+    app.post('/cubreactive/test-speaking', (req, res) => {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'userId required' });
+
+        const state = voiceStates.get(userId) || { username: 'Test User', channelId: 'test', speaking: false, muted: false, deafened: false };
+
+        // Send speaking=true, then speaking=false after 2 seconds
+        const speakingState = { ...state, speaking: true };
+        broadcastVoiceUpdate(userId, speakingState);
+        console.log(`[CubReactive] Test speaking START sent for ${userId}`);
+
+        setTimeout(() => {
+            const silentState = { ...state, speaking: false };
+            broadcastVoiceUpdate(userId, silentState);
+            console.log(`[CubReactive] Test speaking END sent for ${userId}`);
+        }, 2000);
+
+        res.json({ success: true, userId, overlays: (overlayConnections.get(userId) || []).filter(ws => ws.readyState === WebSocket.OPEN).length });
     });
 
     app.listen(config.logServerPort, '127.0.0.1', () => {

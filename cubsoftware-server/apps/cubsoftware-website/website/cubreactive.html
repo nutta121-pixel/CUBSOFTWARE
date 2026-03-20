@@ -1465,6 +1465,17 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Debug Panel -->
+                <div class="debug-panel" id="debug-panel">
+                    <h2>Debug Tools</h2>
+                    <p class="section-description">Use these to diagnose speaking detection issues.</p>
+                    <div class="debug-actions">
+                        <button class="btn-save-settings" onclick="testSpeaking()">Test Speaking on Overlay</button>
+                        <button class="btn-save-settings" onclick="loadDebugStatus()">Check Bot Status</button>
+                    </div>
+                    <pre id="debug-output" class="debug-output" style="display:none"></pre>
+                </div>
                 {% endif %}
             </div>
         </main>

@@ -2355,6 +2355,33 @@ def cubreactive_toggle():
 
     return jsonify({'error': 'User not found'}), 404
 
+@app.route('/api/cubreactive/debug-status')
+@cubreactive_auth_required
+def cubreactive_debug_status():
+    """Proxy to bot's internal debug status endpoint — shows voice connections, subscriptions, voiceStates"""
+    try:
+        bot_port = os.environ.get('LOG_SERVER_PORT', 3847)
+        resp = requests.get(f'http://127.0.0.1:{bot_port}/cubreactive/status', timeout=3)
+        return jsonify(resp.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
+@app.route('/api/cubreactive/test-speaking', methods=['POST'])
+@cubreactive_auth_required
+def cubreactive_test_speaking():
+    """Trigger a 2-second fake speaking event on the user's overlay — tests display pipeline without needing voice"""
+    user = session.get('cubreactive_user')
+    try:
+        bot_port = os.environ.get('LOG_SERVER_PORT', 3847)
+        resp = requests.post(
+            f'http://127.0.0.1:{bot_port}/cubreactive/test-speaking',
+            json={'userId': user['id']},
+            timeout=3
+        )
+        return jsonify(resp.json())
+    except Exception as e:
+        return jsonify({'error': str(e)}), 503
+
 # Serve CubReactive uploads
 @app.route('/uploads/cubreactive/<filename>')
 def cubreactive_serve_upload(filename):

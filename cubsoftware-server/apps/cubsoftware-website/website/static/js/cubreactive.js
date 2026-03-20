@@ -2876,3 +2876,60 @@ function applyShareCode() {
         showToast('Invalid share code', 'error');
     }
 }
+
+// ── Debug Tools ────────────────────────────────────────────────────────────────
+
+async function testSpeaking() {
+    const out = document.getElementById('debug-output');
+    out.style.display = 'block';
+    out.textContent = 'Sending test speaking event…';
+    try {
+        const res = await fetch('/api/cubreactive/test-speaking', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        const data = await res.json();
+        if (data.error) {
+            out.textContent = 'Error: ' + data.error;
+            showToast('Test failed: ' + data.error, 'error');
+        } else {
+            out.textContent = `Test sent to ${data.overlays} overlay connection(s).\nYour OBS overlay should show the speaking image for ~2 seconds.\nIf it did NOT react, the overlay is not connected — check the OBS browser source URL.`;
+            showToast('Test speaking event sent!', 'success');
+        }
+    } catch (e) {
+        out.textContent = 'Request failed: ' + e.message;
+        showToast('Request failed', 'error');
+    }
+}
+
+async function loadDebugStatus() {
+    const out = document.getElementById('debug-output');
+    out.style.display = 'block';
+    out.textContent = 'Loading bot status…';
+    try {
+        const res = await fetch('/api/cubreactive/debug-status');
+        const data = await res.json();
+        if (data.error) {
+            out.textContent = 'Error: ' + data.error;
+        } else {
+            const lines = [
+                `WebSocket clients connected: ${data.wsClients}`,
+                '',
+                'Voice connections (bot in channel):',
+                data.voiceConnections.length ? data.voiceConnections.map(c => `  ${c.channelId}: ${c.status}`).join('\n') : '  (none)',
+                '',
+                'Audio subscriptions (speaking detection active for):',
+                data.subscriptions.length ? data.subscriptions.map(s => `  channel ${s.channelId}: [${s.users.join(', ')}]`).join('\n') : '  (none)',
+                '',
+                'Voice states (users bot knows about):',
+                data.voiceStates.length ? data.voiceStates.map(s => `  ${s.username} (${s.userId}) — speaking:${s.speaking} muted:${s.muted} deaf:${s.deafened}`).join('\n') : '  (none — bot may not know you\'re in voice yet)',
+                '',
+                'Overlay connections (overlays subscribed per user):',
+                data.overlayConnections.length ? data.overlayConnections.map(o => `  ${o.userId}: ${o.count} open connection(s)`).join('\n') : '  (none)',
+                '',
+                'Overlay channels (channels bot joined for overlays):',
+                data.overlayChannels.length ? data.overlayChannels.map(c => `  channel ${c.channelId}: [${c.users.join(', ')}]`).join('\n') : '  (none)',
+            ];
+            out.textContent = lines.join('\n');
+        }
+    } catch (e) {
+        out.textContent = 'Request failed: ' + e.message;
+    }
+}

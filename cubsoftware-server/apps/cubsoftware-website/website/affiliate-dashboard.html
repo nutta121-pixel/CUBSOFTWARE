@@ -659,6 +659,66 @@
                 </div>
             </div>
 
+            <!-- Link SEO Settings -->
+            <div class="history-card" style="text-align:left;">
+                <div class="card-title" style="margin-bottom:0.35rem;">Landing Page &amp; SEO Settings</div>
+                <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.5rem;">Fully customise your affiliate landing page and how it appears on social media, Discord, and search engines. Every affiliate gets their own unique page. Leave any field blank to use the smart default.</p>
+
+                <!-- Social Preview -->
+                <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.75rem;">Social Preview (og: / Twitter / Discord embed)</div>
+                <div style="display:flex;flex-direction:column;gap:0.85rem;margin-bottom:1.5rem;">
+                    <div class="withdraw-field">
+                        <label>Page Title <span style="color:var(--text-muted);font-weight:400;">(shown in link previews &amp; browser tab — max 120 chars)</span></label>
+                        <input type="text" id="seoTitle" maxlength="120" placeholder="e.g. HexechtV recommends CUB SOFTWARE — Free Online Tools" value="{{ affiliate.seo_title or '' }}">
+                    </div>
+                    <div class="withdraw-field">
+                        <label>Meta Description <span style="color:var(--text-muted);font-weight:400;">(shown under the title in previews — max 300 chars)</span></label>
+                        <textarea id="seoDesc" maxlength="300" rows="3" placeholder="e.g. HexechtV uses CUB SOFTWARE for all their stream tools — completely free, no signup needed." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;padding:0.55rem 0.75rem;color:var(--text-light);font-family:'Poppins',sans-serif;font-size:0.88rem;outline:none;resize:vertical;transition:border-color 0.2s;">{{ affiliate.seo_description or '' }}</textarea>
+                    </div>
+                    <div class="withdraw-field">
+                        <label>Preview Image URL <span style="color:var(--text-muted);font-weight:400;">(thumbnail shown in embeds — ideally 1200×630px, must be https://)</span></label>
+                        <input type="url" id="seoImage" maxlength="500" placeholder="https://i.imgur.com/yourimage.png" value="{{ affiliate.seo_image_url or '' }}">
+                    </div>
+                    <div class="withdraw-field">
+                        <label>Keywords <span style="color:var(--text-muted);font-weight:400;">(comma-separated — max 200 chars)</span></label>
+                        <input type="text" id="seoKeywords" maxlength="200" placeholder="free tools, stream setup, discord bots, no signup" value="{{ affiliate.seo_keywords or '' }}">
+                    </div>
+                    <div class="withdraw-field">
+                        <label>Twitter / X Handle <span style="color:var(--text-muted);font-weight:400;">(your @handle — tags you as creator in Twitter cards)</span></label>
+                        <input type="text" id="seoTwitter" maxlength="50" placeholder="@YourHandle" value="{{ affiliate.seo_twitter_handle or '' }}">
+                    </div>
+                </div>
+
+                <!-- Landing Page -->
+                <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.75rem;">Landing Page Content</div>
+                <div style="display:flex;flex-direction:column;gap:0.85rem;margin-bottom:1.5rem;">
+                    <div class="withdraw-field">
+                        <label>Recommendation Message <span style="color:var(--text-muted);font-weight:400;">(displayed on the card visitors see — max 500 chars)</span></label>
+                        <textarea id="seoMessage" maxlength="500" rows="3" placeholder="e.g. I've been using CUB SOFTWARE for my streams for months — genuinely amazing free tools with no catch." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;padding:0.55rem 0.75rem;color:var(--text-light);font-family:'Poppins',sans-serif;font-size:0.88rem;outline:none;resize:vertical;transition:border-color 0.2s;">{{ affiliate.seo_custom_message or '' }}</textarea>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 140px;gap:0.75rem;align-items:end;">
+                        <div class="withdraw-field" style="margin:0;">
+                            <label>Redirect Destination <span style="color:var(--text-muted);font-weight:400;">(path on cubsoftware.site — default /)</span></label>
+                            <input type="text" id="seoRedirectUrl" maxlength="200" placeholder="/cleanme or /apps/multi-twitch" value="{{ affiliate.seo_redirect_url or '' }}">
+                        </div>
+                        <div class="withdraw-field" style="margin:0;">
+                            <label>Delay (1–30s)</label>
+                            <input type="number" id="seoDelay" min="1" max="30" placeholder="5" value="{{ affiliate.seo_redirect_delay or '' }}" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;padding:0.55rem 0.75rem;color:var(--text-light);font-family:'Poppins',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.2s;">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                    <button class="btn-withdraw" id="seoSaveBtn" onclick="saveSeo()">Save Settings</button>
+                    <span id="seoMsg" style="font-size:0.8rem;color:#57F287;display:none;">Saved!</span>
+                    <span id="seoErr" style="font-size:0.8rem;color:#ed4245;display:none;"></span>
+                </div>
+
+                <div style="margin-top:1rem;padding:0.85rem 1rem;background:rgba(0,157,255,0.05);border:1px solid rgba(0,157,255,0.15);border-radius:8px;font-size:0.78rem;color:var(--text-muted);">
+                    Preview your landing page: <a href="/r/{{ affiliate.code }}" target="_blank" style="color:#009dff;text-decoration:none;font-weight:600;">cubsoftware.site/r/{{ affiliate.code }} ↗</a>
+                </div>
+            </div>
+
             <!-- Commission rate -->
             {% if affiliate.commission_rate > 0 %}
             <div class="commission-card">
@@ -733,6 +793,45 @@
                 btn.classList.add('copied');
                 setTimeout(() => { btn.textContent = 'Copy URL'; btn.classList.remove('copied'); }, 2000);
             });
+        }
+
+        async function saveSeo() {
+            const btn = document.getElementById('seoSaveBtn');
+            const msg = document.getElementById('seoMsg');
+            const err = document.getElementById('seoErr');
+            btn.disabled = true;
+            btn.textContent = 'Saving...';
+            msg.style.display = 'none';
+            err.style.display = 'none';
+            try {
+                const res = await fetch('/affiliate/seo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        seo_title: document.getElementById('seoTitle').value.trim(),
+                        seo_description: document.getElementById('seoDesc').value.trim(),
+                        seo_custom_message: document.getElementById('seoMessage').value.trim(),
+                        seo_image_url: document.getElementById('seoImage').value.trim(),
+                        seo_keywords: document.getElementById('seoKeywords').value.trim(),
+                        seo_twitter_handle: document.getElementById('seoTwitter').value.trim(),
+                        seo_redirect_url: document.getElementById('seoRedirectUrl').value.trim(),
+                        seo_redirect_delay: document.getElementById('seoDelay').value.trim(),
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    msg.style.display = 'inline';
+                    setTimeout(() => { msg.style.display = 'none'; }, 3000);
+                } else {
+                    err.textContent = data.error || 'Failed to save.';
+                    err.style.display = 'inline';
+                }
+            } catch (e) {
+                err.textContent = 'Network error. Try again.';
+                err.style.display = 'inline';
+            }
+            btn.disabled = false;
+            btn.textContent = 'Save SEO Settings';
         }
 
         async function requestWithdrawal() {

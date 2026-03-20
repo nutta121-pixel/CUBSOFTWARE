@@ -16103,10 +16103,10 @@ def affiliate_apply():
 
     return render_template('affiliate-apply.html', success=True)
 
-# Affiliate tracking redirect
+# Affiliate tracking landing page
 @app.route('/r/<code>')
 def affiliate_track(code):
-    """Track affiliate click and redirect to homepage"""
+    """Track affiliate click and show branded landing page with custom SEO"""
     aff = get_affiliate_by_code(code)
     if not aff or not aff.get('enabled', True):
         return redirect('/')
@@ -16148,10 +16148,109 @@ def affiliate_track(code):
     if not dest.startswith('/'):
         dest = '/'
 
-    resp = redirect(dest)
+    name = aff.get('username', 'Someone')
+    default_title = f"{name} recommends CUB SOFTWARE — Free Online Tools"
+    default_desc = (
+        f"{name} thinks you should check out CUB SOFTWARE. "
+        "Free online tools that actually work — no ads, no paywalls, no signup. "
+        "Everything we build is and always will be completely free."
+    )
+    default_message = (
+        f"I found CUB SOFTWARE and it's genuinely impressive — free online tools "
+        "that actually work with zero ads and no signup needed. "
+        "Everything from PDF tools to Discord bots, all completely free."
+    )
+
+    seo_title = aff.get('seo_title') or default_title
+    seo_description = aff.get('seo_description') or default_desc
+    seo_image = aff.get('seo_image_url') or 'https://cubsoftware.site/static/images/company-logo.png'
+    seo_keywords = aff.get('seo_keywords') or 'free online tools, CUB SOFTWARE, no signup, free tools'
+    seo_twitter_handle = aff.get('seo_twitter_handle') or ''
+    seo_custom_message = aff.get('seo_custom_message') or default_message
+    redirect_dest = aff.get('seo_redirect_url') or dest
+    if not redirect_dest.startswith('/'):
+        redirect_dest = '/'
+    try:
+        redirect_delay = max(1, min(30, int(aff.get('seo_redirect_delay', 5))))
+    except (ValueError, TypeError):
+        redirect_delay = 5
+
+    resp = make_response(render_template('affiliate-landing.html',
+        affiliate=aff,
+        dest=redirect_dest,
+        seo_title=seo_title,
+        seo_description=seo_description,
+        seo_image=seo_image,
+        seo_keywords=seo_keywords,
+        seo_twitter_handle=seo_twitter_handle,
+        seo_custom_message=seo_custom_message,
+        redirect_delay=redirect_delay,
+    ))
     if new_visitor:
         resp.set_cookie('__cub_vid', visitor_id, max_age=365 * 24 * 3600, httponly=True, samesite='Lax')
     return resp
+
+@app.route('/affiliate/seo', methods=['POST'])
+@affiliate_auth_required
+def affiliate_save_seo():
+    """Save custom SEO settings for the affiliate's landing page."""
+    user = session.get('affiliate_user')
+    data = request.get_json(silent=True) or {}
+
+    def _str(key, maxlen):
+        return str(data.get(key, '')).strip()[:maxlen]
+
+    seo_title = _str('seo_title', 120)
+    seo_description = _str('seo_description', 300)
+    seo_custom_message = _str('seo_custom_message', 500)
+    seo_image_url = _str('seo_image_url', 500)
+    seo_keywords = _str('seo_keywords', 200)
+    seo_twitter_handle = _str('seo_twitter_handle', 50)
+    seo_redirect_url = _str('seo_redirect_url', 200)
+    seo_redirect_delay_raw = str(data.get('seo_redirect_delay', '')).strip()
+
+    # Validate URLs
+    if seo_image_url and not seo_image_url.startswith(('https://', 'http://')):
+        seo_image_url = ''
+    if seo_redirect_url and not seo_redirect_url.startswith('/'):
+        seo_redirect_url = ''
+    if seo_twitter_handle and not seo_twitter_handle.startswith('@'):
+        seo_twitter_handle = '@' + seo_twitter_handle
+    try:
+        seo_redirect_delay = max(1, min(30, int(seo_redirect_delay_raw))) if seo_redirect_delay_raw else None
+    except ValueError:
+        seo_redirect_delay = None
+
+    affiliates_data = load_affiliates()
+    found = False
+    for aff_entry in affiliates_data['affiliates'].values():
+        if aff_entry.get('discord_id') == user['id']:
+            fields = {
+                'seo_title': seo_title,
+                'seo_description': seo_description,
+                'seo_custom_message': seo_custom_message,
+                'seo_image_url': seo_image_url,
+                'seo_keywords': seo_keywords,
+                'seo_twitter_handle': seo_twitter_handle,
+                'seo_redirect_url': seo_redirect_url,
+            }
+            for field, value in fields.items():
+                if value:
+                    aff_entry[field] = value
+                else:
+                    aff_entry.pop(field, None)
+            if seo_redirect_delay is not None:
+                aff_entry['seo_redirect_delay'] = seo_redirect_delay
+            else:
+                aff_entry.pop('seo_redirect_delay', None)
+            found = True
+            break
+
+    if not found:
+        return jsonify({'error': 'Affiliate not found'}), 404
+
+    save_affiliates(affiliates_data)
+    return jsonify({'success': True})
 
 # Affiliate OAuth — unified login handles everything
 @app.route('/affiliate/auth/discord')

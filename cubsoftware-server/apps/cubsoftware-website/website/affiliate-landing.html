@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+
+    <!-- Primary SEO -->
+    <title>{{ seo_title }}</title>
+    <meta name="description" content="{{ seo_description }}">
+    {% if seo_keywords %}<meta name="keywords" content="{{ seo_keywords }}">{% endif %}
+    <meta name="author" content="{{ affiliate.username }}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://cubsoftware.site/r/{{ affiliate.code }}">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{{ seo_title }}">
+    <meta property="og:description" content="{{ seo_description }}">
+    <meta property="og:url" content="https://cubsoftware.site/r/{{ affiliate.code }}">
+    <meta property="og:image" content="{{ seo_image }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="CUB SOFTWARE">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter / X Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ seo_title }}">
+    <meta name="twitter:description" content="{{ seo_description }}">
+    <meta name="twitter:image" content="{{ seo_image }}">
+    <meta name="twitter:site" content="@cubsoftware">
+    {% if seo_twitter_handle %}<meta name="twitter:creator" content="{{ seo_twitter_handle }}">{% endif %}
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": {{ seo_title | tojson }},
+        "description": {{ seo_description | tojson }},
+        "url": "https://cubsoftware.site/r/{{ affiliate.code }}",
+        "image": {{ seo_image | tojson }},
+        "author": {
+            "@type": "Person",
+            "name": {{ affiliate.username | tojson }}
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "CUB SOFTWARE",
+            "url": "https://cubsoftware.site",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://cubsoftware.site/static/images/company-logo.png"
+            }
+        },
+        "mainEntity": {
+            "@type": "WebSite",
+            "name": "CUB SOFTWARE",
+            "url": "https://cubsoftware.site",
+            "description": "Free online tools that actually work. No ads, no signup, no paywalls — everything is always free."
+        }
+    }
+    </script>
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem 1rem;
+            background: var(--background-color, #06050f);
+        }
+
+        .landing-card {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(10, 7, 35, 0.88);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            border-radius: 24px;
+            padding: 2.5rem 2rem 2rem;
+            text-align: center;
+            box-shadow: 0 0 80px rgba(88, 101, 242, 0.15), 0 24px 64px rgba(0,0,0,0.55);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            animation: cardIn 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(22px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .landing-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            margin-bottom: 1.75rem;
+        }
+        .landing-logo .cub {
+            background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .landing-logo .soft { color: rgba(255,255,255,0.9); }
+
+        .landing-affiliate {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.9rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .landing-avatar {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            border: 3px solid rgba(124, 58, 237, 0.5);
+            box-shadow: 0 0 24px rgba(124, 58, 237, 0.3);
+        }
+
+        .landing-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #c4b5fd;
+            background: rgba(124, 58, 237, 0.12);
+            border: 1px solid rgba(124, 58, 237, 0.3);
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .landing-rec {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.9);
+            line-height: 1.5;
+            font-weight: 500;
+        }
+        .landing-rec strong { color: #c4b5fd; font-weight: 700; }
+
+        .landing-divider {
+            width: 40px;
+            height: 2px;
+            background: linear-gradient(90deg, #5865f2, #7c3aed);
+            border-radius: 99px;
+            margin: 1.25rem auto;
+        }
+
+        .landing-msg {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.65);
+            line-height: 1.75;
+            margin-bottom: 0.5rem;
+        }
+
+        .landing-features {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0 1.75rem;
+        }
+        .landing-feature {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.45);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .landing-btn {
+            display: inline-block;
+            padding: 0.8rem 2.75rem;
+            background: linear-gradient(135deg, #5865f2, #7c3aed);
+            border-radius: 12px;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-decoration: none;
+            letter-spacing: 0.03em;
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(88, 101, 242, 0.35);
+            margin-bottom: 1.25rem;
+        }
+        .landing-btn:hover { opacity: 0.88; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(88, 101, 242, 0.45); }
+
+        .landing-progress-wrap {
+            height: 3px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 99px;
+            overflow: hidden;
+            margin-bottom: 0.6rem;
+        }
+        .landing-progress-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #5865f2, #7c3aed);
+            border-radius: 99px;
+            transition: width 1s linear;
+        }
+
+        .landing-redirect {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.25);
+            margin: 0;
+        }
+        .landing-redirect span { color: rgba(124, 58, 237, 0.7); font-weight: 600; }
+
+        .landing-footer {
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.2);
+        }
+        .landing-footer a { color: rgba(124, 58, 237, 0.6); text-decoration: none; }
+        .landing-footer a:hover { color: #c4b5fd; }
+    </style>
+</head>
+<body>
+    <div class="landing-card">
+        <div class="landing-logo"><span class="cub">CUB</span><span class="soft">SOFTWARE</span></div>
+
+        <div class="landing-affiliate">
+            {% if affiliate.avatar %}
+            <img src="{{ affiliate.avatar }}" alt="{{ affiliate.username }}" class="landing-avatar">
+            {% endif %}
+            <span class="landing-badge">✦ Recommended by</span>
+            <div class="landing-rec"><strong>{{ affiliate.username }}</strong></div>
+        </div>
+
+        <div class="landing-divider"></div>
+
+        <p class="landing-msg">{{ seo_custom_message }}</p>
+
+        <div class="landing-features">
+            <span class="landing-feature">100% Free</span>
+            <span class="landing-feature">No Signup</span>
+            <span class="landing-feature">No Ads</span>
+            <span class="landing-feature">Always Free</span>
+        </div>
+
+        <a href="{{ dest }}" class="landing-btn">Visit CUB SOFTWARE →</a>
+
+        <div class="landing-progress-wrap">
+            <div class="landing-progress-bar" id="progressBar"></div>
+        </div>
+        <p class="landing-redirect">Redirecting in <span id="countdown">{{ redirect_delay }}</span>s</p>
+
+        <div class="landing-footer">
+            <a href="https://cubsoftware.site">cubsoftware.site</a> &nbsp;·&nbsp;
+            <a href="https://cubsoftware.site/affiliate">Become an affiliate</a>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const DURATION = {{ redirect_delay }};
+        const dest = {{ dest | tojson }};
+        const progress = document.getElementById('progressBar');
+        const countdown = document.getElementById('countdown');
+        let remaining = DURATION;
+
+        if (progress) progress.style.width = '100%';
+
+        const timer = setInterval(function() {
+            remaining--;
+            if (countdown) countdown.textContent = remaining;
+            if (progress) progress.style.width = ((remaining / DURATION) * 100) + '%';
+            if (remaining <= 0) {
+                clearInterval(timer);
+                window.location.href = dest;
+            }
+        }, 1000);
+    })();
+    </script>
+</body>
+</html>

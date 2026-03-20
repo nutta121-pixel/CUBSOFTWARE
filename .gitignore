@@ -34,7 +34,9 @@ coverage/
 # ── Data / uploads (runtime, not versioned) ───────────────────
 **/data/*.json
 **/data/
-**/uploads/
+**/uploads/*
+!**/uploads/cubreactive
+!**/uploads/cubreactive/**
 backups/
 BackUps/
 

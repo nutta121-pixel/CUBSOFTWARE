@@ -868,14 +868,14 @@ function getAnimationClass(style) {
 function updatePreview() {
     const wrapper = document.getElementById('preview-wrapper');
     const avatar = document.getElementById('preview-avatar');
+    const imgWrapper = document.getElementById('preview-img-wrapper');
     const image = document.getElementById('preview-image');
     const username = document.getElementById('preview-username');
     const stateLabel = document.getElementById('preview-state-label');
 
     if (!wrapper || !avatar || !image) return;
 
-    // Get current form values
-    const size = 180; // Fixed avatar size
+    // Read all settings from form — mirrors the overlay's settings reading
     const shape = getVal('setting-shape', 'rounded');
     const borderEnabled = getVal('setting-border', false);
     const borderColor = getVal('setting-border-color', '#5865f2');
@@ -898,8 +898,12 @@ function updatePreview() {
     const nameShadowColor = getVal('setting-name-shadow-color', '#000000');
     const nameGlowEnabled = getVal('setting-name-glow', false);
     const nameGlowColor = getVal('setting-name-glow-color', '#5865f2');
+    const nameFont = getVal('setting-name-font', 'default');
+    const namePosition = getVal('setting-name-position', 'bottom');
+    const nameAnimation = getVal('setting-name-animation', 'none');
     const idleOpacity = getVal('setting-idle-opacity', 100);
     const dimWhenIdle = getVal('setting-dim', false);
+    const bounceOnSpeak = getVal('setting-bounce', true);
     const animStyle = getVal('setting-animation', 'bounce');
     const animSpeed = getVal('setting-animation-speed', 100);
     const idleAnimStyle = getVal('setting-idle-animation', 'none');
@@ -908,102 +912,119 @@ function updatePreview() {
     const filterContrast = getVal('setting-filter-contrast', 100);
     const filterSaturate = getVal('setting-filter-saturate', 100);
     const filterHue = getVal('setting-filter-hue', 0);
+    const particlesEnabled = getVal('setting-particles', false);
+    const particleType = getVal('setting-particle-type', 'sparkles');
+    const particleColor = getVal('setting-particle-color', '#ffdd00');
+    const particleCount = getVal('setting-particle-count', 15);
+    const animBorderEnabled = getVal('setting-animated-border', false);
+    const animBorderType = getVal('setting-animated-border-type', 'rainbow');
+    const bgEffectEnabled = getVal('setting-bg-effect', false);
+    const bgEffectType = getVal('setting-bg-effect-type', 'glow-aura');
+    const bgEffectColor = getVal('setting-bg-effect-color', '#5865f2');
+    const bgEffectSize = parseInt(getVal('setting-bg-effect-size', 50)) || 30;
+    const outlineEnabled = getVal('setting-outline', false);
+    const outlineColor = getVal('setting-outline-color', '#ffffff');
+    const outlineWidth = getVal('setting-outline-width', 2);
+    const outlineOffset = getVal('setting-outline-offset', 3);
+    const frame = getVal('setting-frame', 'none');
+    const frameColor = getVal('setting-frame-color', '#ffd700');
+    const accessory = getVal('setting-accessory', 'none');
+    const mirrorEnabled = getVal('setting-mirror', false);
+    const mirrorOpacity = getVal('setting-mirror-opacity', 30);
+    const mirrorOffset = getVal('setting-mirror-offset', 5);
+    const voiceIndicatorEnabled = getVal('setting-voice-indicator', false);
+    const voiceIndicatorType = getVal('setting-voice-indicator-type', 'bar');
+    const voiceIndicatorColor = getVal('setting-voice-indicator-color', '#57f287');
+    const statusTextEnabled = getVal('setting-status-text-enabled', false);
+    const statusText = getVal('setting-status-text', '');
+    const statusTextColor = getVal('setting-status-text-color', '#888888');
+    const speakingHighlight = getVal('setting-speaking-highlight', 'none');
 
-    // Apply size
-    avatar.style.width = size + 'px';
-    avatar.style.height = size + 'px';
-
-    // Apply shape
+    // Shape styles
     const shapeStyles = getShapeStyles(shape);
 
-    // Avatar gets both border-radius and clip-path (for proper border shape on hexagon, etc.)
+    // Avatar size + shape
+    avatar.style.width = '180px';
+    avatar.style.height = '180px';
     avatar.style.borderRadius = shapeStyles.borderRadius;
     avatar.style.clipPath = shapeStyles.clipPath || 'none';
     avatar.style.overflow = 'visible';
 
-    // img-wrapper also gets the shape for proper image clipping
-    const imgWrapper = document.getElementById('preview-img-wrapper');
+    // img-wrapper: clip image to shape
     if (imgWrapper) {
-        imgWrapper.style.width = size + 'px';
-        imgWrapper.style.height = size + 'px';
+        imgWrapper.style.width = '100%';
+        imgWrapper.style.height = '100%';
         imgWrapper.style.borderRadius = shapeStyles.borderRadius;
         imgWrapper.style.clipPath = shapeStyles.clipPath || 'none';
         imgWrapper.style.overflow = 'hidden';
+        imgWrapper.style.zIndex = '5';
     }
+    image.style.width = '100%';
+    image.style.height = '100%';
+    image.style.objectFit = 'cover';
 
-    // Image should fill the wrapper
-    if (image) {
-        image.style.width = '100%';
-        image.style.height = '100%';
-        image.style.objectFit = 'cover';
-    }
+    // Border
+    avatar.style.border = borderEnabled ? `${borderWidth}px ${borderStyle} ${borderColor}` : '';
 
-    // Apply border
-    if (borderEnabled) {
-        avatar.style.border = `${borderWidth}px ${borderStyle} ${borderColor}`;
-    } else {
-        avatar.style.border = 'none';
-    }
+    // Box-shadow: speaking ring + glow only (matches overlay)
+    const boxShadows = [];
+    if (speakingRingEnabled && isSpeaking) boxShadows.push(`0 0 0 ${speakingRingWidth}px ${speakingRingColor}`);
+    if (glowEnabled && isSpeaking) boxShadows.push(`0 0 20px ${glowColor}`, `0 0 40px ${glowColor}`);
+    avatar.style.boxShadow = boxShadows.join(', ');
 
-    // Build box-shadow
-    let shadows = [];
-    if (shadowEnabled) {
-        shadows.push(`0 0 ${shadowBlur}px ${shadowColor}`);
-    }
-    if (isSpeaking && glowEnabled) {
-        shadows.push(`0 0 20px ${glowColor}`);
-    }
-    if (isSpeaking && speakingRingEnabled) {
-        shadows.push(`0 0 0 ${speakingRingWidth}px ${speakingRingColor}`);
-    }
-    avatar.style.boxShadow = shadows.length > 0 ? shadows.join(', ') : 'none';
+    // Drop-shadow filter on avatar for shadow (matches overlay — drop-shadow not box-shadow)
+    avatar.style.filter = shadowEnabled ? `drop-shadow(0 4px ${shadowBlur}px ${shadowColor})` : '';
 
-    // Apply flip
-    image.style.transform = flipHorizontal ? 'scaleX(-1)' : 'none';
-
-    // Build image filter
-    let filters = [];
+    // Image filters + flip
+    image.style.transform = flipHorizontal ? 'scaleX(-1)' : '';
+    const filters = [];
     if (filterBrightness !== 100) filters.push(`brightness(${filterBrightness}%)`);
     if (filterContrast !== 100) filters.push(`contrast(${filterContrast}%)`);
     if (filterSaturate !== 100) filters.push(`saturate(${filterSaturate}%)`);
     if (filterHue !== 0) filters.push(`hue-rotate(${filterHue}deg)`);
+    image.style.filter = filters.join(' ');
 
-    // Apply opacity and grayscale based on state
-    if (!isSpeaking && dimWhenIdle) {
-        avatar.style.opacity = (idleOpacity / 100).toString();
-        filters.push('grayscale(20%)');
-    } else {
-        avatar.style.opacity = '1';
-    }
+    // Opacity on wrapper (matches overlay — whole wrapper dims, not just avatar)
+    wrapper.style.opacity = (!isSpeaking && dimWhenIdle) ? (idleOpacity / 100).toString() : '1';
 
-    image.style.filter = filters.length > 0 ? filters.join(' ') : 'none';
-
-    // Apply animation speed
+    // Animation speed on wrapper
     const speedFactor = 100 / animSpeed;
-    avatar.style.animationDuration = (0.5 * speedFactor) + 's';
+    wrapper.style.animationDuration = (0.5 * speedFactor) + 's';
 
-    // Apply animation class when speaking or idle
+    // Animation classes on wrapper (matches overlay)
     const allAnimClasses = ['anim-bounce', 'anim-pulse', 'anim-glow', 'anim-shake', 'anim-wave',
                            'anim-float', 'anim-spin', 'anim-jello', 'anim-heartbeat', 'anim-flash',
                            'anim-rubberband', 'anim-breathe'];
-    allAnimClasses.forEach(c => avatar.classList.remove(c));
-
-    if (isSpeaking) {
+    allAnimClasses.forEach(c => { wrapper.classList.remove(c); avatar.classList.remove(c); });
+    if (isSpeaking && bounceOnSpeak) {
         const animClass = getAnimationClass(animStyle);
-        if (animClass) {
-            avatar.classList.add(animClass);
-        }
-    } else if (idleAnimStyle !== 'none') {
+        if (animClass) wrapper.classList.add(animClass);
+    } else if (!isSpeaking && idleAnimStyle !== 'none') {
         const idleAnimClass = getAnimationClass(idleAnimStyle);
-        if (idleAnimClass) {
-            avatar.classList.add(idleAnimClass);
-        }
+        if (idleAnimClass) wrapper.classList.add(idleAnimClass);
     }
 
-    // Update username visibility and style
-    const nameFont = getVal('setting-name-font', 'default');
-    const namePosition = getVal('setting-name-position', 'bottom');
+    // Speaking highlight on wrapper (matches overlay)
+    wrapper.classList.remove('highlight-glow', 'highlight-pulse', 'highlight-ring', 'highlight-shadow');
+    wrapper.style.setProperty('--speaking-ring-color', speakingRingColor);
+    if (speakingHighlight !== 'none' && isSpeaking) {
+        wrapper.classList.add(`highlight-${speakingHighlight}`);
+    }
 
+    // Image source
+    if (isSpeaking) {
+        image.src = USER_CONFIG.images?.speaking || USER_AVATAR || '';
+    } else {
+        image.src = USER_CONFIG.images?.idle || USER_AVATAR || '';
+    }
+
+    // State label
+    if (stateLabel) {
+        stateLabel.textContent = isSpeaking ? 'Speaking' : 'Idle';
+        stateLabel.className = isSpeaking ? 'preview-state speaking' : 'preview-state';
+    }
+
+    // Username
     const fontMap = {
         'default': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
         'gaming': '"Orbitron", sans-serif',
@@ -1014,85 +1035,43 @@ function updatePreview() {
         'bold': '"Impact", sans-serif',
         'pixel': '"VT323", monospace'
     };
-
     if (username) {
-        username.style.display = showName ? 'block' : 'none';
-        username.style.color = nameColor;
-        username.style.fontSize = nameSize + 'px';
-        username.style.fontFamily = fontMap[nameFont] || fontMap['default'];
-
-        if (nameBgEnabled) {
-            username.style.background = nameBgColor + '80';
-            username.style.padding = '2px 8px';
-            username.style.borderRadius = '4px';
+        if (showName) {
+            username.style.display = 'block';
+            username.style.color = nameColor;
+            username.style.fontSize = nameSize + 'px';
+            username.style.fontFamily = fontMap[nameFont] || fontMap['default'];
+            username.style.background = nameBgEnabled ? nameBgColor + '80' : '';
+            username.style.padding = nameBgEnabled ? '4px 8px' : '';
+            username.style.borderRadius = nameBgEnabled ? '4px' : '';
+            const textShadows = [];
+            if (nameShadowEnabled) textShadows.push(`2px 2px 4px ${nameShadowColor}`);
+            if (nameGlowEnabled) textShadows.push(`0 0 10px ${nameGlowColor}`, `0 0 20px ${nameGlowColor}`);
+            username.style.textShadow = textShadows.length > 0 ? textShadows.join(', ') : '0 2px 4px rgba(0,0,0,0.5)';
+            // Name animation (matches overlay)
+            username.classList.remove('name-anim-typing', 'name-anim-bounce', 'name-anim-wave', 'name-anim-glow', 'name-anim-slide');
+            if (nameAnimation !== 'none') username.classList.add(`name-anim-${nameAnimation}`);
         } else {
-            username.style.background = 'transparent';
-            username.style.padding = '0';
-        }
-
-        // Apply text shadow/glow
-        let textShadows = [];
-        if (nameShadowEnabled) {
-            textShadows.push(`2px 2px 4px ${nameShadowColor}`);
-        }
-        if (nameGlowEnabled) {
-            textShadows.push(`0 0 10px ${nameGlowColor}`);
-            textShadows.push(`0 0 20px ${nameGlowColor}`);
-        }
-        username.style.textShadow = textShadows.length > 0 ? textShadows.join(', ') : '0 2px 4px rgba(0,0,0,0.5)';
-    }
-
-    // Apply name position to wrapper
-    if (wrapper) {
-        wrapper.classList.remove('name-top', 'name-left', 'name-right', 'name-bottom', 'name-inside-bottom', 'name-inside-top');
-        if (namePosition === 'top') {
-            wrapper.classList.add('name-top');
-        } else if (namePosition === 'left') {
-            wrapper.classList.add('name-left');
-        } else if (namePosition === 'right') {
-            wrapper.classList.add('name-right');
-        } else if (namePosition === 'inside-bottom') {
-            wrapper.classList.add('name-inside-bottom');
-        } else if (namePosition === 'inside-top') {
-            wrapper.classList.add('name-inside-top');
-        } else {
-            wrapper.classList.add('name-bottom');
+            username.style.display = 'none';
         }
     }
 
-    // Update image based on speaking state
-    if (isSpeaking) {
-        const speakingImg = USER_CONFIG.images?.speaking;
-        image.src = speakingImg || USER_AVATAR || '';
-    } else {
-        const idleImg = USER_CONFIG.images?.idle;
-        image.src = idleImg || USER_AVATAR || '';
+    // Name position on wrapper
+    wrapper.classList.remove('name-top', 'name-left', 'name-right', 'name-bottom', 'name-inside-bottom', 'name-inside-top');
+    switch (namePosition) {
+        case 'top': wrapper.classList.add('name-top'); break;
+        case 'left': wrapper.classList.add('name-left'); break;
+        case 'right': wrapper.classList.add('name-right'); break;
+        case 'inside-bottom': wrapper.classList.add('name-inside-bottom'); break;
+        case 'inside-top': wrapper.classList.add('name-inside-top'); break;
+        default: wrapper.classList.add('name-bottom');
     }
 
-    // Update state label
-    if (stateLabel) {
-        if (isSpeaking) {
-            stateLabel.textContent = 'Speaking';
-            stateLabel.className = 'preview-state speaking';
-        } else {
-            stateLabel.textContent = 'Idle';
-            stateLabel.className = 'preview-state';
-        }
-    }
-
-    // === NEW EFFECT PREVIEWS ===
-
-    // Particles - stays inside avatar and gets clipped by avatar shape
-    const particlesEnabled = getVal('setting-particles', false);
-    const particleType = getVal('setting-particle-type', 'sparkles');
-    const particleColor = getVal('setting-particle-color', '#ffdd00');
-    const particleCount = getVal('setting-particle-count', 15);
+    // Particles
     const particlesContainer = document.getElementById('preview-particles');
-
     if (particlesContainer) {
         if (particlesEnabled && isSpeaking) {
             particlesContainer.style.display = 'block';
-            // Apply clip-path and overflow to keep particles inside avatar shape
             particlesContainer.style.clipPath = shapeStyles.clipPath || 'none';
             particlesContainer.style.borderRadius = shapeStyles.borderRadius;
             particlesContainer.style.overflow = 'hidden';
@@ -1102,11 +1081,8 @@ function updatePreview() {
         }
     }
 
-    // Animated Border
-    const animBorderEnabled = getVal('setting-animated-border', false);
-    const animBorderType = getVal('setting-animated-border-type', 'rainbow');
+    // Animated border
     const animBorderEl = document.getElementById('preview-anim-border');
-
     if (animBorderEl) {
         if (animBorderEnabled && isSpeaking) {
             animBorderEl.style.display = 'block';
@@ -1121,29 +1097,24 @@ function updatePreview() {
         }
     }
 
-    // Background Effect
-    const bgEffectEnabled = getVal('setting-bg-effect', false);
-    const bgEffectType = getVal('setting-bg-effect-type', 'glow-aura');
-    const bgEffectColor = getVal('setting-bg-effect-color', '#5865f2');
+    // Background effect (position driven by bgEffectSize, matches overlay)
     const bgEffectEl = document.getElementById('preview-bg-effect');
-
     if (bgEffectEl) {
         if (bgEffectEnabled) {
             bgEffectEl.style.display = 'block';
             bgEffectEl.className = `preview-bg-effect bg-effect-${bgEffectType}`;
             bgEffectEl.style.setProperty('--bg-effect-color', bgEffectColor);
+            bgEffectEl.style.top = `-${bgEffectSize}px`;
+            bgEffectEl.style.right = `-${bgEffectSize}px`;
+            bgEffectEl.style.bottom = `-${bgEffectSize}px`;
+            bgEffectEl.style.left = `-${bgEffectSize}px`;
         } else {
             bgEffectEl.style.display = 'none';
         }
     }
 
     // Outline
-    const outlineEnabled = getVal('setting-outline', false);
-    const outlineColor = getVal('setting-outline-color', '#ffffff');
-    const outlineWidth = getVal('setting-outline-width', 2);
-    const outlineOffset = getVal('setting-outline-offset', 3);
     const outlineEl = document.getElementById('preview-outline');
-
     if (outlineEl) {
         if (outlineEnabled) {
             outlineEl.style.display = 'block';
@@ -1160,10 +1131,7 @@ function updatePreview() {
     }
 
     // Frame
-    const frame = getVal('setting-frame', 'none');
-    const frameColor = getVal('setting-frame-color', '#ffd700');
     const frameEl = document.getElementById('preview-frame');
-
     if (frameEl) {
         if (frame !== 'none') {
             frameEl.style.display = 'block';
@@ -1181,9 +1149,7 @@ function updatePreview() {
     }
 
     // Accessory
-    const accessory = getVal('setting-accessory', 'none');
     const accessoryEl = document.getElementById('preview-accessory');
-
     if (accessoryEl) {
         if (accessory !== 'none') {
             accessoryEl.style.display = 'block';
@@ -1195,11 +1161,7 @@ function updatePreview() {
     }
 
     // Mirror
-    const mirrorEnabled = getVal('setting-mirror', false);
-    const mirrorOpacity = getVal('setting-mirror-opacity', 30);
-    const mirrorOffset = getVal('setting-mirror-offset', 5);
     const mirrorEl = document.getElementById('preview-mirror');
-
     if (mirrorEl) {
         if (mirrorEnabled) {
             mirrorEl.style.display = 'block';
@@ -1213,12 +1175,8 @@ function updatePreview() {
         }
     }
 
-    // Voice Indicator
-    const voiceIndicatorEnabled = getVal('setting-voice-indicator', false);
-    const voiceIndicatorType = getVal('setting-voice-indicator-type', 'bar');
-    const voiceIndicatorColor = getVal('setting-voice-indicator-color', '#57f287');
+    // Voice indicator
     const voiceIndicatorEl = document.getElementById('preview-voice-indicator');
-
     if (voiceIndicatorEl) {
         if (voiceIndicatorEnabled && isSpeaking) {
             voiceIndicatorEl.style.display = 'flex';
@@ -1229,12 +1187,8 @@ function updatePreview() {
         }
     }
 
-    // Status Text
-    const statusTextEnabled = getVal('setting-status-text-enabled', false);
-    const statusText = getVal('setting-status-text', '');
-    const statusTextColor = getVal('setting-status-text-color', '#888888');
+    // Status text
     const statusTextEl = document.getElementById('preview-status-text');
-
     if (statusTextEl) {
         if (statusTextEnabled && statusText) {
             statusTextEl.style.display = 'block';

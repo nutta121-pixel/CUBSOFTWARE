@@ -40,7 +40,9 @@ instance/
 # ── Data / uploads (runtime, not versioned) ───────────────────
 **/data/*.json
 **/data/
-**/uploads/
+**/uploads/*
+!**/uploads/cubreactive
+!**/uploads/cubreactive/**
 **/static/downloads/
 backups/
 BackUps/

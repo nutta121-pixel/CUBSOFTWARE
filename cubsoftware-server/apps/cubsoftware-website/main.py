@@ -1713,17 +1713,46 @@ CUBREACTIVE_WS_URL = os.environ.get('CUBREACTIVE_WS_URL', 'wss://cubsoftware.sit
 
 # Whitelist of allowed settings keys for CubReactive config (prevents mass assignment)
 CUBREACTIVE_ALLOWED_SETTINGS = {
+    # Basic
     'bounce_on_speak', 'dim_when_idle', 'show_name', 'grayscale_muted', 'grayscale_deafened',
     'animation_style', 'animation_speed', 'idle_animation_style', 'avatar_shape',
-    'filter_brightness', 'filter_contrast', 'filter_saturate', 'filter_hue',
+    'overlay_position', 'spacing', 'idle_opacity', 'flip_horizontal',
+    'hide_self', 'max_participants', 'member_filter_mode', 'member_filter_list',
+    'overlay_background', 'show_status_icons', 'theme',
+    # Border / glow / shadow
     'border_enabled', 'border_color', 'border_width', 'border_style',
     'glow_enabled', 'glow_color',
-    'name_color', 'name_size', 'name_shadow_enabled', 'name_shadow_color',
-    'name_glow_enabled', 'name_glow_color',
-    'overlay_position', 'spacing',
+    'shadow_enabled', 'shadow_color', 'shadow_blur',
     'speaking_ring_enabled', 'speaking_ring_color', 'speaking_ring_width',
-    'background_color', 'background_opacity', 'padding', 'max_users',
-    'transition_speed', 'enabled',
+    # Transitions
+    'transition_style', 'transition_duration', 'entry_animation', 'entry_duration',
+    # Image filters
+    'filter_brightness', 'filter_contrast', 'filter_saturate', 'filter_hue',
+    # Name styling
+    'name_color', 'name_size', 'name_background_enabled', 'name_background_color',
+    'name_shadow_enabled', 'name_shadow_color', 'name_glow_enabled', 'name_glow_color',
+    'name_font', 'name_position', 'name_animation',
+    # Particles
+    'particles_enabled', 'particle_type', 'particle_color', 'particle_count',
+    # Animated border
+    'animated_border_enabled', 'animated_border_type', 'animated_border_speed',
+    # Background effect
+    'bg_effect_enabled', 'bg_effect_type', 'bg_effect_color', 'bg_effect_size',
+    # Outline
+    'outline_enabled', 'outline_color', 'outline_width', 'outline_offset',
+    # Frame / accessory
+    'frame', 'frame_color', 'accessory',
+    # Mirror / tilt
+    'mirror_enabled', 'mirror_opacity', 'mirror_offset',
+    'tilt_enabled', 'tilt_amount',
+    # Voice indicator
+    'voice_indicator_enabled', 'voice_indicator_type', 'voice_indicator_color',
+    # Status text
+    'status_text_enabled', 'status_text', 'status_text_color',
+    # Group / layout
+    'group_layout', 'speaking_highlight', 'sort_order',
+    # Custom CSS
+    'custom_css',
 }
 
 def load_cubreactive_users():
@@ -2387,6 +2416,85 @@ def cubreactive_test_speaking():
 def cubreactive_serve_upload(filename):
     """Serve uploaded CubReactive images"""
     return send_from_directory(CUBREACTIVE_UPLOADS_DIR, filename)
+
+@app.route('/api/admin/cubreactive/status', methods=['GET'])
+def cubreactive_admin_status():
+    """Admin: list all users, their image references, and whether each file exists on disk."""
+    api_key = request.headers.get('X-API-Key')
+    if not api_key or api_key != os.environ.get('ADMIN_API_KEY', ''):
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    users = load_cubreactive_users()
+    os.makedirs(CUBREACTIVE_UPLOADS_DIR, exist_ok=True)
+    files_on_disk = set(os.listdir(CUBREACTIVE_UPLOADS_DIR))
+
+    report = []
+    referenced_files = set()
+
+    for uid, data in users.items():
+        images = data.get('images', {})
+        image_status = {}
+        for state in ('speaking', 'idle', 'muted', 'deafened'):
+            path = images.get(state)
+            if path:
+                filename = path.split('/')[-1]
+                referenced_files.add(filename)
+                image_status[state] = {'path': path, 'exists': filename in files_on_disk}
+            else:
+                # Check if a file exists for this user+state even though JSON says null
+                for ext in ('png', 'webp', 'jpg', 'jpeg', 'gif'):
+                    candidate = f"{uid}_{state}.{ext}"
+                    if candidate in files_on_disk:
+                        image_status[state] = {'path': None, 'exists': True, 'orphan_file': candidate}
+                        referenced_files.add(candidate)
+                        break
+                else:
+                    image_status[state] = {'path': None, 'exists': False}
+
+        report.append({
+            'user_id': uid,
+            'username': data.get('username', '?'),
+            'enabled': data.get('enabled', True),
+            'created': data.get('created'),
+            'images': image_status,
+        })
+
+    # Files on disk not referenced by any user
+    orphaned = sorted(files_on_disk - referenced_files)
+
+    return jsonify({'users': report, 'orphaned_files': orphaned})
+
+
+@app.route('/api/admin/cubreactive/reconcile', methods=['POST'])
+def cubreactive_admin_reconcile():
+    """Admin: for each user, if a file exists on disk but JSON says null, update the JSON to reference it."""
+    api_key = request.headers.get('X-API-Key')
+    if not api_key or api_key != os.environ.get('ADMIN_API_KEY', ''):
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    users = load_cubreactive_users()
+    os.makedirs(CUBREACTIVE_UPLOADS_DIR, exist_ok=True)
+    files_on_disk = set(os.listdir(CUBREACTIVE_UPLOADS_DIR))
+    fixed = []
+
+    for uid, data in users.items():
+        if 'images' not in data:
+            data['images'] = {}
+        for state in ('speaking', 'idle', 'muted', 'deafened'):
+            if data['images'].get(state):
+                continue  # already set, skip
+            for ext in ('png', 'webp', 'jpg', 'jpeg', 'gif'):
+                candidate = f"{uid}_{state}.{ext}"
+                if candidate in files_on_disk:
+                    path = f'/uploads/cubreactive/{candidate}'
+                    data['images'][state] = path
+                    fixed.append({'user_id': uid, 'username': data.get('username', '?'), 'state': state, 'path': path})
+                    break
+
+    if fixed:
+        save_cubreactive_users(users)
+
+    return jsonify({'fixed': fixed, 'count': len(fixed)})
 
 # ==================== CUBPRESENCE - DISCORD CUSTOM RICH PRESENCE ====================
 

@@ -391,6 +391,21 @@ async function joinChannelForSpeaking(channelId, guildId) {
             if (newNetworking && newNetworking !== oldNetworking) {
                 wireNetworkingWs(newNetworking);
             }
+            if (newState.status === 'ready' && oldState.status !== 'ready') {
+                // Reset all speaking states: SPEAKING packets during the handshake are SSRC
+                // announcements (not real speaking events) and leave users stuck as "speaking".
+                const members = channelMembers.get(channelId);
+                if (members) {
+                    members.forEach(uid => {
+                        const vs = voiceStates.get(uid);
+                        if (vs?.speaking) {
+                            vs.speaking = false;
+                            voiceStates.set(uid, vs);
+                            broadcastVoiceUpdate(uid, vs);
+                        }
+                    });
+                }
+            }
             if (newState.status === 'destroyed') {
                 if (wiredWs) { wiredWs.removeListener('packet', onSpeakingPacket); wiredWs = null; }
                 activeVoiceConnections.delete(channelId);

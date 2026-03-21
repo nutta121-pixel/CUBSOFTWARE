@@ -9,7 +9,7 @@
     <title>{{ seo_title }}</title>
     <meta name="description" content="{{ seo_description }}">
     {% if seo_keywords %}<meta name="keywords" content="{{ seo_keywords }}">{% endif %}
-    <meta name="author" content="{{ affiliate.username }}">
+    <meta name="author" content="{{ affiliate.username or affiliate.code }}">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://cubsoftware.site/r/{{ affiliate.code }}">
 
@@ -43,7 +43,7 @@
         "image": {{ seo_image | tojson }},
         "author": {
             "@type": "Person",
-            "name": {{ (affiliate.username or '') | tojson }}
+            "name": {{ (affiliate.username or affiliate.code or '') | tojson }}
         },
         "publisher": {
             "@type": "Organization",
@@ -242,7 +242,7 @@
             <img src="{{ affiliate.avatar }}" alt="{{ affiliate.username }}" class="landing-avatar">
             {% endif %}
             <span class="landing-badge">✦ Recommended by</span>
-            <div class="landing-rec"><strong>{{ affiliate.username }}</strong></div>
+            <div class="landing-rec"><strong>{{ affiliate.username or affiliate.code }}</strong></div>
         </div>
 
         <div class="landing-divider"></div>

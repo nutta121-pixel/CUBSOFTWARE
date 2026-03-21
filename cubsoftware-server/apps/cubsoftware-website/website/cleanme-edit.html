@@ -28,18 +28,6 @@
                 <a href="/cleanme/dashboard" class="nav-link">Dashboard</a>
                 <a href="/" class="nav-link">Back to Tools</a>
             </nav>
-            <div class="header-actions">
-                <div class="user-menu" style="display: flex;">
-                    <button class="user-menu-btn">
-                        <img src="{{ server.owner.avatar or '/static/images/default-avatar.png' }}" alt="Avatar" class="user-avatar">
-                        <span class="user-name">{{ server.owner.username or 'User' }}</span>
-                    </button>
-                    <div class="user-dropdown">
-                        <a href="/cleanme/dashboard">My Servers</a>
-                        <button class="logout-btn">Logout</button>
-                    </div>
-                </div>
-            </div>
             {% include 'nav_auth.html' %}
             <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
                 <span></span><span></span><span></span>

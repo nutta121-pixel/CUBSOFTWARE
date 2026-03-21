@@ -193,6 +193,9 @@
             case 'custom-bots':
                 loadCustomBots();
                 break;
+            case 'cubassist':
+                loadCubAssist();
+                break;
         }
     }
 
@@ -1791,3 +1794,71 @@
     });
 
 })();
+
+// ── CubAssist bot token management ─────────────────────────────────────────────
+
+window.loadCubAssist = async function() {
+    const nick    = document.getElementById('cubassistNick');
+    const dot     = document.getElementById('cubassistDot');
+    if (!nick) return;
+    nick.textContent = 'Loading…';
+    try {
+        const r = await fetch('/cubassist/api/status');
+        if (!r.ok) throw new Error('Not available');
+        const d = await r.json();
+        if (d.bot_nick) {
+            nick.textContent = d.bot_nick;
+            dot.style.background = d.connected ? '#57f287' : '#f59e0b';
+            dot.style.boxShadow  = d.connected ? '0 0 8px #57f287' : 'none';
+            nick.style.color = 'var(--text-primary)';
+        } else {
+            nick.textContent = 'Not connected';
+            dot.style.background = '#ed4245';
+            dot.style.boxShadow  = 'none';
+        }
+    } catch {
+        nick.textContent = 'Unavailable';
+        dot.style.background = 'var(--text-muted)';
+    }
+};
+
+window.cubassistConnect = async function() {
+    const btn  = document.getElementById('cubassistConnectBtn');
+    const hint = document.getElementById('cubassistActionHint');
+    btn.disabled = true;
+    hint.textContent = 'Opening Twitch…';
+    try {
+        const r = await fetch('/cubassist/api/admin/start-bot-setup', { method: 'POST' });
+        const d = await r.json();
+        if (d.url) {
+            hint.textContent = 'Redirecting to Twitch — log in as the bot account…';
+            window.location.href = d.url;
+        } else {
+            hint.textContent = 'Failed to start setup.';
+            btn.disabled = false;
+        }
+    } catch (e) {
+        hint.textContent = 'Error: ' + e.message;
+        btn.disabled = false;
+    }
+};
+
+window.cubassistRefreshToken = async function() {
+    const btn  = document.getElementById('cubassistRefreshBtn');
+    const hint = document.getElementById('cubassistActionHint');
+    btn.disabled = true;
+    hint.textContent = 'Refreshing…';
+    try {
+        const r = await fetch('/cubassist/api/admin/refresh-bot-token', { method: 'POST' });
+        const d = await r.json();
+        if (d.ok) {
+            hint.textContent = '✓ Token refreshed — bot account: ' + (d.bot_nick || '');
+            await loadCubAssist();
+        } else {
+            hint.textContent = d.error || 'Refresh failed — try Connect instead.';
+        }
+    } catch (e) {
+        hint.textContent = 'Error: ' + e.message;
+    }
+    btn.disabled = false;
+};

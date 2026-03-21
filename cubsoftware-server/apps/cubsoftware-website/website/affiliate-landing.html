@@ -43,7 +43,7 @@
         "image": {{ seo_image | tojson }},
         "author": {
             "@type": "Person",
-            "name": {{ affiliate.username | tojson }}
+            "name": {{ (affiliate.username or '') | tojson }}
         },
         "publisher": {
             "@type": "Organization",

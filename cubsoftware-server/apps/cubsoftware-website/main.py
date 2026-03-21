@@ -605,8 +605,17 @@ def _cub_bridge_session():
 
 @app.context_processor
 def _inject_cub_user():
-    """Inject cub_user into every template so header.html can show login state."""
-    return {'cub_user': session.get('cub_user')}
+    """Inject cub_user and nav whitelist flags into every template."""
+    cub = session.get('cub_user')
+    nav_pm2 = bool(session.get('pm2_user'))
+    nav_bot_dashboard = False
+    if session.get('bot_dashboard_user'):
+        try:
+            wl = load_bot_dashboard_whitelist()
+            nav_bot_dashboard = session['bot_dashboard_user']['id'] in wl.get('allowed_users', [])
+        except Exception:
+            pass
+    return {'cub_user': cub, 'nav_pm2': nav_pm2, 'nav_bot_dashboard': nav_bot_dashboard}
 
 # ---- Unified login/logout routes ----
 

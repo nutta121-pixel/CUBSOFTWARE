@@ -51,9 +51,18 @@
 
                     <div class="dropdown-divider"></div>
                     <span class="dropdown-section-label">Dashboards</span>
-                    <a href="/apps/cubreactive/dashboard">CubReactive</a>
+                    <a href="/apps/cubreactive">CubReactive</a>
                     <a href="/cub-protector">CUB Protector</a>
                     <a href="/cleanme">CleanMe</a>
+                    <a href="/overlays">Stream Overlays</a>
+                    <a href="/cubdeck">CubDeck</a>
+                    <a href="/affiliate/dashboard">Affiliate Program</a>
+                    {% if nav_bot_dashboard %}
+                    <a href="/bot-dashboard">Bot Dashboard</a>
+                    {% endif %}
+                    {% if nav_pm2 %}
+                    <a href="/dashboard">Server Dashboard</a>
+                    {% endif %}
 
                     <div class="dropdown-divider"></div>
                     <a href="/logout" class="dropdown-danger">Sign Out</a>

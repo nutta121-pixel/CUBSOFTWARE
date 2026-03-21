@@ -16,8 +16,15 @@
     <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
     <link rel="stylesheet" href="/static/css/admin-dashboard.css?v={{ v }}">
     <link rel="stylesheet" href="/static/css/cub-protector-dashboard.css?v={{ v }}">
+    <style>
+        /* Push fixed sidebar below the site header */
+        .admin-sidebar { top: 62px; }
+        @media (max-width: 768px) { .admin-sidebar { top: 54px; } }
+    </style>
 </head>
 <body>
+
+    {% include 'header.html' %}
 
     <!-- ==================== SERVER PICKER (shown first) ==================== -->
     <div class="server-picker-screen" id="serverPickerScreen">
@@ -288,7 +295,6 @@
 
         <!-- Mobile Header -->
         <header class="mobile-header" id="mobileHeader">
-            {% include 'nav_auth.html' %}
             <button class="mobile-menu-btn" id="mobileMenuBtn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -4685,5 +4691,7 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <script src="/static/js/cub-protector-dashboard.js?v={{ v }}"></script>
+
+    {% include 'footer.html' %}
 </body>
 </html>

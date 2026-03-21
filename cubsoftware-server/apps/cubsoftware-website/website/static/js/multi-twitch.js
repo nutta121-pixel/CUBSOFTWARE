@@ -133,20 +133,8 @@ function updateAuthUI() {
             avatar.style.display = 'none';
         }
     } else {
-        loggedOut.style.display = 'flex';
+        if (loggedOut) loggedOut.style.display = 'none';
         loggedIn.style.display = 'none';
-        const title = document.getElementById('authStateTitle');
-        const hint = document.getElementById('authStateHint');
-        const btn = document.getElementById('authActionBtn');
-        if (state.authReason === 'link_twitch' || state.authReason === 'reauth_twitch') {
-            if (title) title.textContent = 'Twitch not linked';
-            if (hint) hint.textContent = 'Link Twitch to send messages';
-            if (btn) { btn.textContent = 'Link Twitch'; btn.href = '/login/twitch?link=1&next=/apps/multi-twitch'; }
-        } else {
-            if (title) title.textContent = 'Not logged in';
-            if (hint) hint.textContent = 'Login to send messages';
-            if (btn) { btn.textContent = 'Login to chat'; btn.href = '/login?next=/apps/multi-twitch'; }
-        }
     }
     for (const ch of state.channels) updateChatInputState(ch);
 }

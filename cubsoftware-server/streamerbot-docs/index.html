@@ -8,6 +8,24 @@
     <link rel="stylesheet" href="css/shared.css">
     <link rel="stylesheet" href="css/commands.css">
     <link rel="icon" href="images/company-logo.png">
+    <style>
+        .nav-login-btn,
+        .nav-account-btn {
+            background: transparent;
+            border: 1.5px solid rgba(124,58,237,0.7);
+            border-radius: 8px;
+            padding: 7px 16px;
+            color: rgba(255,255,255,0.85);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .nav-login-btn:hover,
+        .nav-account-btn:hover {
+            border-color: rgba(124,58,237,1);
+            color: #fff;
+        }
+    </style>
 </head>
 <body>
     <div class="main-container">
@@ -24,6 +42,7 @@
                     <a href="index.html" class="active">Commands</a>
                     <a href="commands/config-setup.html">Setup Guide</a>
                     <a href="https://github.com/HexEchoTV/CUBSOFTWARE/tree/main/cubsoftware-server/apps/streamerbot-commands/files" target="_blank">GitHub</a>
+                    <a id="nav-auth-btn" class="nav-login-btn" href="/login?next=/apps/streamerbot-commands">Login</a>
                 </nav>
             </div>
         </header>
@@ -607,6 +626,24 @@
             </div>
         </footer>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('/api/auth/me', { credentials: 'include' })
+                .then(function (res) { return res.ok ? res.json() : null; })
+                .then(function (data) {
+                    if (data && data.logged_in) {
+                        var btn = document.getElementById('nav-auth-btn');
+                        if (btn) {
+                            btn.textContent = 'Account';
+                            btn.href = '/account';
+                            btn.className = 'nav-account-btn';
+                        }
+                    }
+                })
+                .catch(function () { /* silently ignore network errors */ });
+        });
+    </script>
 
     <script>
         let currentFilter = 'all';

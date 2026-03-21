@@ -32,11 +32,6 @@
 
         /* ---- Navigation overrides ---- */
         .site-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
             background: rgba(10, 10, 26, 0.85);
             backdrop-filter: blur(12px);
         }
@@ -49,7 +44,7 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 8rem 2rem 6rem;
+            padding: 5rem 2rem 6rem;
             overflow: hidden;
         }
 
@@ -1020,5 +1015,7 @@
             history.replaceState({}, '', '/cub-protector');
         }
     </script>
+
+    {% include 'footer.html' %}
 </body>
 </html>

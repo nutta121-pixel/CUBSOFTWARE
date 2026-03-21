@@ -136,7 +136,8 @@ def _user_channel() -> str:
 def _clean_states(d):
     cutoff = time.time() - 600
     for k in list(d):
-        if d[k] < cutoff:
+        ts = d[k]['ts'] if isinstance(d[k], dict) else d[k]
+        if ts < cutoff:
             del d[k]
 
 # ── Dashboard login ─────────────────────────────────────────────────────────────
@@ -882,7 +883,7 @@ def admin_setup():
     if not ADMIN_KEY or key != ADMIN_KEY:
         return 'Unauthorised', 403
     state = secrets.token_urlsafe(16)
-    _admin_states[state] = time.time()
+    _admin_states[state] = {'ts': time.time(), 'next': '/dashboard#cubassist'}
     _clean_states(_admin_states)
     params = urllib.parse.urlencode({
         'client_id':     TWITCH_CLIENT_ID,
@@ -904,7 +905,8 @@ def admin_callback():
         return f'Twitch error: {error}', 400
     if not code or state not in _admin_states:
         return 'Invalid or expired state.', 400
-    del _admin_states[state]
+    state_data = _admin_states.pop(state)
+    next_url   = state_data['next'] if isinstance(state_data, dict) else '/dashboard#cubassist'
 
     data = urllib.parse.urlencode({
         'client_id':     TWITCH_CLIENT_ID,
@@ -954,7 +956,7 @@ def admin_callback():
         import time as _time; _time.sleep(1)
         bot.start()
 
-    return f'<h2 style="font-family:sans-serif;color:#57f287">✓ CubAssist bot account connected as <strong>{nick}</strong>. Token saved.</h2>'
+    return redirect(next_url)
 
 
 @cubassist_bp.route('/admin/refresh-token')
@@ -974,11 +976,13 @@ def admin_refresh_token():
 @cubassist_bp.route('/api/admin/start-bot-setup', methods=['POST'])
 def api_admin_start_bot_setup():
     """Return the Twitch OAuth URL to connect the bot account.
-    Called from the Settings tab — user clicks Connect and is redirected to Twitch."""
+    Accepts optional JSON body: {"next": "/dashboard#cubassist"} to control post-auth redirect."""
     err = _require_auth()
     if err: return err
-    state = secrets.token_urlsafe(16)
-    _admin_states[state] = time.time()
+    body      = request.get_json(silent=True) or {}
+    next_url  = body.get('next', '/dashboard#cubassist')
+    state     = secrets.token_urlsafe(16)
+    _admin_states[state] = {'ts': time.time(), 'next': next_url}
     _clean_states(_admin_states)
     params = urllib.parse.urlencode({
         'client_id':     TWITCH_CLIENT_ID,

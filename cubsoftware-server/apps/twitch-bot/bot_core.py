@@ -2250,7 +2250,7 @@ class CubBot:
             'running':        self._running,
             'connected':      self._connected,
             'channels':       list(self._channels.keys()),
-            'bot_nick':       os.environ.get('CUBASSIST_BOT_NICK', ''),
+            'bot_nick':       get_bot_credentials().get('bot_nick', ''),
             'uptime_seconds': int(time.time() - self._connect_ts)
                               if self._connect_ts and self._connected else 0,
         }
@@ -2262,7 +2262,7 @@ class CubBot:
             'running':        self._running,
             'connected':      self._connected and channel in self._channels,
             'channel':        channel,
-            'bot_nick':       os.environ.get('CUBASSIST_BOT_NICK', ''),
+            'bot_nick':       get_bot_credentials().get('bot_nick', ''),
             'uptime_seconds': int(time.time() - state.join_ts)
                               if state and state.join_ts else 0,
         }

@@ -3423,7 +3423,11 @@ async function connectBotAccount() {
     btn.disabled = true;
     hint.textContent = 'Opening Twitch…';
     try {
-        const r = await fetch('/cubassist/api/admin/start-bot-setup', { method: 'POST' });
+        const r = await fetch('/cubassist/api/admin/start-bot-setup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ next: '/cubassist/#settings' })
+        });
         const d = await r.json();
         if (d.url) {
             hint.textContent = 'Redirecting to Twitch — log in as the bot account…';

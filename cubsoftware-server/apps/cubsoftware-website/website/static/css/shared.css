@@ -609,21 +609,9 @@ a:hover {
 
 /* ==================== NAV AUTH WIDGET ==================== */
 .nav-auth {
-    position: fixed;
-    top: 14px;
-    right: 20px;
-    z-index: 9999;
     display: flex;
     align-items: center;
-}
-
-/* When nav-auth lives inside the standard header-container, pull it into the grid */
-.header-container .nav-auth {
-    position: static;
     justify-self: end;
-    z-index: auto;
-    top: auto;
-    right: auto;
 }
 
 .nav-login-btn {

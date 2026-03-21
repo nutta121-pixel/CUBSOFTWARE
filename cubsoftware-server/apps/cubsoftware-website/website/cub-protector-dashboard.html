@@ -288,6 +288,7 @@
 
         <!-- Mobile Header -->
         <header class="mobile-header" id="mobileHeader">
+            {% include 'nav_auth.html' %}
             <button class="mobile-menu-btn" id="mobileMenuBtn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -298,7 +299,6 @@
             <span class="mobile-title" id="mobileTitle">CUB PROTECTOR</span>
             <img src="{{ user.avatar_url }}" alt="Avatar" class="mobile-avatar">
         </header>
-        {% include 'nav_auth.html' %}
 
         <!-- Main Content -->
         <main class="admin-content">

@@ -16128,7 +16128,7 @@ def affiliate_track(code):
     if code_lower not in clicks_data:
         clicks_data[code_lower] = {'clicks': [], 'unique_fingerprints': []}
 
-    seen = clicks_data[code_lower]['unique_fingerprints']
+    seen = clicks_data[code_lower].setdefault('unique_fingerprints', [])
 
     # Unique only if NEITHER the cookie fingerprint NOR the IP fingerprint has been seen
     is_unique = (cookie_fp not in seen) and (ip_fp not in seen)

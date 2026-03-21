@@ -42,7 +42,7 @@
         <div class="legal-container">
             <div class="legal-content">
                 <h1>Privacy Policy</h1>
-                <p class="last-updated">Last Updated: February 2026</p>
+                <p class="last-updated">Last Updated: March 2026</p>
 
                 <p><strong>Your privacy is important to us. This Privacy Policy explains how CUB SOFTWARE ("we," "us," or "our") collects, uses, discloses, and safeguards your information when you use our services.</strong></p>
 
@@ -53,23 +53,18 @@
                 <h2>2. Services Covered</h2>
                 <p>This Privacy Policy applies to all CUB SOFTWARE services including:</p>
                 <ul>
-                    <li>Social Media Saver - Media download tool</li>
-                    <li>StreamerBot Commands - Streamer command collection</li>
-                    <li>File Converter, Image Editor, PDF Tools - File processing tools</li>
-                    <li>QR Code Generator, Color Picker - Utility tools</li>
-                    <li>Text Tools, JSON Formatter, Code Minifier - Text/code tools</li>
-                    <li>CubVault - Password manager</li>
-                    <li>QuestCord, CleanMe - Discord bots</li>
-                    <li>Link Shortener (cubsw.link) - URL shortening service</li>
-                    <li>Video Compressor, Audio Trimmer - Media tools</li>
-                    <li>Resume Builder, Invoice Generator - Document tools</li>
-                    <li>Calculator Suite, Unit Converter, Currency Converter - Calculators</li>
-                    <li>Timer Tools, World Clock, Countdown Maker - Time tools</li>
-                    <li>Encoding Tools, Diff Checker, Regex Tester - Developer tools</li>
-                    <li>Notepad, Markdown Editor, Sticky Board - Note-taking tools</li>
-                    <li>Wheel Spinner, Random Picker - Random tools</li>
-                    <li>CleanMe Website - Server template sharing platform</li>
-                    <li>PM2 Dashboard - Process management (authorized users only)</li>
+                    <li>CUB Protector, CleanMe, QuestCord — Discord bots</li>
+                    <li>CubReactive, CubPresence, Multi-Twitch, Stream Overlays, CubDeck — Streamer tools</li>
+                    <li>StreamerBot Commands, Permission Calculator, Embed Builder, Webhook Sender, Timestamp Generator — Discord/streamer utilities</li>
+                    <li>Social Media Saver, File Converter, Image Editor, PDF Tools, Video Compressor, Audio Trimmer — Media tools</li>
+                    <li>Resume Builder, Invoice Generator, Markdown Editor, Notepad, Sticky Board, Text Tools, Countdown Maker — Productivity tools</li>
+                    <li>QR Code Generator, Color Picker, Unit Converter, Currency Converter, Calculator Suite, Password Generator, Timer Tools, World Clock, Wheel Spinner, Random Picker — Generators &amp; converters</li>
+                    <li>Link Shortener (cubsw.link) — URL shortening service</li>
+                    <li>CubVault — Client-side encrypted password manager</li>
+                    <li>JSON Formatter, Timestamp Converter, Encoding Tools, Diff Checker, Regex Tester, Code Minifier — Developer tools</li>
+                    <li>CleanMe Website — Server template sharing platform</li>
+                    <li>Affiliate Program, Vanity Profiles — Platform services</li>
+                    <li>PM2 Dashboard — Process management (authorized users only)</li>
                 </ul>
 
                 <h2>3. Information We Collect</h2>
@@ -95,7 +90,8 @@
 
                 <h3>3.3 Information from Third Parties</h3>
                 <ul>
-                    <li><strong>Discord:</strong> User ID, username, discriminator, avatar URL, and guild list (when you authenticate)</li>
+                    <li><strong>Discord:</strong> User ID, username, avatar URL, and guild list (when you authenticate via Discord OAuth)</li>
+                    <li><strong>Twitch:</strong> User ID, login name, display name, and profile image URL (when you authenticate via Twitch OAuth)</li>
                     <li><strong>Social Media Platforms:</strong> Publicly available media metadata when you use our download tools</li>
                 </ul>
 
@@ -123,9 +119,20 @@
                 </ul>
                 <p><strong>Important:</strong> If you create links to malicious, illegal, or harmful content, your IP address and link data may be reported to appropriate authorities.</p>
 
-                <h2>6. Discord Bots (QuestCord & CleanMe)</h2>
+                <h2>6. Authentication (Discord &amp; Twitch OAuth)</h2>
+                <p>CUB SOFTWARE uses a unified login system supporting both Discord and Twitch OAuth. When you log in:</p>
+                <ul>
+                    <li>We store a session cookie to keep you authenticated across visits</li>
+                    <li>We store your provider (Discord or Twitch), user ID, display name, and avatar URL in your session</li>
+                    <li>You may link a second account (e.g. link Twitch to your Discord login); both accounts' identifiers are then associated in your session</li>
+                    <li>We do not store your OAuth access tokens beyond the current session, except where a Twitch token is required for live chat functionality (Multi-Twitch)</li>
+                    <li>We never access your email, direct messages, or private account information beyond what is described above</li>
+                    <li>You can sign out at any time, which clears your session data from our servers</li>
+                </ul>
 
-                <h3>6.1 QuestCord</h3>
+                <h2>6a. Discord Bots (QuestCord, CleanMe &amp; CUB Protector)</h2>
+
+                <h3>6a.1 QuestCord</h3>
                 <p>When you use QuestCord, we collect and store:</p>
                 <ul>
                     <li>Discord user ID and username for player identification</li>
@@ -134,7 +141,7 @@
                 </ul>
                 <p>We do NOT access or store your Discord messages, private information, or any data beyond what is necessary for game functionality.</p>
 
-                <h3>6.2 CleanMe</h3>
+                <h3>6a.2 CleanMe</h3>
                 <p>When you use CleanMe, we collect and store:</p>
                 <ul>
                     <li>Server ID for identifying saved configurations</li>
@@ -142,6 +149,25 @@
                     <li>User ID of the person who saved the configuration</li>
                 </ul>
                 <p>We do NOT access or store your Discord messages, member lists, message history, or any content beyond server structure. Saved configurations may be shared with other users via the CleanMe Website.</p>
+
+                <h3>6a.3 CUB Protector</h3>
+                <p>When you use CUB Protector, we collect and store:</p>
+                <ul>
+                    <li>Server ID and configuration settings you apply through the bot</li>
+                    <li>Moderation action logs (bans, kicks, warnings) for audit purposes</li>
+                    <li>User IDs of members subject to moderation actions</li>
+                </ul>
+                <p>We do NOT access or store your Discord messages beyond what is necessary for moderation rule matching.</p>
+
+                <h2>6b. Affiliate Program</h2>
+                <p>If you participate in the CUB SOFTWARE Affiliate Program, we collect and store:</p>
+                <ul>
+                    <li>Your application details (name, contact information, platform links)</li>
+                    <li>Your assigned vanity code and affiliate link</li>
+                    <li>Click statistics: total clicks, unique visitor fingerprints (anonymised), and timestamps</li>
+                    <li>Commission earnings and payout records</li>
+                </ul>
+                <p>Visitor fingerprints used for unique-click tracking are anonymised hashes and are not linked to individual identities. This data is used solely to calculate your commission and prevent click fraud.</p>
 
                 <h2>7. CleanMe Website (Server Template Sharing)</h2>
                 <p>When using the CleanMe website:</p>

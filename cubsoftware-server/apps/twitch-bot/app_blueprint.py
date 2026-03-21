@@ -18,7 +18,7 @@ from flask import (Blueprint, request, jsonify, session,
 
 sys.path.insert(0, str(Path(__file__).parent))
 from bot_core import (
-    get_bot, get_bot_credentials, _data_dir,
+    get_bot, get_bot_credentials, refresh_bot_token, _data_dir,
     load_channel_config, save_channel_config,
     register_channel, unregister_channel, get_channels,
     load_config,
@@ -955,6 +955,53 @@ def admin_callback():
         bot.start()
 
     return f'<h2 style="font-family:sans-serif;color:#57f287">✓ CubAssist bot account connected as <strong>{nick}</strong>. Token saved.</h2>'
+
+
+@cubassist_bp.route('/admin/refresh-token')
+def admin_refresh_token():
+    """Manually force a token refresh — visit with ?key=YOUR_ADMIN_KEY."""
+    key = request.args.get('key', '')
+    if not ADMIN_KEY or key != ADMIN_KEY:
+        return 'Unauthorised', 403
+    ok = refresh_bot_token()
+    if ok:
+        return '<h2 style="font-family:sans-serif;color:#57f287">✓ Token refreshed successfully.</h2>'
+    return '<h2 style="font-family:sans-serif;color:#ef4444">✗ Token refresh failed — check server logs. You may need to re-run /admin/setup.</h2>', 500
+
+
+# ── Dashboard API: bot account management (auth-protected, no key needed) ───────
+
+@cubassist_bp.route('/api/admin/start-bot-setup', methods=['POST'])
+def api_admin_start_bot_setup():
+    """Return the Twitch OAuth URL to connect the bot account.
+    Called from the Settings tab — user clicks Connect and is redirected to Twitch."""
+    err = _require_auth()
+    if err: return err
+    state = secrets.token_urlsafe(16)
+    _admin_states[state] = time.time()
+    _clean_states(_admin_states)
+    params = urllib.parse.urlencode({
+        'client_id':     TWITCH_CLIENT_ID,
+        'redirect_uri':  ADMIN_REDIRECT_URI,
+        'response_type': 'code',
+        'scope':         BOT_SCOPES,
+        'state':         state,
+        'force_verify':  'true',
+    })
+    return jsonify({'url': f'https://id.twitch.tv/oauth2/authorize?{params}'})
+
+
+@cubassist_bp.route('/api/admin/refresh-bot-token', methods=['POST'])
+def api_admin_refresh_bot_token():
+    """Refresh the bot OAuth token. Called from the Settings tab."""
+    err = _require_auth()
+    if err: return err
+    ok = refresh_bot_token()
+    if ok:
+        creds = get_bot_credentials()
+        return jsonify({'ok': True, 'bot_nick': creds.get('bot_nick', '')})
+    return jsonify({'ok': False, 'error': 'Refresh failed — no refresh token stored or Twitch rejected it. Use Connect to re-authorise.'}), 500
+
 
 # ── Global settings ─────────────────────────────────────────────────────────────
 

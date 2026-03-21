@@ -1341,10 +1341,21 @@ tbody tr:hover td { background: rgba(255,255,255,.02); }
             <div class="tab" id="tab-settings">
                 <div class="card">
                     <div class="card-title">🤖 Bot Account</div>
-                    <p class="hint" style="margin-bottom:14px">CubAssist connects to Twitch using its own dedicated account. This is set up once by the CUB SOFTWARE team.</p>
-                    <div id="settingsAccountInfo" style="display:flex;align-items:center;gap:12px">
+                    <p class="hint" style="margin-bottom:14px">CubAssist connects to Twitch using its own dedicated bot account. Connect once — the token refreshes automatically and the bot stays online permanently.</p>
+                    <div id="settingsAccountInfo" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
                         <div id="settingsNick" style="font-size:15px;font-weight:600;color:var(--twitch)">Not connected</div>
                     </div>
+                    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+                        <button class="btn btn-twitch" id="connectBotBtn" onclick="connectBotAccount()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:5px"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/></svg>
+                            Connect Bot Account
+                        </button>
+                        <button class="btn btn-ghost" id="refreshTokenBtn" onclick="refreshBotToken()">
+                            ↻ Refresh Token
+                        </button>
+                        <span id="botAccountHint" class="hint"></span>
+                    </div>
+                    <p class="hint" style="margin-top:12px;font-size:11px;opacity:.6">Clicking <strong>Connect</strong> will open Twitch — log in as the bot account to authorise it. After connecting, the token refreshes automatically on each reconnect so you never need to do this again.</p>
                 </div>
 
                 <div class="card">
@@ -3402,6 +3413,51 @@ async function saveSettings() {
         await loadConfig();
         showToast('Settings saved', 'success');
     }
+}
+
+// ── Bot account management ──────────────────────────────────────────────────────
+
+async function connectBotAccount() {
+    const btn  = document.getElementById('connectBotBtn');
+    const hint = document.getElementById('botAccountHint');
+    btn.disabled = true;
+    hint.textContent = 'Opening Twitch…';
+    try {
+        const r = await fetch('/cubassist/api/admin/start-bot-setup', { method: 'POST' });
+        const d = await r.json();
+        if (d.url) {
+            hint.textContent = 'Redirecting to Twitch — log in as the bot account…';
+            window.location.href = d.url;
+        } else {
+            hint.textContent = 'Failed to start setup.';
+            btn.disabled = false;
+        }
+    } catch (e) {
+        hint.textContent = 'Error: ' + e.message;
+        btn.disabled = false;
+    }
+}
+
+async function refreshBotToken() {
+    const btn  = document.getElementById('refreshTokenBtn');
+    const hint = document.getElementById('botAccountHint');
+    btn.disabled = true;
+    hint.textContent = 'Refreshing…';
+    try {
+        const r = await fetch('/cubassist/api/admin/refresh-bot-token', { method: 'POST' });
+        const d = await r.json();
+        if (d.ok) {
+            hint.textContent = '✓ Token refreshed';
+            showToast('Bot token refreshed successfully', 'success');
+            await loadConfig();
+        } else {
+            hint.textContent = d.error || 'Refresh failed';
+            showToast(d.error || 'Token refresh failed', 'error');
+        }
+    } catch (e) {
+        hint.textContent = 'Error: ' + e.message;
+    }
+    btn.disabled = false;
 }
 
 // ── Commands ───────────────────────────────────────────────────────────────────

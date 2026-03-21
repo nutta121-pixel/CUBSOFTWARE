@@ -127,6 +127,70 @@ def get_bot_credentials() -> dict:
                     pass
     return {'oauth_token': token, 'bot_nick': nick}
 
+
+def refresh_bot_token() -> bool:
+    """Exchange the stored refresh_token for a new access_token and save it back.
+
+    Returns True on success, False if refresh was skipped or failed.
+    Called automatically by _connect() on every (re)connection so the bot
+    never needs manual re-authorisation after the initial /admin/setup.
+    """
+    client_id     = os.environ.get('TWITCH_CLIENT_ID', '9n9yjc79p44kpsluv81kvvh6h9bxvu')
+    client_secret = os.environ.get('TWITCH_CLIENT_SECRET', '')
+
+    creds_path = _data_dir() / 'bot_credentials.json'
+    if not creds_path.exists():
+        return False
+
+    try:
+        creds = json.loads(creds_path.read_text())
+    except Exception:
+        return False
+
+    refresh_token = creds.get('refresh_token', '')
+    if not refresh_token:
+        logger.warning('CubAssist: no refresh_token stored — manual re-auth needed')
+        return False
+    if not client_secret:
+        logger.warning('CubAssist: TWITCH_CLIENT_SECRET not set — cannot refresh token')
+        return False
+
+    data = urllib.parse.urlencode({
+        'client_id':     client_id,
+        'client_secret': client_secret,
+        'refresh_token': refresh_token,
+        'grant_type':    'refresh_token',
+    }).encode()
+
+    try:
+        req = urllib.request.Request(
+            'https://id.twitch.tv/oauth2/token', data=data, method='POST')
+        with urllib.request.urlopen(req, timeout=10) as r:
+            token_data = json.loads(r.read())
+    except Exception as e:
+        logger.warning(f'CubAssist token refresh failed: {e}')
+        return False
+
+    new_access  = token_data.get('access_token', '')
+    # Twitch rotates the refresh token on each use — always save the new one
+    new_refresh = token_data.get('refresh_token', refresh_token)
+
+    if not new_access:
+        logger.warning('CubAssist token refresh returned no access_token')
+        return False
+
+    creds['oauth_token']   = new_access
+    creds['refresh_token'] = new_refresh
+    try:
+        creds_path.write_text(json.dumps(creds, indent=2))
+    except Exception as e:
+        logger.warning(f'CubAssist: failed to save refreshed token: {e}')
+        return False
+
+    logger.info('CubAssist bot token refreshed successfully')
+    return True
+
+
 # ── Channel registry ────────────────────────────────────────────────────────────
 
 def get_channels() -> list:
@@ -2239,6 +2303,11 @@ class CubBot:
                 time.sleep(10)
 
     def _connect(self):
+        # Refresh the OAuth token before each connection attempt.
+        # If the previous token expired (which is what causes IRC drops),
+        # this swaps in a fresh one automatically using the stored refresh_token.
+        refresh_bot_token()
+
         creds    = get_bot_credentials()
         token    = creds.get('oauth_token', '').strip()
         nick     = creds.get('bot_nick', '').strip().lower()

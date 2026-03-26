@@ -2242,6 +2242,7 @@ const crChannelMembers    = new Map(); // channelId → Set(userId)
 const crActiveVoiceConns  = new Map(); // channelId → { guildId, connection }
 const crOverlayChannels   = new Map(); // channelId → Set(userId)
 let   crWss               = null;
+const crBotPeers          = new Map(); // guildId → bot peer ws connection (custom bot instances)
 
 function _crSpeakingHandler(channelId, guildId) {
     return function onPacket(packet) {
@@ -2306,6 +2307,17 @@ function crScanChannel(channel) {
 }
 
 async function crJoinChannel(channelId, guildId) {
+    // If this guild has a custom bot, delegate voice joining to it
+    if (guildHasCustomBot(guildId)) {
+        const peer = crBotPeers.get(guildId);
+        if (peer?.readyState === WebSocket.OPEN) {
+            peer.send(JSON.stringify({ type: 'JOIN_VOICE', channelId, guildId }));
+        }
+        const guild = client.guilds.cache.get(guildId);
+        const channel = guild?.channels.cache.get(channelId);
+        if (channel) { crScanChannel(channel); crBroadcastChannel(channelId); }
+        return;
+    }
     if (crActiveVoiceConns.has(channelId)) {
         const guild = client.guilds.cache.get(guildId);
         const ch = guild?.channels.cache.get(channelId);
@@ -2365,6 +2377,13 @@ function crLeaveIfUnneeded(channelId) {
     const users = crOverlayChannels.get(channelId);
     if (!users || users.size === 0) {
         crOverlayChannels.delete(channelId);
+        const guildId = crActiveVoiceConns.get(channelId)?.guildId
+                     || [...crVoiceStates.values()].find(s => s.channelId === channelId)?.guildId;
+        if (guildId && guildHasCustomBot(guildId)) {
+            const peer = crBotPeers.get(guildId);
+            if (peer?.readyState === WebSocket.OPEN) peer.send(JSON.stringify({ type: 'LEAVE_VOICE', channelId }));
+            return;
+        }
         const st = crActiveVoiceConns.get(channelId);
         if (st) { try { st.connection?.destroy(); } catch (_) {} crActiveVoiceConns.delete(channelId); }
     }
@@ -2402,6 +2421,19 @@ function startCubReactiveWebSocket() {
         ws.on('message', msg => {
             try {
                 const data = JSON.parse(msg);
+                if (data.type === 'BOT_REGISTER') {
+                    ws.isBotPeer = true;
+                    ws.botGuildId = data.guildId;
+                    crBotPeers.set(data.guildId, ws);
+                    ws.send(JSON.stringify({ type: 'BOT_REGISTERED' }));
+                    console.log(`[CubReactive] Custom bot peer registered for guild ${data.guildId}`);
+                    return;
+                }
+                if (data.type === 'SPEAKING_EVENT' && ws.isBotPeer) {
+                    const vs = crVoiceStates.get(data.userId);
+                    if (vs) { vs.speaking = data.speaking; crVoiceStates.set(data.userId, vs); crBroadcastVoice(data.userId, vs); }
+                    return;
+                }
                 if (data.type === 'SUBSCRIBE') {
                     const cubUsers = loadCubReactiveUsers();
                     const uc = cubUsers[data.userId];
@@ -2421,6 +2453,7 @@ function startCubReactiveWebSocket() {
             } catch (e) { console.error('[CubReactive] msg error:', e); }
         });
         ws.on('close', () => {
+            if (ws.isBotPeer && ws.botGuildId) { crBotPeers.delete(ws.botGuildId); return; }
             if (ws.userId) {
                 const conns = crOverlayConns.get(ws.userId);
                 if (conns) {
@@ -2439,6 +2472,86 @@ function startCubReactiveWebSocket() {
     const hb = setInterval(() => { crWss.clients.forEach(ws => { if (!ws.isAlive) return ws.terminate(); ws.isAlive = false; ws.ping(); }); }, 30000);
     crWss.on('close', () => clearInterval(hb));
     console.log(`[CubReactive] WebSocket server on port ${CUBREACTIVE_WS_PORT}`);
+}
+
+// CubReactive — Custom Bot Peer (joins voice on behalf of main bot for custom-bot guilds)
+const crBotActiveVoiceConns = new Map(); // channelId → { guildId, connection }
+let crBotPeerWs = null;
+
+async function crBotJoinChannel(channelId, guildId) {
+    if (crBotActiveVoiceConns.has(channelId)) return;
+    try {
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) return;
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel) return;
+        const connection = _crJoinVC({ channelId, guildId, adapterCreator: guild.voiceAdapterCreator, selfMute: true, selfDeaf: true });
+        crBotActiveVoiceConns.set(channelId, { guildId, connection });
+        function sendSpeaking(userId, speaking) {
+            if (crBotPeerWs?.readyState === WebSocket.OPEN)
+                crBotPeerWs.send(JSON.stringify({ type: 'SPEAKING_EVENT', userId, speaking, channelId, guildId }));
+        }
+        const onPacket = (packet) => {
+            if (packet.op === 5) {
+                const { user_id, speaking: flags } = packet.d;
+                if (user_id && user_id !== client.user?.id) sendSpeaking(user_id, (flags & 1) !== 0);
+            }
+        };
+        let wiredWs2 = null;
+        function wireWs2(networking) {
+            if (!networking) return;
+            const nws = Reflect.get(networking.state, 'ws');
+            if (nws && nws !== wiredWs2) { nws.on('packet', onPacket); wiredWs2 = nws; }
+            networking.on('stateChange', (_o, ns) => {
+                const nnws = Reflect.get(ns, 'ws');
+                if (nnws && nnws !== wiredWs2) { if (wiredWs2) wiredWs2.removeListener('packet', onPacket); nnws.on('packet', onPacket); wiredWs2 = nnws; }
+            });
+        }
+        connection.on('stateChange', (oldSt, newSt) => {
+            const oNet = Reflect.get(oldSt, 'networking'), nNet = Reflect.get(newSt, 'networking');
+            if (nNet && nNet !== oNet) wireWs2(nNet);
+            if (newSt.status === 'ready' && oldSt.status !== 'ready') {
+                connection.receiver.speaking.removeAllListeners('start');
+                connection.receiver.speaking.removeAllListeners('end');
+                connection.receiver.speaking.on('start', uid => { if (uid !== client.user?.id) sendSpeaking(uid, true); });
+                connection.receiver.speaking.on('end',   uid => { if (uid !== client.user?.id) sendSpeaking(uid, false); });
+            }
+            if (newSt.status === 'destroyed') crBotActiveVoiceConns.delete(channelId);
+        });
+        const initNet = Reflect.get(connection.state, 'networking');
+        if (initNet) wireWs2(initNet);
+        console.log(`[CubReactive] Custom bot joined voice ${channelId}`);
+    } catch (e) {
+        console.error(`[CubReactive] Custom bot failed to join ${channelId}:`, e.message);
+        crBotActiveVoiceConns.delete(channelId);
+    }
+}
+
+function startCrBotPeer() {
+    try {
+        crBotPeerWs = new WebSocket(`ws://localhost:${CUBREACTIVE_WS_PORT}`);
+        crBotPeerWs.on('open', () => {
+            crBotPeerWs.send(JSON.stringify({ type: 'BOT_REGISTER', guildId: CUSTOM_GUILD_ID }));
+        });
+        crBotPeerWs.on('message', async (msg) => {
+            try {
+                const data = JSON.parse(msg);
+                if (data.type === 'JOIN_VOICE') await crBotJoinChannel(data.channelId, data.guildId);
+                if (data.type === 'LEAVE_VOICE') {
+                    const st = crBotActiveVoiceConns.get(data.channelId);
+                    if (st) { try { st.connection.destroy(); } catch (_) {} crBotActiveVoiceConns.delete(data.channelId); }
+                }
+            } catch (e) { console.error('[CubReactive] Bot peer msg error:', e); }
+        });
+        crBotPeerWs.on('close', () => {
+            console.warn('[CubReactive] Bot peer WS disconnected, reconnecting in 15s...');
+            setTimeout(startCrBotPeer, 15000);
+        });
+        crBotPeerWs.on('error', (e) => { console.warn('[CubReactive] Bot peer WS error:', e.message); });
+    } catch (e) {
+        console.error('[CubReactive] startCrBotPeer failed:', e.message);
+        setTimeout(startCrBotPeer, 15000);
+    }
 }
 
 function startLogServer() {
@@ -11394,11 +11507,12 @@ client.once('ready', async () => {
         startCubReactiveWebSocket();
         startLogServer();
     }
+    if (CUSTOM_GUILD_ID) startCrBotPeer();
 
     // ── Rotating Presence (main bot only) ─────────────────────────────────────
     if (!CUSTOM_GUILD_ID) {
         const presences = [
-            { activities: [{ name: 'CUB', type: 2 }], status: 'online' },            // Listening to CUB
+            { activities: [{ name: 'CUB is my Owner', type: 2 }], status: 'online' }, // Listening to CUB is my Owner
             { activities: [{ name: 'Developed by CUBSOFTWARE', type: 3 }], status: 'online' }, // Watching ...
             { activities: [{ name: 'https://cubsoftware.site', type: 3 }], status: 'online' }, // Watching ...
         ];

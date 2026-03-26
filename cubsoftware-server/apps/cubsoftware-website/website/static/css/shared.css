@@ -1063,6 +1063,7 @@ a:hover {
 
     /* Header inside a padded container should still be full-width */
     .main-container > .site-header {
+        margin-top: -1.25rem;
         margin-left: -1.25rem;
         margin-right: -1.25rem;
         width: calc(100% + 2.5rem);
@@ -1092,6 +1093,7 @@ a:hover {
 
     /* Header inside a padded container should still be full-width */
     .main-container > .site-header {
+        margin-top: -1rem;
         margin-left: -1rem;
         margin-right: -1rem;
         width: calc(100% + 2rem);
@@ -1192,6 +1194,7 @@ a:hover {
 
     /* Header inside a padded container should still be full-width */
     .main-container > .site-header {
+        margin-top: -0.75rem;
         margin-left: -0.75rem;
         margin-right: -0.75rem;
         width: calc(100% + 1.5rem);

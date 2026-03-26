@@ -558,20 +558,39 @@
 
     .qr-column,
     .recent-section {
-        padding: 20px 15px;
+        padding: 15px;
     }
 
     .type-tab {
-        padding: 10px 14px;
-        font-size: 0.85rem;
+        padding: 8px 10px;
+        font-size: 0.8rem;
+        flex: 1 1 calc(50% - 8px);
+        justify-content: center;
     }
 
-    .type-tab svg {
-        width: 16px;
-        height: 16px;
+    .type-tabs {
+        gap: 6px;
+    }
+
+    .recent-header {
+        grid-template-columns: 1fr auto;
+    }
+
+    .recent-header h3 {
+        grid-column: 1;
+        text-align: left;
+    }
+
+    .clear-recent {
+        grid-column: 2;
     }
 
     .recent-qr-item {
         width: 60px;
+    }
+
+    .qr-preview-box {
+        padding: 15px;
+        min-height: 200px;
     }
 }

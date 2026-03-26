@@ -609,6 +609,10 @@
         height: 50px;
     }
 
+    .palette-color-hex {
+        font-size: 0.65rem;
+    }
+
     .recent-color {
         width: 40px;
         height: 40px;
@@ -621,5 +625,31 @@
     .palette-tab {
         padding: 6px 14px;
         font-size: 0.85rem;
+    }
+
+    .recent-header {
+        grid-template-columns: 1fr auto;
+    }
+
+    .recent-header h3 {
+        grid-column: 1;
+        text-align: left;
+        font-size: 1rem;
+    }
+
+    .clear-recent {
+        grid-column: 2;
+    }
+
+    .color-area {
+        height: 150px;
+    }
+
+    .rgb-sliders .slider-group {
+        gap: 8px;
+    }
+
+    .rgb-sliders .slider-group span {
+        width: 28px;
     }
 }

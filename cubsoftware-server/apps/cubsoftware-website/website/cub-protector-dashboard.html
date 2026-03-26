@@ -17,19 +17,13 @@
     <link rel="stylesheet" href="/static/css/admin-dashboard.css?v={{ v }}">
     <link rel="stylesheet" href="/static/css/cub-protector-dashboard.css?v={{ v }}">
     <style>
-        /* Make site header fixed on dashboard */
-        .site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
-        .admin-layout { padding-top: 62px; }
-        /* Push fixed sidebar below the site header */
-        .admin-sidebar { top: 62px; }
+        /* Sidebar fills from top — site header scrolls naturally */
+        .admin-sidebar { top: 0; }
         @media (max-width: 768px) {
-            .admin-layout { padding-top: 54px; }
-            /* Mobile-header sits below the site header, not on top of it */
-            .mobile-header { top: 54px; z-index: 95; }
-            /* Sidebar starts below both the site header and mobile-header */
-            .admin-sidebar { top: calc(54px + 60px); z-index: 200; }
-            /* Content offset accounts for both headers */
-            .admin-content { padding-top: calc(54px + 60px + 1rem) !important; }
+            /* Mobile-header is static — scrolls with the page */
+            .mobile-header { position: relative; top: auto; z-index: 95; }
+            .admin-sidebar { top: 0; z-index: 200; }
+            .admin-content { padding-top: 1rem !important; }
         }
     </style>
 </head>

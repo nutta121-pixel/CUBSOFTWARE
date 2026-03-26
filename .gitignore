@@ -74,6 +74,7 @@ NUL
 # ── Temp ──────────────────────────────────────────────────────
 *.tmp
 *.temp
+tmp_cubai_in_*.wav
 
 # ── Local dev scripts (never commit) ──────────────────────────
 *.bat

@@ -6,6 +6,7 @@ function cubEmbed() {
 }
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 // dotenv will NOT override env vars already set by PM2 ecosystem (e.g. DISCORD_TOKEN, CLIENT_ID, CUSTOM_GUILD_ID)
 // It will still load API keys (TWITCH_CLIENT_ID, YOUTUBE_API_KEY etc.) from .env as normal
 require('dotenv').config({ path: path.join(__dirname, '.env') });
@@ -10561,6 +10562,33 @@ client.once('ready', async () => {
             client.user.setPresence(presences[presIdx]);
         }, 20000);
     }
+
+    // ── Daily cleanup of tmp_cubai_* files at midnight ────────────────────────
+    function cleanTmpCubAiFiles() {
+        try {
+            const files = fs.readdirSync(__dirname);
+            let deleted = 0;
+            files.forEach(f => {
+                if (/^tmp_cubai_in_/.test(f) && f.endsWith('.wav')) {
+                    try { fs.unlinkSync(path.join(__dirname, f)); deleted++; } catch (_) {}
+                }
+            });
+            if (deleted > 0) {
+                console.log(`[CubAI] Cleaned up ${deleted} tmp file(s)`);
+                try {
+                    execSync('git add .', { cwd: __dirname });
+                    console.log('[CubAI] git add . complete');
+                } catch (e) { console.error('[CubAI] git add error:', e.message); }
+            }
+        } catch (e) { console.error('[CubAI] Cleanup error:', e.message); }
+    }
+    function scheduleMidnightCleanup() {
+        const now = new Date();
+        const midnight = new Date(now);
+        midnight.setHours(24, 0, 0, 0);
+        setTimeout(() => { cleanTmpCubAiFiles(); setInterval(cleanTmpCubAiFiles, 24 * 60 * 60 * 1000); }, midnight - now);
+    }
+    scheduleMidnightCleanup();
 
     console.log('CUB PROTECTOR is ready!');
 });

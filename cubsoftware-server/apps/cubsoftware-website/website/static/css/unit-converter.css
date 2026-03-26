@@ -255,8 +255,15 @@
         font-size: 2rem;
     }
 
+    .converter-header p {
+        font-size: 1rem;
+    }
+
     .category-tabs {
         gap: 0.4rem;
+        overflow-x: auto;
+        flex-wrap: wrap;
+        -webkit-overflow-scrolling: touch;
     }
 
     .category-tab {
@@ -293,6 +300,10 @@
 
     .reference-grid {
         grid-template-columns: 1fr;
+    }
+
+    .converter-panel {
+        padding: 1.25rem;
     }
 }
 

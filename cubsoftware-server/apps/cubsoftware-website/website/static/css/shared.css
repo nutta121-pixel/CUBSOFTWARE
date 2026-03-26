@@ -1041,3 +1041,223 @@ a:hover {
         margin: 0 5px;
     }
 }
+
+/* ==================== GLOBAL TABLET & MOBILE FIXES ==================== */
+
+/* Tablet (≤900px) */
+@media (max-width: 900px) {
+    .main-container, .container, .page-container, .content-wrapper {
+        padding: 1.25rem;
+    }
+
+    /* Common grid patterns → 2 columns */
+    .tools-grid, .apps-grid, .features-grid, .cards-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Section headings */
+    h1 { font-size: clamp(1.4rem, 4vw, 2.2rem); }
+    h2 { font-size: clamp(1.2rem, 3vw, 1.8rem); }
+    h3 { font-size: clamp(1rem, 2.5vw, 1.4rem); }
+}
+
+/* Mobile (≤768px) */
+@media (max-width: 768px) {
+    /* Prevent horizontal overflow on any page */
+    body { overflow-x: hidden; }
+
+    .main-container, .container, .page-container,
+    .content-wrapper, .tool-container, .page-content {
+        padding: 1rem;
+        max-width: 100%;
+    }
+
+    /* All grids → single column */
+    .tools-grid, .apps-grid, .features-grid, .cards-grid,
+    .grid-2, .grid-3, .grid-4, .two-col, .three-col {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Flex rows → stack */
+    .flex-row, .row, .form-row, .button-row, .action-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* Full-width buttons and inputs */
+    .btn, .button, button.primary, button.secondary,
+    input[type="submit"], input[type="button"] {
+        width: 100%;
+        justify-content: center;
+        min-height: 44px;
+    }
+
+    /* Cards */
+    .card, .tool-card, .feature-card, .info-card {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Tables → horizontal scroll */
+    table { display: block; overflow-x: auto; width: 100%; }
+
+    /* Hero/banner sections */
+    .hero, .hero-section, .page-hero, .banner {
+        padding: 2rem 1rem;
+        text-align: center;
+    }
+
+    /* Section headings */
+    h1 { font-size: clamp(1.3rem, 5vw, 2rem); }
+    h2 { font-size: clamp(1.1rem, 4vw, 1.6rem); }
+    h3 { font-size: clamp(1rem, 3.5vw, 1.3rem); }
+
+    /* Form elements full width */
+    .form-group, .input-group {
+        width: 100%;
+    }
+    .form-group input, .form-group select,
+    .form-group textarea, .input-group input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Sidebar layouts → stack */
+    .sidebar-layout, .two-panel, .split-layout {
+        flex-direction: column;
+    }
+    .sidebar, .side-panel, .left-panel, .right-panel {
+        width: 100% !important;
+        max-width: 100%;
+    }
+
+    /* Modals full width */
+    .modal-content, .dialog, .popup-content {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        margin: 1rem auto;
+    }
+
+    /* Tab bars → scrollable */
+    .tabs, .tab-bar, .tab-list {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+    .tab, .tab-btn {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    /* Footer */
+    .footer-content, .footer-links, .footer-grid {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        text-align: center;
+    }
+}
+
+/* Small phones (≤480px) */
+@media (max-width: 480px) {
+    .main-container, .container, .page-container,
+    .content-wrapper, .tool-container, .page-content {
+        padding: 0.75rem;
+    }
+
+    h1 { font-size: clamp(1.2rem, 6vw, 1.6rem); }
+    h2 { font-size: clamp(1rem, 5vw, 1.3rem); }
+
+    .btn, .button, button.primary, button.secondary,
+    input[type="submit"], input[type="button"] {
+        font-size: 0.9rem;
+        padding: 10px 14px;
+    }
+}
+
+/* ==================== LOGIN PAGE (inline styles) ==================== */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 2rem 1.25rem;
+        border-radius: 16px;
+    }
+
+    .login-title {
+        font-size: 1.35rem;
+    }
+
+    .login-btn {
+        font-size: 0.93rem;
+        padding: 0.85rem 1rem;
+    }
+}
+
+/* ==================== ACCOUNT PAGE (inline styles) ==================== */
+@media (max-width: 480px) {
+    .account-card {
+        padding: 1.5rem 1rem;
+    }
+
+    .account-linked-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .btn-unlink {
+        width: 100%;
+        text-align: center;
+    }
+
+    .account-actions {
+        flex-direction: column;
+    }
+
+    .btn-logout,
+    .btn-link-discord,
+    .btn-link-twitch {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ==================== VANITY PROFILE PAGE (inline styles) ==================== */
+@media (max-width: 768px) {
+    .profile-wrap {
+        padding: 1.5rem 1rem;
+    }
+
+    .profile-header {
+        flex-wrap: wrap;
+        gap: 1rem;
+        padding: 1.25rem;
+    }
+
+    .profile-cta {
+        margin-left: 0;
+        width: 100%;
+        text-align: center;
+    }
+
+    .bots-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .profile-cta .btn {
+        width: 100%;
+        display: block;
+        text-align: center;
+    }
+
+    .bots-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}

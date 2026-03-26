@@ -1168,8 +1168,38 @@
         font-size: 0.85rem;
     }
 
+    .editor-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .action-btn.primary,
+    .action-btn.secondary {
+        width: 100%;
+        justify-content: center;
+    }
+
     .download-options {
         width: 100%;
         justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .quality-slider {
+        flex: 1;
+    }
+
+    .image-info {
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .sidebar-tabs {
+        gap: 4px;
+    }
+
+    .sidebar-tab {
+        padding: 8px;
     }
 }

@@ -506,4 +506,43 @@
         padding: 8px 12px;
         font-size: 0.8rem;
     }
+
+    .lorem-input-group {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 6px;
+    }
+
+    .lorem-input-group input {
+        width: 100%;
+        text-align: left;
+    }
+
+    .lorem-input-group select {
+        width: 100%;
+    }
+
+    .generate-btn {
+        width: 100%;
+    }
+
+    .find-replace-options {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .checkbox-label {
+        width: 100%;
+    }
+
+    .replace-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .column-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
 }

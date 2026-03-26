@@ -1025,7 +1025,14 @@ const client = new Client({
 // ============================================================
 // Commands the main bot keeps active even when a custom bot is running in a guild.
 // All other commands are registered only in guilds without a custom bot.
-const MAIN_BOT_SHARED_COMMANDS = new Set(['help', 'website', 'invite', 'cubsoftware']);
+const MAIN_BOT_SHARED_COMMANDS = new Set(['help', 'website', 'invite']);
+// Commands that only run on the main cub-protector — never on custom bot instances
+const MAIN_BOT_ONLY_COMMANDS = new Set([
+    'cubai', 'cubsoftware',
+    'link-find', 'link-ban', 'link-unban', 'link-bans', 'link-delete',
+    'ip-ban', 'ip-temp-ban', 'ip-unban', 'ip-list',
+    'keraplast-password', 'feature',
+]);
 
 // ============================================================
 // Slash Commands Definition
@@ -2012,7 +2019,7 @@ async function registerCommands() {
             // Custom bot mode: register guild-specific commands (instant, no propagation delay)
             console.log(`Registering guild commands for custom bot (guild: ${CUSTOM_GUILD_ID})...`);
             await rest.put(Routes.applicationGuildCommands(CLIENT_ID, CUSTOM_GUILD_ID), {
-                body: commands.map(c => c.toJSON()),
+                body: commands.filter(c => !MAIN_BOT_ONLY_COMMANDS.has(c.name)).map(c => c.toJSON()),
             });
             console.log('Custom bot guild commands registered!');
         } else {
@@ -4458,6 +4465,7 @@ client.on('messageReactionRemove', async (reaction, user) => {
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
     if (CUSTOM_GUILD_ID && interaction.guildId !== CUSTOM_GUILD_ID) return;
+    if (CUSTOM_GUILD_ID && MAIN_BOT_ONLY_COMMANDS.has(interaction.commandName)) return;
     if (guildHasCustomBot(interaction.guildId) && !MAIN_BOT_SHARED_COMMANDS.has(interaction.commandName)) {
         const botName = getCustomBotName(interaction.guildId);
         return interaction.reply({ content: `This server uses **${botName}**. Please use that bot for commands instead.`, ephemeral: true });

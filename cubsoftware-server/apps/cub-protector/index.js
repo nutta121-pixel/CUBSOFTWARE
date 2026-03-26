@@ -3583,7 +3583,8 @@ function _selfRoleEmojiMatch(storedEmoji, reactionEmoji) {
 client.on('messageReactionAdd', async (reaction, user) => {
     if (user.bot) return;
     if (reaction.partial) await reaction.fetch().catch(() => {});
-    if (!reaction.message.guild) return;
+    if (reaction.message.partial) await reaction.message.fetch().catch(() => {});
+    if (!reaction.message.guildId) return;
     if (CUSTOM_GUILD_ID && reaction.message.guild.id !== CUSTOM_GUILD_ID) return;
     if (guildHasCustomBot(reaction.message.guild.id)) return;
 
@@ -3604,12 +3605,15 @@ client.on('messageReactionAdd', async (reaction, user) => {
                             const guild = reaction.message.guild ?? await client.guilds.fetch(srGuildId).catch(() => null);
                             const member = guild ? await guild.members.fetch(user.id).catch(() => null) : null;
                             if (member) {
-                                await member.roles.add(roleEntry.role_id).catch(() => {});
-                                // Exclusive: max_select=1 removes all other roles in this category
+                                await member.roles.add(roleEntry.role_id).catch(e => console.error('[SelfRole] add role failed:', e.message));
+                                // Exclusive: max_select=1 removes all other roles and reactions in this category
                                 if ((matchCat.max_select || 0) === 1) {
                                     for (const r of matchCat.roles) {
                                         if (r.role_id !== roleEntry.role_id && member.roles.cache.has(r.role_id)) {
                                             await member.roles.remove(r.role_id).catch(() => {});
+                                            // Remove their previous reaction from the message
+                                            const prevReact = reaction.message.reactions.cache.find(mr => _selfRoleEmojiMatch(r.emoji, mr.emoji));
+                                            if (prevReact) await prevReact.users.remove(user.id).catch(() => {});
                                         }
                                     }
                                 }
@@ -3617,7 +3621,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
                         }
                     }
                 }
-            } catch (_e) {}
+            } catch (_e) { console.error('[SelfRole] reaction handler error:', _e.message); }
         }
     }
 
@@ -3668,6 +3672,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
 client.on('messageReactionRemove', async (reaction, user) => {
     if (user.bot) return;
     if (reaction.partial) await reaction.fetch().catch(() => {});
+    if (reaction.message.partial) await reaction.message.fetch().catch(() => {});
     const srGuildId = reaction.message.guildId;
     if (!srGuildId) return;
     if (CUSTOM_GUILD_ID && srGuildId !== CUSTOM_GUILD_ID) return;

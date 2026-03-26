@@ -50,18 +50,32 @@
                     {% endif %}
 
                     <div class="dropdown-divider"></div>
-                    <span class="dropdown-section-label">Dashboards</span>
-                    <a href="/apps/cubreactive">CubReactive</a>
-                    <a href="/cub-protector">CUB Protector</a>
-                    <a href="/cleanme">CleanMe</a>
+                    <span class="dropdown-section-label">Streaming Tools</span>
                     <a href="/overlays">Stream Overlays</a>
                     <a href="/cubdeck">CubDeck</a>
-                    <a href="/affiliate/dashboard">Affiliate Program</a>
+                    <a href="/apps/cubreactive">CubReactive</a>
+                    <a href="/cubassist/">CubAssist</a>
+
+                    <div class="dropdown-divider"></div>
+                    <span class="dropdown-section-label">Discord Bots</span>
+                    <a href="/cub-protector">CUB Protector</a>
+                    <a href="/cleanme">CleanMe</a>
+
+                    {% if nav_is_affiliate %}
+                    <div class="dropdown-divider"></div>
+                    <span class="dropdown-section-label">Affiliate</span>
+                    <a href="/affiliate/dashboard">Affiliate Dashboard</a>
+                    {% endif %}
+
+                    {% if nav_bot_dashboard or nav_pm2 %}
+                    <div class="dropdown-divider"></div>
+                    <span class="dropdown-section-label">Admin</span>
                     {% if nav_bot_dashboard %}
                     <a href="/bot-dashboard">Bot Dashboard</a>
                     {% endif %}
                     {% if nav_pm2 %}
                     <a href="/dashboard">Server Dashboard</a>
+                    {% endif %}
                     {% endif %}
 
                     <div class="dropdown-divider"></div>
@@ -97,6 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mobileBtn.addEventListener('click', function() {
             nav.classList.toggle('active');
             mobileBtn.classList.toggle('active');
+            document.body.style.overflow = nav.classList.contains('active') ? 'hidden' : '';
         });
     }
 

@@ -97,6 +97,7 @@ MASCOT_EXCLUDED_PREFIXES = (
     '/overlays/api',
     '/cubdeck',
     '/cubassist',
+    '/streamavatars',
 )
 
 @app.after_request
@@ -615,7 +616,14 @@ def _inject_cub_user():
             nav_bot_dashboard = session['bot_dashboard_user']['id'] in wl.get('allowed_users', [])
         except Exception:
             pass
-    return {'cub_user': cub, 'nav_pm2': nav_pm2, 'nav_bot_dashboard': nav_bot_dashboard}
+    nav_is_affiliate = False
+    if cub:
+        try:
+            aff = get_affiliate_by_discord_id(cub.get('id', ''))
+            nav_is_affiliate = bool(aff and aff.get('enabled', True))
+        except Exception:
+            pass
+    return {'cub_user': cub, 'nav_pm2': nav_pm2, 'nav_bot_dashboard': nav_bot_dashboard, 'nav_is_affiliate': nav_is_affiliate}
 
 # ---- Unified login/logout routes ----
 
@@ -1003,6 +1011,11 @@ def serve_js(filename):
 def serve_images(filename):
     """Serve image files for main website"""
     return send_from_directory('website/static/images', filename)
+
+@app.route('/marbles/static/<path:filename>')
+def serve_marbles_static(filename):
+    """Serve static assets for the Marbles section (css, js, images, sounds)"""
+    return send_from_directory('website/marbles', filename)
 
 @app.route('/favicon.ico')
 def favicon():
@@ -1757,6 +1770,1201 @@ def code_minifier():
 def markdown_editor():
     """Markdown Editor - Write and preview Markdown in real-time"""
     return render_template('markdown-editor.html')
+
+# ==================== MARBLE MAP EDITOR ====================
+
+MARBLES_BETA_USERS = {'378501056008683530'}
+
+@app.route('/apps/marble-editor')
+@app.route('/apps/marble-editor/')
+def marble_editor():
+    """Marble Map Editor - Build custom Marbles on Stream maps in the browser (beta whitelist)"""
+    cub_user = session.get('cub_user')
+    if not cub_user:
+        return redirect(url_for('cub_login_page', next='/apps/marble-editor'))
+    if str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return render_template('feature-disabled.html', feature='marble-editor'), 403
+    is_dev = str(cub_user.get('id', '')) in MARBLES_BETA_USERS
+    return render_template('marbles/editor.html', is_dev=is_dev, v=STATIC_VERSION)
+
+# ── Marble Game API (session management + Twitch IRC reader) ──────────────────
+
+from marbles_irc import MarbleIRCManager as _MarbleIRC
+from marbles_db import (
+    init_db as _marble_db_init,
+    award_race_results as _marble_award,
+    get_leaderboard as _marble_leaderboard,
+    get_player as _marble_player,
+    get_track_records as _marble_track_records,
+    get_map_leaderboard as _marble_map_leaderboard,
+    save_map as _marble_save_map,
+    get_maps as _marble_get_maps,
+    get_map as _marble_get_map,
+    increment_map_plays as _marble_inc_plays,
+    rate_map as _marble_rate_map,
+    set_map_featured as _marble_set_featured,
+    get_featured_maps as _marble_get_featured,
+    delete_map as _marble_delete_map,
+    get_race_history as _marble_race_history,
+    get_maps_admin as _marble_get_maps_admin,
+    get_coins_balance as _marble_get_coins,
+    adjust_coins as _marble_adjust_coins,
+    get_player_achievements as _marble_get_achievements,
+    get_player_settings as _marble_get_settings,
+    save_player_settings as _marble_save_settings,
+    start_season as _marble_start_season,
+    end_season as _marble_end_season,
+    get_current_season as _marble_current_season,
+    get_seasons as _marble_get_seasons,
+    get_season_leaderboard as _marble_season_lb,
+    ban_player as _marble_ban_player,
+    unban_player as _marble_unban_player,
+    get_banned_players as _marble_banned_list,
+    reset_player_points as _marble_reset_points,
+    reset_map_record as _marble_reset_map_record,
+    reset_all_track_records as _marble_reset_all_records,
+    get_map_versions as _marble_map_versions,
+    get_map_version_data as _marble_map_version_data,
+    search_players as _marble_search_players,
+    get_rival as _marble_get_rival,
+    get_marble_of_the_week as _marble_motw,
+    get_cosmetics as _marble_get_cosmetics,
+    unlock_cosmetic as _marble_unlock_cosmetic,
+    equip_cosmetic as _marble_equip_cosmetic,
+    get_cosmetics_catalogue as _marble_cosmetics_catalogue,
+    buy_shop_item as _marble_buy_shop_item,
+    get_shop_catalogue as _marble_get_shop_catalogue,
+    get_track_record_for_map as _marble_get_track_record,
+)
+import secrets as _secrets_mod
+_marble_db_init()
+
+# ── StreamAvatars ─────────────────────────────────────────────────────────────
+from streamavatars_db import (
+    init_db         as _sa_db_init,
+    get_characters  as _sa_get_characters,
+    get_character   as _sa_get_character,
+    save_character  as _sa_save_character,
+    activate_character  as _sa_activate,
+    delete_character    as _sa_delete,
+    get_active_character_id as _sa_active_id,
+    get_overlay_settings    as _sa_overlay_settings,
+    save_overlay_settings   as _sa_save_overlay_settings,
+)
+import streamavatars_irc as _sa_irc
+_sa_db_init()
+
+@app.route('/marbles/api/game/create', methods=['POST'])
+def marbles_game_create():
+    body       = request.get_json(silent=True) or {}
+    channel    = body.get('channel', '').strip().lower().strip('#')
+    if not channel or not re.match(r'^[a-z0-9_]{1,25}$', channel):
+        return jsonify({'error': 'Valid Twitch channel name required'}), 400
+    join_cmd    = (body.get('join_cmd', '!join') or '!join').strip()
+    max_players = max(2, min(int(body.get('max_players', 100)), 200))
+    marble_types = body.get('marble_types')  # optional custom roster
+    # Race settings
+    raw = body.get('settings') or {}
+    settings = {
+        'fall_mode':        raw.get('fall_mode', 'respawn') if raw.get('fall_mode') in ('respawn', 'elimination') else 'respawn',
+        'max_respawns':     max(-1, int(raw.get('max_respawns', -1))),
+        'timeout_mins':     max(1, min(60, int(raw.get('timeout_mins', 3)))),
+        'gravity':          raw.get('gravity', 'normal') if raw.get('gravity') in ('low', 'normal', 'high') else 'normal',
+        'marble_friction':  raw.get('marble_friction', 'normal') if raw.get('marble_friction') in ('low', 'normal', 'high') else 'normal',
+        'announce_winner':  bool(raw.get('announce_winner', False)),
+        'coin_multiplier':  int(raw.get('coin_multiplier', 1)) if int(raw.get('coin_multiplier', 1)) in (1, 2, 3) else 1,
+        'camera_lock':      raw.get('camera_lock', 'off') if raw.get('camera_lock') in ('off', 'leader', 'overview', 'side') else 'off',
+    }
+    session_obj = _MarbleIRC.get_instance().create_session(channel, join_cmd, max_players, marble_types, settings)
+    return jsonify({'ok': True, 'session': session_obj.to_dict()})
+
+@app.route('/marbles/api/game/<session_id>', methods=['GET'])
+def marbles_game_get(session_id):
+    s = _MarbleIRC.get_instance().get_session(session_id)
+    if not s:
+        return jsonify({'error': 'Session not found'}), 404
+    return jsonify(s.to_dict())
+
+@app.route('/marbles/api/game/<session_id>/start', methods=['POST'])
+def marbles_game_start(session_id):
+    mgr    = _MarbleIRC.get_instance()
+    if not mgr.get_session(session_id):
+        return jsonify({'error': 'Session not found'}), 404
+    body   = request.get_json(silent=True) or {}
+    map_id = body.get('map_id', '')
+    ok = mgr.start_race(session_id, map_id=map_id)
+    s  = mgr.get_session(session_id)
+    if ok and s and s.settings.get('tournament_mode', False):
+        s.tournament_race_num += 1
+    if ok and s and s.settings.get('elimination_rounds', False):
+        s.elimination_round += 1
+    # Auto-assign teams when team_mode is on
+    if ok and s and s.settings.get('team_mode', False) and not s.teams:
+        players = [p['name'] for p in s.players]
+        import random as _rnd
+        _rnd.shuffle(players)
+        mid = len(players) // 2
+        s.teams = {p: ('red' if i < mid else 'blue') for i, p in enumerate(players)}
+    return jsonify({'ok': ok, 'session': s.to_dict()})
+
+@app.route('/marbles/api/game/<session_id>/end', methods=['POST'])
+def marbles_game_end(session_id):
+    mgr = _MarbleIRC.get_instance()
+    if not mgr.get_session(session_id):
+        return jsonify({'error': 'Session not found'}), 404
+    mgr.end_session(session_id)
+    return jsonify({'ok': True})
+
+@app.route('/marbles/api/game/<session_id>/reset', methods=['POST'])
+def marbles_game_reset(session_id):
+    mgr = _MarbleIRC.get_instance()
+    if not mgr.get_session(session_id):
+        return jsonify({'error': 'Session not found'}), 404
+    mgr.reset_lobby(session_id)
+    s = mgr.get_session(session_id)
+    return jsonify({'ok': True, 'session': s.to_dict()})
+
+@app.route('/marbles/api/game/<session_id>/kick', methods=['POST'])
+def marbles_game_kick(session_id):
+    mgr      = _MarbleIRC.get_instance()
+    body     = request.get_json(silent=True) or {}
+    username = body.get('username', '').lower().strip()
+    if not username:
+        return jsonify({'error': 'username required'}), 400
+    mgr.kick_player(session_id, username)
+    return jsonify({'ok': True})
+
+@app.route('/marbles/api/game/<session_id>/selection', methods=['POST'])
+def marbles_game_selection(session_id):
+    """Open or close the character-select phase."""
+    mgr  = _MarbleIRC.get_instance()
+    s    = mgr.get_session(session_id)
+    if not s:
+        return jsonify({'error': 'Session not found'}), 404
+    body = request.get_json(silent=True) or {}
+    s.selection_open = bool(body.get('open', True))
+    if not s.selection_open:
+        s.player_selections = dict(s.player_selections)   # freeze snapshot
+    return jsonify({'ok': True, 'selection_open': s.selection_open})
+
+@app.route('/marbles/api/game/<session_id>/roster', methods=['POST'])
+def marbles_game_roster(session_id):
+    """Live-update the marble roster (types list) for a session."""
+    mgr  = _MarbleIRC.get_instance()
+    s    = mgr.get_session(session_id)
+    if not s:
+        return jsonify({'error': 'Session not found'}), 404
+    body = request.get_json(silent=True) or {}
+    marble_types = body.get('marble_types')
+    if not isinstance(marble_types, list):
+        return jsonify({'error': 'marble_types array required'}), 400
+    s.marble_types = marble_types
+    return jsonify({'ok': True})
+
+@app.route('/marbles/api/irc-status', methods=['GET'])
+def marbles_irc_status():
+    return jsonify(_MarbleIRC.get_instance().connection_status())
+
+@app.route('/marbles/api/game/<session_id>/abilities', methods=['GET'])
+def marbles_game_abilities(session_id):
+    """Poll pending chat abilities. Returns and clears the queue."""
+    mgr = _MarbleIRC.get_instance()
+    s   = mgr.get_session(session_id)
+    if not s:
+        return jsonify({'abilities': []})
+    return jsonify({'abilities': s.drain_abilities()})
+
+@app.route('/marbles/api/game/<session_id>/ability-log', methods=['GET'])
+def marbles_game_ability_log(session_id):
+    """Return the last 10 fired abilities for the OBS control panel."""
+    mgr = _MarbleIRC.get_instance()
+    s   = mgr.get_session(session_id)
+    if not s:
+        return jsonify({'log': []})
+    return jsonify({'log': s.get_ability_log()})
+
+@app.route('/marbles/api/game/<session_id>/chat', methods=['GET'])
+def marbles_game_chat(session_id):
+    """Return recent Twitch chat messages for a session (for the in-race chat overlay)."""
+    since_ts = int(request.args.get('since', 0))
+    msgs = _MarbleIRC.get_instance().get_chat(session_id, since_ts=since_ts)
+    return jsonify({'messages': msgs})
+
+@app.route('/marbles/api/game/<session_id>/results', methods=['POST'])
+def marbles_game_results(session_id):
+    mgr  = _MarbleIRC.get_instance()
+    s    = mgr.get_session(session_id)
+    if not s:
+        return jsonify({'error': 'Session not found'}), 404
+    body          = request.get_json(silent=True) or {}
+    results       = body.get('results', [])
+    map_id        = body.get('map_id', 'unknown')
+    map_name      = body.get('map_name', 'Untitled')
+    halfway_last      = body.get('halfway_last', '')
+    race_duration_ms  = int(body.get('race_duration_ms', 0) or 0)
+    ghost_paths       = body.get('ghost_paths') or None  # {login: [[x,y,z], ...]}
+    s.results = results
+    # For tournament mode, keep session alive between races
+    is_tournament = s.settings.get('tournament_mode', False)
+    total_races   = max(2, min(10, int(s.settings.get('tournament_races', 3))))
+    race_is_final = (not is_tournament) or (s.tournament_race_num >= total_races)
+    if race_is_final:
+        s.state = 'ended'
+    else:
+        s.state = 'lobby'  # ready for next race; players preserved
+    # Write stats to DB (non-blocking — failures are logged, not surfaced)
+    race_id = _secrets_mod.token_hex(8)
+    try:
+        base_multiplier = s.settings.get('coin_multiplier', 1)
+        if getattr(s, 'double_coins_active', False):
+            base_multiplier = base_multiplier * 2
+            s.double_coins_active = False   # consumed — reset for next race
+        summary = _marble_award(race_id, map_id, map_name, s.channel, results,
+                                coin_multiplier=base_multiplier,
+                                halfway_last=halfway_last,
+                                race_duration_ms=race_duration_ms,
+                                player_roles=s.get_player_roles(),
+                                ghost_paths=ghost_paths)
+    except Exception as e:
+        app.logger.warning(f'marbles_db award_race_results error: {e}')
+        summary = {}
+
+    # Post new achievements to Twitch chat (non-blocking)
+    try:
+        ach_by_player = {u: v['achievements'] for u, v in summary.items() if v.get('achievements')}
+        if ach_by_player and s.settings.get('announce_winner', False):
+            mgr.post_achievement_feed(s.channel, ach_by_player)
+    except Exception as e:
+        app.logger.debug(f'marbles achievement feed error: {e}')
+
+    # Discord webhook — post race result embed (non-blocking)
+    webhook_url = s.settings.get('discord_webhook', '').strip()
+    if webhook_url:
+        try:
+            import threading as _thr, requests as _req
+            def _post_discord():
+                top3 = [r for r in sorted(results, key=lambda r: r.get('rank') or 999) if r.get('rank')][:3]
+                medals = ['🥇', '🥈', '🥉']
+                podium = '\n'.join(
+                    f"{medals[i]} **{r['username']}** — {(r.get('finish_time_ms',0)/1000):.2f}s"
+                    for i, r in enumerate(top3)
+                ) or 'No finishers'
+                embed = {
+                    'title': f'🏁 Race Finished — {map_name}',
+                    'description': podium,
+                    'color': 0x5865f2,
+                    'fields': [
+                        {'name': 'Players', 'value': str(len(results)), 'inline': True},
+                        {'name': 'Channel', 'value': f'#{s.channel}', 'inline': True},
+                    ],
+                    'footer': {'text': 'cubsoftware.site/marbles'},
+                }
+                try:
+                    _req.post(webhook_url, json={'embeds': [embed]}, timeout=5)
+                except Exception:
+                    pass
+            _thr.Thread(target=_post_discord, daemon=True).start()
+        except Exception as e:
+            app.logger.debug(f'Discord webhook error: {e}')
+
+    # Accumulate tournament scores
+    tournament_info = None
+    if is_tournament:
+        race_pts = {1:15, 2:12, 3:10, 4:8, 5:6, 6:4, 7:3, 8:2}
+        for r in results:
+            login = (r.get('username') or '').lower()
+            rank  = r.get('rank')
+            if login and rank:
+                pts = race_pts.get(rank, 1)
+                s.tournament_scores[login] = s.tournament_scores.get(login, 0) + pts
+        standings = sorted(s.tournament_scores.items(), key=lambda x: -x[1])
+        tournament_info = {
+            'race_num':   s.tournament_race_num,
+            'total_races': total_races,
+            'final':      race_is_final,
+            'standings':  [{'login': l, 'points': p} for l, p in standings],
+        }
+
+    # Elimination mode: remove last finisher each round
+    elimination_info = None
+    is_elimination = s.settings.get('elimination_rounds', False)
+    if is_elimination and results:
+        sorted_r = sorted(results, key=lambda r: (r.get('rank') or 999))
+        loser_login = (sorted_r[-1].get('username') or '').lower()
+        if loser_login:
+            s.elimination_eliminated.append(loser_login)
+            s.remove_player(loser_login)
+        remaining = [p['name'] for p in s.players]
+        elim_final = len(remaining) <= 1
+        if elim_final:
+            s.state = 'ended'
+        elif not is_tournament:          # tournament handles state above; elimination standalone
+            s.state = 'lobby'
+        elimination_info = {
+            'round':                s.elimination_round,
+            'eliminated_this_round': loser_login,
+            'all_eliminated':       list(s.elimination_eliminated),
+            'remaining':            remaining,
+            'final':                elim_final,
+        }
+
+    return jsonify({'ok': True, 'race_id': race_id, 'summary': summary, 'tournament': tournament_info, 'elimination': elimination_info})
+
+# ── Stream alert queues (in-memory, per channel) ─────────────────────────────
+from collections import deque as _deque
+_marble_alert_queues: dict = {}   # channel → deque(maxlen=20) of alert dicts
+
+@app.route('/marbles/api/game/<session_id>/alerts/push', methods=['POST'])
+def marbles_push_alerts(session_id):
+    """play.js pushes stream alerts (records, achievements) here after a race."""
+    mgr = _MarbleIRC.get_instance()
+    s   = mgr.get_session(session_id)
+    if not s:
+        return jsonify({'ok': False}), 404
+    body   = request.get_json(silent=True) or {}
+    alerts = body.get('alerts', [])
+    ch = s.channel
+    if ch not in _marble_alert_queues:
+        _marble_alert_queues[ch] = _deque(maxlen=20)
+    for a in alerts[:10]:  # cap to 10 per push
+        if isinstance(a, dict) and a.get('type'):
+            _marble_alert_queues[ch].append(a)
+    return jsonify({'ok': True})
+
+@app.route('/marbles/api/channel/<channel>/alerts', methods=['GET'])
+def marbles_consume_alerts(channel):
+    """Browser source polls this to consume pending alerts. Returns and clears queue."""
+    ch = channel.lower().strip('#')
+    q  = _marble_alert_queues.get(ch)
+    if not q:
+        return jsonify({'alerts': []})
+    alerts = list(q)
+    q.clear()
+    return jsonify({'alerts': alerts})
+
+@app.route('/marbles/alerts/<channel>')
+@app.route('/marbles/alerts/<channel>/')
+def marbles_alerts_source(channel):
+    """OBS browser source URL for stream alerts (transparent overlay)."""
+    return render_template('marbles/alerts.html', channel=channel.lower().strip('#'), v=STATIC_VERSION)
+
+@app.route('/marbles/api/map/<map_id>/ghost', methods=['GET'])
+def marbles_api_map_ghost(map_id):
+    """Return the ghost path (track record replay) for a map, if available."""
+    rec = _marble_get_track_record(map_id)
+    if not rec or not rec.get('path'):
+        return jsonify({'ok': False, 'holder': None, 'time_ms': None, 'path': None})
+    return jsonify({
+        'ok':      True,
+        'holder':  rec['twitch_login'],
+        'time_ms': rec['finish_time_ms'],
+        'path':    rec['path'],
+    })
+
+@app.route('/marbles/leaderboard')
+@app.route('/marbles/leaderboard/')
+def marbles_leaderboard():
+    sort    = request.args.get('sort', 'points')
+    current_season = _marble_current_season()
+    if sort == 'season' and current_season:
+        data = _marble_season_lb(current_season['season_id'], limit=100)
+    else:
+        data = _marble_leaderboard(sort_by=sort if sort != 'season' else 'points', limit=100)
+    recs  = _marble_track_records(limit=20)
+    motw  = _marble_motw()
+    return render_template('marbles/leaderboard.html', players=data, track_records=recs,
+                           sort=sort, current_season=current_season, motw=motw, v=STATIC_VERSION)
+
+@app.route('/marbles/player/search')
+def marbles_player_search_page():
+    q = request.args.get('q', '').strip()
+    results = _marble_search_players(q, limit=20) if q else []
+    return render_template('marbles/player-search.html', query=q, results=results, v=STATIC_VERSION)
+
+@app.route('/marbles/api/player/search', methods=['GET'])
+def marbles_api_player_search():
+    q = request.args.get('q', '').strip()
+    if not q:
+        return jsonify([])
+    return jsonify(_marble_search_players(q, limit=20))
+
+@app.route('/marbles/player/<twitch_login>')
+def marbles_player_profile(twitch_login):
+    login = twitch_login.lower()
+    data = _marble_player(login)
+    cub_user = session.get('cubsoftware_user')
+    my_login = cub_user.get('login', '').lower() if cub_user else ''
+    is_own   = (my_login == login)
+    rival    = _marble_get_rival(login) if data else None
+    if not data:
+        return render_template('marbles/player.html', player=None, username=twitch_login,
+                               is_own=is_own, rival=None, v=STATIC_VERSION)
+    return render_template('marbles/player.html', player=data, username=twitch_login,
+                           is_own=is_own, rival=rival, v=STATIC_VERSION)
+
+@app.route('/marbles/api/leaderboard', methods=['GET'])
+def marbles_api_leaderboard():
+    sort  = request.args.get('sort', 'points')
+    limit = min(int(request.args.get('limit', 100)), 200)
+    return jsonify(_marble_leaderboard(sort_by=sort, limit=limit))
+
+@app.route('/marbles/api/leaderboard/top10', methods=['GET'])
+def marbles_api_leaderboard_top10():
+    """Top 10 by points — for chat commands and embeds."""
+    return jsonify(_marble_leaderboard(sort_by='points', limit=10))
+
+@app.route('/marbles/api/leaderboard/map/<map_id>', methods=['GET'])
+def marbles_api_map_leaderboard(map_id):
+    """Per-map leaderboard — all players' best times on this map."""
+    from marbles_db import get_map_leaderboard
+    return jsonify(get_map_leaderboard(map_id))
+
+@app.route('/marbles/api/player/<twitch_login>', methods=['GET'])
+def marbles_api_player(twitch_login):
+    data = _marble_player(twitch_login.lower())
+    if not data:
+        return jsonify({'error': 'Player not found'}), 404
+    return jsonify(data)
+
+@app.route('/marbles/api/player/<twitch_login>/coins', methods=['GET', 'POST'])
+def marbles_api_player_coins(twitch_login):
+    """GET: return coin balance. POST (admin): adjust coins. Body: {amount, reason}"""
+    login = twitch_login.lower()
+    if request.method == 'GET':
+        return jsonify({'twitch_login': login, 'coins': _marble_get_coins(login)})
+    # POST — admin only
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    body   = request.get_json(silent=True) or {}
+    amount = int(body.get('amount', 0))
+    reason = str(body.get('reason', 'admin_adjust'))
+    new_bal = _marble_adjust_coins(login, amount, reason)
+    return jsonify({'ok': True, 'twitch_login': login, 'new_balance': new_bal})
+
+@app.route('/marbles/api/player/<twitch_login>/achievements', methods=['GET'])
+def marbles_api_player_achievements(twitch_login):
+    """Return all unlocked achievements for a player."""
+    return jsonify(_marble_get_achievements(twitch_login.lower()))
+
+@app.route('/marbles/api/achievements', methods=['GET'])
+def marbles_api_achievements_list():
+    """Return the full achievement definition catalogue."""
+    from marbles_db import ACHIEVEMENTS
+    return jsonify([{**v, 'key': k} for k, v in ACHIEVEMENTS.items()])
+
+@app.route('/marbles/api/player/<twitch_login>/cosmetics', methods=['GET'])
+def marbles_api_player_cosmetics(twitch_login):
+    """Return a player's cosmetic data (unlocked + equipped)."""
+    return jsonify(_marble_get_cosmetics(twitch_login.lower()))
+
+@app.route('/marbles/api/player/<twitch_login>/cosmetics/equip', methods=['PUT'])
+def marbles_api_cosmetics_equip(twitch_login):
+    """Equip a cosmetic item. Requires login as that player."""
+    cub_user = session.get('cubsoftware_user')
+    if not cub_user:
+        return jsonify({'error': 'Login required'}), 401
+    login = cub_user.get('login', cub_user.get('username', '')).lower()
+    if login != twitch_login.lower():
+        return jsonify({'error': 'Forbidden'}), 403
+    body = request.get_json(silent=True) or {}
+    cosm_type = body.get('type', '')
+    key       = body.get('key', '')
+    if cosm_type not in ('skin', 'trail', 'accessory') or not key:
+        return jsonify({'error': 'type and key required'}), 400
+    ok = _marble_equip_cosmetic(login, cosm_type, key)
+    if not ok:
+        return jsonify({'error': 'Item not unlocked or invalid key'}), 400
+    return jsonify({'ok': True})
+
+@app.route('/marbles/api/cosmetics', methods=['GET'])
+def marbles_api_cosmetics_catalogue():
+    """Return the full cosmetics catalogue."""
+    return jsonify(_marble_cosmetics_catalogue())
+
+@app.route('/marbles/api/game/<session_id>/cosmetics', methods=['GET'])
+def marbles_game_cosmetics(session_id):
+    """Return equipped cosmetics for all players in a session. {login: {skin, trail, accessory}}"""
+    mgr = _MarbleIRC.get_instance()
+    s   = mgr.get_session(session_id)
+    if not s:
+        return jsonify({})
+    result = {}
+    for p in s.players:
+        login = p['name'].lower()
+        c    = _marble_get_cosmetics(login)
+        sets = _marble_get_settings(login)
+        result[login] = {
+            'skin':      c['equipped_skin'],
+            'trail':     c['equipped_trail'],
+            'accessory': c['equipped_accessory'],
+            'size':      sets.get('marble_size', 1.0),
+        }
+    return jsonify(result)
+
+@app.route('/marbles/shop')
+@app.route('/marbles/shop/')
+def marbles_shop_page():
+    """Coin shop page — requires Twitch login."""
+    cub_user = session.get('cubsoftware_user')
+    if not cub_user:
+        return redirect(url_for('cub_login_page', next='/marbles/shop'))
+    login    = cub_user.get('login', cub_user.get('username', '')).lower()
+    shop     = _marble_get_shop_catalogue(login)
+    return render_template('marbles/shop.html', login=login,
+                           catalogue=shop['catalogue'],
+                           balance=shop['balance'], v=STATIC_VERSION)
+
+@app.route('/marbles/api/shop/buy', methods=['POST'])
+def marbles_api_shop_buy():
+    """Buy a cosmetic from the coin shop."""
+    cub_user = session.get('cubsoftware_user')
+    if not cub_user:
+        return jsonify({'error': 'Not logged in'}), 401
+    login = cub_user.get('login', cub_user.get('username', '')).lower()
+    body  = request.get_json(silent=True) or {}
+    cosm_type = body.get('type', '')
+    key       = body.get('key', '')
+    result    = _marble_buy_shop_item(login, cosm_type, key)
+    if result.get('ok'):
+        return jsonify(result)
+    return jsonify(result), 400
+
+@app.route('/marbles/api/shop')
+def marbles_api_shop_catalogue():
+    """Public shop catalogue (no auth required)."""
+    cub_user  = session.get('cubsoftware_user')
+    login     = cub_user.get('login', cub_user.get('username', '')).lower() if cub_user else None
+    return jsonify(_marble_get_shop_catalogue(login))
+
+@app.route('/marbles/cosmetics')
+@app.route('/marbles/cosmetics/')
+def marbles_cosmetics_page():
+    """Marble cosmetics equip page — requires Twitch login."""
+    cub_user = session.get('cubsoftware_user')
+    if not cub_user:
+        return redirect(url_for('cub_login_page', next='/marbles/cosmetics'))
+    login    = cub_user.get('login', cub_user.get('username', '')).lower()
+    cosmetics = _marble_get_cosmetics(login)
+    catalogue = _marble_cosmetics_catalogue()
+    return render_template('marbles/cosmetics.html',
+                           login=login,
+                           cosmetics=cosmetics,
+                           catalogue=catalogue)
+
+@app.route('/marbles/settings')
+@app.route('/marbles/settings/')
+def marbles_settings_page():
+    """Player settings page — requires Twitch login."""
+    cub_user = session.get('cubsoftware_user')
+    if not cub_user:
+        return redirect(url_for('cub_login_page', next='/marbles/settings'))
+    login    = cub_user.get('login', cub_user.get('username', '')).lower()
+    settings = _marble_get_settings(login)
+    return render_template('marbles/settings.html', twitch_login=login,
+                           display_name=cub_user.get('username', login),
+                           settings=settings, v=STATIC_VERSION)
+
+@app.route('/marbles/api/player/<twitch_login>/settings', methods=['GET', 'PUT'])
+def marbles_api_player_settings(twitch_login):
+    """GET: return settings. PUT: save settings (must be own account or admin)."""
+    login = twitch_login.lower()
+    if request.method == 'GET':
+        return jsonify(_marble_get_settings(login))
+    # PUT — must be logged in as that player or admin
+    cub_user = session.get('cubsoftware_user')
+    my_login = cub_user.get('login', '').lower() if cub_user else ''
+    is_admin = str(cub_user.get('id', '')) in MARBLES_BETA_USERS if cub_user else False
+    if not cub_user or (my_login != login and not is_admin):
+        return jsonify({'error': 'Unauthorized'}), 403
+    body = request.get_json(silent=True) or {}
+    saved = _marble_save_settings(login, body)
+    return jsonify({'ok': True, 'settings': saved})
+
+@app.route('/marbles/api/track-records', methods=['GET'])
+def marbles_api_track_records():
+    map_id = request.args.get('map_id')
+    if map_id:
+        return jsonify(_marble_map_leaderboard(map_id))
+    return jsonify(_marble_track_records())
+
+# ── Map library ────────────────────────────────────────────────────────────────
+
+@app.route('/marbles/api/map/publish', methods=['POST'])
+def marbles_map_publish():
+    """Save/update a map in the library. Dev/beta users only."""
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Not authorized'}), 403
+    import json as _json
+    body     = request.get_json(silent=True) or {}
+    map_obj  = body.get('map', {})
+    if not isinstance(map_obj, dict) or not map_obj.get('pieces'):
+        return jsonify({'error': 'map with pieces required'}), 400
+    name        = str(map_obj.get('name', 'Untitled'))[:64].strip() or 'Untitled'
+    description = str(body.get('description', ''))[:256]
+    tags_raw    = str(body.get('tags', ''))[:128]
+    # Normalise tags: lowercase, strip, dedupe, max 8 tags
+    tags = ','.join(sorted({t.strip().lower() for t in tags_raw.split(',') if t.strip()}))[:128]
+    author      = str(cub_user.get('username', cub_user.get('id', 'dev')))[:32]
+    piece_count = len(map_obj.get('pieces', []))
+    map_id      = body.get('map_id') or _secrets_mod.token_hex(8)
+    thumbnail   = body.get('thumbnail')  # base64 data URL from canvas capture
+    if thumbnail and not str(thumbnail).startswith('data:image/'):
+        thumbnail = None  # reject anything that isn't a data URL
+    _marble_save_map(map_id, name, description, author, _json.dumps(map_obj), piece_count, thumbnail, tags)
+    return jsonify({'ok': True, 'map_id': map_id})
+
+@app.route('/marbles/api/maps', methods=['GET'])
+def marbles_api_maps():
+    """List all published maps."""
+    return jsonify(_marble_get_maps(limit=100))
+
+@app.route('/marbles/api/map/<map_id>', methods=['GET'])
+def marbles_api_map(map_id):
+    """Get a single map including its map_data JSON."""
+    m = _marble_get_map(map_id)
+    if not m:
+        return jsonify({'error': 'Map not found'}), 404
+    return jsonify(m)
+
+@app.route('/marbles/api/map/<map_id>/rate', methods=['POST'])
+def marbles_api_map_rate(map_id):
+    """Vote on a map. Requires login. vote: 1 (up) or -1 (down). Toggling the same vote removes it."""
+    cub_user = session.get('cub_user')
+    if not cub_user:
+        return jsonify({'error': 'Login required'}), 401
+    body = request.get_json(silent=True) or {}
+    vote = body.get('vote')
+    if vote not in (1, -1):
+        return jsonify({'error': 'vote must be 1 or -1'}), 400
+    if not _marble_get_map(map_id):
+        return jsonify({'error': 'Map not found'}), 404
+    user_login = str(cub_user.get('username', cub_user.get('id', '')))[:32]
+    result = _marble_rate_map(map_id, user_login, vote)
+    return jsonify(result)
+
+@app.route('/marbles/api/map/<map_id>/versions', methods=['GET'])
+def marbles_api_map_versions(map_id):
+    """List archived versions for a map (metadata only, no map_data)."""
+    if not _marble_get_map(map_id):
+        return jsonify({'error': 'Map not found'}), 404
+    return jsonify({'versions': _marble_map_versions(map_id)})
+
+@app.route('/marbles/api/map/<map_id>/versions/<int:version_num>', methods=['GET'])
+def marbles_api_map_version(map_id, version_num):
+    """Return the full map_data for a specific archived version."""
+    v = _marble_map_version_data(map_id, version_num)
+    if not v:
+        return jsonify({'error': 'Version not found'}), 404
+    return jsonify(v)
+
+@app.route('/marbles/api/map/<map_id>/feature', methods=['POST'])
+def marbles_api_map_feature(map_id):
+    """Set or unset a map as featured (admin only). Body: {featured: true|false}"""
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    if not _marble_get_map(map_id):
+        return jsonify({'error': 'Map not found'}), 404
+    body = request.get_json(silent=True) or {}
+    featured = bool(body.get('featured', True))
+    _marble_set_featured(map_id, featured)
+    return jsonify({'ok': True, 'featured': featured})
+
+@app.route('/marbles/api/maps/featured', methods=['GET'])
+def marbles_api_featured_maps():
+    """Return featured maps for the homepage section."""
+    return jsonify(_marble_get_featured(limit=8))
+
+@app.route('/marbles/api/admin/sessions', methods=['GET'])
+def marbles_admin_sessions():
+    """Admin: list all active and recent sessions."""
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    mgr = _MarbleIRC.get_instance()
+    return jsonify({
+        'sessions': mgr.all_sessions(),
+        'irc': mgr.connection_status(),
+    })
+
+@app.route('/marbles/api/admin/sessions/<session_id>/end', methods=['POST'])
+def marbles_admin_end_session(session_id):
+    """Admin: force-end a session."""
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    mgr = _MarbleIRC.get_instance()
+    if not mgr.get_session(session_id):
+        return jsonify({'error': 'Session not found'}), 404
+    mgr.end_session(session_id)
+    return jsonify({'ok': True})
+
+@app.route('/marbles/api/admin/maps', methods=['GET'])
+def marbles_admin_maps():
+    """Admin: list all maps with management metadata."""
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    return jsonify(_marble_get_maps_admin(limit=500))
+
+@app.route('/marbles/api/admin/maps/<map_id>', methods=['DELETE'])
+def marbles_admin_delete_map(map_id):
+    """Admin: delete a map."""
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    _marble_delete_map(map_id)
+    return jsonify({'ok': True})
+
+@app.route('/marbles/api/admin/races', methods=['GET'])
+def marbles_admin_races():
+    """Admin: race history."""
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    return jsonify(_marble_race_history(limit=100))
+
+@app.route('/marbles/api/seasons', methods=['GET'])
+def marbles_api_seasons():
+    """Public: list all seasons."""
+    return jsonify(_marble_get_seasons())
+
+@app.route('/marbles/api/seasons/current', methods=['GET'])
+def marbles_api_season_current():
+    s = _marble_current_season()
+    return jsonify(s or {})
+
+@app.route('/marbles/api/seasons/<season_id>/leaderboard', methods=['GET'])
+def marbles_api_season_lb(season_id):
+    limit = min(int(request.args.get('limit', 100)), 200)
+    return jsonify(_marble_season_lb(season_id, limit=limit))
+
+@app.route('/marbles/api/admin/seasons/start', methods=['POST'])
+def marbles_admin_start_season():
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    body = request.get_json(silent=True) or {}
+    name = str(body.get('name', 'Season'))[:64].strip() or 'Season'
+    sid  = _marble_start_season(name)
+    return jsonify({'ok': True, 'season_id': sid, 'name': name})
+
+@app.route('/marbles/api/admin/seasons/end', methods=['POST'])
+def marbles_admin_end_season():
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    result = _marble_end_season()
+    if not result:
+        return jsonify({'error': 'No active season'}), 404
+    return jsonify({'ok': True, **result})
+
+@app.route('/marbles/api/admin/players/banned', methods=['GET'])
+def marbles_admin_banned():
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    return jsonify(_marble_banned_list())
+
+@app.route('/marbles/api/admin/players/<twitch_login>/ban', methods=['POST'])
+def marbles_admin_ban(twitch_login):
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    ok = _marble_ban_player(twitch_login.lower())
+    return jsonify({'ok': ok})
+
+@app.route('/marbles/api/admin/players/<twitch_login>/unban', methods=['POST'])
+def marbles_admin_unban(twitch_login):
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    ok = _marble_unban_player(twitch_login.lower())
+    return jsonify({'ok': ok})
+
+@app.route('/marbles/api/admin/players/<twitch_login>/reset-points', methods=['POST'])
+def marbles_admin_reset_points(twitch_login):
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    ok = _marble_reset_points(twitch_login.lower())
+    return jsonify({'ok': ok})
+
+@app.route('/marbles/api/admin/records/reset', methods=['POST'])
+def marbles_admin_reset_records():
+    """Reset track records — all or a specific map."""
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Admin access required'}), 403
+    body   = request.get_json(silent=True) or {}
+    map_id = body.get('map_id')
+    if map_id:
+        ok = _marble_reset_map_record(str(map_id))
+        return jsonify({'ok': ok, 'scope': 'map', 'map_id': map_id})
+    deleted = _marble_reset_all_records()
+    return jsonify({'ok': True, 'scope': 'all', 'deleted': deleted})
+
+@app.route('/marbles/api/game/test-race', methods=['POST'])
+def marbles_test_race():
+    """Create a test race with bot players, dev only."""
+    cub_user = session.get('cub_user')
+    if not cub_user or str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return jsonify({'error': 'Not authorized'}), 403
+    mgr = _MarbleIRC.get_instance()
+    s   = mgr.create_session('test', '!join', 10)
+    for name in ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon']:
+        s.add_player(name)
+    mgr.start_race(s.id)
+    return jsonify({'ok': True, 'session': s.to_dict()})
+
+# ── Marbles homepage ───────────────────────────────────────────────────────────
+
+@app.route('/marbles')
+@app.route('/marbles/')
+def marbles_home():
+    maps = _marble_get_maps(limit=50)
+    return render_template('marbles/index.html', maps=maps, v=STATIC_VERSION)
+
+@app.route('/apps/marble-play')
+@app.route('/apps/marble-play/')
+def marble_play():
+    cub_user = session.get('cub_user')
+    if not cub_user:
+        return redirect(url_for('cub_login_page', next='/apps/marble-play'))
+    if str(cub_user.get('id', '')) not in MARBLES_BETA_USERS:
+        return render_template('feature-disabled.html', feature='marble-play'), 403
+    login = (session.get('cubsoftware_user') or {}).get('login', '')
+    return render_template('marbles/play.html', player_login=login)
+
+@app.route('/marbles/leaderboard/<map_id>')
+def marble_map_leaderboard(map_id):
+    """Per-map leaderboard page showing all players' best times."""
+    return render_template('marbles/map-leaderboard.html', v=STATIC_VERSION)
+
+@app.route('/marbles/maps')
+def marble_maps_browser():
+    """Public map library browser."""
+    return render_template('marbles/maps.html', v=STATIC_VERSION)
+
+@app.route('/marbles/obs/<session_id>')
+def marble_obs(session_id):
+    """OBS browser source — no login required, auto-starts when session goes live."""
+    return render_template('marbles/play.html', obs_session=session_id)
+
+@app.route('/marbles/watch/<session_id>')
+def marble_watch(session_id):
+    """Live spectator page — no login required, view an ongoing race in read-only mode."""
+    return render_template('marbles/play.html', watch_session=session_id)
+
+@app.route('/marbles/obs-control/<session_id>')
+def marble_obs_control(session_id):
+    """OBS Dock control panel — Start/Reset/End + live player list, no 3D scene."""
+    return render_template('marbles/obs-control.html')
+
+@app.route('/marbles/lowerthird/<session_id>')
+def marble_lowerthird(session_id):
+    """OBS lower-third overlay — 1920×180 transparent strip with live leaderboard top 5."""
+    return render_template('marbles/lowerthird.html')
+
+@app.route('/marbles/winner/<session_id>')
+def marble_winner(session_id):
+    """OBS winner card overlay — 400×200 animated winner announcement."""
+    return render_template('marbles/winner.html')
+
+@app.route('/marbles/chatfollower/<session_id>')
+def marble_chatfollower(session_id):
+    """OBS chat follower — scrolling panel of players who recently joined via !join."""
+    return render_template('marbles/chatfollower.html')
+
+# ==================== STREAMAVATARS ====================
+
+@app.route('/streamavatars/static/<path:filename>')
+def sa_static(filename):
+    return send_from_directory('website/streamavatars', filename)
+
+@app.route('/streamavatars')
+@app.route('/streamavatars/')
+def streamavatars_home():
+    cub_user = session.get('cubsoftware_user') or session.get('cub_user')
+    if not cub_user:
+        return redirect(url_for('cub_login_page', next='/streamavatars'))
+    login      = (cub_user.get('login') or cub_user.get('username', '')).lower()
+    characters = _sa_get_characters(login)
+    settings   = _sa_overlay_settings(login)
+    return render_template('streamavatars/index.html',
+                           cub_user=cub_user, login=login,
+                           characters=characters, settings=settings,
+                           origin=request.host_url.rstrip('/'))
+
+@app.route('/streamavatars/editor')
+def streamavatars_editor():
+    cub_user = session.get('cubsoftware_user') or session.get('cub_user')
+    if not cub_user:
+        return redirect(url_for('cub_login_page', next='/streamavatars/editor'))
+    return render_template('streamavatars/editor.html', cub_user=cub_user)
+
+@app.route('/streamavatars/overlay/<channel>')
+def streamavatars_overlay(channel):
+    return render_template('streamavatars/overlay.html',
+                           channel=channel.lower().lstrip('#'))
+
+# ── StreamAvatars API ─────────────────────────────────────────────────────────
+
+@app.route('/streamavatars/api/character/save', methods=['POST'])
+def sa_api_save_character():
+    cub_user = session.get('cubsoftware_user') or session.get('cub_user')
+    if not cub_user:
+        return jsonify({'error': 'Not logged in'}), 401
+    login   = (cub_user.get('login') or cub_user.get('username', '')).lower()
+    body    = request.get_json(silent=True) or {}
+    name    = (body.get('name') or 'My Character')[:64]
+    sprites = body.get('sprites') or {}
+    thumb   = body.get('thumbnail')
+    char_id = body.get('char_id')
+    if char_id:
+        try: char_id = int(char_id)
+        except Exception: char_id = None
+    new_id  = _sa_save_character(login, char_id, name, sprites, thumb)
+    return jsonify({'ok': True, 'char_id': new_id})
+
+@app.route('/streamavatars/api/character/<int:char_id>', methods=['GET'])
+def sa_api_get_character(char_id):
+    cub_user = session.get('cubsoftware_user') or session.get('cub_user')
+    if not cub_user:
+        return jsonify({'error': 'Not logged in'}), 401
+    login = (cub_user.get('login') or cub_user.get('username', '')).lower()
+    char  = _sa_get_character(char_id, user_login=login)
+    if not char:
+        return jsonify({'ok': False, 'error': 'Not found'}), 404
+    return jsonify({'ok': True, **char})
+
+@app.route('/streamavatars/api/characters/<int:char_id>/activate', methods=['POST'])
+def sa_api_activate(char_id):
+    cub_user = session.get('cubsoftware_user') or session.get('cub_user')
+    if not cub_user:
+        return jsonify({'error': 'Not logged in'}), 401
+    login = (cub_user.get('login') or cub_user.get('username', '')).lower()
+    _sa_activate(login, char_id)
+    return jsonify({'ok': True})
+
+@app.route('/streamavatars/api/characters/<int:char_id>', methods=['DELETE'])
+def sa_api_delete_character(char_id):
+    cub_user = session.get('cubsoftware_user') or session.get('cub_user')
+    if not cub_user:
+        return jsonify({'error': 'Not logged in'}), 401
+    login = (cub_user.get('login') or cub_user.get('username', '')).lower()
+    _sa_delete(login, char_id)
+    return jsonify({'ok': True})
+
+@app.route('/streamavatars/api/overlay-settings', methods=['POST'])
+def sa_api_save_settings():
+    cub_user = session.get('cubsoftware_user') or session.get('cub_user')
+    if not cub_user:
+        return jsonify({'error': 'Not logged in'}), 401
+    login = (cub_user.get('login') or cub_user.get('username', '')).lower()
+    body  = request.get_json(silent=True) or {}
+    _sa_save_overlay_settings(login, body)
+    return jsonify({'ok': True})
+
+@app.route('/streamavatars/api/user/<login>/sprites', methods=['GET'])
+def sa_api_user_sprites(login):
+    """Public — returns active character sprites for a viewer login."""
+    char_id = _sa_active_id(login.lower())
+    if not char_id:
+        return jsonify({'sprites': None})
+    char = _sa_get_character(char_id)
+    return jsonify({'sprites': char['sprites'] if char else None})
+
+@app.route('/streamavatars/api/overlay/<channel>/events', methods=['GET'])
+def sa_api_overlay_events(channel):
+    """Overlay polls this for new chat events and active chatter list."""
+    channel = channel.lower().lstrip('#')
+    after   = int(request.args.get('after', 0))
+    sess    = _sa_irc.get_or_create(channel)
+    events  = sess.get_events(after_seq=after)
+    active  = sess.get_active_chatters()
+    ov_set  = _sa_overlay_settings(channel)
+    return jsonify({
+        'events':          events,
+        'active_chatters': {k: True for k in active},
+        'settings':        {
+            'show_bubbles': bool(ov_set.get('show_bubbles', 1)),
+            'sprite_scale': float(ov_set.get('sprite_scale', 3.0)),
+            'walk_speed':   float(ov_set.get('walk_speed', 1.0)),
+        },
+    })
+
+# ==================== USER TITLES ====================
+#
+# Keys in _title_db are "provider:id"  e.g. "discord:378501056008683530"
+#                                           "twitch:141981764"
+# Each entry also stores twitch_login (lowercase) so marble IRC can resolve names.
+# Hardcoded roles use the same "provider:id" format and are never overridden by
+# the file-backed store.
+
+import threading as _threading
+
+_TITLE_DATA_PATH = os.path.normpath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'user_titles.json')
+)
+
+_ROLE_DISPLAY = {
+    'dev':      '[DEV]',
+    'staff':    '[STAFF]',
+    'streamer': '[STREAMER]',
+    'default':  '[DEFAULT]',
+}
+
+# Permanent roles that cannot be overridden by the admin API
+# Keys: "provider:id"   Values: role string
+_HARDCODED_ROLES = {
+    'discord:378501056008683530': 'dev',   # HexEchoTV — developer (Discord)
+    'twitch_login:hexechotv':     'dev',   # HexEchoTV — developer (Twitch IRC lookup)
+}
+
+_title_db: dict = {}          # "provider:id" → {role, twitch_login?}
+_title_db_lock = _threading.Lock()
+
+
+def _titles_load():
+    global _title_db
+    try:
+        if os.path.exists(_TITLE_DATA_PATH):
+            with open(_TITLE_DATA_PATH, 'r', encoding='utf-8') as f:
+                _title_db = json.load(f)
+    except Exception:
+        _title_db = {}
+
+
+def _titles_save():
+    try:
+        os.makedirs(os.path.dirname(_TITLE_DATA_PATH), exist_ok=True)
+        with open(_TITLE_DATA_PATH, 'w', encoding='utf-8') as f:
+            json.dump(_title_db, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.warning(f'Could not save user_titles.json: {e}')
+
+
+def _title_key(provider: str, user_id: str) -> str:
+    return f'{provider}:{user_id}'
+
+
+def _title_entry(key: str) -> dict:
+    if key not in _title_db:
+        _title_db[key] = {'role': _HARDCODED_ROLES.get(key, 'default')}
+    return _title_db[key]
+
+
+def get_user_title_prefix(provider: str, user_id: str) -> str:
+    """Return display prefix e.g. '[DEV]'. Hardcoded roles always win."""
+    key = _title_key(provider, user_id)
+    if key in _HARDCODED_ROLES:
+        return _ROLE_DISPLAY.get(_HARDCODED_ROLES[key], '[DEFAULT]')
+    entry = _title_entry(key)
+    return _ROLE_DISPLAY.get(entry.get('role', 'default'), '[DEFAULT]')
+
+
+def get_user_title_prefix_from_cub(cub_user: dict) -> str:
+    """Convenience wrapper — checks hardcoded by provider:id, then by twitch_login."""
+    provider = cub_user.get('provider', '')
+    uid      = str(cub_user.get('id', ''))
+    key      = _title_key(provider, uid)
+    if key in _HARDCODED_ROLES:
+        return _ROLE_DISPLAY.get(_HARDCODED_ROLES[key], '[DEFAULT]')
+    # Twitch logins: also check by login name (handles cases where Twitch user ID is unknown)
+    if provider == 'twitch':
+        login_key = f'twitch_login:{cub_user.get("login", "").lower()}'
+        if login_key in _HARDCODED_ROLES:
+            return _ROLE_DISPLAY.get(_HARDCODED_ROLES[login_key], '[DEFAULT]')
+    entry = _title_entry(key)
+    return _ROLE_DISPLAY.get(entry.get('role', 'default'), '[DEFAULT]')
+
+
+def get_title_by_twitch_login(login: str) -> str:
+    """Return prefix for a Twitch username — used by the marble IRC display."""
+    login = login.lower()
+    # Check hardcoded first
+    hk = f'twitch_login:{login}'
+    if hk in _HARDCODED_ROLES:
+        return _ROLE_DISPLAY.get(_HARDCODED_ROLES[hk], '[DEFAULT]')
+    # Scan file-backed store for a matching twitch_login field
+    for entry in _title_db.values():
+        if entry.get('twitch_login') == login:
+            return _ROLE_DISPLAY.get(entry.get('role', 'default'), '[DEFAULT]')
+    return _ROLE_DISPLAY['default']
+
+
+def _caller_role(cub_user: dict) -> str:
+    provider = cub_user.get('provider', '')
+    key = _title_key(provider, str(cub_user.get('id', '')))
+    if key in _HARDCODED_ROLES:
+        return _HARDCODED_ROLES[key]
+    if provider == 'twitch':
+        login_key = f'twitch_login:{cub_user.get("login", "").lower()}'
+        if login_key in _HARDCODED_ROLES:
+            return _HARDCODED_ROLES[login_key]
+    return _title_entry(key).get('role', 'default')
+
+
+_titles_load()
+
+
+@app.route('/api/user/title', methods=['GET'])
+def api_get_my_title():
+    cub_user = session.get('cub_user')
+    if not cub_user:
+        return jsonify({'error': 'Not logged in'}), 401
+    prefix = get_user_title_prefix_from_cub(cub_user)
+    return jsonify({
+        'provider':       cub_user.get('provider'),
+        'user_id':        str(cub_user.get('id', '')),
+        'role':           _caller_role(cub_user),
+        'display_prefix': prefix,
+        'display_name':   f'{prefix} {cub_user.get("username", "?")}',
+    })
+
+
+@app.route('/api/user/<provider>/<user_id>/title', methods=['GET'])
+def api_get_user_title(provider, user_id):
+    prefix = get_user_title_prefix(provider, user_id)
+    return jsonify({
+        'display_prefix': prefix,
+        'role':           _title_entry(_title_key(provider, user_id)).get('role', 'default'),
+    })
+
+
+@app.route('/api/admin/user/role', methods=['POST'])
+def api_admin_set_role():
+    """Dev/Staff only — assign a role to any user by provider+id."""
+    cub_user = session.get('cub_user')
+    if not cub_user:
+        return jsonify({'error': 'Not logged in'}), 401
+    caller = _caller_role(cub_user)
+    if caller not in ('dev', 'staff'):
+        return jsonify({'error': 'Insufficient permissions'}), 403
+    body     = request.get_json(silent=True) or {}
+    provider = body.get('provider', '').strip()
+    uid      = str(body.get('user_id', '')).strip()
+    role     = body.get('role', '').strip()
+    login    = body.get('twitch_login', '').strip().lower() or None
+    if not provider or not uid or role not in _ROLE_DISPLAY:
+        return jsonify({'error': 'provider, user_id, and valid role required'}), 400
+    if role == 'dev' and caller != 'dev':
+        return jsonify({'error': 'Only DEV can assign the DEV role'}), 403
+    key = _title_key(provider, uid)
+    if key in _HARDCODED_ROLES and caller != 'dev':
+        return jsonify({'error': 'Cannot change a hardcoded role'}), 403
+    with _title_db_lock:
+        entry = _title_entry(key)
+        entry['role'] = role
+        if login:
+            entry['twitch_login'] = login
+        _titles_save()
+    return jsonify({'ok': True, 'key': key, 'role': role,
+                    'display_prefix': get_user_title_prefix(provider, uid)})
+
 
 # ==================== ROADMAP ====================
 

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings — Marbles | CUBSOFTWARE</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        body { background:#050508; color:#e0e0e0; font-family:'Poppins',sans-serif; }
+        .s-wrap  { max-width:700px; margin:0 auto; padding:40px 20px; }
+        .s-back  { font-size:12px; color:#555; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin-bottom:20px; }
+        .s-back:hover { color:#5865f2; }
+        .s-title { font-family:'Orbitron',sans-serif; font-size:22px; font-weight:900; color:#fff; margin-bottom:6px; }
+        .s-sub   { font-size:12px; color:#555; margin-bottom:32px; }
+
+        .s-section { margin-bottom:28px; }
+        .s-section-title {
+            font-family:'Orbitron',sans-serif; font-size:11px; color:#5865f2;
+            text-transform:uppercase; letter-spacing:0.15em; margin-bottom:12px;
+            padding-bottom:6px; border-bottom:1px solid #1e1e2e;
+        }
+
+        .s-field { margin-bottom:16px; }
+        .s-field label { display:block; font-size:12px; font-weight:600; color:#c0c0e0; margin-bottom:5px; }
+        .s-field .s-hint { font-size:10px; color:#555; margin-top:3px; }
+
+        .s-input {
+            width:100%; background:#0d0d1a; border:1px solid #1e1e2e; border-radius:7px;
+            padding:9px 12px; color:#e0e0e0; font-family:'Poppins',sans-serif; font-size:13px;
+        }
+        .s-input:focus { outline:none; border-color:#5865f2; }
+        .s-select { appearance:none; cursor:pointer; }
+
+        .s-row  { display:flex; align-items:center; justify-content:space-between; padding:10px 14px;
+                  background:#0d0d1a; border:1px solid #1e1e2e; border-radius:8px; margin-bottom:8px; }
+        .s-row-label { font-size:13px; color:#e0e0e0; }
+        .s-row-hint  { font-size:10px; color:#555; margin-top:1px; }
+
+        /* Toggle switch */
+        .s-toggle { position:relative; width:40px; height:22px; flex-shrink:0; }
+        .s-toggle input { opacity:0; width:0; height:0; position:absolute; }
+        .s-slider {
+            position:absolute; inset:0; background:#1e1e2e; border-radius:22px; cursor:pointer;
+            transition:background 0.2s;
+        }
+        .s-slider::before {
+            content:''; position:absolute; width:16px; height:16px; left:3px; top:3px;
+            background:#555; border-radius:50%; transition:transform 0.2s, background 0.2s;
+        }
+        .s-toggle input:checked + .s-slider { background:#5865f2; }
+        .s-toggle input:checked + .s-slider::before { transform:translateX(18px); background:#fff; }
+
+        .s-color-row { display:flex; align-items:center; gap:12px; }
+        .s-color-preview { width:36px; height:36px; border-radius:50%; border:2px solid #1e1e2e; flex-shrink:0; }
+        input[type="color"] { width:36px; height:36px; border:none; background:none; cursor:pointer; padding:0; }
+
+        .s-save-btn {
+            display:block; width:100%; padding:13px;
+            background:linear-gradient(135deg,#5865f2,#a855f7); color:#fff;
+            border:none; border-radius:10px; font-family:'Poppins',sans-serif;
+            font-size:14px; font-weight:700; cursor:pointer; margin-top:24px;
+            transition:opacity 0.15s;
+        }
+        .s-save-btn:hover { opacity:0.9; }
+        .s-save-btn:disabled { opacity:0.5; cursor:default; }
+
+        .s-toast {
+            position:fixed; bottom:24px; right:24px; z-index:9999;
+            background:#22c55e; color:#fff; padding:10px 18px; border-radius:8px;
+            font-size:13px; font-weight:600; opacity:0;
+            transition:opacity 0.3s;
+        }
+        .s-toast.visible { opacity:1; }
+    </style>
+</head>
+<body>
+<div class="s-wrap">
+    <a class="s-back" href="/marbles/player/{{ twitch_login }}">← Profile</a>
+    <div class="s-title">Settings</div>
+    <div class="s-sub">Logged in as <strong>{{ display_name }}</strong> · Changes apply to your next race</div>
+
+    <form id="settingsForm">
+
+        <!-- Identity -->
+        <div class="s-section">
+            <div class="s-section-title">Identity</div>
+            <div class="s-field">
+                <label>Display Name</label>
+                <input class="s-input" type="text" name="display_name" maxlength="20"
+                       value="{{ settings.display_name or '' }}"
+                       placeholder="{{ display_name }} (Twitch username)">
+                <div class="s-hint">Override your Twitch username in-race. Leave blank to use your Twitch name.</div>
+            </div>
+            <div class="s-field">
+                <label>Marble Colour</label>
+                <div class="s-color-row">
+                    <div class="s-color-preview" id="colorPreview" style="background:{{ settings.marble_color or '#5865f2' }}"></div>
+                    <input type="color" id="colorPicker" value="{{ settings.marble_color or '#5865f2' }}">
+                    <input class="s-input" type="text" name="marble_color" id="colorHex"
+                           value="{{ settings.marble_color or '' }}" placeholder="Auto (e.g. #ff6600)" maxlength="7">
+                    <button type="button" onclick="document.getElementById('marble_color').value=''; document.getElementById('colorHex').value=''; updateColorPreview('');" style="background:none;border:1px solid #333;color:#888;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:11px;">Reset</button>
+                </div>
+                <div class="s-hint">Leave blank for automatic colour based on your username.</div>
+            </div>
+        </div>
+
+        <!-- In-race appearance -->
+        <div class="s-section">
+            <div class="s-section-title">In-Race Appearance</div>
+            <div class="s-field">
+                <label>Marble Size</label>
+                <select class="s-input s-select" name="marble_size">
+                    <option value="0.8" {% if settings.marble_size == 0.8 %}selected{% endif %}>Small (0.8×)</option>
+                    <option value="1.0" {% if (settings.marble_size or 1.0) == 1.0 %}selected{% endif %}>Normal (1.0×)</option>
+                    <option value="1.2" {% if settings.marble_size == 1.2 %}selected{% endif %}>Large (1.2×)</option>
+                    <option value="1.4" {% if settings.marble_size == 1.4 %}selected{% endif %}>Extra Large (1.4×)</option>
+                </select>
+                <div class="s-hint">Cosmetic scale — does not affect physics</div>
+            </div>
+            <div class="s-field">
+                <label>Nametag Style</label>
+                <select class="s-input s-select" name="nametag_style">
+                    <option value="default"  {% if settings.nametag_style == 'default'  %}selected{% endif %}>Default</option>
+                    <option value="bold"     {% if settings.nametag_style == 'bold'     %}selected{% endif %}>Bold</option>
+                    <option value="minimal"  {% if settings.nametag_style == 'minimal'  %}selected{% endif %}>Minimal (name only)</option>
+                    <option value="hidden"   {% if settings.nametag_style == 'hidden'   %}selected{% endif %}>Hidden (competitive)</option>
+                </select>
+            </div>
+            <div class="s-row">
+                <div>
+                    <div class="s-row-label">Reduce Motion</div>
+                    <div class="s-row-hint">Disables particles, trails, slow-mo, and camera shake</div>
+                </div>
+                <label class="s-toggle">
+                    <input type="checkbox" name="reduced_motion" {% if settings.reduced_motion %}checked{% endif %}>
+                    <span class="s-slider"></span>
+                </label>
+            </div>
+            <div class="s-row">
+                <div>
+                    <div class="s-row-label">High Contrast Names</div>
+                    <div class="s-row-hint">Forces white nametag text regardless of marble colour</div>
+                </div>
+                <label class="s-toggle">
+                    <input type="checkbox" name="high_contrast_names" {% if settings.high_contrast_names %}checked{% endif %}>
+                    <span class="s-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Camera -->
+        <div class="s-section">
+            <div class="s-section-title">Camera</div>
+            <div class="s-field">
+                <label>Default Camera Mode</label>
+                <select class="s-input s-select" name="camera_preference">
+                    <option value="leader"   {% if settings.camera_preference == 'leader'   %}selected{% endif %}>Follow Leader</option>
+                    <option value="overview" {% if settings.camera_preference == 'overview' %}selected{% endif %}>Overview</option>
+                    <option value="side"     {% if settings.camera_preference == 'side'     %}selected{% endif %}>Side View</option>
+                    <option value="free"     {% if settings.camera_preference == 'free'     %}selected{% endif %}>Free Camera</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="s-section">
+            <div class="s-section-title">Notifications</div>
+            <div class="s-row">
+                <div>
+                    <div class="s-row-label">Achievement Unlocked</div>
+                    <div class="s-row-hint">Show a toast when you earn a new achievement</div>
+                </div>
+                <label class="s-toggle">
+                    <input type="checkbox" name="notify_achievements" {% if settings.notify_achievements %}checked{% endif %}>
+                    <span class="s-slider"></span>
+                </label>
+            </div>
+            <div class="s-row">
+                <div>
+                    <div class="s-row-label">Track Record Broken</div>
+                    <div class="s-row-hint">Show overlay when a new track record is set</div>
+                </div>
+                <label class="s-toggle">
+                    <input type="checkbox" name="notify_records" {% if settings.notify_records %}checked{% endif %}>
+                    <span class="s-slider"></span>
+                </label>
+            </div>
+            <div class="s-row">
+                <div>
+                    <div class="s-row-label">Coins Earned</div>
+                    <div class="s-row-hint">Show coin summary popup after each race</div>
+                </div>
+                <label class="s-toggle">
+                    <input type="checkbox" name="notify_coins" {% if settings.notify_coins %}checked{% endif %}>
+                    <span class="s-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Sound -->
+        <div class="s-section">
+            <div class="s-section-title">Sound</div>
+            <div class="s-field">
+                <label>Sound Volume <span id="volLabel" style="color:#5865f2;font-weight:700;">{{ settings.sound_volume | default(80) }}%</span></label>
+                <input type="range" class="s-input" name="sound_volume" min="0" max="100" step="5"
+                       value="{{ settings.sound_volume | default(80) }}" id="volSlider"
+                       style="padding:4px 0;cursor:pointer;">
+                <div class="s-hint">Controls the volume of all in-race sound effects</div>
+            </div>
+            <div class="s-field">
+                <label>Sound Pack</label>
+                <select class="s-input s-select" name="sound_pack">
+                    <option value="classic"   {% if settings.sound_pack in ('classic', '', none) %}selected{% endif %}>Classic</option>
+                    <option value="retro"     {% if settings.sound_pack == 'retro'     %}selected{% endif %}>Retro 8-bit</option>
+                    <option value="satisfying"{% if settings.sound_pack == 'satisfying'%}selected{% endif %}>Satisfying</option>
+                </select>
+                <div class="s-hint">Sound pack selection — more packs coming soon</div>
+            </div>
+        </div>
+
+        <!-- Cosmetics link -->
+        <div class="s-section">
+            <div class="s-section-title">Appearance</div>
+            <a href="/marbles/cosmetics" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#a78bfa;text-decoration:none;background:#0d0d1a;border:1px solid #1e1e2e;border-radius:8px;padding:10px 16px;">
+                🎨 Skins, Trails &amp; Accessories →
+            </a>
+            <div class="s-hint" style="margin-top:8px;">Customise your marble appearance on the Cosmetics page</div>
+        </div>
+
+        <!-- Privacy -->
+        <div class="s-section">
+            <div class="s-section-title">Privacy</div>
+            <div class="s-row">
+                <div>
+                    <div class="s-row-label">Public Profile</div>
+                    <div class="s-row-hint">Allow anyone to view your stats at /marbles/player/{{ twitch_login }}</div>
+                </div>
+                <label class="s-toggle">
+                    <input type="checkbox" name="profile_public" {% if settings.profile_public %}checked{% endif %}>
+                    <span class="s-slider"></span>
+                </label>
+            </div>
+            <div class="s-row">
+                <div>
+                    <div class="s-row-label">Show on Leaderboard</div>
+                    <div class="s-row-hint">Include your name in the global leaderboard</div>
+                </div>
+                <label class="s-toggle">
+                    <input type="checkbox" name="show_on_leaderboard" {% if settings.show_on_leaderboard %}checked{% endif %}>
+                    <span class="s-slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" class="s-save-btn" id="saveBtn">Save Settings</button>
+    </form>
+</div>
+
+<div class="s-toast" id="saveToast">Settings saved!</div>
+
+<script>
+const colorPicker  = document.getElementById('colorPicker');
+const colorHex     = document.getElementById('colorHex');
+const colorPreview = document.getElementById('colorPreview');
+
+function updateColorPreview(hex) {
+    const valid = /^#[0-9a-fA-F]{6}$/.test(hex);
+    colorPreview.style.background = valid ? hex : '#5865f2';
+}
+
+colorPicker.addEventListener('input', () => {
+    colorHex.value = colorPicker.value;
+    updateColorPreview(colorPicker.value);
+});
+
+const volSlider = document.getElementById('volSlider');
+const volLabel  = document.getElementById('volLabel');
+if (volSlider) volSlider.addEventListener('input', () => { volLabel.textContent = volSlider.value + '%'; });
+
+colorHex.addEventListener('input', () => {
+    const hex = colorHex.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(hex)) colorPicker.value = hex;
+    updateColorPreview(hex);
+});
+
+document.getElementById('settingsForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+
+    const fd = new FormData(e.target);
+    const body = {
+        display_name:        fd.get('display_name') || '',
+        marble_color:        fd.get('marble_color') || '',
+        nametag_style:       fd.get('nametag_style'),
+        camera_preference:   fd.get('camera_preference'),
+        reduced_motion:      fd.has('reduced_motion') && fd.get('reduced_motion') !== null,
+        high_contrast_names: fd.has('high_contrast_names') && fd.get('high_contrast_names') !== null,
+        notify_achievements: fd.has('notify_achievements') && fd.get('notify_achievements') !== null,
+        notify_records:      fd.has('notify_records')      && fd.get('notify_records')      !== null,
+        notify_coins:        fd.has('notify_coins')        && fd.get('notify_coins')        !== null,
+        profile_public:      fd.has('profile_public')      && fd.get('profile_public')      !== null,
+        show_on_leaderboard: fd.has('show_on_leaderboard') && fd.get('show_on_leaderboard') !== null,
+    };
+    // FormData checkboxes: checked = present, unchecked = absent
+    const checkboxes = ['reduced_motion','high_contrast_names','notify_achievements',
+                        'notify_records','notify_coins','profile_public','show_on_leaderboard'];
+    checkboxes.forEach(k => { body[k] = e.target.querySelector(`[name="${k}"]`).checked; });
+
+    try {
+        const res = await fetch('/marbles/api/player/{{ twitch_login }}/settings', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+        if (res.ok) {
+            const toast = document.getElementById('saveToast');
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 2500);
+        }
+    } catch (_) {}
+
+    btn.disabled = false;
+    btn.textContent = 'Save Settings';
+});
+</script>
+</body>
+</html>

@@ -346,17 +346,20 @@
 
     .hero {
         padding: 40px 20px;
-        min-height: calc(100vh - 90px);
+        height: auto;
+        min-height: calc(100vh - 60px);
     }
 
     .hero-tagline {
-        font-size: 2.2rem;
+        font-size: 2rem;
         white-space: normal;
-        line-height: 1.3;
+        line-height: 1.25;
+        margin-bottom: 20px;
     }
 
     .hero-description {
-        font-size: 1.2rem;
+        font-size: 1.05rem;
+        line-height: 1.7;
     }
 
     .section-title {
@@ -372,11 +375,16 @@
     }
 
     .feature-card {
-        padding: 24px 20px;
+        padding: 20px 16px;
     }
 
     .feature-card h3 {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+
+    .feature-card p {
+        font-size: 0.95rem;
     }
 
     .category-section {
@@ -387,41 +395,52 @@
 @media (max-width: 480px) {
     .hero {
         padding: 30px 15px;
-        min-height: calc(100vh - 100px);
+        height: auto;
+        min-height: calc(100vh - 60px);
     }
 
     .hero-tagline {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
         white-space: normal;
+        line-height: 1.25;
+        margin-bottom: 16px;
     }
 
     .hero-description {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
+        line-height: 1.65;
     }
 
     .section-title {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
     }
 
     .features-grid .feature-card {
-        flex: 0 1 100%;
+        flex: 0 1 calc(50% - 10px);
         max-width: none;
     }
 
     .features-grid-4col {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 
     .feature-card {
-        padding: 20px;
+        padding: 16px 12px;
     }
 
     .feature-card h3 {
-        font-size: 1.1rem;
+        font-size: 1rem;
+        margin-bottom: 8px;
     }
 
     .feature-card p {
-        font-size: 0.95rem;
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+    }
+
+    .feature-badge {
+        font-size: 0.8rem;
+        padding: 6px 14px;
     }
 
     .about-section {

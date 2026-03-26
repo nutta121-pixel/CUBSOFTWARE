@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marbles Race — CUBSOFTWARE</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/marbles/static/css/play.css">
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/",
+            "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Canvas fills the whole window -->
+    <canvas id="race-canvas"></canvas>
+
+    <!-- ── Countdown overlay ── -->
+    <div id="overlayCountdown" class="overlay hidden">
+        <div id="countdownText" class="countdown-number">3</div>
+        <div class="countdown-sub">Get ready!</div>
+    </div>
+
+    <!-- ── Race HUD (top bar) ── -->
+    <div id="hud" class="hud hidden">
+        <div class="hud-left">
+            <div id="hudTimer" class="hud-timer">0:00.0</div>
+            <div id="hudMarbles" class="hud-marbles">0 marbles</div>
+            <div id="hudEliminatedCount" class="hud-marbles" style="display:none;color:#f87171;"></div>
+        </div>
+        <div class="hud-center">
+            <div id="hudMapName" class="hud-mapname"></div>
+        </div>
+        <div class="hud-right" id="hudLeaderboard">
+            <!-- Top-5 rows injected by JS -->
+        </div>
+    </div>
+
+    <!-- ── Camera mode toggle ── -->
+    <div id="camBtn" class="cam-btn hidden" title="Switch camera">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.89L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+        </svg>
+    </div>
+
+    <!-- ── "New Record!" banner ── -->
+    <div id="recordBanner" class="record-banner hidden">
+        <span class="record-icon">🏆</span>
+        <span id="recordText"></span>
+    </div>
+
+    <!-- ── Results overlay ── -->
+    <div id="overlayResults" class="overlay results hidden">
+        <div class="results-panel">
+            <div class="results-title">
+                <span class="results-trophy">🏆</span>
+                Race Complete!
+            </div>
+            <div id="resultsMapName" class="results-mapname"></div>
+            <div id="resultsList" class="results-list"></div>
+            <div class="results-actions">
+                <button id="btnRaceAgain" class="r-btn primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.51"/></svg>
+                    Race Again
+                </button>
+                <button id="btnBackEditor" class="r-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    Back to Editor
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Character Select overlay (pre-race) ── -->
+    <div id="overlayCharSelect" class="overlay hidden">
+        <div class="charselect-panel">
+            <div class="csp-title">Choose Your Marble</div>
+            <div class="csp-subtitle">Type <strong>!play</strong> or <strong>!play &lt;slot&gt;</strong> in chat</div>
+            <div id="csGrid" class="csp-grid"></div>
+            <div class="csp-divider"></div>
+            <div class="csp-players-header">Players who have chosen</div>
+            <div id="csPlayers" class="csp-players"></div>
+        </div>
+    </div>
+
+    <!-- ── Error overlay (no session data) ── -->
+    <div id="overlayError" class="overlay error hidden">
+        <div class="error-panel">
+            <div class="error-icon">⚠️</div>
+            <div id="errorMsg" class="error-msg">No race session found.</div>
+            <button onclick="window.location.href='/apps/marble-editor'" class="r-btn primary">Back to Editor</button>
+        </div>
+    </div>
+
+    {% if player_login %}<script>window.__MARBLES_LOGIN = '{{ player_login }}';</script>{% endif %}
+    {% if obs_session %}<script>window.__MARBLES_SESSION = '{{ obs_session }}'; window.__MARBLES_OBS = true;</script>{% endif %}
+    {% if watch_session %}<script>window.__MARBLES_SESSION = '{{ watch_session }}'; window.__MARBLES_WATCH = true;</script>{% endif %}
+    <script type="module" src="/marbles/static/js/play.js"></script>
+</body>
+</html>

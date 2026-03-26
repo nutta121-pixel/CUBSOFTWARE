@@ -6,11 +6,14 @@
     let currentSection = 'overview';
     let selectedGuild = null;  // full guild object
     let guilds = [];
-    let cachedChannels = null;  // cached channels for selected guild
-    let cachedRoles = null;     // cached roles for selected guild
-    let channelsLoading = null; // promise while loading
+    let cachedChannels = null;   // cached channels for selected guild
+    let cachedChannelsTTL = 0;   // expiry timestamp for channel cache
+    let cachedRoles = null;      // cached roles for selected guild
+    let cachedRolesTTL = 0;      // expiry timestamp for roles cache
+    let channelsLoading = null;  // promise while loading
     let _sectionLoading = false; // guard to prevent autosave during load
-    let rolesLoading = null;    // promise while loading
+    let rolesLoading = null;     // promise while loading
+    const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
     // ==================== SECTION GROUPS (combined tab sections) ====================
     const sectionGroups = {
@@ -162,7 +165,9 @@
 
         // Clear and pre-fetch channels/roles cache for this guild
         cachedChannels = null;
+        cachedChannelsTTL = 0;
         cachedRoles = null;
+        cachedRolesTTL = 0;
         channelsLoading = null;
         rolesLoading = null;
         fetchGuildChannels();
@@ -5104,12 +5109,14 @@
 
     // ==================== GUILD DATA CACHE ====================
     async function fetchGuildChannels() {
-        if (cachedChannels) return cachedChannels;
+        if (cachedChannels && Date.now() < cachedChannelsTTL) return cachedChannels;
         if (channelsLoading) return channelsLoading;
+        cachedChannels = null;
         channelsLoading = fetch(`/api/cub-protector/guilds/${selectedGuild.id}/channels`)
             .then(r => r.json())
             .then(data => {
                 cachedChannels = data.channels || [];
+                cachedChannelsTTL = Date.now() + CACHE_TTL_MS;
                 channelsLoading = null;
                 return cachedChannels;
             })
@@ -5117,13 +5124,28 @@
         return channelsLoading;
     }
 
+    window.cpRefreshChannels = async function() {
+        cachedChannels = null;
+        cachedChannelsTTL = 0;
+        cachedRoles = null;
+        cachedRolesTTL = 0;
+        channelsLoading = null;
+        rolesLoading = null;
+        await fetchGuildChannels();
+        await fetchGuildRoles();
+        await loadSectionData(currentSection);
+        showToast('Channel list refreshed', 'success');
+    };
+
     async function fetchGuildRoles() {
-        if (cachedRoles) return cachedRoles;
+        if (cachedRoles && Date.now() < cachedRolesTTL) return cachedRoles;
         if (rolesLoading) return rolesLoading;
+        cachedRoles = null;
         rolesLoading = fetch(`/api/cub-protector/guilds/${selectedGuild.id}/roles`)
             .then(r => r.json())
             .then(data => {
                 cachedRoles = data.roles || [];
+                cachedRolesTTL = Date.now() + CACHE_TTL_MS;
                 rolesLoading = null;
                 return cachedRoles;
             })

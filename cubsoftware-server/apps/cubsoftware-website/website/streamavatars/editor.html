@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprite Editor — StreamAvatars</title>
+<link rel="icon" type="image/png" href="/static/images/company-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+<link rel="stylesheet" href="/streamavatars/static/css/streamavatars.css?v={{ v }}">
+<style>
+html, body { height: 100%; display: flex; flex-direction: column; margin: 0; }
+.editor-outer { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+
+/* ── Top bar ──────────────────────────────────── */
+.editor-bar {
+    background: #0d0d1a;
+    border-bottom: 1px solid #1e1e2e;
+    padding: 0 16px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    overflow: hidden;
+}
+.char-name-input {
+    background: #07070f;
+    border: 1px solid #1e1e2e;
+    border-radius: 7px;
+    color: #e0e0e0;
+    padding: 5px 11px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    outline: none;
+    width: 160px;
+    transition: border-color 0.15s;
+}
+.char-name-input:focus { border-color: #5865f2; }
+
+/* ── State tabs ───────────────────────────────── */
+.state-tabs { display: flex; gap: 3px; }
+.state-btn {
+    padding: 5px 11px;
+    background: #07070f;
+    border: 1px solid #1e1e2e;
+    border-radius: 6px;
+    color: #555;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    transition: all 0.12s;
+}
+.state-btn:hover { border-color: #5865f2; color: #5865f2; }
+.state-btn.active { background: #5865f2; border-color: #5865f2; color: #fff; }
+.spacer { flex: 1; }
+
+/* ── Layout ───────────────────────────────────── */
+.editor-main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* ── Left tools ───────────────────────────────── */
+.tool-panel {
+    width: 56px;
+    background: #0d0d1a;
+    border-right: 1px solid #1e1e2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 6px;
+    gap: 5px;
+    flex-shrink: 0;
+}
+.tool-btn {
+    width: 38px; height: 38px;
+    background: #07070f;
+    border: 1px solid #1e1e2e;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.12s, background 0.12s;
+    color: #888;
+    flex-shrink: 0;
+}
+.tool-btn:hover { border-color: #5865f2; color: #5865f2; }
+.tool-btn.active { border-color: #5865f2; background: #0a0a18; color: #5865f2; }
+.tool-sep { width: 28px; height: 1px; background: #1e1e2e; margin: 3px 0; }
+
+/* Color swatch */
+.color-swatch {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    border: 1px solid #1e1e2e;
+    overflow: hidden;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.color-swatch input[type=color] {
+    width: 150%; height: 150%;
+    margin: -25% 0 0 -25%;
+    border: none;
+    cursor: pointer;
+}
+
+/* ── Canvas area ──────────────────────────────── */
+.canvas-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #030306;
+    overflow: auto;
+    position: relative;
+}
+/* Checkerboard transparency hint */
+.canvas-area::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(45deg, #0d0d1a 25%, transparent 25%),
+        linear-gradient(-45deg, #0d0d1a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #0d0d1a 75%),
+        linear-gradient(-45deg, transparent 75%, #0d0d1a 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    pointer-events: none;
+    opacity: 0.5;
+}
+#editorCanvas {
+    image-rendering: pixelated;
+    cursor: crosshair;
+    border: 1px solid #1e1e2e;
+    display: block;
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Right panel ──────────────────────────────── */
+.right-panel {
+    width: 188px;
+    background: #0d0d1a;
+    border-left: 1px solid #1e1e2e;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+.panel-section {
+    padding: 11px 12px;
+    border-bottom: 1px solid #131320;
+}
+.panel-section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px;
+    font-weight: 700;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+}
+
+/* ── Frame list ───────────────────────────────── */
+#frameList { display: flex; flex-wrap: wrap; gap: 5px; }
+.frame-thumb-wrap { position: relative; }
+.frame-thumb {
+    display: block;
+    width: 36px; height: 54px;
+    image-rendering: pixelated;
+    background: #07070f;
+    border: 1px solid #1e1e2e;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: border-color 0.12s;
+}
+.frame-thumb:hover { border-color: #444; }
+.frame-thumb.active { border-color: #5865f2; }
+.frame-btns { display: flex; gap: 5px; margin-top: 7px; }
+.frame-btns button {
+    flex: 1;
+    padding: 5px;
+    background: #07070f;
+    border: 1px solid #1e1e2e;
+    border-radius: 6px;
+    color: #888;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    transition: border-color 0.12s, color 0.12s;
+}
+.frame-btns button:hover { border-color: #5865f2; color: #5865f2; }
+#btnDelFrame:hover { border-color: #ef4444 !important; color: #ef4444 !important; }
+
+/* ── Preview ──────────────────────────────────── */
+#previewCanvas {
+    image-rendering: pixelated;
+    display: block;
+    border: 1px solid #1e1e2e;
+    border-radius: 4px;
+    background: #07070f;
+    margin: 0 auto;
+}
+.preview-fps { font-size: 10px; color: #444; margin-top: 5px; text-align: center; }
+
+/* ── Color palette ────────────────────────────── */
+.palette {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 2px;
+}
+.palette-swatch {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: transform 0.1s, border-color 0.1s;
+}
+.palette-swatch:hover { transform: scale(1.25); border-color: #e0e0e0; }
+.transparency-btn {
+    width: 100%;
+    padding: 5px;
+    background: #07070f;
+    border: 1px solid #1e1e2e;
+    border-radius: 5px;
+    color: #555;
+    font-size: 10px;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    margin-top: 6px;
+    transition: border-color 0.12s, color 0.12s;
+}
+.transparency-btn:hover { border-color: #5865f2; color: #5865f2; }
+</style>
+</head>
+<body>
+
+{% include 'header.html' %}
+
+<div class="editor-outer">
+
+<!-- Top bar -->
+<div class="editor-bar">
+    <a href="/streamavatars" class="sa-nav-brand">StreamAvatars</a>
+    <input class="char-name-input" type="text" id="charName" placeholder="Character name..." value="My Character">
+    <div class="state-tabs">
+        <button class="state-btn active" data-state="idle">Idle</button>
+        <button class="state-btn" data-state="walk">Walk</button>
+        <button class="state-btn" data-state="run">Run</button>
+        <button class="state-btn" data-state="jump">Jump</button>
+        <button class="state-btn" data-state="talk">Talk</button>
+    </div>
+    <div class="spacer"></div>
+    <input type="color" id="presetColor" value="#202838" title="Preset colour"
+           style="width:28px;height:28px;border:1px solid #1e1e2e;border-radius:6px;
+                  background:#07070f;cursor:pointer;padding:0;flex-shrink:0">
+    <button class="state-btn" onclick="loadPreset('wolf')"    title="Wolf preset">🐺</button>
+    <button class="state-btn" onclick="loadPreset('onion')"   title="Onion DJ preset">🧅</button>
+    <button class="state-btn" onclick="loadPreset('leopard')" title="Snow Leopard preset">❄️</button>
+    <button class="state-btn" onclick="loadPreset('kitsune')" title="Kitsune Fox preset">🦊</button>
+    <button class="btn btn-sm" id="btnRecolor" title="Recolour current preset">🎨 Recolour</button>
+    <button class="btn btn-primary btn-sm" id="btnSave">💾 Save</button>
+</div>
+
+<!-- Main -->
+<div class="editor-main">
+
+    <!-- Left: tools -->
+    <div class="tool-panel">
+        <button class="tool-btn active" data-tool="pencil" title="Pencil (P)">✏️</button>
+        <button class="tool-btn" data-tool="eraser" title="Eraser (E)">🧹</button>
+        <button class="tool-btn" data-tool="fill" title="Fill (F)">🪣</button>
+        <button class="tool-btn" data-tool="eyedropper" title="Pick colour (I)">💉</button>
+        <div class="tool-sep"></div>
+        <div class="color-swatch" title="Pick colour">
+            <input type="color" id="colorPicker" value="#5865f2">
+        </div>
+        <div class="tool-sep"></div>
+        <button class="tool-btn" id="btnZoomIn"  title="Zoom In (+)"  style="font-weight:bold;font-size:15px;color:#888">+</button>
+        <button class="tool-btn" id="btnZoomOut" title="Zoom Out (-)" style="font-weight:bold;font-size:15px;color:#888">−</button>
+        <div class="tool-sep"></div>
+        <button class="tool-btn" id="btnEraseAll" title="Clear frame" onclick="clearFrame()"
+                style="color:#555;font-size:14px">🗑</button>
+    </div>
+
+    <!-- Centre: pixel canvas -->
+    <div class="canvas-area">
+        <canvas id="editorCanvas"></canvas>
+    </div>
+
+    <!-- Right: frames + preview + palette -->
+    <div class="right-panel">
+        <div class="panel-section">
+            <div class="panel-section-title">Frames</div>
+            <div id="frameList"></div>
+            <div class="frame-btns">
+                <button id="btnAddFrame">+ Add</button>
+                <button id="btnDelFrame">- Del</button>
+            </div>
+        </div>
+        <div class="panel-section">
+            <div class="panel-section-title">Preview</div>
+            <canvas id="previewCanvas" width="96" height="144"></canvas>
+            <!-- Speed slider -->
+            <div style="display:flex;align-items:center;gap:6px;margin-top:7px;">
+                <span style="font-size:10px;color:#444;flex-shrink:0">FPS</span>
+                <input type="range" id="previewFpsSlider" min="1" max="24" step="1" value="2"
+                       style="flex:1;accent-color:#5865f2;height:3px;cursor:pointer">
+                <span style="font-size:10px;color:#5865f2;min-width:20px;text-align:right" id="previewFpsLabel">2</span>
+            </div>
+            <!-- Flip toggle -->
+            <button id="btnFlipPreview"
+                    style="width:100%;margin-top:6px;padding:4px;background:#07070f;border:1px solid #1e1e2e;
+                           border-radius:6px;color:#666;font-size:11px;font-family:'Poppins',sans-serif;
+                           cursor:pointer;transition:border-color 0.12s,color 0.12s"
+                    title="Toggle mirrored direction">
+                ↔ Flip Preview
+            </button>
+        </div>
+        <div class="panel-section">
+            <div class="panel-section-title">Colours</div>
+            <div class="palette" id="palette"></div>
+            <button class="transparency-btn" onclick="setTransparent()">Erase with Fill</button>
+        </div>
+    </div>
+
+</div>
+
+</div><!-- /.editor-outer -->
+
+{% include 'footer.html' %}
+
+<div class="toast" id="toast"></div>
+
+<script src="/streamavatars/static/js/editor.js?v={{ v }}"></script>
+<script>
+const EDIT_ID = new URLSearchParams(location.search).get('id');
+if (EDIT_ID) {
+    loadCharacter(parseInt(EDIT_ID));
+} else {
+    loadDefaultCharacter();
+}
+</script>
+</body>
+</html>

@@ -10319,7 +10319,7 @@ client.once('ready', async () => {
                         const emoji = platformEmojis[platform] || '🔴';
                         const platformName = platformNames[platform] || platform;
 
-                        const alertMsg = (streamer.message || `${emoji} **{username}** is now live on {platform}!\n**{title}**\n{url}`)
+                        const alertMsg = (streamer.message || `${emoji} **{username}** is now live on {platform}!\n{url}`)
                             .replace(/{username}/g, displayName)
                             .replace(/{title}/g, streamInfo.title || 'Untitled Stream')
                             .replace(/{game}/g, streamInfo.game || '')

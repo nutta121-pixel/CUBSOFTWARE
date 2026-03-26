@@ -348,6 +348,7 @@
             mobileBtn.addEventListener('click', function() {
                 nav.classList.toggle('active');
                 mobileBtn.classList.toggle('active');
+                document.body.style.overflow = nav.classList.contains('active') ? 'hidden' : '';
             });
         }
         document.querySelectorAll('.dropdown-toggle').forEach(btn => {

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marbles Alerts — {{ channel }}</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body {
+    width:100%; height:100%;
+    background:transparent;
+    overflow:hidden;
+    font-family:'Poppins', 'Segoe UI', sans-serif;
+}
+#alertContainer {
+    position:fixed;
+    bottom:40px;
+    left:40px;
+    display:flex;
+    flex-direction:column-reverse;
+    gap:10px;
+    pointer-events:none;
+}
+.alert-card {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 18px;
+    border-radius:12px;
+    min-width:280px;
+    max-width:420px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.6);
+    opacity:0;
+    transform:translateX(-30px);
+    transition:opacity 0.4s ease, transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    will-change:opacity,transform;
+}
+.alert-card.show {
+    opacity:1;
+    transform:translateX(0);
+}
+.alert-card.hide {
+    opacity:0;
+    transform:translateX(-30px);
+    transition:opacity 0.4s ease, transform 0.3s ease;
+}
+
+/* Record broken */
+.alert-record {
+    background:linear-gradient(135deg,#0a0a14ee,#1a1020ee);
+    border:2px solid #fbbf24;
+}
+.alert-record .alert-icon { font-size:28px; }
+.alert-record .alert-label { font-size:10px; font-weight:700; letter-spacing:0.15em; color:#fbbf24; text-transform:uppercase; }
+.alert-record .alert-title { font-size:15px; font-weight:700; color:#fff; }
+.alert-record .alert-sub   { font-size:11px; color:#888; margin-top:1px; }
+
+/* Achievement */
+.alert-achievement {
+    background:linear-gradient(135deg,#0a0a14ee,#0e1a10ee);
+    border:2px solid #22c55e;
+}
+.alert-achievement .alert-icon { font-size:28px; }
+.alert-achievement .alert-label { font-size:10px; font-weight:700; letter-spacing:0.15em; color:#22c55e; text-transform:uppercase; }
+.alert-achievement .alert-title { font-size:15px; font-weight:700; color:#fff; }
+.alert-achievement .alert-sub   { font-size:11px; color:#888; margin-top:1px; }
+
+/* Generic */
+.alert-generic {
+    background:linear-gradient(135deg,#0a0a14ee,#1a1a2eee);
+    border:2px solid #5865f2;
+}
+.alert-generic .alert-icon { font-size:28px; }
+.alert-generic .alert-label { font-size:10px; font-weight:700; letter-spacing:0.15em; color:#5865f2; text-transform:uppercase; }
+.alert-generic .alert-title { font-size:15px; font-weight:700; color:#fff; }
+.alert-generic .alert-sub   { font-size:11px; color:#888; margin-top:1px; }
+</style>
+</head>
+<body>
+<div id="alertContainer"></div>
+
+<script>
+const CHANNEL = '{{ channel }}';
+const POLL_MS = 1500;
+
+function showAlert(alert) {
+    const container = document.getElementById('alertContainer');
+
+    const card = document.createElement('div');
+    card.className = 'alert-card';
+
+    let typeClass = 'alert-generic';
+    let icon = '🏁';
+    let label = 'Marbles';
+    let title = '';
+    let sub = '';
+
+    if (alert.type === 'record') {
+        typeClass = 'alert-record';
+        icon = '⚡';
+        label = 'New Track Record!';
+        title = esc(alert.username);
+        sub = esc(alert.map_name || '') + (alert.time_ms ? ` — ${(alert.time_ms/1000).toFixed(2)}s` : '');
+    } else if (alert.type === 'achievement') {
+        typeClass = 'alert-achievement';
+        icon = alert.ach_icon || '🏅';
+        label = 'Achievement Unlocked!';
+        title = esc(alert.ach_name || '');
+        sub = esc(alert.username || '');
+    } else {
+        title = esc(alert.title || alert.type || '');
+        sub   = esc(alert.body  || '');
+    }
+
+    card.classList.add(typeClass);
+    card.innerHTML = `
+        <span class="alert-icon">${icon}</span>
+        <div>
+            <div class="alert-label">${label}</div>
+            <div class="alert-title">${title}</div>
+            ${sub ? `<div class="alert-sub">${sub}</div>` : ''}
+        </div>
+    `;
+
+    container.appendChild(card);
+
+    // Animate in
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => card.classList.add('show'));
+    });
+
+    // Auto-dismiss after 5s
+    setTimeout(() => {
+        card.classList.remove('show');
+        card.classList.add('hide');
+        setTimeout(() => card.remove(), 500);
+    }, 5000);
+}
+
+function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function poll() {
+    try {
+        const res  = await fetch(`/marbles/api/channel/${CHANNEL}/alerts`);
+        if (!res.ok) return;
+        const data = await res.json();
+        for (const a of (data.alerts || [])) {
+            showAlert(a);
+        }
+    } catch (_) {}
+}
+
+setInterval(poll, POLL_MS);
+poll();
+</script>
+</body>
+</html>

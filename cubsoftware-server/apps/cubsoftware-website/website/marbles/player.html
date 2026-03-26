@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ username }} — Marbles Profile | CUBSOFTWARE</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        body { background:#050508; color:#e0e0e0; font-family:'Poppins',sans-serif; }
+        .p-wrap  { max-width:860px; margin:0 auto; padding:40px 20px; }
+        .p-back  { font-size:12px; color:#555; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin-bottom:20px; }
+        .p-back:hover { color:#5865f2; }
+
+        .p-header { display:flex; align-items:center; gap:20px; margin-bottom:32px; }
+        .p-avatar {
+            width:64px; height:64px; border-radius:50%;
+            background: linear-gradient(135deg, #5865f2, #a855f7);
+            display:flex; align-items:center; justify-content:center;
+            font-family:'Orbitron',sans-serif; font-size:22px; font-weight:900; color:#fff;
+            flex-shrink:0;
+        }
+        .p-name  { font-family:'Orbitron',sans-serif; font-size:22px; font-weight:900; color:#fff; }
+        .p-rank  { font-size:12px; color:#5865f2; font-weight:600; margin-top:2px; }
+
+        .p-stats { display:grid; grid-template-columns:repeat(auto-fill, minmax(130px,1fr)); gap:12px; margin-bottom:32px; }
+        .p-stat  {
+            background:#0d0d1a; border:1px solid #1e1e2e; border-radius:10px;
+            padding:14px 16px; text-align:center;
+        }
+        .p-stat-val  { font-family:'Orbitron',sans-serif; font-size:20px; font-weight:700; color:#5865f2; }
+        .p-stat-lbl  { font-size:10px; color:#555; text-transform:uppercase; letter-spacing:0.1em; margin-top:3px; }
+
+        .p-section-title {
+            font-family:'Orbitron',sans-serif; font-size:13px; color:#888;
+            text-transform:uppercase; letter-spacing:0.1em; margin:24px 0 10px;
+        }
+
+        .p-history-row {
+            display:flex; align-items:center; gap:10px;
+            background:#0d0d1a; border:1px solid #1e1e2e; border-radius:7px;
+            padding:9px 14px; margin-bottom:5px; font-size:12px;
+        }
+        .p-hist-rank  { min-width:28px; font-size:14px; }
+        .p-hist-map   { flex:1; color:#c0c0e0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .p-hist-time  { font-family:'Orbitron',sans-serif; font-size:10px; color:#666; white-space:nowrap; }
+        .p-hist-pts   { font-size:10px; color:#5865f2; font-weight:600; white-space:nowrap; }
+        .p-hist-coins { font-size:10px; color:#f59e0b; white-space:nowrap; }
+
+        .p-rec-row {
+            display:flex; align-items:center; gap:10px;
+            background:#0d0d1a; border:1px solid #1e1e2e; border-radius:7px;
+            padding:9px 14px; margin-bottom:5px; font-size:12px;
+        }
+        .p-rec-map  { flex:1; color:#c0c0e0; font-weight:600; }
+        .p-rec-time { font-family:'Orbitron',sans-serif; font-size:11px; color:#22c55e; }
+
+        .p-not-found { padding:60px; text-align:center; color:#444; }
+        .p-nf-name   { font-family:'Orbitron',sans-serif; font-size:20px; color:#888; margin-bottom:10px; }
+
+        .medal-gold   { color:#f59e0b; }
+        .medal-silver { color:#94a3b8; }
+        .medal-bronze { color:#b45309; }
+
+        .p-ach-grid {
+            display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; margin-bottom:32px;
+        }
+        .p-ach-card {
+            background:#0d0d1a; border:1px solid #1e1e2e; border-radius:10px;
+            padding:12px 14px; display:flex; align-items:center; gap:10px;
+        }
+        .p-ach-card.secret { border-color:#333; opacity:0.7; }
+        .p-ach-icon { font-size:22px; flex-shrink:0; line-height:1; }
+        .p-ach-name { font-size:11px; font-weight:700; color:#fff; }
+        .p-ach-desc { font-size:10px; color:#555; margin-top:2px; }
+    </style>
+</head>
+<body>
+<div class="p-wrap">
+    <a class="p-back" href="/marbles/leaderboard">← Leaderboard</a>
+
+    {% if player %}
+    <div class="p-header">
+        <div class="p-avatar">{{ username[0].upper() }}</div>
+        <div style="flex:1;">
+            <div class="p-name">{{ username }}</div>
+            <div class="p-rank">Rank #{{ player.rank }} globally · {{ player.points }} points</div>
+        </div>
+        {% if is_own %}
+        <a href="/marbles/settings" style="font-size:11px;color:#5865f2;text-decoration:none;background:#0d0d1a;border:1px solid #1e1e2e;border-radius:7px;padding:6px 12px;white-space:nowrap;">⚙ Settings</a>
+        <a href="/marbles/cosmetics" style="font-size:11px;color:#a78bfa;text-decoration:none;background:#0d0d1a;border:1px solid #1e1e2e;border-radius:7px;padding:6px 12px;white-space:nowrap;">🎨 Cosmetics</a>
+        <a href="/marbles/shop" style="font-size:11px;color:#fbbf24;text-decoration:none;background:#0d0d1a;border:1px solid #1e1e2e;border-radius:7px;padding:6px 12px;white-space:nowrap;">🛒 Shop</a>
+        {% endif %}
+    </div>
+
+    {% if rival %}
+    <div style="margin-bottom:16px;padding:10px 14px;background:#0d0d1a;border:1px solid #1e1e2e;border-radius:8px;font-size:12px;display:flex;align-items:center;gap:8px;">
+        <span style="color:#555;">⚔️ Rival:</span>
+        <a href="/marbles/player/{{ rival.twitch_login }}" style="color:#f43f5e;font-weight:700;text-decoration:none;">@{{ rival.twitch_login }}</a>
+        <span style="color:#555;margin-left:auto;">{{ rival.points }} pts · {{ rival.shared_races }} shared races</span>
+    </div>
+    {% endif %}
+
+    <div class="p-stats">
+        <div class="p-stat">
+            <div class="p-stat-val">{{ player.points }}</div>
+            <div class="p-stat-lbl">Points</div>
+        </div>
+        <div class="p-stat">
+            <div class="p-stat-val" style="color:#22c55e;">{{ player.wins }}</div>
+            <div class="p-stat-lbl">Wins</div>
+        </div>
+        <div class="p-stat">
+            <div class="p-stat-val" style="color:#888;">{{ player.races_played }}</div>
+            <div class="p-stat-lbl">Races</div>
+        </div>
+        <div class="p-stat">
+            <div class="p-stat-val" style="color:#f59e0b;">{{ player.coins }}</div>
+            <div class="p-stat-lbl">Coins</div>
+        </div>
+        <div class="p-stat">
+            <div class="p-stat-val" style="color:#f43f5e;">{{ player.win_streak }}</div>
+            <div class="p-stat-lbl">Win Streak</div>
+        </div>
+        <div class="p-stat">
+            <div class="p-stat-val" style="color:#a855f7;">{{ player.best_win_streak }}</div>
+            <div class="p-stat-lbl">Best Streak</div>
+        </div>
+        {% if player.races_played > 0 %}
+        <div class="p-stat">
+            <div class="p-stat-val" style="font-size:15px;">{{ '%.0f'|format(player.wins / player.races_played * 100) }}%</div>
+            <div class="p-stat-lbl">Win Rate</div>
+        </div>
+        {% endif %}
+        {% if player.comeback_king %}
+        <div class="p-stat">
+            <div class="p-stat-val" style="color:#ef4444;">{{ player.comeback_king }}</div>
+            <div class="p-stat-lbl">Comeback King</div>
+        </div>
+        {% endif %}
+        {% if player.clean_races %}
+        <div class="p-stat">
+            <div class="p-stat-val" style="color:#06b6d4;">{{ player.clean_races }}</div>
+            <div class="p-stat-lbl">Iron Marble</div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if player.track_records %}
+    <div class="p-section-title">⚡ Track Records Held</div>
+    {% for r in player.track_records %}
+    <div class="p-rec-row">
+        <div class="p-rec-map">{{ r.map_name or 'Untitled' }}</div>
+        <div class="p-rec-time">{{ '%.2f'|format(r.finish_time_ms / 1000) }}s</div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if player.achievements %}
+    <div class="p-section-title">🏆 Achievements ({{ player.achievements|length }})</div>
+    <div class="p-ach-grid">
+        {% for a in player.achievements %}
+        <div class="p-ach-card{% if a.secret %} secret{% endif %}">
+            <div class="p-ach-icon">{{ a.icon }}</div>
+            <div>
+                <div class="p-ach-name">{{ a.name }}</div>
+                <div class="p-ach-desc">{{ a.desc }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if player.history %}
+    <div class="p-section-title">Recent Races</div>
+    {% for h in player.history %}
+    {% set rank = h.rank %}
+    <div class="p-history-row">
+        <div class="p-hist-rank">
+            {% if rank == 1 %}<span class="medal-gold">🥇</span>
+            {% elif rank == 2 %}<span class="medal-silver">🥈</span>
+            {% elif rank == 3 %}<span class="medal-bronze">🥉</span>
+            {% elif rank %}{{ rank }}th
+            {% else %}DNF
+            {% endif %}
+        </div>
+        <div class="p-hist-map">{{ h.map_name or 'Untitled' }}</div>
+        <div class="p-hist-time">
+            {% if h.finish_time_ms %}{{ '%.2f'|format(h.finish_time_ms / 1000) }}s{% else %}—{% endif %}
+        </div>
+        <div class="p-hist-pts">+{{ h.points_awarded }}pts</div>
+        <div class="p-hist-coins">+{{ h.coins_awarded }}🪙</div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="padding:20px;text-align:center;color:#444;font-size:12px;">No race history yet.</div>
+    {% endif %}
+
+    {% else %}
+    <div class="p-not-found">
+        <div class="p-nf-name">{{ username }}</div>
+        <div>This player hasn't raced yet.</div>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

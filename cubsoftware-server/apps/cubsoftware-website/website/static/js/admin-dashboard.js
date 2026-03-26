@@ -196,6 +196,9 @@
             case 'cubassist':
                 loadCubAssist();
                 break;
+            case 'marbles':
+                loadMarblesAdmin();
+                break;
         }
     }
 
@@ -1798,23 +1801,38 @@
 // ── CubAssist bot token management ─────────────────────────────────────────────
 
 window.loadCubAssist = async function() {
-    const nick    = document.getElementById('cubassistNick');
-    const dot     = document.getElementById('cubassistDot');
+    const nick     = document.getElementById('cubassistNick');
+    const dot      = document.getElementById('cubassistDot');
+    const warnings = document.getElementById('cubassistWarnings');
     if (!nick) return;
     nick.textContent = 'Loading…';
     try {
-        const r = await fetch('/cubassist/api/status');
+        const r = await fetch('/cubassist/api/admin/bot-status');
         if (!r.ok) throw new Error('Not available');
         const d = await r.json();
-        if (d.bot_nick) {
-            nick.textContent = d.bot_nick;
-            dot.style.background = d.connected ? '#57f287' : '#f59e0b';
-            dot.style.boxShadow  = d.connected ? '0 0 8px #57f287' : 'none';
-            nick.style.color = 'var(--text-primary)';
+
+        nick.textContent = d.bot_nick || 'Not configured';
+
+        if (d.connected) {
+            dot.style.background = '#57f287';
+            dot.style.boxShadow  = '0 0 8px #57f287';
+        } else if (d.running) {
+            dot.style.background = '#f59e0b';
+            dot.style.boxShadow  = 'none';
         } else {
-            nick.textContent = 'Not connected';
             dot.style.background = '#ed4245';
             dot.style.boxShadow  = 'none';
+        }
+
+        if (warnings) {
+            if (d.warnings && d.warnings.length) {
+                warnings.innerHTML = d.warnings.map(w =>
+                    `<div style="color:#f59e0b;font-size:11px;margin-top:6px;">⚠ ${w}</div>`
+                ).join('');
+                warnings.style.display = '';
+            } else {
+                warnings.style.display = 'none';
+            }
         }
     } catch {
         nick.textContent = 'Unavailable';
@@ -1861,4 +1879,282 @@ window.cubassistRefreshToken = async function() {
         hint.textContent = 'Error: ' + e.message;
     }
     btn.disabled = false;
+};
+
+// ==================== MARBLES ADMIN ====================
+let _marblesAllMaps = [];
+
+function _marblesEsc(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function _marblesFormatDate(ts) {
+    if (!ts) return '—';
+    return new Date(ts * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+window.loadMarblesAdmin = async function() {
+    const [sessRes, mapsRes, racesRes] = await Promise.all([
+        fetch('/marbles/api/admin/sessions'),
+        fetch('/marbles/api/admin/maps'),
+        fetch('/marbles/api/admin/races'),
+    ]);
+
+    // IRC Status
+    if (sessRes.ok) {
+        const d = await sessRes.json();
+        const irc = d.irc || {};
+        const dot = document.getElementById('marblesIrcDot');
+        const txt = document.getElementById('marblesIrcText');
+        if (dot && txt) {
+            dot.style.background = irc.connected ? '#22c55e' : '#ef4444';
+            txt.textContent = irc.connected
+                ? `IRC connected · ${(irc.channels || []).length} channel(s) · ${irc.sessions} active session(s)`
+                : 'IRC disconnected';
+        }
+        // Sessions table
+        const sessions = d.sessions || [];
+        const badge = document.getElementById('marblesBadge');
+        const active = sessions.filter(s => s.state !== 'ended');
+        if (badge) { badge.textContent = active.length; badge.style.display = active.length ? '' : 'none'; }
+        const tbody = document.getElementById('marblesSessionsBody');
+        if (tbody) {
+            if (!sessions.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No sessions.</td></tr>';
+            } else {
+                tbody.innerHTML = sessions.map(s => `
+                <tr>
+                    <td><code style="font-size:11px;">${_marblesEsc(s.id)}</code></td>
+                    <td>#${_marblesEsc(s.channel)}</td>
+                    <td><span style="padding:2px 8px;border-radius:10px;font-size:10px;background:${s.state==='running'?'#22c55e20':s.state==='lobby'?'#5865f220':'#44444420'};color:${s.state==='running'?'#22c55e':s.state==='lobby'?'#818cf8':'#888'};">${s.state}</span></td>
+                    <td>${s.player_count}</td>
+                    <td>${_marblesFormatDate(s.created_at)}</td>
+                    <td>
+                        <a href="/marbles/obs/${_marblesEsc(s.id)}" target="_blank" style="font-size:11px;color:#5865f2;margin-right:8px;">OBS</a>
+                        <a href="/marbles/watch/${_marblesEsc(s.id)}" target="_blank" style="font-size:11px;color:#818cf8;margin-right:8px;">Watch</a>
+                        ${s.state !== 'ended' ? `<button onclick="marblesEndSession('${_marblesEsc(s.id)}')" style="padding:2px 8px;border-radius:4px;border:1px solid #ef444440;background:transparent;color:#ef4444;font-size:11px;cursor:pointer;">End</button>` : ''}
+                    </td>
+                </tr>`).join('');
+            }
+        }
+    }
+
+    // Maps table
+    if (mapsRes.ok) {
+        _marblesAllMaps = await mapsRes.json();
+        _renderMarblesAdminMaps();
+    }
+
+    // Race history
+    if (racesRes.ok) {
+        const races = await racesRes.json();
+        const tbody = document.getElementById('marblesRaceBody');
+        if (tbody) {
+            if (!races.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No races yet.</td></tr>';
+            } else {
+                tbody.innerHTML = races.map(r => `
+                <tr>
+                    <td><code style="font-size:11px;">${_marblesEsc(r.race_id)}</code></td>
+                    <td title="${_marblesEsc(r.map_id)}">${_marblesEsc(r.map_name || 'Untitled')}</td>
+                    <td>#${_marblesEsc(r.channel || '—')}</td>
+                    <td>${_marblesEsc(r.winner || '—')}</td>
+                    <td>${r.player_count}</td>
+                    <td>${_marblesFormatDate(r.played_at)}</td>
+                </tr>`).join('');
+            }
+        }
+    }
+    // Also refresh banned players list and seasons
+    _loadBannedPlayers();
+    _loadSeasons();
+};
+
+function _renderMarblesAdminMaps() {
+    const q = (document.getElementById('marblesMapSearch')?.value || '').trim().toLowerCase();
+    const maps = _marblesAllMaps.filter(m =>
+        !q ||
+        (m.name || '').toLowerCase().includes(q) ||
+        (m.author_login || '').toLowerCase().includes(q)
+    );
+    const tbody = document.getElementById('marblesMapBody');
+    if (!tbody) return;
+    if (!maps.length) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No maps.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = maps.map(m => `
+    <tr>
+        <td>${_marblesEsc(m.name)}</td>
+        <td>${_marblesEsc(m.author_login)}</td>
+        <td>${m.piece_count || 0}</td>
+        <td>${m.play_count || 0}</td>
+        <td style="color:#22c55e;">+${m.upvotes} <span style="color:#ef4444;">-${m.downvotes}</span></td>
+        <td>
+            <button onclick="marblesToggleFeatured('${_marblesEsc(m.map_id)}', ${m.featured ? 'false' : 'true'})"
+                style="padding:2px 8px;border-radius:4px;border:1px solid ${m.featured?'#f59e0b40':'#2a2a3a'};background:${m.featured?'#f59e0b20':'transparent'};color:${m.featured?'#f59e0b':'#666'};font-size:11px;cursor:pointer;">
+                ${m.featured ? '⭐ Featured' : 'Feature'}
+            </button>
+        </td>
+        <td>
+            <a href="/apps/marble-editor?load=${encodeURIComponent(m.map_id)}" target="_blank" style="font-size:11px;color:#5865f2;margin-right:8px;">Load</a>
+            <button onclick="marblesDeleteMap('${_marblesEsc(m.map_id)}', '${_marblesEsc(m.name)}')"
+                style="padding:2px 8px;border-radius:4px;border:1px solid #ef444440;background:transparent;color:#ef4444;font-size:11px;cursor:pointer;">Delete</button>
+        </td>
+    </tr>`).join('');
+}
+
+window.filterMarblesAdminMaps = _renderMarblesAdminMaps;
+
+window.marblesEndSession = async function(sessionId) {
+    if (!confirm(`Force-end session ${sessionId}?`)) return;
+    const res = await fetch(`/marbles/api/admin/sessions/${encodeURIComponent(sessionId)}/end`, { method: 'POST' });
+    if (res.ok) { showToast('Session ended', 'success'); await loadMarblesAdmin(); }
+    else showToast('Failed to end session', 'error');
+};
+
+window.marblesToggleFeatured = async function(mapId, featured) {
+    const res = await fetch(`/marbles/api/map/${encodeURIComponent(mapId)}/feature`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ featured }),
+    });
+    if (res.ok) { showToast(featured ? 'Map featured' : 'Map unfeatured', 'success'); await loadMarblesAdmin(); }
+    else showToast('Failed to update featured status', 'error');
+};
+
+window.marblesDeleteMap = async function(mapId, name) {
+    if (!confirm(`Delete map "${name}"? This cannot be undone.`)) return;
+    const res = await fetch(`/marbles/api/admin/maps/${encodeURIComponent(mapId)}`, { method: 'DELETE' });
+    if (res.ok) { showToast('Map deleted', 'success'); await loadMarblesAdmin(); }
+    else showToast('Failed to delete map', 'error');
+};
+
+// ── Leaderboard admin ─────────────────────────────────────────────────────────
+
+async function _loadBannedPlayers() {
+    const res = await fetch('/marbles/api/admin/players/banned');
+    if (!res.ok) return;
+    const players = await res.json();
+    const tbody = document.getElementById('marblesBannedBody');
+    if (!tbody) return;
+    if (!players.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No banned players</td></tr>';
+        return;
+    }
+    tbody.innerHTML = players.map(p => `
+        <tr>
+            <td><a href="/marbles/player/${_marblesEsc(p.twitch_login)}" target="_blank" style="color:var(--accent-primary);">${_marblesEsc(p.twitch_login)}</a></td>
+            <td>${p.points}</td>
+            <td>${p.wins}</td>
+            <td>${p.races_played}</td>
+            <td>
+                <button onclick="marblesAdminUnbanByName('${_marblesEsc(p.twitch_login)}')" style="padding:2px 8px;border-radius:4px;border:1px solid #22c55e40;background:transparent;color:#22c55e;font-size:11px;cursor:pointer;">Unban</button>
+            </td>
+        </tr>`).join('');
+}
+
+window.marblesAdminBanPlayer = async function() {
+    const login = (document.getElementById('marblesAdminPlayerInput')?.value || '').trim().toLowerCase();
+    if (!login) return;
+    if (!confirm(`Ban "${login}" from leaderboards?`)) return;
+    const res = await fetch(`/marbles/api/admin/players/${encodeURIComponent(login)}/ban`, { method: 'POST' });
+    const d = await res.json();
+    if (d.ok) { showToast(`${login} banned`, 'success'); _loadBannedPlayers(); }
+    else showToast('Player not found or failed', 'error');
+};
+
+window.marblesAdminUnbanPlayer = async function() {
+    const login = (document.getElementById('marblesAdminPlayerInput')?.value || '').trim().toLowerCase();
+    if (!login) return;
+    const res = await fetch(`/marbles/api/admin/players/${encodeURIComponent(login)}/unban`, { method: 'POST' });
+    const d = await res.json();
+    if (d.ok) { showToast(`${login} unbanned`, 'success'); _loadBannedPlayers(); }
+    else showToast('Player not found or failed', 'error');
+};
+
+window.marblesAdminUnbanByName = async function(login) {
+    const res = await fetch(`/marbles/api/admin/players/${encodeURIComponent(login)}/unban`, { method: 'POST' });
+    const d = await res.json();
+    if (d.ok) { showToast(`${login} unbanned`, 'success'); _loadBannedPlayers(); }
+    else showToast('Unban failed', 'error');
+};
+
+window.marblesAdminResetPoints = async function() {
+    const login = (document.getElementById('marblesAdminPlayerInput')?.value || '').trim().toLowerCase();
+    if (!login) return;
+    if (!confirm(`Reset all points and win streak for "${login}"? This cannot be undone.`)) return;
+    const res = await fetch(`/marbles/api/admin/players/${encodeURIComponent(login)}/reset-points`, { method: 'POST' });
+    const d = await res.json();
+    if (d.ok) showToast(`${login} points reset`, 'success');
+    else showToast('Player not found or failed', 'error');
+};
+
+window.marblesResetAllRecords = async function() {
+    if (!confirm('Reset ALL track records? This cannot be undone.')) return;
+    const res = await fetch('/marbles/api/admin/records/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+    });
+    const d = await res.json();
+    if (d.ok) showToast(`Deleted ${d.deleted} track record(s)`, 'success');
+    else showToast('Reset failed', 'error');
+};
+
+// ── Season management ─────────────────────────────────────────────────────────
+
+async function _loadSeasons() {
+    const [seasonsRes, currentRes] = await Promise.all([
+        fetch('/marbles/api/seasons'),
+        fetch('/marbles/api/seasons/current'),
+    ]);
+    if (!seasonsRes.ok) return;
+    const seasons = await seasonsRes.json();
+    const current = currentRes.ok ? await currentRes.json() : {};
+
+    const statusEl = document.getElementById('marblesSeasonStatus');
+    if (statusEl) {
+        statusEl.textContent = current.season_id
+            ? `Active: ${current.name}`
+            : 'No active season';
+        statusEl.style.color = current.season_id ? '#22c55e' : 'var(--text-muted)';
+    }
+
+    const tbody = document.getElementById('marblesSeasonsBody');
+    if (!tbody) return;
+    if (!seasons.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1rem;">No seasons yet</td></tr>';
+        return;
+    }
+    tbody.innerHTML = seasons.map(s => `
+        <tr>
+            <td><code style="font-size:11px;">${_marblesEsc(s.season_id)}</code></td>
+            <td>${_marblesEsc(s.name)}</td>
+            <td>${_marblesFormatDate(s.started_at)}</td>
+            <td>${s.ended_at ? _marblesFormatDate(s.ended_at) : '—'}</td>
+            <td>${s.winner ? _marblesEsc(s.winner) : '—'}</td>
+            <td><span style="color:${s.active ? '#22c55e' : 'var(--text-muted)'};">${s.active ? '🟢 Active' : 'Ended'}</span></td>
+        </tr>`).join('');
+}
+
+window.marblesStartSeason = async function() {
+    const name = (document.getElementById('marblesSeasonNameInput')?.value || '').trim() || 'Season';
+    if (!confirm(`Start new season "${name}"? Any currently active season will be deactivated.`)) return;
+    const res = await fetch('/marbles/api/admin/seasons/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+    });
+    const d = await res.json();
+    if (d.ok) { showToast(`Season "${d.name}" started`, 'success'); _loadSeasons(); }
+    else showToast('Failed to start season', 'error');
+};
+
+window.marblesEndSeason = async function() {
+    if (!confirm('End the current season? This will finalize rankings and cannot be undone.')) return;
+    const res = await fetch('/marbles/api/admin/seasons/end', { method: 'POST' });
+    const d = await res.json();
+    if (d.ok) { showToast(`Season ended. Winner: ${d.winner || 'none'}`, 'success'); _loadSeasons(); }
+    else showToast(d.error || 'Failed to end season', 'error');
 };

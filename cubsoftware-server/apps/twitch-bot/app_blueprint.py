@@ -976,9 +976,9 @@ def admin_refresh_token():
 @cubassist_bp.route('/api/admin/start-bot-setup', methods=['POST'])
 def api_admin_start_bot_setup():
     """Return the Twitch OAuth URL to connect the bot account.
-    Accepts optional JSON body: {"next": "/dashboard#cubassist"} to control post-auth redirect."""
-    err = _require_auth()
-    if err: return err
+    Restricted to PM2 admin users only. Accepts optional JSON body: {"next": "..."} to control post-auth redirect."""
+    if not session.get('pm2_user'):
+        return jsonify({'error': 'Admin access required'}), 403
     body      = request.get_json(silent=True) or {}
     next_url  = body.get('next', '/dashboard#cubassist')
     state     = secrets.token_urlsafe(16)
@@ -997,14 +997,55 @@ def api_admin_start_bot_setup():
 
 @cubassist_bp.route('/api/admin/refresh-bot-token', methods=['POST'])
 def api_admin_refresh_bot_token():
-    """Refresh the bot OAuth token. Called from the Settings tab."""
-    err = _require_auth()
-    if err: return err
+    """Refresh the bot OAuth token. Restricted to PM2 admin users only."""
+    if not session.get('pm2_user'):
+        return jsonify({'error': 'Admin access required'}), 403
     ok = refresh_bot_token()
     if ok:
         creds = get_bot_credentials()
         return jsonify({'ok': True, 'bot_nick': creds.get('bot_nick', '')})
     return jsonify({'ok': False, 'error': 'Refresh failed — no refresh token stored or Twitch rejected it. Use Connect to re-authorise.'}), 500
+
+
+@cubassist_bp.route('/api/admin/bot-status', methods=['GET'])
+def api_admin_bot_status():
+    """Bot health status for the PM2 admin dashboard — requires pm2_user, not cubassist_user."""
+    if not session.get('pm2_user'):
+        return jsonify({'error': 'Admin access required'}), 403
+
+    bot   = get_bot()
+    creds = get_bot_credentials()
+    s     = bot.status
+
+    has_secret        = bool(TWITCH_CLIENT_SECRET)
+    has_creds         = bool(creds.get('oauth_token') and creds.get('bot_nick'))
+    creds_path        = _data_dir() / 'bot_credentials.json'
+    has_refresh_token = False
+    if creds_path.exists():
+        try:
+            stored = json.loads(creds_path.read_text())
+            has_refresh_token = bool(stored.get('refresh_token', ''))
+        except Exception:
+            pass
+
+    warnings = []
+    if not has_secret:
+        warnings.append('TWITCH_CLIENT_SECRET not set — auto token refresh disabled')
+    if not has_refresh_token and has_creds:
+        warnings.append('No refresh token stored — bot will need manual re-auth after token expires')
+    if not has_creds:
+        warnings.append('Bot credentials not configured — use Connect Bot to authorise')
+
+    return jsonify({
+        'running':           s['running'],
+        'connected':         s['connected'],
+        'bot_nick':          s['bot_nick'],
+        'uptime_seconds':    s['uptime_seconds'],
+        'channels':          s['channels'],
+        'has_secret':        has_secret,
+        'has_refresh_token': has_refresh_token,
+        'warnings':          warnings,
+    })
 
 
 # ── Global settings ─────────────────────────────────────────────────────────────

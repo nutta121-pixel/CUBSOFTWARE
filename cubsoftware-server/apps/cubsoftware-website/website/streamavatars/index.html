@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StreamAvatars — CUBSOFTWARE</title>
+<link rel="icon" type="image/png" href="/static/images/company-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+<link rel="stylesheet" href="/streamavatars/static/css/streamavatars.css?v={{ v }}">
+</head>
+<body>
+
+{% include 'header.html' %}
+
+<div class="sa-wrap">
+
+    <div>
+        <div class="sa-page-title">StreamAvatars</div>
+        <div class="sa-page-sub">Your character appears on every stream you chat in — drawn by you, owned by you.</div>
+    </div>
+
+    <!-- OBS Overlay URL -->
+    <div class="card">
+        <div class="card-title">🎥 OBS Browser Source</div>
+        <p style="font-size:12px;color:#555;margin-bottom:12px;">
+            Add this as a Browser Source in OBS. Set resolution to match your canvas (1920×1080), enable <strong style="color:#888">transparent background</strong>.
+        </p>
+        <div class="url-row">
+            <input class="url-input" type="text" id="overlayUrl" readonly
+                   value="{{ origin }}/streamavatars/overlay/{{ login }}">
+            <button class="btn btn-sm" onclick="copyUrl()">Copy</button>
+            <a href="/streamavatars/overlay/{{ login }}" target="_blank" class="btn btn-sm">Preview</a>
+        </div>
+    </div>
+
+    <!-- Overlay Settings -->
+    <div class="card">
+        <div class="card-title">⚙️ Overlay Settings</div>
+        <div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Show Chat Bubbles</div>
+                    <div class="toggle-desc">Display what viewers say above their sprite</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="settingBubbles" {% if settings.show_bubbles %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="toggle-row">
+                <div>
+                    <div class="toggle-label">Allow !jump, !run Commands</div>
+                    <div class="toggle-desc">Viewers type commands to control their sprite</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="settingCommands" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="settings-grid" style="margin-top:16px">
+            <div class="setting-row">
+                <label class="setting-label">Sprite Scale</label>
+                <input class="setting-input" type="number" id="settingScale" min="1" max="8" step="0.5"
+                       value="{{ settings.sprite_scale }}">
+            </div>
+            <div class="setting-row">
+                <label class="setting-label">Walk Speed</label>
+                <input class="setting-input" type="number" id="settingSpeed" min="0.1" max="5" step="0.1"
+                       value="{{ settings.walk_speed }}">
+            </div>
+            <div class="setting-row">
+                <label class="setting-label">Max Sprites on Screen</label>
+                <input class="setting-input" type="number" id="settingMax" min="1" max="200"
+                       value="{{ settings.max_sprites }}">
+            </div>
+            <div class="setting-row">
+                <label class="setting-label">Idle Timeout (seconds)</label>
+                <input class="setting-input" type="number" id="settingIdle" min="30" max="600"
+                       value="{{ settings.idle_time }}">
+            </div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:16px" onclick="saveSettings()">Save Settings</button>
+    </div>
+
+    <!-- My Characters -->
+    <div>
+        <div class="section-header">
+            <div class="section-title">My Characters</div>
+            <a href="/streamavatars/editor" class="btn btn-primary btn-sm">+ New Character</a>
+        </div>
+
+        {% if characters %}
+        <div class="char-grid">
+            {% for char in characters %}
+            <div class="char-card {% if char.is_active %}active{% endif %}" id="char-{{ char.id }}">
+                {% if char.is_active %}
+                <span class="char-active-badge">Active</span>
+                {% endif %}
+                {% if char.thumbnail %}
+                <img class="char-thumbnail" src="{{ char.thumbnail }}" alt="{{ char.name }}">
+                {% else %}
+                <div class="char-thumbnail" style="display:flex;align-items:center;justify-content:center;font-size:28px;color:#333;">👤</div>
+                {% endif %}
+                <div class="char-name">{{ char.name }}</div>
+                <div class="char-date">{{ char.updated_at | datetime }}</div>
+                <div class="char-actions">
+                    <a href="/streamavatars/editor?id={{ char.id }}" class="btn btn-sm">Edit</a>
+                    {% if not char.is_active %}
+                    <button class="btn btn-primary btn-sm" onclick="activateChar({{ char.id }})">Use</button>
+                    {% endif %}
+                    <button class="btn btn-danger btn-sm" onclick="deleteChar({{ char.id }}, '{{ char.name | e }}')">✕</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <span class="emoji">🎨</span>
+            <p>You haven't created any characters yet.</p>
+            <a href="/streamavatars/editor" class="btn btn-primary" style="margin-top:16px">Create Your First Character</a>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+{% include 'footer.html' %}
+
+<div class="toast" id="toast"></div>
+
+<script>
+function copyUrl() {
+    navigator.clipboard.writeText(document.getElementById('overlayUrl').value)
+        .then(() => showToast('Copied to clipboard'));
+}
+
+async function activateChar(id) {
+    const r = await fetch(`/streamavatars/api/characters/${id}/activate`, { method: 'POST' });
+    const d = await r.json();
+    if (d.ok) location.reload(); else showToast('Error', true);
+}
+
+async function deleteChar(id, name) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    const r = await fetch(`/streamavatars/api/characters/${id}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.ok) { document.getElementById(`char-${id}`)?.remove(); showToast('Deleted'); }
+    else showToast('Error', true);
+}
+
+async function saveSettings() {
+    const body = {
+        show_bubbles: document.getElementById('settingBubbles').checked ? 1 : 0,
+        sprite_scale: parseFloat(document.getElementById('settingScale').value),
+        walk_speed:   parseFloat(document.getElementById('settingSpeed').value),
+        max_sprites:  parseInt(document.getElementById('settingMax').value),
+        idle_time:    parseInt(document.getElementById('settingIdle').value),
+    };
+    const r = await fetch('/streamavatars/api/overlay-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+    const d = await r.json();
+    showToast(d.ok ? 'Settings saved!' : 'Error saving', !d.ok);
+}
+
+function showToast(msg, err = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (err ? ' error' : '');
+    setTimeout(() => t.className = 'toast', 2500);
+}
+</script>
+</body>
+</html>

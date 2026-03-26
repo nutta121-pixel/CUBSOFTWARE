@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marbles Lower Third</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            width: 1920px; height: 180px;
+            overflow: hidden;
+            background: transparent;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        #strip {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            padding: 0 32px;
+            gap: 12px;
+            background: linear-gradient(90deg, rgba(5,5,8,0.92) 0%, rgba(5,5,8,0.85) 80%, transparent 100%);
+        }
+
+        .brand {
+            font-size: 11px;
+            font-weight: 700;
+            color: #5865f2;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            padding-right: 16px;
+            border-right: 1px solid #2a2a3a;
+        }
+
+        .entries {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .entry {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 12px 5px 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.06);
+            white-space: nowrap;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .rank {
+            font-size: 10px;
+            font-weight: 700;
+            color: #888;
+            width: 16px;
+            text-align: center;
+        }
+        .rank.gold   { color: #fbbf24; }
+        .rank.silver { color: #94a3b8; }
+        .rank.bronze { color: #b45309; }
+
+        .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e0e0e0;
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .time {
+            font-size: 11px;
+            color: #666;
+            margin-left: 2px;
+        }
+        .time.finished { color: #22c55e; }
+
+        .state-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: #5865f2;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        .state-label.racing { color: #22c55e; }
+
+        .dot-anim {
+            display: inline-block;
+            width: 6px; height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+    </style>
+</head>
+<body>
+<div id="strip">
+    <div class="brand">🏁 MARBLES</div>
+    <div class="entries" id="entries">
+        <div class="entry" style="color:#444;font-size:11px;border:none;background:none;">
+            Waiting for race…
+        </div>
+    </div>
+    <div class="state-label" id="stateLabel"></div>
+</div>
+
+<script>
+const SESSION_ID = location.pathname.split('/').pop();
+
+const MEDALS = ['gold', 'silver', 'bronze'];
+
+function colourFor(name) {
+    let h = 0;
+    for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) % 360;
+    return `hsl(${h},60%,60%)`;
+}
+
+function formatMs(ms) {
+    if (!ms) return '';
+    const s = ms / 1000;
+    const m = Math.floor(s / 60);
+    const sec = (s % 60).toFixed(1);
+    return m > 0 ? `${m}:${sec.padStart(4,'0')}` : `${sec}s`;
+}
+
+async function refresh() {
+    try {
+        const res = await fetch(`/marbles/api/game/${SESSION_ID}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const state = data.state || 'waiting';
+        const players = data.players || [];
+        const results = (data.results || []).slice().sort((a, b) => a.rank - b.rank);
+
+        const stateEl = document.getElementById('stateLabel');
+        const entries = document.getElementById('entries');
+
+        if (state === 'running') {
+            stateEl.className = 'state-label racing';
+            stateEl.innerHTML = '<span class="dot-anim"></span>RACING';
+        } else if (state === 'ended') {
+            stateEl.className = 'state-label';
+            stateEl.textContent = 'RESULTS';
+        } else {
+            stateEl.className = 'state-label';
+            stateEl.textContent = players.length ? `${players.length} joined` : '';
+        }
+
+        if (state === 'waiting') {
+            entries.innerHTML = players.length
+                ? players.slice(0, 10).map(p =>
+                    `<div class="entry"><div class="dot" style="background:${colourFor(p)}"></div><span class="name">${p}</span></div>`
+                  ).join('')
+                : '<div class="entry" style="color:#444;font-size:11px;border:none;background:none;">Waiting for players…</div>';
+            return;
+        }
+
+        const top = results.length ? results.slice(0, 5) : players.slice(0, 5).map((p, i) => ({ username: p, rank: i + 1 }));
+
+        entries.innerHTML = top.map(r => {
+            const name  = r.username || r.twitch_login || '?';
+            const rank  = r.rank || '';
+            const medal = rank >= 1 && rank <= 3 ? MEDALS[rank - 1] : '';
+            const timeStr = r.finish_time_ms ? formatMs(r.finish_time_ms) : '';
+            return `
+            <div class="entry">
+                <span class="rank ${medal}">${rank || '—'}</span>
+                <div class="dot" style="background:${colourFor(name)}"></div>
+                <span class="name">${name}</span>
+                ${timeStr ? `<span class="time ${r.finish_time_ms ? 'finished' : ''}">${timeStr}</span>` : ''}
+            </div>`;
+        }).join('');
+    } catch {}
+}
+
+refresh();
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>

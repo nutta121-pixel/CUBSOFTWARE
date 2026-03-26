@@ -363,9 +363,50 @@
             padding: 0 1.25rem 1rem;
         }
 
-        @media (max-width: 600px) {
-            .aff-hero { padding: 2rem 0; }
-            .apply-card { padding: 1.75rem 1.25rem; }
+        @media (max-width: 768px) {
+            /* Remove side padding — main-container already pads */
+            .aff-page {
+                padding-left: 0;
+                padding-right: 0;
+                padding-top: 1.5rem;
+            }
+            .aff-hero { padding: 1.5rem 0 1rem; }
+            .aff-hero-title { font-size: clamp(1.8rem, 8vw, 2.5rem); }
+            .aff-hero-sub { font-size: 0.95rem; }
+
+            /* CTA buttons full width */
+            .hero-cta-group,
+            .apply-card > div[style*="display:flex"] {
+                flex-direction: column;
+            }
+            .btn-discord, .btn-dashboard {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* Grids → 1 column */
+            .steps-grid, .perks-grid {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Apply steps stack */
+            .apply-steps {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .apply-step {
+                justify-content: flex-start;
+            }
+
+            .apply-card {
+                padding: 1.5rem 1rem;
+            }
+
+            .section-title { font-size: 1.3rem; }
+        }
+
+        @media (max-width: 480px) {
+            .aff-page { padding-top: 1rem; padding-bottom: 3rem; }
         }
     </style>
 </head>

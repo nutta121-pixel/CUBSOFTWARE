@@ -3880,6 +3880,7 @@
                             <span class="toggle-slider"></span>
                         </label>
                         <button class="control-btn small" onclick="window.cpEditStreamer('${s.id}')">Edit</button>
+                        <button class="control-btn small" style="background:rgba(88,101,242,0.15);color:#7289da;" onclick="window.cpTestStreamer('${s.id}')">Test</button>
                         <button class="control-btn small" style="background:rgba(237,66,69,0.15);color:#ed4245;" onclick="window.cpDeleteStreamer('${s.id}')">Delete</button>
                     </div>
                 </div>`;
@@ -3927,9 +3928,12 @@
         document.getElementById('la-ping-role').value = '';
         document.getElementById('la-auto-delete').checked = false;
         window.cpLAUpdatePlatformHelp();
+        document.getElementById('la-test-btn').style.display = 'none';
         document.getElementById('live-alerts-form').style.display = 'block';
         _laPopulateRoles();
     };
+
+    window._laEditingIdProxy = function() { return _laEditingId; };
 
     window.cpHideLAForm = function() {
         document.getElementById('live-alerts-form').style.display = 'none';
@@ -3996,10 +4000,21 @@
             document.getElementById('la-message').value = s.message || '';
             document.getElementById('la-auto-delete').checked = s.auto_delete || false;
             window.cpLAUpdatePlatformHelp();
+            document.getElementById('la-test-btn').style.display = '';
             document.getElementById('live-alerts-form').style.display = 'block';
             await _laPopulateRoles();
             document.getElementById('la-ping-role').value = s.ping_role || '';
         } catch (e) { showToast('Failed to load streamer', 'error'); }
+    };
+
+    window.cpTestStreamer = async function(streamerId) {
+        try {
+            showToast('Sending test alert…', 'info');
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/live-alerts/streamers/${streamerId}/test`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) showToast('Test alert sent! Check the configured alert channel.', 'success');
+            else showToast(data.error || 'Failed to send test', 'error');
+        } catch (e) { showToast('Failed to send test alert', 'error'); }
     };
 
     window.cpDeleteStreamer = async function(streamerId) {

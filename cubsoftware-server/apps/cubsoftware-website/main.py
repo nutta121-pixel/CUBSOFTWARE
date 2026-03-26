@@ -2624,6 +2624,11 @@ def marbles_test_race():
 @app.route('/marbles')
 @app.route('/marbles/')
 def marbles_home():
+    cub = session.get('cub_user')
+    if not cub:
+        return redirect(url_for('cub_login_page', next='/marbles'))
+    if not is_app_whitelisted('marbles', cub.get('id', '')):
+        return render_template('feature-disabled.html', feature='marbles'), 403
     maps = _marble_get_maps(limit=50)
     return render_template('marbles/index.html', maps=maps, v=STATIC_VERSION)
 
@@ -2690,6 +2695,8 @@ def streamavatars_home():
     cub_user = session.get('cubsoftware_user') or session.get('cub_user')
     if not cub_user:
         return redirect(url_for('cub_login_page', next='/streamavatars'))
+    if not is_app_whitelisted('streamavatars', cub_user.get('id', '')):
+        return render_template('feature-disabled.html', feature='streamavatars'), 403
     login      = (cub_user.get('login') or cub_user.get('username', '')).lower()
     characters = _sa_get_characters(login)
     settings   = _sa_overlay_settings(login)
@@ -2703,6 +2710,8 @@ def streamavatars_editor():
     cub_user = session.get('cubsoftware_user') or session.get('cub_user')
     if not cub_user:
         return redirect(url_for('cub_login_page', next='/streamavatars/editor'))
+    if not is_app_whitelisted('streamavatars', cub_user.get('id', '')):
+        return render_template('feature-disabled.html', feature='streamavatars'), 403
     return render_template('streamavatars/editor.html', cub_user=cub_user)
 
 @app.route('/streamavatars/overlay/<channel>')
@@ -4932,6 +4941,32 @@ def submit_report():
 # PM2 Dashboard Configuration
 PM2_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'pm2_config.json')
 PM2_WHITELIST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'pm2_whitelist.json')
+APP_WHITELIST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'app_whitelist.json')
+
+_APP_WHITELIST_VALID = {'streamavatars', 'marbles'}
+
+def load_app_whitelist():
+    """Load app-level whitelists (streamavatars, marbles)"""
+    if os.path.exists(APP_WHITELIST_FILE):
+        try:
+            with open(APP_WHITELIST_FILE, 'r') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {app: {'allowed_users': []} for app in _APP_WHITELIST_VALID}
+
+def save_app_whitelist(data):
+    os.makedirs(os.path.dirname(APP_WHITELIST_FILE), exist_ok=True)
+    with open(APP_WHITELIST_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
+
+def is_app_whitelisted(app_name, user_id):
+    """Return True if user_id is whitelisted for the given app (or whitelist is empty = open to all)."""
+    data = load_app_whitelist()
+    users = data.get(app_name, {}).get('allowed_users', [])
+    if not users:
+        return True  # empty whitelist = feature is open to everyone
+    return str(user_id) in users
 
 # Discord OAuth Configuration (loaded from config file or environment)
 def load_pm2_config():
@@ -6028,6 +6063,48 @@ def pm2_bot_get_whitelist():
 
     whitelist = load_pm2_whitelist()
     return jsonify(whitelist)
+
+# ==================== APP WHITELIST API ====================
+
+@app.route('/api/admin/app-whitelist/<app_name>', methods=['GET'])
+@pm2_auth_required
+def admin_get_app_whitelist(app_name):
+    if app_name not in _APP_WHITELIST_VALID:
+        return jsonify({'error': 'Unknown app'}), 400
+    data = load_app_whitelist()
+    return jsonify({'allowed_users': data.get(app_name, {}).get('allowed_users', [])})
+
+@app.route('/api/admin/app-whitelist/<app_name>/add', methods=['POST'])
+@pm2_auth_required
+def admin_add_app_whitelist(app_name):
+    if app_name not in _APP_WHITELIST_VALID:
+        return jsonify({'error': 'Unknown app'}), 400
+    body = request.get_json(silent=True) or {}
+    user_id = str(body.get('user_id', '')).strip()
+    if not user_id:
+        return jsonify({'error': 'user_id is required'}), 400
+    data = load_app_whitelist()
+    data.setdefault(app_name, {'allowed_users': []})
+    if user_id not in data[app_name]['allowed_users']:
+        data[app_name]['allowed_users'].append(user_id)
+        save_app_whitelist(data)
+    return jsonify({'success': True, 'allowed_users': data[app_name]['allowed_users']})
+
+@app.route('/api/admin/app-whitelist/<app_name>/remove', methods=['POST'])
+@pm2_auth_required
+def admin_remove_app_whitelist(app_name):
+    if app_name not in _APP_WHITELIST_VALID:
+        return jsonify({'error': 'Unknown app'}), 400
+    body = request.get_json(silent=True) or {}
+    user_id = str(body.get('user_id', '')).strip()
+    if not user_id:
+        return jsonify({'error': 'user_id is required'}), 400
+    data = load_app_whitelist()
+    data.setdefault(app_name, {'allowed_users': []})
+    if user_id in data[app_name]['allowed_users']:
+        data[app_name]['allowed_users'].remove(user_id)
+        save_app_whitelist(data)
+    return jsonify({'success': True, 'allowed_users': data[app_name]['allowed_users']})
 
 # ==================== ADMIN API ENDPOINTS ====================
 
@@ -14148,6 +14225,75 @@ def cub_protector_live_alerts_edit(guild_id, streamer_id):
     if 'guilds' in data and guild_id in data['guilds']:
         data['guilds'][guild_id] = guild_data
     save_cp_json(CUB_PROTECTOR_LIVE_ALERTS_FILE, data)
+    return jsonify({'success': True})
+
+@app.route('/api/cub-protector/guilds/<guild_id>/live-alerts/streamers/<streamer_id>/test', methods=['POST'])
+@cub_protector_auth_required
+def cub_protector_live_alerts_test(guild_id, streamer_id):
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    data = load_cp_json(CUB_PROTECTOR_LIVE_ALERTS_FILE)
+    guild_data = data.get('guilds', {}).get(guild_id, {})
+    alert_channel = guild_data.get('alert_channel', '')
+    if not alert_channel:
+        return jsonify({'error': 'No alert channel configured. Save Live Alerts settings first.'}), 400
+    streamer = next((s for s in guild_data.get('streamers', []) if s.get('id') == streamer_id), None)
+    if not streamer:
+        return jsonify({'error': 'Streamer not found'}), 404
+
+    platform = streamer.get('platform', 'twitch')
+    display_name = streamer.get('display_name') or streamer.get('username', 'TestStreamer')
+    platform_colors = {'twitch': 0x9146FF, 'youtube': 0xFF0000, 'kick': 0x53FC18}
+    platform_names = {'twitch': 'Twitch', 'youtube': 'YouTube', 'kick': 'Kick'}
+    platform_emojis = {'twitch': '\U0001f7e3', 'youtube': '\U0001f534', 'kick': '\U0001f7e2'}
+    stream_domains = {'twitch': 'twitch.tv', 'youtube': 'youtube.com/live', 'kick': 'kick.com'}
+
+    emoji = platform_emojis.get(platform, '\U0001f4fa')
+    platform_name = platform_names.get(platform, platform.title())
+    color = platform_colors.get(platform, 0x5865F2)
+    test_title = f'{display_name} Test Stream'
+    test_game = 'Just Chatting'
+    test_url = f'https://{stream_domains.get(platform, platform)}/{streamer.get("username", "test")}'
+    test_viewers = 42
+
+    msg_template = streamer.get('message') or f'{emoji} **{{username}}** is now live on {{platform}}!\n{{url}}'
+    alert_msg = (msg_template
+        .replace('{username}', display_name)
+        .replace('{title}', test_title)
+        .replace('{game}', test_game)
+        .replace('{url}', test_url)
+        .replace('{platform}', platform_name)
+        .replace('{emoji}', emoji)
+        .replace('{viewers}', str(test_viewers)))
+
+    import datetime as _dt
+    embed = {
+        'color': color,
+        'title': f'{emoji} {display_name} is Live on {platform_name}! (TEST)',
+        'description': alert_msg,
+        'url': test_url,
+        'fields': [
+            {'name': 'Stream Title', 'value': test_title, 'inline': True},
+            {'name': 'Playing', 'value': test_game, 'inline': True},
+            {'name': 'Viewers', 'value': str(test_viewers), 'inline': True},
+        ],
+        'footer': {'text': '\u26a0\ufe0f This is a test alert \u2014 not a real live notification'},
+        'timestamp': _dt.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+    }
+
+    payload = {'embeds': [embed]}
+    ping_role = streamer.get('ping_role', '')
+    if ping_role == 'everyone':
+        payload['content'] = '@everyone'
+    elif ping_role == 'here':
+        payload['content'] = '@here'
+    elif ping_role:
+        payload['content'] = f'<@&{ping_role}>'
+
+    token = _get_guild_bot_token(guild_id)
+    result = cub_protector_bot_request('POST', f'/channels/{alert_channel}/messages', json=payload, token=token)
+    if result is None:
+        return jsonify({'error': 'Failed to send test alert. Make sure the alert channel is set and the bot has access.'}), 500
     return jsonify({'success': True})
 
 # ==================== CUSTOM BOT API ====================

@@ -1902,8 +1902,9 @@
                         </div>
                         <label class="toggle"><input type="checkbox" id="la-auto-delete"><span class="toggle-slider"></span></label>
                     </div>
-                    <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.5rem;">
+                    <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.5rem;flex-wrap:wrap;">
                         <button class="control-btn small" onclick="window.cpHideLAForm()">Cancel</button>
+                        <button id="la-test-btn" class="control-btn small" style="display:none;background:rgba(88,101,242,0.15);color:#7289da;" onclick="window.cpTestStreamer(window._laEditingIdProxy())">Send Test Alert</button>
                         <button id="la-submit-btn" class="control-btn primary small" onclick="window.cpSubmitLAForm()">Add Streamer</button>
                     </div>
                 </div>

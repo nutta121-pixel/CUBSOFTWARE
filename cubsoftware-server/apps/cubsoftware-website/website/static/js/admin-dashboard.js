@@ -180,6 +180,8 @@
                 break;
             case 'whitelist':
                 loadWhitelist();
+                loadAppWhitelist('streamavatars');
+                loadAppWhitelist('marbles');
                 break;
             case 'ipbans':
                 loadIpBans();
@@ -907,6 +909,79 @@
         } catch (e) {
             showToast('Failed to remove user', 'error');
         }
+    };
+
+    window.switchWhitelistTab = function(tab) {
+        document.querySelectorAll('.wl-panel').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('.wl-tab-btn').forEach(b => b.classList.remove('active'));
+        const panel = document.getElementById(`wl-${tab}-panel`);
+        if (panel) panel.style.display = '';
+        const btn = document.querySelector(`.wl-tab-btn[data-wl="${tab}"]`);
+        if (btn) btn.classList.add('active');
+    };
+
+    const _appWlListIds = { streamavatars: 'saWhitelistList', marbles: 'mbWhitelistList' };
+    const _appWlInputIds = { streamavatars: 'newSaUserId', marbles: 'newMbUserId' };
+
+    async function loadAppWhitelist(app) {
+        const listEl = document.getElementById(_appWlListIds[app]);
+        if (!listEl) return;
+        try {
+            const res = await fetch(`/api/admin/app-whitelist/${app}`);
+            if (!res.ok) throw new Error('Failed');
+            const data = await res.json();
+            const users = data.allowed_users || [];
+            if (users.length === 0) {
+                listEl.innerHTML = '<div class="empty-state" style="color:var(--text-muted);font-size:0.85rem;">No users whitelisted — feature is open to everyone</div>';
+                return;
+            }
+            listEl.innerHTML = users.map(id => `
+                <div class="whitelist-user">
+                    <span class="whitelist-user-id">${id}</span>
+                    <button class="whitelist-remove" onclick="removeFromAppWhitelist('${app}', '${id}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        } catch (e) {
+            listEl.innerHTML = '<div class="loading">Failed to load</div>';
+        }
+    }
+
+    window.addToAppWhitelist = async function(app) {
+        const inputEl = document.getElementById(_appWlInputIds[app]);
+        const userId = inputEl?.value?.trim();
+        if (!userId) { showToast('Please enter a user ID', 'error'); return; }
+        try {
+            const res = await fetch(`/api/admin/app-whitelist/${app}/add`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+            if (res.ok) {
+                showToast('User added to whitelist', 'success');
+                if (inputEl) inputEl.value = '';
+                loadAppWhitelist(app);
+            } else throw new Error('Failed');
+        } catch (e) { showToast('Failed to add user', 'error'); }
+    };
+
+    window.removeFromAppWhitelist = async function(app, userId) {
+        if (!confirm(`Remove ${userId} from ${app} whitelist?`)) return;
+        try {
+            const res = await fetch(`/api/admin/app-whitelist/${app}/remove`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+            if (res.ok) {
+                showToast('User removed from whitelist', 'success');
+                loadAppWhitelist(app);
+            } else throw new Error('Failed');
+        } catch (e) { showToast('Failed to remove user', 'error'); }
     };
 
     // ==================== IP BANS ====================

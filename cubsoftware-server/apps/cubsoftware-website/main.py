@@ -16372,7 +16372,7 @@ def cp_self_roles_add_category(guild_id):
         return jsonify({'error': 'Access denied'}), 403
     body = request.get_json() or {}
     name = body.get('name', '').strip()
-    description = body.get('description', '').strip() or f'Pick your {name} role!'
+    description = body.get('description', '').strip()[:4096] or f'Pick your {name} role!'
     emoji = body.get('emoji', '').strip()
     if not name:
         return jsonify({'error': 'Name is required'}), 400
@@ -16384,7 +16384,12 @@ def cp_self_roles_add_category(guild_id):
     if style not in ('select', 'reaction'):
         style = 'select'
     max_select = int(body.get('max_select', 0))
-    category = {'id': category_id, 'name': name, 'description': description, 'emoji': emoji, 'preset': None, 'roles': [], 'message_id': None, 'style': style, 'max_select': max_select}
+    embed_color = str(body.get('embed_color', '#5865F2')).strip().lstrip('#')
+    try:
+        int(embed_color, 16)
+    except ValueError:
+        embed_color = '5865F2'
+    category = {'id': category_id, 'name': name, 'description': description, 'emoji': emoji, 'preset': None, 'roles': [], 'message_id': None, 'style': style, 'max_select': max_select, 'embed_color': embed_color}
     categories.append(category)
     save_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE, data)
     return jsonify({'success': True, 'category': category})
@@ -16430,9 +16435,16 @@ def cp_self_roles_patch_category(guild_id, category_id):
     if 'name' in body and str(body['name']).strip():
         cat['name'] = str(body['name']).strip()[:50]
     if 'description' in body:
-        cat['description'] = str(body['description']).strip()[:100]
+        cat['description'] = str(body['description']).strip()[:4096]
     if 'emoji' in body:
         cat['emoji'] = str(body['emoji']).strip()[:64]
+    if 'embed_color' in body:
+        c = str(body['embed_color']).strip().lstrip('#')
+        try:
+            int(c, 16)
+            cat['embed_color'] = c
+        except ValueError:
+            pass
     save_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE, data)
     return jsonify({'success': True})
 
@@ -16506,6 +16518,7 @@ def cp_self_roles_publish(guild_id):
 
         cat_emoji = cat.get('emoji', '').strip()
         embed_title = f"{cat_emoji} {cat.get('name', '')}".strip() if cat_emoji else cat.get('name', '')
+        embed_color = int(cat.get('embed_color', '5865F2'), 16)
         existing_mid = cat.get('message_id')
 
         if style == 'reaction':
@@ -16515,7 +16528,7 @@ def cp_self_roles_publish(guild_id):
                 e = r.get('emoji', '▫️') or '▫️'
                 lines.append(f"{e} = **{r.get('label') or r.get('role_id', '')}**")
             desc = (cat.get('description') or 'React to this message to get your roles!') + '\n\n' + '\n'.join(lines)
-            embed = {'color': 0x5865F2, 'title': embed_title, 'description': desc}
+            embed = {'color': embed_color, 'title': embed_title, 'description': desc}
             payload = {'embeds': [embed]}
             result = None
             if existing_mid:
@@ -16545,7 +16558,7 @@ def cp_self_roles_publish(guild_id):
             max_select = cat.get('max_select') or len(options)
             max_select = min(max(1, max_select), len(options))
             embed = {
-                'color': 0x5865F2,
+                'color': embed_color,
                 'title': embed_title,
                 'description': cat.get('description') or 'Select a role below!',
                 'footer': {'text': 'Selecting a role you already have will remove it'},

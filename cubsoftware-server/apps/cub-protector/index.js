@@ -3589,18 +3589,35 @@ client.on('messageReactionAdd', async (reaction, user) => {
 
     // ── Self-roles reaction handling ──
     {
-        const rmData = loadRoleMenusData();
-        const guildId = reaction.message.guild.id;
-        const sr = rmData.guilds?.[guildId]?.self_roles;
-        if (sr?.enabled) {
-            for (const cat of (sr.categories || [])) {
-                if (cat.style !== 'reaction' || cat.message_id !== reaction.message.id) continue;
-                const roleEntry = cat.roles.find(r => _selfRoleEmojiMatch(r.emoji, reaction.emoji));
-                if (!roleEntry) break;
-                const member = await reaction.message.guild.members.fetch(user.id).catch(() => null);
-                if (member) await member.roles.add(roleEntry.role_id).catch(() => {});
-                break;
-            }
+        const srGuildId = reaction.message.guildId;
+        if (srGuildId) {
+            try {
+                const rmData = loadRoleMenusData();
+                const sr = rmData.guilds?.[srGuildId]?.self_roles;
+                if (sr?.enabled) {
+                    const matchCat = (sr.categories || []).find(c =>
+                        c.style === 'reaction' && String(c.message_id) === String(reaction.message.id)
+                    );
+                    if (matchCat) {
+                        const roleEntry = matchCat.roles.find(r => _selfRoleEmojiMatch(r.emoji, reaction.emoji));
+                        if (roleEntry) {
+                            const guild = reaction.message.guild ?? await client.guilds.fetch(srGuildId).catch(() => null);
+                            const member = guild ? await guild.members.fetch(user.id).catch(() => null) : null;
+                            if (member) {
+                                await member.roles.add(roleEntry.role_id).catch(() => {});
+                                // Exclusive: max_select=1 removes all other roles in this category
+                                if ((matchCat.max_select || 0) === 1) {
+                                    for (const r of matchCat.roles) {
+                                        if (r.role_id !== roleEntry.role_id && member.roles.cache.has(r.role_id)) {
+                                            await member.roles.remove(r.role_id).catch(() => {});
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (_e) {}
         }
     }
 
@@ -3651,22 +3668,25 @@ client.on('messageReactionAdd', async (reaction, user) => {
 client.on('messageReactionRemove', async (reaction, user) => {
     if (user.bot) return;
     if (reaction.partial) await reaction.fetch().catch(() => {});
-    if (!reaction.message.guild) return;
-    if (CUSTOM_GUILD_ID && reaction.message.guild.id !== CUSTOM_GUILD_ID) return;
-    if (guildHasCustomBot(reaction.message.guild.id)) return;
+    const srGuildId = reaction.message.guildId;
+    if (!srGuildId) return;
+    if (CUSTOM_GUILD_ID && srGuildId !== CUSTOM_GUILD_ID) return;
+    if (guildHasCustomBot(srGuildId)) return;
 
-    const rmData = loadRoleMenusData();
-    const guildId = reaction.message.guild.id;
-    const sr = rmData.guilds?.[guildId]?.self_roles;
-    if (!sr?.enabled) return;
-    for (const cat of (sr.categories || [])) {
-        if (cat.style !== 'reaction' || cat.message_id !== reaction.message.id) continue;
-        const roleEntry = cat.roles.find(r => _selfRoleEmojiMatch(r.emoji, reaction.emoji));
-        if (!roleEntry) break;
-        const member = await reaction.message.guild.members.fetch(user.id).catch(() => null);
+    try {
+        const rmData = loadRoleMenusData();
+        const sr = rmData.guilds?.[srGuildId]?.self_roles;
+        if (!sr?.enabled) return;
+        const matchCat = (sr.categories || []).find(c =>
+            c.style === 'reaction' && String(c.message_id) === String(reaction.message.id)
+        );
+        if (!matchCat) return;
+        const roleEntry = matchCat.roles.find(r => _selfRoleEmojiMatch(r.emoji, reaction.emoji));
+        if (!roleEntry) return;
+        const guild = reaction.message.guild ?? await client.guilds.fetch(srGuildId).catch(() => null);
+        const member = guild ? await guild.members.fetch(user.id).catch(() => null) : null;
         if (member) await member.roles.remove(roleEntry.role_id).catch(() => {});
-        break;
-    }
+    } catch (_e) {}
 });
 
 // ============================================================

@@ -7469,6 +7469,10 @@
                         <input type="text" class="form-input" value="${escapeHtml(cat.emoji || '')}" placeholder="None" maxlength="64" style="width:90px;" onchange="window.cpUpdateSelfRoleCategory('${cat.id}','emoji',this.value.trim())">
                     </div>
                     <div>
+                        <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:2px;">Embed Colour</label>
+                        <input type="color" value="#${cat.embed_color || '5865F2'}" style="width:42px;height:34px;padding:2px;border-radius:6px;border:1px solid var(--border-color);cursor:pointer;background:none;" onchange="window.cpUpdateSelfRoleCategory('${cat.id}','embed_color',this.value.slice(1))">
+                    </div>
+                    <div>
                         <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:2px;">Style</label>
                         <select class="form-select" style="width:160px;" onchange="window.cpUpdateSelfRoleCategory('${cat.id}','style',this.value)">
                             <option value="select" ${!isReaction ? 'selected' : ''}>Dropdown Menu</option>
@@ -7539,11 +7543,12 @@
         const name = document.getElementById('sr-add-name').value.trim();
         const desc = document.getElementById('sr-add-desc').value.trim();
         const emoji = document.getElementById('sr-add-emoji').value.trim();
+        const color = (document.getElementById('sr-add-color')?.value || '#5865F2').slice(1);
         if (!name) return showToast('Category name is required', 'error');
         try {
             const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/self-roles/categories`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, description: desc, emoji: emoji || '🎭' }),
+                body: JSON.stringify({ name, description: desc, emoji, embed_color: color }),
             });
             const data = await res.json();
             if (!res.ok) return showToast(data.error || 'Failed to add category', 'error');

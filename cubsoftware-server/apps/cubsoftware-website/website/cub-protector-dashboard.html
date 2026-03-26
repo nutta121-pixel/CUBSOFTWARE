@@ -3769,8 +3769,9 @@
                     <h3 style="margin-bottom:1rem;">Add Custom Category</h3>
                     <div class="form-row">
                         <div class="form-group"><label>Category Name</label><input type="text" id="sr-add-name" placeholder="e.g. Hobbies" maxlength="50"></div>
-                        <div class="form-group"><label>Description</label><input type="text" id="sr-add-desc" placeholder="Pick your hobby!" maxlength="100"></div>
+                        <div class="form-group"><label>Description</label><textarea id="sr-add-desc" class="form-input" rows="2" placeholder="Pick your hobby!" maxlength="4096" style="resize:vertical;"></textarea></div>
                         <div class="form-group"><label>Emoji <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label><input type="text" id="sr-add-emoji" placeholder="None" maxlength="64"></div>
+                        <div class="form-group"><label>Embed Colour</label><input type="color" id="sr-add-color" value="#5865F2" style="width:42px;height:38px;padding:2px;border-radius:6px;border:1px solid var(--border-color);cursor:pointer;background:none;"></div>
                         <div class="form-group" style="align-self:flex-end;"><button class="control-btn primary" onclick="window.cpAddSelfRoleCategory()">Add Category</button></div>
                     </div>
                 </div>

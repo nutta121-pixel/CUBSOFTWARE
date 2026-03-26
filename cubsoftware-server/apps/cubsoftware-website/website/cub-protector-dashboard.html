@@ -19,7 +19,14 @@
     <style>
         /* Push fixed sidebar below the site header */
         .admin-sidebar { top: 62px; }
-        @media (max-width: 768px) { .admin-sidebar { top: 54px; } }
+        @media (max-width: 768px) {
+            /* Mobile-header sits below the site header, not on top of it */
+            .mobile-header { top: 54px; z-index: 95; }
+            /* Sidebar starts below both the site header and mobile-header */
+            .admin-sidebar { top: calc(54px + 60px); z-index: 200; }
+            /* Content offset accounts for both headers */
+            .admin-content { padding-top: calc(54px + 60px + 1rem) !important; }
+        }
     </style>
 </head>
 <body>

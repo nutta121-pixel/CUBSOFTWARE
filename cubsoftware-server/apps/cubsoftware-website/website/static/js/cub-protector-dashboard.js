@@ -7458,7 +7458,7 @@
             return `<div class="settings-card" style="margin-bottom:0.75rem;background:var(--bg-tertiary);">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
                     <div>
-                        <strong>${escapeHtml(cat.emoji || '🎭')} ${escapeHtml(cat.name)}</strong>
+                        <strong>${cat.emoji ? escapeHtml(cat.emoji) + ' ' : ''}${escapeHtml(cat.name)}</strong>
                         <span style="color:var(--text-muted);font-size:0.85rem;margin-left:0.5rem;">${cat.roles.length} role(s)${cat.preset ? ' · preset: ' + escapeHtml(cat.preset) : ''}</span>
                     </div>
                     <button class="control-btn danger small" onclick="window.cpDeleteSelfRoleCategory('${cat.id}')">Remove</button>

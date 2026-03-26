@@ -690,7 +690,7 @@ const SELF_ROLE_PRESETS = {
 async function postSelfRolesCategory(guild, channel, category) {
     const embed = new EmbedBuilder()
         .setColor(0x5865F2)
-        .setTitle(`${category.emoji || '🎭'} ${category.name}`)
+        .setTitle(category.emoji ? `${category.emoji} ${category.name}` : category.name)
         .setDescription(category.description || 'Select a role below!')
         .setFooter({ text: 'Selecting a role you already have will remove it' });
     const options = category.roles.slice(0, 25).map(r => {

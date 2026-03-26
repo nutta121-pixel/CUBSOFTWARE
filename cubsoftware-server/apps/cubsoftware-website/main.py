@@ -16373,7 +16373,7 @@ def cp_self_roles_add_category(guild_id):
     body = request.get_json() or {}
     name = body.get('name', '').strip()
     description = body.get('description', '').strip() or f'Pick your {name} role!'
-    emoji = body.get('emoji', '🎭').strip() or '🎭'
+    emoji = body.get('emoji', '').strip()
     if not name:
         return jsonify({'error': 'Name is required'}), 400
     data = load_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE)
@@ -16397,8 +16397,16 @@ def cp_self_roles_delete_category(guild_id, category_id):
     data = load_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE)
     if guild_id in data.get('guilds', {}):
         sr = data['guilds'][guild_id].get('self_roles', {})
-        sr['categories'] = [c for c in sr.get('categories', []) if c.get('id') != category_id]
-        save_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE, data)
+        cat = next((c for c in sr.get('categories', []) if c.get('id') == category_id), None)
+        if cat:
+            # Delete the Discord message if it was published
+            message_id = cat.get('message_id')
+            channel_id = sr.get('channel_id')
+            if message_id and channel_id:
+                token = _get_guild_bot_token(guild_id)
+                cub_protector_bot_request('DELETE', f'/channels/{channel_id}/messages/{message_id}', token=token)
+            sr['categories'] = [c for c in sr.get('categories', []) if c.get('id') != category_id]
+            save_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE, data)
     return jsonify({'success': True})
 
 @app.route('/api/cub-protector/guilds/<guild_id>/self-roles/categories/<category_id>', methods=['PATCH'])
@@ -16494,7 +16502,8 @@ def cp_self_roles_publish(guild_id):
         if not roles:
             continue
 
-        embed_title = f"{cat.get('emoji', '🎭')} {cat.get('name', '')}"
+        cat_emoji = cat.get('emoji', '').strip()
+        embed_title = f"{cat_emoji} {cat.get('name', '')}".strip() if cat_emoji else cat.get('name', '')
         existing_mid = cat.get('message_id')
 
         if style == 'reaction':

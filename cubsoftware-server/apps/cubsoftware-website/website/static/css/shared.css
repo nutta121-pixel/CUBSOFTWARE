@@ -1024,6 +1024,17 @@ a:hover {
         visibility: visible;
         transform: translateY(0);
     }
+
+    /* Shrink account/login button on mobile so it fits the header */
+    .nav-auth .nav-link.dropdown-toggle {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+
+    .nav-login-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
 }
 
 @media (max-width: 480px) {

@@ -48,7 +48,8 @@
       "WebFetch(domain:www.speedrun.com)",
       "WebFetch(domain:discord.gg)",
       "Bash(find 'G:\\\\GitHub Projects\\\\CUBSOFTWARE\\\\cubsoftware-server' -name *.env*)",
-      "Bash(\"G:/GitHub Projects/CUBSOFTWARE/cubsoftware-server/apps/cubsoftware-website/website/marbles/css/play.css\")"
+      "Bash(\"G:/GitHub Projects/CUBSOFTWARE/cubsoftware-server/apps/cubsoftware-website/website/marbles/css/play.css\")",
+      "Bash(find 'G:\\\\GitHub Projects\\\\CUBSOFTWARE\\\\cubsoftware-server\\\\apps' -type d -name *bot* -o -type d -name *protector*)"
     ]
   }
 }

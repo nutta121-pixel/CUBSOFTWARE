@@ -9,6 +9,11 @@ const path = require('path');
 // dotenv will NOT override env vars already set by PM2 ecosystem (e.g. DISCORD_TOKEN, CLIENT_ID, CUSTOM_GUILD_ID)
 // It will still load API keys (TWITCH_CLIENT_ID, YOUTUBE_API_KEY etc.) from .env as normal
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+const express = require('express');
+const axios = require('axios');
+const WebSocket = require('ws');
+let DiscordTerminal = null;
+try { DiscordTerminal = require('../../shared/discord-terminal'); } catch (e) { console.warn('[Terminal] discord-terminal not available:', e.message); }
 let generateRankCard = null;
 try { generateRankCard = require('./rankCard').generateRankCard; } catch (e) { console.warn('[RankCard] @napi-rs/canvas not available — run npm install'); }
 // ── Podcast Player ────────────────────────────────────────────────────────────
@@ -180,6 +185,31 @@ const GAMES_FILE = path.join(DATA_DIR, 'games.json');
 const MEDIA_CHANNELS_FILE = path.join(DATA_DIR, 'media_channels.json');
 const SUPPORT_SERVER_LINK = 'https://discord.gg/ngQXHUbnKg';
 const SUPPORT_USER_LINK = 'https://discord.com/users/523949187663585310';
+
+// ============================================================
+// Admin / CubSoftware Bot Config
+// ============================================================
+const OWNER_IDS = (process.env.OWNER_IDS || '378501056008683530').split(',').map(id => id.trim());
+const API_URL = process.env.API_URL || 'https://cubsoftware.site';
+const API_KEY = process.env.API_KEY || '';
+const TERMINAL_CHANNEL_ID = process.env.TERMINAL_CHANNEL_ID || '1466190584372003092';
+const LINKS_LOG_CHANNEL_ID = process.env.LINKS_LOG_CHANNEL_ID || '1466190584372003092';
+const LOG_SERVER_PORT = parseInt(process.env.LOG_SERVER_PORT) || 3847;
+const CUBREACTIVE_WS_PORT = parseInt(process.env.CUBREACTIVE_WS_PORT) || 3848;
+const projectChannels = {
+    'cubsoftware-website': '1466190584372003092',
+    'questcord-website':   '1466190431485427856',
+    'cleanme-bot':         '1466190746401902855',
+    'reports':             '1468610071494656226',
+};
+
+// Website data file paths (shared with cubsoftware-website)
+const WEBSITE_DATA_PATH  = path.join(__dirname, '..', 'cubsoftware-website', 'data');
+const LINKS_FILE         = path.join(WEBSITE_DATA_PATH, 'shortened_links.json');
+const LINKS_AUDIT_FILE   = path.join(WEBSITE_DATA_PATH, 'links_audit.json');
+const BANNED_IPS_FILE    = path.join(WEBSITE_DATA_PATH, 'banned_ips.json');
+const IP_BANS_FILE       = path.join(WEBSITE_DATA_PATH, 'ip_bans.json');
+const CUBREACTIVE_USERS_FILE = path.join(WEBSITE_DATA_PATH, 'cubreactive_users.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -1826,6 +1856,129 @@ const commands = [
         .setName('games')
         .setDescription('🎮 View all available games and your game stats'),
 
+    // ── Admin commands (from CubSoftware Bot) ─────────────────────────────────
+    new SlashCommandBuilder()
+        .setName('cubsoftware')
+        .setDescription('CUB SOFTWARE information')
+        .addSubcommand(sub => sub.setName('info').setDescription('About CUB SOFTWARE'))
+        .addSubcommand(sub => sub.setName('apps').setDescription('List all apps')),
+
+    new SlashCommandBuilder()
+        .setName('link-find')
+        .setDescription('Find information about a shortened link')
+        .addStringOption(o => o.setName('code').setDescription('Short code or full URL').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('link-ban')
+        .setDescription('Ban an IP from creating links')
+        .addStringOption(o => o.setName('ip').setDescription('IP address').setRequired(true))
+        .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('link-unban')
+        .setDescription('Unban an IP from creating links')
+        .addStringOption(o => o.setName('ip').setDescription('IP address').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('link-bans')
+        .setDescription('List all banned IPs')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('link-delete')
+        .setDescription('Delete a shortened link')
+        .addStringOption(o => o.setName('code').setDescription('Short code or full URL').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('ip-ban')
+        .setDescription('Ban an IP from the website')
+        .addStringOption(o => o.setName('ip').setDescription('IP address').setRequired(true))
+        .addStringOption(o => o.setName('type').setDescription('Ban type').setRequired(true)
+            .addChoices(
+                { name: 'Global (entire website)', value: 'global' },
+                { name: 'Link Shortener', value: 'links' },
+                { name: 'Social Media Saver', value: 'social' },
+                { name: 'File Converter', value: 'converter' },
+                { name: 'PDF Tools', value: 'pdf' },
+                { name: 'Reports', value: 'reports' }
+            ))
+        .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('ip-temp-ban')
+        .setDescription('Temporarily ban an IP')
+        .addStringOption(o => o.setName('ip').setDescription('IP address').setRequired(true))
+        .addStringOption(o => o.setName('duration').setDescription('Duration e.g. 30m, 1h, 7d').setRequired(true))
+        .addStringOption(o => o.setName('type').setDescription('Ban type (default: global)').setRequired(false)
+            .addChoices(
+                { name: 'Global (entire website)', value: 'global' },
+                { name: 'Link Shortener', value: 'links' },
+                { name: 'Social Media Saver', value: 'social' }
+            ))
+        .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('ip-unban')
+        .setDescription('Unban an IP')
+        .addStringOption(o => o.setName('ip').setDescription('IP address').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('ip-list')
+        .setDescription('List all IP bans')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('keraplast-password')
+        .setDescription('Manage Keraplast calculator passwords')
+        .addSubcommand(sub => sub.setName('create').setDescription('Create a password')
+            .addStringOption(o => o.setName('password').setDescription('The password').setRequired(true))
+            .addStringOption(o => o.setName('label').setDescription('Label').setRequired(false)))
+        .addSubcommand(sub => sub.setName('delete').setDescription('Delete a password')
+            .addStringOption(o => o.setName('password').setDescription('The password').setRequired(true)))
+        .addSubcommand(sub => sub.setName('list').setDescription('List all passwords'))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('feature')
+        .setDescription('Enable or disable website features')
+        .addSubcommand(sub => sub.setName('disable').setDescription('Disable a feature')
+            .addStringOption(o => o.setName('name').setDescription('Feature to disable').setRequired(true)
+                .addChoices(...[
+                    ['Social Media Saver','social-media-saver'],['File Converter','file-converter'],
+                    ['PDF Tools','pdf-tools'],['Image Editor','image-editor'],['QR Generator','qr-generator'],
+                    ['Link Shortener','link-shortener'],['Color Picker','color-picker'],['Text Tools','text-tools'],
+                    ['Unit Converter','unit-converter'],['JSON Formatter','json-formatter'],
+                    ['Timestamp Converter','timestamp-converter'],['Video Compressor','video-compressor'],
+                    ['Resume Builder','resume-builder'],['Countdown Maker','countdown-maker'],
+                    ['Random Picker','random-picker'],['Wheel Spinner','wheel-spinner'],
+                    ['Calculator Suite','calculator-suite'],['Password Generator','password-generator'],
+                    ['Timer Tools','timer-tools'],['World Clock','world-clock'],
+                    ['Currency Converter','currency-converter'],['Sticky Board','sticky-board'],
+                ].map(([name, value]) => ({ name, value })))))
+        .addSubcommand(sub => sub.setName('enable').setDescription('Enable a feature')
+            .addStringOption(o => o.setName('name').setDescription('Feature to enable').setRequired(true)
+                .addChoices(...[
+                    ['Social Media Saver','social-media-saver'],['File Converter','file-converter'],
+                    ['PDF Tools','pdf-tools'],['Image Editor','image-editor'],['QR Generator','qr-generator'],
+                    ['Link Shortener','link-shortener'],['Color Picker','color-picker'],['Text Tools','text-tools'],
+                    ['Unit Converter','unit-converter'],['JSON Formatter','json-formatter'],
+                    ['Timestamp Converter','timestamp-converter'],['Video Compressor','video-compressor'],
+                    ['Resume Builder','resume-builder'],['Countdown Maker','countdown-maker'],
+                    ['Random Picker','random-picker'],['Wheel Spinner','wheel-spinner'],
+                    ['Calculator Suite','calculator-suite'],['Password Generator','password-generator'],
+                    ['Timer Tools','timer-tools'],['World Clock','world-clock'],
+                    ['Currency Converter','currency-converter'],['Sticky Board','sticky-board'],
+                ].map(([name, value]) => ({ name, value })))))
+        .addSubcommand(sub => sub.setName('list').setDescription('Show all features and their status'))
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
 ];
 
 // ============================================================
@@ -2017,6 +2170,444 @@ function startOwnershipLockTimer(channelId, lockMinutes) {
 const hubChannelIndex = new Map();
 
 // ============================================================
+// Admin Helper Functions (Link/IP/Feature Management)
+// ============================================================
+function loadLinksFile() {
+    try { if (fs.existsSync(LINKS_FILE)) return JSON.parse(fs.readFileSync(LINKS_FILE, 'utf8')); } catch (e) {}
+    return {};
+}
+function loadAuditFile() {
+    try { if (fs.existsSync(LINKS_AUDIT_FILE)) return JSON.parse(fs.readFileSync(LINKS_AUDIT_FILE, 'utf8')); } catch (e) {}
+    return {};
+}
+function saveLinksFile(data) {
+    try { fs.mkdirSync(path.dirname(LINKS_FILE), { recursive: true }); fs.writeFileSync(LINKS_FILE, JSON.stringify(data, null, 2)); return true; } catch (e) { return false; }
+}
+function saveAuditFile(data) {
+    try { fs.mkdirSync(path.dirname(LINKS_AUDIT_FILE), { recursive: true }); fs.writeFileSync(LINKS_AUDIT_FILE, JSON.stringify(data, null, 2)); return true; } catch (e) { return false; }
+}
+function loadBannedIps() {
+    try { if (fs.existsSync(BANNED_IPS_FILE)) return JSON.parse(fs.readFileSync(BANNED_IPS_FILE, 'utf8')); } catch (e) {}
+    return { ips: [], reasons: {} };
+}
+function saveBannedIps(data) {
+    try { fs.mkdirSync(path.dirname(BANNED_IPS_FILE), { recursive: true }); fs.writeFileSync(BANNED_IPS_FILE, JSON.stringify(data, null, 2)); return true; } catch (e) { return false; }
+}
+function loadIpBans() {
+    try { if (fs.existsSync(IP_BANS_FILE)) return JSON.parse(fs.readFileSync(IP_BANS_FILE, 'utf8')); } catch (e) {}
+    return { global: [], features: {}, temp: [] };
+}
+function saveIpBans(data) {
+    try { fs.mkdirSync(path.dirname(IP_BANS_FILE), { recursive: true }); fs.writeFileSync(IP_BANS_FILE, JSON.stringify(data, null, 2)); return true; } catch (e) { return false; }
+}
+function loadCubReactiveUsers() {
+    try { if (fs.existsSync(CUBREACTIVE_USERS_FILE)) return JSON.parse(fs.readFileSync(CUBREACTIVE_USERS_FILE, 'utf8')); } catch (e) {}
+    return {};
+}
+
+const ALL_WEBSITE_FEATURES = [
+    'social-media-saver', 'file-converter', 'pdf-tools', 'image-editor',
+    'qr-generator', 'link-shortener', 'color-picker', 'text-tools',
+    'unit-converter', 'json-formatter', 'timestamp-converter', 'video-compressor',
+    'resume-builder', 'countdown-maker', 'random-picker', 'wheel-spinner',
+    'calculator-suite', 'password-generator', 'timer-tools', 'world-clock',
+    'currency-converter', 'sticky-board',
+];
+function loadDisabledFeatures() {
+    const DISABLED_FILE = path.join(WEBSITE_DATA_PATH, 'disabled_features.json');
+    try { if (fs.existsSync(DISABLED_FILE)) return JSON.parse(fs.readFileSync(DISABLED_FILE, 'utf8')); } catch (e) {}
+    return [];
+}
+function saveDisabledFeatures(features) {
+    const DISABLED_FILE = path.join(WEBSITE_DATA_PATH, 'disabled_features.json');
+    try { fs.mkdirSync(path.dirname(DISABLED_FILE), { recursive: true }); fs.writeFileSync(DISABLED_FILE, JSON.stringify(features, null, 2)); return true; } catch (e) { return false; }
+}
+function loadKeraplastPasswords() {
+    const KERAPLAST_FILE = path.join(WEBSITE_DATA_PATH, 'keraplast_passwords.json');
+    try { if (fs.existsSync(KERAPLAST_FILE)) return JSON.parse(fs.readFileSync(KERAPLAST_FILE, 'utf8')); } catch (e) {}
+    return { passwords: [] };
+}
+function saveKeraplastPasswords(data) {
+    const KERAPLAST_FILE = path.join(WEBSITE_DATA_PATH, 'keraplast_passwords.json');
+    try { fs.mkdirSync(path.dirname(KERAPLAST_FILE), { recursive: true }); fs.writeFileSync(KERAPLAST_FILE, JSON.stringify(data, null, 2)); return true; } catch (e) { return false; }
+}
+
+// ============================================================
+// CubReactive — Voice Speaking Detection (OBS Overlay)
+// ============================================================
+const { joinVoiceChannel: _crJoinVC } = require('@discordjs/voice');
+const crVoiceStates       = new Map(); // userId  → state object
+const crOverlayConns      = new Map(); // userId  → [ws, …]
+const crChannelMembers    = new Map(); // channelId → Set(userId)
+const crActiveVoiceConns  = new Map(); // channelId → { guildId, connection }
+const crOverlayChannels   = new Map(); // channelId → Set(userId)
+let   crWss               = null;
+
+function _crSpeakingHandler(channelId, guildId) {
+    return function onPacket(packet) {
+        if (packet.op === 5) {
+            const { user_id, speaking: flags } = packet.d;
+            if (!user_id || user_id === client.user?.id) return;
+            const isSpeaking = (flags & 1) !== 0;
+            const vs = crVoiceStates.get(user_id);
+            if (vs) { vs.speaking = isSpeaking; crVoiceStates.set(user_id, vs); crBroadcastVoice(user_id, vs); }
+        } else if (packet.op === 4) {
+            const guild = client.guilds.cache.get(guildId);
+            const channel = guild?.channels.cache.get(channelId);
+            if (channel) { crScanChannel(channel); crBroadcastChannel(channelId); }
+        }
+    };
+}
+
+function crBroadcastVoice(userId, data) {
+    (crOverlayConns.get(userId) || []).forEach(ws => {
+        if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'VOICE_STATE_UPDATE', userId, data }));
+    });
+    crOverlayConns.forEach((conns, oid) => {
+        if (oid === userId) return;
+        conns.forEach(ws => {
+            if (ws.readyState !== WebSocket.OPEN || !ws.isGroupMode) return;
+            const a = crVoiceStates.get(oid), b = crVoiceStates.get(userId);
+            if (a && b && a.channelId === b.channelId) ws.send(JSON.stringify({ type: 'VOICE_STATE_UPDATE', userId, data }));
+        });
+    });
+}
+
+function crBroadcastChannel(channelId) {
+    const members = crChannelMembers.get(channelId) || new Set();
+    const list = [...members].map(uid => { const s = crVoiceStates.get(uid); return s ? { userId: uid, ...s } : null; }).filter(Boolean);
+    crOverlayConns.forEach((conns, uid) => {
+        const s = crVoiceStates.get(uid);
+        if (s && s.channelId === channelId) {
+            conns.forEach(ws => { if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'CHANNEL_UPDATE', channelId, members: list })); });
+        }
+    });
+}
+
+function crScanChannel(channel) {
+    if (!channel?.members) return;
+    const channelId = channel.id, guildId = channel.guild?.id;
+    if (!crChannelMembers.has(channelId)) crChannelMembers.set(channelId, new Set());
+    channel.members.forEach(member => {
+        if (member.user.bot) return;
+        const uid = member.id;
+        crChannelMembers.get(channelId).add(uid);
+        if (crVoiceStates.has(uid)) return;
+        const vs = member.voice;
+        crVoiceStates.set(uid, {
+            channelId, guildId,
+            username: member.displayName || member.user.username || 'Unknown',
+            avatar: member.user.avatarURL({ size: 256 }) || `https://cdn.discordapp.com/embed/avatars/${parseInt(member.user.discriminator || '0') % 5}.png`,
+            muted: vs?.selfMute || vs?.serverMute || false,
+            deafened: vs?.selfDeaf || vs?.serverDeaf || false,
+            speaking: false, streaming: vs?.streaming || false, video: vs?.selfVideo || false,
+        });
+    });
+}
+
+async function crJoinChannel(channelId, guildId) {
+    if (crActiveVoiceConns.has(channelId)) {
+        const guild = client.guilds.cache.get(guildId);
+        const ch = guild?.channels.cache.get(channelId);
+        if (ch) { crScanChannel(ch); crBroadcastChannel(channelId); }
+        return;
+    }
+    try {
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) return;
+        const channel = guild.channels.cache.get(channelId);
+        if (!channel) return;
+        const perms = channel.permissionsFor(guild.members.me);
+        if (!perms?.has('Connect')) { crBroadcastChannel(channelId); return; }
+        crScanChannel(channel);
+        crBroadcastChannel(channelId);
+        const connection = _crJoinVC({ channelId, guildId, adapterCreator: guild.voiceAdapterCreator, selfMute: true, selfDeaf: true });
+        crActiveVoiceConns.set(channelId, { guildId, channelId, connection });
+
+        const onPacket = _crSpeakingHandler(channelId, guildId);
+        let wiredWs = null;
+        function wireWs(networking) {
+            if (!networking) return;
+            const ws = Reflect.get(networking.state, 'ws');
+            if (ws && ws !== wiredWs) { ws.on('packet', onPacket); wiredWs = ws; }
+            networking.on('stateChange', (_o, ns) => {
+                const nws = Reflect.get(ns, 'ws');
+                if (nws && nws !== wiredWs) { if (wiredWs) wiredWs.removeListener('packet', onPacket); nws.on('packet', onPacket); wiredWs = nws; }
+            });
+        }
+        connection.on('stateChange', (oldSt, newSt) => {
+            const oNet = Reflect.get(oldSt, 'networking'), nNet = Reflect.get(newSt, 'networking');
+            if (nNet && nNet !== oNet) wireWs(nNet);
+            if (newSt.status === 'ready' && oldSt.status !== 'ready') {
+                const members = crChannelMembers.get(channelId);
+                if (members) members.forEach(uid => { const vs = crVoiceStates.get(uid); if (vs?.speaking) { vs.speaking = false; crVoiceStates.set(uid, vs); crBroadcastVoice(uid, vs); } });
+                connection.receiver.speaking.removeAllListeners('start');
+                connection.receiver.speaking.removeAllListeners('end');
+                connection.receiver.speaking.on('start', uid => { if (uid === client.user?.id) return; const vs = crVoiceStates.get(uid); if (vs && !vs.speaking) { vs.speaking = true; crVoiceStates.set(uid, vs); crBroadcastVoice(uid, vs); } });
+                connection.receiver.speaking.on('end',   uid => { if (uid === client.user?.id) return; const vs = crVoiceStates.get(uid); if (vs?.speaking)  { vs.speaking = false; crVoiceStates.set(uid, vs); crBroadcastVoice(uid, vs); } });
+            }
+            if (newSt.status === 'destroyed') {
+                if (wiredWs) { wiredWs.removeListener('packet', onPacket); wiredWs = null; }
+                crActiveVoiceConns.delete(channelId);
+                const overlayUsers = crOverlayChannels.get(channelId);
+                if (overlayUsers?.size > 0) setTimeout(() => { if (!crActiveVoiceConns.has(channelId)) crJoinChannel(channelId, guildId).catch(() => {}); }, 5000);
+            }
+        });
+        const initNet = Reflect.get(connection.state, 'networking');
+        if (initNet) wireWs(initNet);
+    } catch (e) {
+        console.error(`[CubReactive] Failed to join ${channelId}:`, e.message);
+        crActiveVoiceConns.delete(channelId);
+    }
+}
+
+function crLeaveIfUnneeded(channelId) {
+    const users = crOverlayChannels.get(channelId);
+    if (!users || users.size === 0) {
+        crOverlayChannels.delete(channelId);
+        const st = crActiveVoiceConns.get(channelId);
+        if (st) { try { st.connection?.destroy(); } catch (_) {} crActiveVoiceConns.delete(channelId); }
+    }
+}
+
+function crTrackUser(userId, channelId, guildId) {
+    if (!crOverlayChannels.has(channelId)) crOverlayChannels.set(channelId, new Set());
+    crOverlayChannels.get(channelId).add(userId);
+    setTimeout(() => crJoinChannel(channelId, guildId).catch(() => {}), 500);
+}
+
+function crUntrackUser(userId, channelId) {
+    const users = crOverlayChannels.get(channelId);
+    if (users) { users.delete(userId); crLeaveIfUnneeded(channelId); }
+}
+
+function scanAllVoiceChannels() {
+    let total = 0;
+    client.guilds.cache.forEach(guild => {
+        guild.channels.cache.forEach(channel => {
+            if ((channel.type === 2 || channel.type === 13) && channel.members?.size > 0) {
+                crScanChannel(channel);
+                total += channel.members.size;
+            }
+        });
+    });
+    console.log(`[CubReactive] Startup scan: ${total} users in voice`);
+}
+
+function startCubReactiveWebSocket() {
+    crWss = new WebSocket.Server({ port: CUBREACTIVE_WS_PORT });
+    crWss.on('connection', (ws) => {
+        ws.isAlive = true; ws.userId = null; ws.isGroupMode = false;
+        ws.on('pong', () => { ws.isAlive = true; });
+        ws.on('message', msg => {
+            try {
+                const data = JSON.parse(msg);
+                if (data.type === 'SUBSCRIBE') {
+                    const cubUsers = loadCubReactiveUsers();
+                    const uc = cubUsers[data.userId];
+                    if (uc && uc.enabled === false) { ws.send(JSON.stringify({ type: 'DISABLED', userId: data.userId })); ws.close(); return; }
+                    ws.userId = data.userId;
+                    ws.isGroupMode = data.mode === 'group';
+                    if (!crOverlayConns.has(data.userId)) crOverlayConns.set(data.userId, []);
+                    crOverlayConns.get(data.userId).push(ws);
+                    const cur = crVoiceStates.get(data.userId);
+                    if (cur) {
+                        ws.send(JSON.stringify({ type: 'VOICE_STATE_UPDATE', userId: data.userId, data: cur }));
+                        if (cur.channelId && cur.guildId) crTrackUser(data.userId, cur.channelId, cur.guildId);
+                        if (ws.isGroupMode && cur.channelId) crBroadcastChannel(cur.channelId);
+                    } else { ws.send(JSON.stringify({ type: 'NOT_IN_VOICE', userId: data.userId })); }
+                }
+                if (data.type === 'PING') ws.send(JSON.stringify({ type: 'PONG' }));
+            } catch (e) { console.error('[CubReactive] msg error:', e); }
+        });
+        ws.on('close', () => {
+            if (ws.userId) {
+                const conns = crOverlayConns.get(ws.userId);
+                if (conns) {
+                    const i = conns.indexOf(ws);
+                    if (i > -1) conns.splice(i, 1);
+                    if (conns.length === 0) {
+                        crOverlayConns.delete(ws.userId);
+                        const vs = crVoiceStates.get(ws.userId);
+                        if (vs?.channelId) crUntrackUser(ws.userId, vs.channelId);
+                    }
+                }
+            }
+        });
+        ws.send(JSON.stringify({ type: 'READY' }));
+    });
+    const hb = setInterval(() => { crWss.clients.forEach(ws => { if (!ws.isAlive) return ws.terminate(); ws.isAlive = false; ws.ping(); }); }, 30000);
+    crWss.on('close', () => clearInterval(hb));
+    console.log(`[CubReactive] WebSocket server on port ${CUBREACTIVE_WS_PORT}`);
+}
+
+function startLogServer() {
+    const logApp = express();
+    logApp.use(express.json());
+
+    logApp.post('/log', async (req, res) => {
+        const { project, level, message, apiKey } = req.body;
+        if (apiKey !== API_KEY) return res.status(401).json({ error: 'Invalid API key' });
+        if (!project || !message) return res.status(400).json({ error: 'Missing project or message' });
+        const channelId = projectChannels[project];
+        if (!channelId) return res.status(400).json({ error: 'Unknown project' });
+        try {
+            const ch = await client.channels.fetch(channelId).catch(() => null);
+            if (!ch) return res.status(500).json({ error: 'Channel not found' });
+            const colors = { info: 0x3b82f6, success: 0x22c55e, warn: 0xf59e0b, error: 0xef4444 };
+            const icons  = { info: 'ℹ️',   success: '✅',         warn: '⚠️',       error: '❌' };
+            const lvl = level || 'info';
+            await ch.send({ embeds: [new EmbedBuilder().setColor(colors[lvl] || colors.info).setDescription(`${icons[lvl] || ''} ${message}`).setFooter({ text: project }).setTimestamp()] });
+            res.json({ success: true });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    logApp.post('/report', async (req, res) => {
+        const { apiKey, report } = req.body;
+        if (apiKey !== API_KEY) return res.status(401).json({ error: 'Invalid API key' });
+        if (!report) return res.status(400).json({ error: 'Missing report data' });
+        try {
+            const ch = await client.channels.fetch(projectChannels['reports']).catch(() => null);
+            if (!ch) return res.status(500).json({ error: 'Channel not found' });
+            const reportEmbed = new EmbedBuilder().setTitle(`New Report: ${(report.type || 'general').charAt(0).toUpperCase() + (report.type || 'general').slice(1)}`).setColor(0xFF6B6B)
+                .addFields(
+                    { name: 'Report ID', value: report.id || 'N/A', inline: true },
+                    { name: 'Type', value: report.type || 'general', inline: true },
+                    { name: 'Subject', value: report.subject || 'N/A', inline: false },
+                    { name: 'Description', value: (report.description || 'N/A').substring(0, 1000), inline: false },
+                    { name: 'URL', value: report.url || 'N/A', inline: false },
+                    { name: 'Contact', value: report.contact || 'N/A', inline: true }
+                ).setTimestamp();
+            const trackingEmbed = new EmbedBuilder().setTitle('User Tracking Information').setColor(0x5865F2)
+                .addFields(
+                    { name: 'IP Address',   value: `\`${report.ip || 'Unknown'}\``, inline: true },
+                    { name: 'Fingerprint',  value: `\`${report.fingerprint || 'N/A'}\``, inline: true },
+                    { name: 'User Agent',   value: `\`\`\`${(report.user_agent || 'Unknown').substring(0, 200)}\`\`\``, inline: false },
+                    { name: 'Language',     value: report.accept_language || 'Unknown', inline: true },
+                    { name: 'Referer',      value: (report.referer || 'Direct').substring(0, 100), inline: true }
+                );
+            await ch.send({ content: `<@378501056008683530> New report submitted!`, embeds: [reportEmbed, trackingEmbed] });
+            res.json({ success: true });
+        } catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    logApp.post('/cubreactive/refresh', (req, res) => {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'userId required' });
+        const conns = crOverlayConns.get(userId) || [];
+        let notified = 0;
+        conns.forEach(ws => { if (ws.readyState === WebSocket.OPEN) { ws.send(JSON.stringify({ type: 'CONFIG_UPDATED', userId })); notified++; } });
+        res.json({ success: true, notified });
+    });
+
+    logApp.get('/cubreactive/status', (req, res) => {
+        const voiceConns = [];
+        crActiveVoiceConns.forEach((c, cid) => voiceConns.push({ channelId: cid, status: c.connection?.state?.status ?? 'unknown' }));
+        const states = [];
+        crVoiceStates.forEach((s, uid) => states.push({ userId: uid, channelId: s.channelId, username: s.username, speaking: s.speaking, muted: s.muted, deafened: s.deafened }));
+        const overlays = [];
+        crOverlayConns.forEach((cs, uid) => overlays.push({ userId: uid, count: cs.filter(ws => ws.readyState === WebSocket.OPEN).length }));
+        res.json({ voiceConnections: voiceConns, voiceStates: states, overlayConnections: overlays, wsClients: crWss ? crWss.clients.size : 0 });
+    });
+
+    logApp.post('/cubreactive/test-speaking', (req, res) => {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ error: 'userId required' });
+        const state = crVoiceStates.get(userId) || { username: 'Test User', channelId: 'test', speaking: false, muted: false, deafened: false };
+        crBroadcastVoice(userId, { ...state, speaking: true });
+        setTimeout(() => crBroadcastVoice(userId, { ...state, speaking: false }), 2000);
+        res.json({ success: true, userId, overlays: (crOverlayConns.get(userId) || []).filter(ws => ws.readyState === WebSocket.OPEN).length });
+    });
+
+    logApp.listen(LOG_SERVER_PORT, '127.0.0.1', () => console.log(`[CubSoftware] Log server on port ${LOG_SERVER_PORT}`));
+}
+
+// ============================================================
+// Discord Terminal Setup (Admin Commands via Discord Channel)
+// ============================================================
+let terminal = null;
+if (DiscordTerminal) {
+    terminal = new DiscordTerminal(client, {
+        prefix: '>',
+        ownerIds: OWNER_IDS,
+        channelId: TERMINAL_CHANNEL_ID,
+        botName: 'CUB PROTECTOR',
+    });
+
+    terminal.addCommand('whitelist', {
+        description: 'Manage dashboard whitelist',
+        usage: 'whitelist <add|remove|list> [userid]',
+        execute: async (args) => {
+            const action = args[0], userId = args[1];
+            if (!action || !['add', 'remove', 'list'].includes(action)) return '❌ Usage: `>whitelist <add|remove|list> [userid]`';
+            const headers = { 'X-API-Key': API_KEY, 'Content-Type': 'application/json' };
+            if (action === 'list') { const res = await axios.get(`${API_URL}/api/pm2/bot/whitelist`, { headers }); return `📋 **Whitelist:**\n\`\`\`\n${(res.data.allowed_users || []).join('\n') || 'None'}\n\`\`\``; }
+            if (!userId) return '❌ Provide a user ID';
+            if (action === 'add') { await axios.post(`${API_URL}/api/pm2/bot/whitelist/add`, { user_id: userId }, { headers }); return `✅ Added **${userId}**`; }
+            if (action === 'remove') { await axios.post(`${API_URL}/api/pm2/bot/whitelist/remove`, { user_id: userId }, { headers }); return `🗑️ Removed **${userId}**`; }
+        },
+    });
+
+    terminal.addCommand('feature', {
+        description: 'Enable/disable website features',
+        usage: 'feature <enable|disable|list> [name]',
+        execute: async (args) => {
+            const action = args[0], name = args.slice(1).join('-');
+            if (!action || !['enable', 'disable', 'list'].includes(action)) return '❌ Usage: `>feature <enable|disable|list> [name]`\n\nFeatures: `' + ALL_WEBSITE_FEATURES.join('`, `') + '`';
+            if (action === 'list') { const d = loadDisabledFeatures(); return `**Feature Status:**\n${ALL_WEBSITE_FEATURES.map(f => `${d.includes(f) ? '🔴' : '🟢'} ${f}`).join('\n')}`; }
+            if (!name) return '❌ Specify a feature name';
+            if (!ALL_WEBSITE_FEATURES.includes(name)) return `❌ Unknown feature: \`${name}\``;
+            const d = loadDisabledFeatures();
+            if (action === 'disable') { if (d.includes(name)) return `⚠️ Already disabled`; d.push(name); return saveDisabledFeatures(d) ? `🔴 **${name}** disabled` : '❌ Save failed'; }
+            if (action === 'enable')  { if (!d.includes(name)) return `⚠️ Not disabled`; return saveDisabledFeatures(d.filter(f => f !== name)) ? `🟢 **${name}** enabled` : '❌ Save failed'; }
+        },
+    });
+
+    terminal.addCommand('link-find', {
+        description: 'Find info about a shortened link',
+        usage: 'link-find <code>',
+        execute: async (args) => {
+            let code = args[0]; if (!code) return '❌ Usage: `>link-find <code>`';
+            if (code.includes('cubsw.link/')) code = code.split('cubsw.link/')[1].split(/[?#]/)[0];
+            if (code.includes('/')) code = code.split('/').pop();
+            const links = loadLinksFile(), audit = loadAuditFile();
+            if (links[code]) { const l = links[code]; return `**Link Found (Active)**\n• Code: \`${code}\`\n• URL: ${l.url.substring(0, 200)}\n• Clicks: ${l.clicks || 0}\n• Created: ${new Date(l.created * 1000).toLocaleString()}\n• IP: ||${l.ip || 'Unknown'}||`; }
+            if (audit[code]) { const e = audit[code]; return `**Link Found (Deleted)**\n• Code: \`${code}\`\n• URL: ${e.original_url.substring(0, 200)}\n• IP: ||${e.ip_address}||`; }
+            return `❌ No link found: \`${code}\``;
+        },
+    });
+
+    terminal.addCommand('link-delete', {
+        description: 'Delete a shortened link',
+        usage: 'link-delete <code>',
+        execute: async (args) => {
+            let code = args[0]; if (!code) return '❌ Usage: `>link-delete <code>`';
+            if (code.includes('cubsw.link/')) code = code.split('cubsw.link/')[1].split(/[?#]/)[0];
+            if (code.includes('/')) code = code.split('/').pop();
+            const links = loadLinksFile(), audit = loadAuditFile();
+            if (!links[code]) return audit[code] ? `⚠️ Already deleted` : `❌ Not found: \`${code}\``;
+            const ld = links[code];
+            if (!audit[code]) audit[code] = { original_url: ld.url, created_at: ld.created, ip_address: ld.ip || 'Unknown', history: [] };
+            audit[code].history.push({ action: 'deleted', timestamp: Math.floor(Date.now() / 1000), ip: 'Discord Terminal', clicks: ld.clicks || 0 });
+            delete links[code];
+            return saveLinksFile(links) && saveAuditFile(audit) ? `✅ Deleted \`${code}\` (${ld.clicks || 0} clicks)` : '❌ Save failed';
+        },
+    });
+
+    terminal.addCommand('link-list', {
+        description: 'List recent shortened links',
+        usage: 'link-list [count]',
+        execute: async (args) => {
+            const count = Math.min(parseInt(args[0]) || 10, 25);
+            const links = loadLinksFile();
+            const sorted = Object.entries(links).sort((a, b) => (b[1].created || 0) - (a[1].created || 0)).slice(0, count);
+            if (!sorted.length) return '📋 No links found.';
+            return `**Recent Links (${sorted.length})**\n${sorted.map(([c, d]) => `\`${c}\` → ${d.url.length > 40 ? d.url.substring(0, 40) + '...' : d.url} (${d.clicks || 0} clicks)`).join('\n')}`;
+        },
+    });
+}
+
+// ============================================================
 // Voice State Update - Create/Delete Temp Channels
 // ============================================================
 client.on('voiceStateUpdate', async (oldState, newState) => {
@@ -2201,6 +2792,58 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             clearTimeout(keepAliveTimers.get(newState.channelId));
             keepAliveTimers.delete(newState.channelId);
         }
+    }
+});
+
+// CubReactive voice state tracking (runs alongside temp-channel handler above)
+client.on('voiceStateUpdate', async (oldState, newState) => {
+    const userId = newState.member?.id || oldState.member?.id;
+    if (!userId || userId === client.user?.id) return;
+    // CubReactive runs on the main bot only — it tracks voice states across ALL guilds.
+    // Custom bot instances don't run CubReactive (they share the same WS server).
+    if (CUSTOM_GUILD_ID) return;
+    const crGuildId = newState.guild?.id || oldState.guild?.id;
+    const member = newState.member || oldState.member;
+    const username = member?.displayName || member?.user?.username || 'Unknown';
+    const avatar = member?.user?.avatarURL({ size: 256 }) || `https://cdn.discordapp.com/embed/avatars/${parseInt(member?.user?.discriminator || '0') % 5}.png`;
+    const oldChannelId = oldState.channelId, newChannelId = newState.channelId;
+
+    if (!newChannelId) {
+        if (oldChannelId) {
+            const om = crChannelMembers.get(oldChannelId);
+            if (om) { om.delete(userId); if (om.size === 0) crChannelMembers.delete(oldChannelId); }
+            if (crOverlayConns.has(userId)) crUntrackUser(userId, oldChannelId);
+            crBroadcastChannel(oldChannelId);
+        }
+        crVoiceStates.delete(userId);
+        crBroadcastVoice(userId, { left: true });
+        return;
+    }
+    if (oldChannelId && oldChannelId !== newChannelId) {
+        const om = crChannelMembers.get(oldChannelId);
+        if (om) { om.delete(userId); if (om.size === 0) crChannelMembers.delete(oldChannelId); }
+        if (crOverlayConns.has(userId)) crUntrackUser(userId, oldChannelId);
+        crBroadcastChannel(oldChannelId);
+    }
+    if (!crChannelMembers.has(newChannelId)) crChannelMembers.set(newChannelId, new Set());
+    crChannelMembers.get(newChannelId).add(userId);
+    const isNew = !oldChannelId || oldChannelId !== newChannelId;
+    const state = {
+        channelId: newChannelId, guildId: crGuildId, username, avatar,
+        muted: newState.selfMute || newState.serverMute || false,
+        deafened: newState.selfDeaf || newState.serverDeaf || false,
+        speaking: crVoiceStates.get(userId)?.speaking || false,
+        streaming: newState.streaming || false, video: newState.selfVideo || false,
+    };
+    crVoiceStates.set(userId, state);
+    crBroadcastVoice(userId, state);
+    if (isNew) {
+        if (crOverlayConns.has(userId)) crTrackUser(userId, newChannelId, crGuildId);
+        crBroadcastChannel(newChannelId);
+    }
+    if (oldChannelId && oldChannelId !== newChannelId) {
+        const vs = crVoiceStates.get(userId);
+        if (vs) { vs.speaking = false; crVoiceStates.set(userId, vs); }
     }
 });
 
@@ -7177,6 +7820,177 @@ client.on('interactionCreate', async (interaction) => {
             .addFields({ name: 'Attempts', value: '0', inline: true }, { name: 'Hint', value: 'No guesses yet', inline: true });
         await interaction.reply({ embeds: [embed], components: [guessBtn] });
     }
+
+    // ── Admin Commands (from CubSoftware Bot) ─────────────────────────────────
+    const isOwner = OWNER_IDS.includes(interaction.user.id);
+
+    if (commandName === 'cubsoftware') {
+        const sub = interaction.options.getSubcommand();
+        if (sub === 'info') {
+            return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x5865f2).setTitle('CUB SOFTWARE').setDescription('Free, privacy-focused web tools.').addFields({ name: 'Website', value: '[cubsoftware.site](https://cubsoftware.site)', inline: true }, { name: 'QuestCord', value: '[questcord.fun](https://questcord.fun)', inline: true }).setTimestamp()] });
+        }
+        if (sub === 'apps') {
+            return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x5865f2).setTitle('CUB SOFTWARE Apps').addFields({ name: 'Social Media Saver', value: 'Download content', inline: true }, { name: 'File Converter', value: 'Convert images', inline: true }, { name: 'PDF Tools', value: 'Merge/split PDFs', inline: true }, { name: 'QR Generator', value: 'Create QR codes', inline: true }, { name: 'More...', value: 'cubsoftware.site', inline: true }).setTimestamp()] });
+        }
+    }
+
+    if (commandName === 'link-find') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        let code = interaction.options.getString('code');
+        if (code.includes('cubsw.link/')) code = code.split('cubsw.link/')[1].split(/[?#]/)[0];
+        if (code.includes('/')) code = code.split('/').pop();
+        const links = loadLinksFile(), audit = loadAuditFile();
+        if (links[code]) {
+            const l = links[code];
+            const embed = new EmbedBuilder().setColor(0x00FF00).setTitle('Link Found (Active)').addFields({ name: 'Short Code', value: code, inline: true }, { name: 'Status', value: '🟢 Active', inline: true }, { name: 'Clicks', value: String(l.clicks || 0), inline: true }, { name: 'Destination', value: l.url.substring(0, 500) }, { name: 'Created', value: new Date(l.created * 1000).toLocaleString(), inline: true }, { name: 'Creator IP', value: `||${l.ip || 'Unknown'}||`, inline: true }).setTimestamp();
+            if (audit[code]?.history) embed.addFields({ name: 'History (last 5)', value: audit[code].history.slice(-5).map(h => `${h.action} - ${new Date(h.timestamp * 1000).toLocaleString()}`).join('\n') || 'None' });
+            return interaction.reply({ embeds: [embed], ephemeral: true });
+        }
+        if (audit[code]) {
+            const e = audit[code];
+            const embed = new EmbedBuilder().setColor(0xFF6B6B).setTitle('Link Found (Deleted)').addFields({ name: 'Short Code', value: code, inline: true }, { name: 'Status', value: '🔴 Deleted', inline: true }, { name: 'Original URL', value: e.original_url.substring(0, 500) }, { name: 'Created', value: new Date(e.created_at * 1000).toLocaleString(), inline: true }, { name: 'Creator IP', value: `||${e.ip_address}||`, inline: true }).setTimestamp();
+            if (e.history) embed.addFields({ name: 'Full History', value: e.history.map(h => `${h.action} - ${new Date(h.timestamp * 1000).toLocaleString()} - ||${h.ip}||`).join('\n') || 'None' });
+            return interaction.reply({ embeds: [embed], ephemeral: true });
+        }
+        return interaction.reply({ content: `❌ No link found: \`${code}\``, ephemeral: true });
+    }
+
+    if (commandName === 'link-ban') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        const ip = interaction.options.getString('ip'), reason = interaction.options.getString('reason') || 'No reason provided';
+        const banned = loadBannedIps();
+        if (banned.ips.includes(ip)) return interaction.reply({ content: `⚠️ IP \`${ip}\` already banned.`, ephemeral: true });
+        banned.ips.push(ip); banned.reasons[ip] = { reason, bannedBy: interaction.user.id, bannedAt: Date.now() };
+        return saveBannedIps(banned) ? interaction.reply({ content: `✅ Banned IP: \`${ip}\`\nReason: ${reason}`, ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+    }
+
+    if (commandName === 'link-unban') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        const ip = interaction.options.getString('ip');
+        const banned = loadBannedIps();
+        if (!banned.ips.includes(ip)) return interaction.reply({ content: `⚠️ IP \`${ip}\` not banned.`, ephemeral: true });
+        banned.ips = banned.ips.filter(i => i !== ip); delete banned.reasons[ip];
+        return saveBannedIps(banned) ? interaction.reply({ content: `✅ Unbanned: \`${ip}\``, ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+    }
+
+    if (commandName === 'link-bans') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        const banned = loadBannedIps();
+        if (!banned.ips.length) return interaction.reply({ content: '📋 No IPs currently banned.', ephemeral: true });
+        const embed = new EmbedBuilder().setColor(0xFF6B6B).setTitle('Banned IPs').setDescription(banned.ips.map(ip => { const info = banned.reasons[ip]; return info ? `\`${ip}\` - ${info.reason} (${new Date(info.bannedAt).toLocaleDateString()})` : `\`${ip}\``; }).join('\n')).setFooter({ text: `Total: ${banned.ips.length}` }).setTimestamp();
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
+    if (commandName === 'link-delete') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        let code = interaction.options.getString('code');
+        if (code.includes('cubsw.link/')) code = code.split('cubsw.link/')[1].split(/[?#]/)[0];
+        if (code.includes('/')) code = code.split('/').pop();
+        const links = loadLinksFile(), audit = loadAuditFile();
+        if (!links[code]) return interaction.reply({ content: audit[code] ? `⚠️ Already deleted.` : `❌ Not found: \`${code}\``, ephemeral: true });
+        const ld = links[code];
+        if (!audit[code]) audit[code] = { original_url: ld.url, created_at: ld.created, ip_address: ld.ip || 'Unknown', history: [] };
+        audit[code].history.push({ action: 'deleted', timestamp: Math.floor(Date.now() / 1000), ip: 'Discord Bot', deletedBy: interaction.user.id, clicks: ld.clicks || 0 });
+        delete links[code];
+        if (!saveLinksFile(links)) return interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+        saveAuditFile(audit);
+        const embed = new EmbedBuilder().setColor(0xFF6B6B).setTitle('Link Deleted').addFields({ name: 'Short Code', value: code, inline: true }, { name: 'Clicks', value: String(ld.clicks || 0), inline: true }, { name: 'Original URL', value: ld.url.substring(0, 500) }, { name: 'Creator IP', value: `||${ld.ip || 'Unknown'}||`, inline: true }, { name: 'Deleted By', value: `<@${interaction.user.id}>`, inline: true }).setTimestamp();
+        try { const lc = await client.channels.fetch(LINKS_LOG_CHANNEL_ID).catch(() => null); if (lc) await lc.send({ content: `🗑️ Link deleted by <@${interaction.user.id}>`, embeds: [embed] }); } catch (_) {}
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
+    if (commandName === 'ip-ban') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        const ip = interaction.options.getString('ip'), type = interaction.options.getString('type'), reason = interaction.options.getString('reason') || 'No reason provided';
+        const bans = loadIpBans();
+        if (type === 'global') {
+            if (bans.global.some(b => b.ip === ip)) return interaction.reply({ content: `⚠️ \`${ip}\` already globally banned.`, ephemeral: true });
+            bans.global.push({ ip, reason, bannedBy: interaction.user.id, bannedAt: Date.now() });
+        } else {
+            if (!bans.features[type]) bans.features[type] = [];
+            if (bans.features[type].some(b => b.ip === ip)) return interaction.reply({ content: `⚠️ \`${ip}\` already banned from ${type}.`, ephemeral: true });
+            bans.features[type].push({ ip, reason, bannedBy: interaction.user.id, bannedAt: Date.now() });
+        }
+        return saveIpBans(bans) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFF6B6B).setTitle('IP Banned').addFields({ name: 'IP', value: `\`${ip}\``, inline: true }, { name: 'Type', value: type === 'global' ? 'Global' : type, inline: true }, { name: 'Reason', value: reason }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+    }
+
+    if (commandName === 'ip-temp-ban') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        const ip = interaction.options.getString('ip'), durationStr = interaction.options.getString('duration'), type = interaction.options.getString('type') || 'global', reason = interaction.options.getString('reason') || 'Temporary ban';
+        const duration = parseDuration(durationStr);
+        if (!duration) return interaction.reply({ content: '❌ Invalid duration. Use: 30m, 1h, 7d', ephemeral: true });
+        const bans = loadIpBans(), expires = Date.now() + duration;
+        bans.temp = bans.temp.filter(b => b.ip !== ip);
+        bans.temp.push({ ip, feature: type === 'global' ? null : type, reason, bannedBy: interaction.user.id, bannedAt: Date.now(), expires });
+        return saveIpBans(bans) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFFA500).setTitle('IP Temporarily Banned').addFields({ name: 'IP', value: `\`${ip}\``, inline: true }, { name: 'Duration', value: formatDuration(duration), inline: true }, { name: 'Type', value: type === 'global' ? 'Global' : type, inline: true }, { name: 'Expires', value: `<t:${Math.floor(expires / 1000)}:R>`, inline: true }, { name: 'Reason', value: reason }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+    }
+
+    if (commandName === 'ip-unban') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        const ip = interaction.options.getString('ip');
+        const bans = loadIpBans(); let removed = false;
+        const gi = bans.global.findIndex(b => b.ip === ip); if (gi !== -1) { bans.global.splice(gi, 1); removed = true; }
+        for (const feat in bans.features) { const fi = bans.features[feat].findIndex(b => b.ip === ip); if (fi !== -1) { bans.features[feat].splice(fi, 1); removed = true; } }
+        const ti = bans.temp.findIndex(b => b.ip === ip); if (ti !== -1) { bans.temp.splice(ti, 1); removed = true; }
+        if (!removed) return interaction.reply({ content: `⚠️ \`${ip}\` not found in any ban list.`, ephemeral: true });
+        return saveIpBans(bans) ? interaction.reply({ content: `✅ Unbanned: \`${ip}\``, ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+    }
+
+    if (commandName === 'ip-list') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        const bans = loadIpBans();
+        const embed = new EmbedBuilder().setColor(0xFF6B6B).setTitle('All IP Bans').setTimestamp();
+        if (bans.global.length) embed.addFields({ name: `🌐 Global (${bans.global.length})`, value: bans.global.slice(0, 10).map(b => `\`${b.ip}\` - ${b.reason}`).join('\n') + (bans.global.length > 10 ? `\n+${bans.global.length - 10} more` : '') });
+        for (const feat in bans.features) { if (bans.features[feat].length) embed.addFields({ name: `📌 ${feat} (${bans.features[feat].length})`, value: bans.features[feat].slice(0, 5).map(b => `\`${b.ip}\` - ${b.reason}`).join('\n') }); }
+        const active = bans.temp.filter(b => b.expires > Date.now());
+        if (active.length) embed.addFields({ name: `⏰ Temporary (${active.length})`, value: active.slice(0, 10).map(b => `\`${b.ip}\` - ${b.feature || 'global'} - expires <t:${Math.floor(b.expires / 1000)}:R>`).join('\n') });
+        const total = bans.global.length + Object.values(bans.features).reduce((s, a) => s + a.length, 0) + active.length;
+        if (!total) embed.setDescription('No IPs currently banned.'); else embed.setFooter({ text: `Total: ${total} active bans` });
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
+    if (commandName === 'keraplast-password') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        const sub = interaction.options.getSubcommand();
+        if (sub === 'create') {
+            const password = interaction.options.getString('password'), label = interaction.options.getString('label') || '';
+            const data = loadKeraplastPasswords();
+            if (data.passwords.some(p => p.password === password)) return interaction.reply({ content: '❌ Password already exists.', ephemeral: true });
+            data.passwords.push({ password, label, created_at: Date.now() / 1000 });
+            return saveKeraplastPasswords(data) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0x22c55e).setTitle('Keraplast Password Created').addFields({ name: 'Password', value: `\`${password}\``, inline: true }, { name: 'Label', value: label || 'None', inline: true }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+        }
+        if (sub === 'delete') {
+            const password = interaction.options.getString('password');
+            const data = loadKeraplastPasswords(), orig = data.passwords.length;
+            data.passwords = data.passwords.filter(p => p.password !== password);
+            if (data.passwords.length === orig) return interaction.reply({ content: '❌ Password not found.', ephemeral: true });
+            return saveKeraplastPasswords(data) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xef4444).setTitle('Keraplast Password Deleted').addFields({ name: 'Password', value: `\`${password}\`` }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+        }
+        if (sub === 'list') {
+            const data = loadKeraplastPasswords();
+            if (!data.passwords.length) return interaction.reply({ content: 'No passwords configured.', ephemeral: true });
+            return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x5865f2).setTitle('Keraplast Passwords').setDescription(data.passwords.map((p, i) => `${i + 1}. \`${p.password}\`${p.label ? ` (${p.label})` : ''}`).join('\n')).setFooter({ text: `${data.passwords.length} password(s)` }).setTimestamp()], ephemeral: true });
+        }
+    }
+
+    if (commandName === 'feature') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        const sub = interaction.options.getSubcommand(), name = interaction.options.getString('name');
+        if (sub === 'list') {
+            const disabled = loadDisabledFeatures();
+            return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x5865f2).setTitle('Feature Status').setDescription(ALL_WEBSITE_FEATURES.map(f => `${disabled.includes(f) ? '🔴' : '🟢'} ${f}`).join('\n')).setFooter({ text: `${disabled.length} disabled, ${ALL_WEBSITE_FEATURES.length - disabled.length} enabled` }).setTimestamp()], ephemeral: true });
+        }
+        const disabled = loadDisabledFeatures();
+        if (sub === 'disable') {
+            if (disabled.includes(name)) return interaction.reply({ content: `⚠️ **${name}** already disabled.`, ephemeral: true });
+            disabled.push(name);
+            return saveDisabledFeatures(disabled) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFF6B6B).setTitle('Feature Disabled').setDescription(`**${name}** has been disabled.`).addFields({ name: 'Status', value: '🔴 Disabled', inline: true }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+        }
+        if (sub === 'enable') {
+            if (!disabled.includes(name)) return interaction.reply({ content: `⚠️ **${name}** is not disabled.`, ephemeral: true });
+            return saveDisabledFeatures(disabled.filter(f => f !== name)) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0x22c55e).setTitle('Feature Enabled').setDescription(`**${name}** has been enabled.`).addFields({ name: 'Status', value: '🟢 Enabled', inline: true }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+        }
+    }
 });
 
 // ============================================================
@@ -10572,6 +11386,29 @@ client.once('ready', async () => {
         }
         if (changed) saveFeedsData(fData);
     }, 60 * 60 * 1000);
+
+    // ── Terminal, CubReactive, Log Server (main bot only) ─────────────────────
+    if (terminal) terminal.init();
+    if (!CUSTOM_GUILD_ID) {
+        scanAllVoiceChannels();
+        startCubReactiveWebSocket();
+        startLogServer();
+    }
+
+    // ── Rotating Presence (main bot only) ─────────────────────────────────────
+    if (!CUSTOM_GUILD_ID) {
+        const presences = [
+            { activities: [{ name: 'CUB', type: 2 }], status: 'online' },            // Listening to CUB
+            { activities: [{ name: 'Developed by CUBSOFTWARE', type: 3 }], status: 'online' }, // Watching ...
+            { activities: [{ name: 'https://cubsoftware.site', type: 3 }], status: 'online' }, // Watching ...
+        ];
+        let presIdx = 0;
+        client.user.setPresence(presences[0]);
+        setInterval(() => {
+            presIdx = (presIdx + 1) % presences.length;
+            client.user.setPresence(presences[presIdx]);
+        }, 20000);
+    }
 
     console.log('CUB PROTECTOR is ready!');
 });

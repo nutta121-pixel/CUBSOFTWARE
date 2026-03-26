@@ -3583,13 +3583,12 @@ function _selfRoleEmojiMatch(storedEmoji, reactionEmoji) {
 client.on('messageReactionAdd', async (reaction, user) => {
     if (user.bot) return;
     if (reaction.partial) await reaction.fetch().catch(() => {});
-    if (reaction.message.partial) await reaction.message.fetch().catch(e => console.error('[SelfRole] message fetch failed:', e.message));
-    console.log(`[SelfRole] reaction: ${reaction.emoji.name} msg:${reaction.message.id} guildId:${reaction.message.guildId} guild:${!!reaction.message.guild} partial:${reaction.message.partial}`);
+    if (reaction.message.partial) await reaction.message.fetch().catch(() => {});
     if (!reaction.message.guildId) return;
     if (CUSTOM_GUILD_ID && reaction.message.guild?.id !== CUSTOM_GUILD_ID) return;
     const _srGuild = reaction.message.guild ?? await client.guilds.fetch(reaction.message.guildId).catch(() => null);
-    if (!_srGuild) { console.log('[SelfRole] could not resolve guild'); return; }
-    if (guildHasCustomBot(_srGuild.id)) { console.log('[SelfRole] guild has custom bot, skipping'); return; }
+    if (!_srGuild) return;
+    if (guildHasCustomBot(_srGuild.id)) return;
 
     // ── Self-roles reaction handling ──
     {
@@ -3597,40 +3596,35 @@ client.on('messageReactionAdd', async (reaction, user) => {
         try {
             const rmData = loadRoleMenusData();
             const sr = rmData.guilds?.[srGuildId]?.self_roles;
-            console.log(`[SelfRole] sr.enabled=${sr?.enabled} categories=${sr?.categories?.length}`);
             if (sr?.enabled) {
                 const matchCat = (sr.categories || []).find(c =>
                     c.style === 'reaction' && String(c.message_id) === String(reaction.message.id)
                 );
-                console.log(`[SelfRole] matchCat=${matchCat?.name} (looking for msgId ${reaction.message.id})`);
                 if (matchCat) {
                     const roleEntry = matchCat.roles.find(r => _selfRoleEmojiMatch(r.emoji, reaction.emoji));
-                    console.log(`[SelfRole] roleEntry=${roleEntry?.role_id} emoji stored=${roleEntry?.emoji} reaction.emoji.name=${reaction.emoji.name} reaction.emoji.id=${reaction.emoji.id}`);
                     if (roleEntry) {
                         const member = await _srGuild.members.fetch(user.id).catch(() => null);
                         if (member) {
-                            await member.roles.add(roleEntry.role_id).catch(e => console.error('[SelfRole] add role failed:', e.message));
-                            console.log(`[SelfRole] added role ${roleEntry.role_id} to ${user.id}`);
+                            await member.roles.add(roleEntry.role_id).catch(() => {});
                             // Exclusive: max_select=1 removes all other roles and reactions in this category
                             if ((matchCat.max_select || 0) === 1) {
                                 for (const r of matchCat.roles) {
                                     if (r.role_id !== roleEntry.role_id && member.roles.cache.has(r.role_id)) {
                                         await member.roles.remove(r.role_id).catch(() => {});
-                                        // Remove their previous reaction from the message
                                         const prevReact = reaction.message.reactions.cache.find(mr => _selfRoleEmojiMatch(r.emoji, mr.emoji));
                                         if (prevReact) await prevReact.users.remove(user.id).catch(() => {});
                                     }
                                 }
                             }
-                        } else { console.log(`[SelfRole] could not fetch member ${user.id}`); }
+                        }
                     }
                 }
             }
-        } catch (_e) { console.error('[SelfRole] reaction handler error:', _e); }
+        } catch (_e) {}
     }
 
     const sbData = loadStarboardData();
-    const guildSB = sbData.guilds[reaction.message.guild.id];
+    const guildSB = sbData.guilds[_srGuild.id];
     if (!guildSB || !guildSB.enabled || !guildSB.channel_id) return;
 
     const emoji = guildSB.emoji || '⭐';

@@ -7470,7 +7470,7 @@
                     </div>
                     <div>
                         <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:2px;">Embed Colour</label>
-                        <input type="color" value="#${cat.embed_color || '5865F2'}" style="width:42px;height:34px;padding:2px;border-radius:6px;border:1px solid var(--border-color);cursor:pointer;background:none;" onchange="window.cpUpdateSelfRoleCategory('${cat.id}','embed_color',this.value.slice(1))">
+                        <input type="color" value="#${cat.embed_color || '5865f2'}" style="width:42px;height:34px;padding:2px;border-radius:6px;border:1px solid var(--border-color);cursor:pointer;background:none;" onchange="window.cpUpdateSelfRoleCategory('${cat.id}','embed_color',this.value.slice(1))">
                     </div>
                     <div>
                         <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:2px;">Style</label>
@@ -7543,7 +7543,7 @@
         const name = document.getElementById('sr-add-name').value.trim();
         const desc = document.getElementById('sr-add-desc').value.trim();
         const emoji = document.getElementById('sr-add-emoji').value.trim();
-        const color = (document.getElementById('sr-add-color')?.value || '#5865F2').slice(1);
+        const color = (document.getElementById('sr-add-color')?.value || '#5865f2').slice(1);
         if (!name) return showToast('Category name is required', 'error');
         try {
             const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/self-roles/categories`, {
@@ -7555,6 +7555,7 @@
             document.getElementById('sr-add-name').value = '';
             document.getElementById('sr-add-desc').value = '';
             document.getElementById('sr-add-emoji').value = '';
+            document.getElementById('sr-add-color').value = '#5865f2';
             showToast(`Category "${name}" added!`, 'success');
             loadSelfRoles();
         } catch (e) { showToast('Failed to add category', 'error'); }

@@ -3586,7 +3586,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
     if (reaction.message.partial) await reaction.message.fetch().catch(() => {});
     console.log(`[SR0] emoji:${reaction.emoji.name} guildId:${reaction.message.guildId} guild:${reaction.message.guild?.id} partial:${reaction.message.partial}`);
     if (!reaction.message.guildId) return;
-    if (CUSTOM_GUILD_ID && reaction.message.guild?.id !== CUSTOM_GUILD_ID) return;
+    if (CUSTOM_GUILD_ID && reaction.message.guildId !== CUSTOM_GUILD_ID) return;
     const _srGuild = reaction.message.guild ?? await client.guilds.fetch(reaction.message.guildId).catch(() => null);
     if (!_srGuild) return;
     if (guildHasCustomBot(_srGuild.id)) return;

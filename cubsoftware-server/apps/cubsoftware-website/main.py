@@ -16427,10 +16427,12 @@ def cp_self_roles_patch_category(guild_id, category_id):
         cat['message_id'] = None  # reset message_id so it reposts on next publish
     if 'max_select' in body:
         cat['max_select'] = max(0, int(body['max_select']))
-    if 'name' in body and body['name'].strip():
+    if 'name' in body and str(body['name']).strip():
         cat['name'] = str(body['name']).strip()[:50]
     if 'description' in body:
         cat['description'] = str(body['description']).strip()[:100]
+    if 'emoji' in body:
+        cat['emoji'] = str(body['emoji']).strip()[:64]
     save_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE, data)
     return jsonify({'success': True})
 

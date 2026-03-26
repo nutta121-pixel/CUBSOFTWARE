@@ -7465,6 +7465,10 @@
                 </div>
                 <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap;align-items:center;">
                     <div>
+                        <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:2px;">Emoji <span style="font-weight:400;">(optional)</span></label>
+                        <input type="text" class="form-input" value="${escapeHtml(cat.emoji || '')}" placeholder="None" maxlength="64" style="width:90px;" onchange="window.cpUpdateSelfRoleCategory('${cat.id}','emoji',this.value.trim())">
+                    </div>
+                    <div>
                         <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:2px;">Style</label>
                         <select class="form-select" style="width:160px;" onchange="window.cpUpdateSelfRoleCategory('${cat.id}','style',this.value)">
                             <option value="select" ${!isReaction ? 'selected' : ''}>Dropdown Menu</option>
@@ -7516,7 +7520,7 @@
                 body: JSON.stringify({[field]: value})
             });
             const data = await res.json();
-            if (data.success) { if (field === 'style') loadSelfRoles(); }
+            if (data.success) { if (field === 'style' || field === 'emoji') loadSelfRoles(); }
             else showToast(data.error || 'Failed to update', 'error');
         } catch (e) { showToast('Failed to update category', 'error'); }
     };

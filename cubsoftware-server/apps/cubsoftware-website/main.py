@@ -15120,6 +15120,7 @@ def cub_protector_bulk_role(guild_id):
     req = request.get_json()
     role_id = req.get('role_id')
     action = req.get('action')
+    exclude_bots = bool(req.get('exclude_bots', False))
     if not role_id or action not in ('add', 'remove'):
         return jsonify({'error': 'Invalid params'}), 400
     # Fetch members in batches
@@ -15137,6 +15138,8 @@ def cub_protector_bulk_role(guild_id):
             break
     count = 0
     for m in members:
+        if exclude_bots and m.get('user', {}).get('bot'):
+            continue
         uid = m.get('user', {}).get('id')
         has_role = role_id in m.get('roles', [])
         if action == 'add' and not has_role:
@@ -16417,6 +16420,74 @@ def cp_self_roles_add_role(guild_id, category_id):
     category.setdefault('roles', []).append({'role_id': role_id, 'label': label or role_id, 'emoji': emoji})
     save_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE, data)
     return jsonify({'success': True})
+
+@app.route('/api/cub-protector/guilds/<guild_id>/self-roles/publish', methods=['POST'])
+@cub_protector_auth_required
+def cp_self_roles_publish(guild_id):
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    data = load_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE)
+    _cp_ensure_role_menus_guild(data, guild_id)
+    sr = data['guilds'][guild_id].get('self_roles', {})
+    channel_id = sr.get('channel_id')
+    if not channel_id:
+        return jsonify({'error': 'No channel configured. Select a channel and save first.'}), 400
+    categories = sr.get('categories', [])
+    cats_with_roles = [c for c in categories if c.get('roles')]
+    if not cats_with_roles:
+        return jsonify({'error': 'No categories with roles to publish.'}), 400
+
+    token = _get_guild_bot_token(guild_id)
+    posted = 0
+    errors = []
+    for cat in cats_with_roles:
+        options = []
+        for r in cat.get('roles', [])[:25]:
+            opt = {'label': (r.get('label') or r.get('role_id', ''))[:25], 'value': r.get('role_id', '')}
+            raw_emoji = r.get('emoji', '')
+            if raw_emoji:
+                import re as _re
+                custom = _re.match(r'<a?:(\w+):(\d+)>', raw_emoji)
+                if custom:
+                    opt['emoji'] = {'name': custom.group(1), 'id': custom.group(2)}
+                else:
+                    opt['emoji'] = {'name': raw_emoji}
+            options.append(opt)
+        if not options:
+            continue
+        embed = {
+            'color': 0x5865F2,
+            'title': f"{cat.get('emoji', '🎭')} {cat.get('name', '')}",
+            'description': cat.get('description') or 'Select a role below!',
+            'footer': {'text': 'Selecting a role you already have will remove it'},
+        }
+        component = {
+            'type': 3,
+            'custom_id': f"self_role_select_{cat['id']}",
+            'placeholder': f"Choose from {cat.get('name', 'this category')}...",
+            'min_values': 0,
+            'max_values': len(options),
+            'options': options,
+        }
+        payload = {'embeds': [embed], 'components': [{'type': 1, 'components': [component]}]}
+        # Try to edit existing message, else post new
+        existing_mid = cat.get('message_id')
+        result = None
+        if existing_mid:
+            result = cub_protector_bot_request('PATCH', f'/channels/{channel_id}/messages/{existing_mid}', json=payload, token=token)
+        if result is None:
+            result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json=payload, token=token)
+            if result and result.get('id'):
+                cat['message_id'] = result['id']
+                posted += 1
+            else:
+                errors.append(cat.get('name', cat['id']))
+        else:
+            posted += 1
+    save_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE, data)
+    if errors:
+        return jsonify({'success': posted > 0, 'message': f'Published {posted} categor{"y" if posted==1 else "ies"}. Failed: {", ".join(errors)}.'})
+    return jsonify({'success': True, 'message': f'Published {posted} categor{"y" if posted==1 else "ies"} to <#{channel_id}>.'})
 
 @app.route('/api/cub-protector/guilds/<guild_id>/self-roles/categories/<category_id>/roles/<role_id>', methods=['DELETE'])
 @cub_protector_auth_required

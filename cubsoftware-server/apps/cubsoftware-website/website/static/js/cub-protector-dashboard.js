@@ -7450,7 +7450,7 @@
     function renderSelfRolesCategories(categories) {
         const el = document.getElementById('self-roles-categories');
         if (categories.length === 0) {
-            el.innerHTML = '<p style="color:var(--text-muted);">No categories yet. Add one above or use <code>/self-roles preset</code> in Discord.</p>';
+            el.innerHTML = '<p style="color:var(--text-muted);">No categories yet. Add one above to get started.</p>';
             return;
         }
         el.innerHTML = categories.map(cat => `
@@ -7492,6 +7492,16 @@
             });
             showToast('Self roles settings saved', 'success');
         } catch (e) { showToast('Failed to save', 'error'); }
+    };
+
+    window.cpPublishSelfRoles = async function() {
+        try {
+            showToast('Publishing panel…', 'info');
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/self-roles/publish`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) showToast(data.message || 'Panel published!', 'success');
+            else showToast(data.error || data.message || 'Failed to publish', 'error');
+        } catch (e) { showToast('Failed to publish panel', 'error'); }
     };
 
     window.cpAddSelfRoleCategory = async function() {

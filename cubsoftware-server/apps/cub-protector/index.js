@@ -3574,12 +3574,35 @@ const voiceLogUpdate = async (oldState, newState) => {
 client.on('voiceStateUpdate', voiceLogUpdate);
 
 // Starboard handler
+function _selfRoleEmojiMatch(storedEmoji, reactionEmoji) {
+    if (!storedEmoji) return false;
+    if (reactionEmoji.id) return storedEmoji.includes(reactionEmoji.id);
+    return storedEmoji === reactionEmoji.name || storedEmoji.trim() === reactionEmoji.name;
+}
+
 client.on('messageReactionAdd', async (reaction, user) => {
     if (user.bot) return;
     if (reaction.partial) await reaction.fetch().catch(() => {});
     if (!reaction.message.guild) return;
     if (CUSTOM_GUILD_ID && reaction.message.guild.id !== CUSTOM_GUILD_ID) return;
     if (guildHasCustomBot(reaction.message.guild.id)) return;
+
+    // ── Self-roles reaction handling ──
+    {
+        const rmData = loadRoleMenusData();
+        const guildId = reaction.message.guild.id;
+        const sr = rmData.guilds?.[guildId]?.self_roles;
+        if (sr?.enabled) {
+            for (const cat of (sr.categories || [])) {
+                if (cat.style !== 'reaction' || cat.message_id !== reaction.message.id) continue;
+                const roleEntry = cat.roles.find(r => _selfRoleEmojiMatch(r.emoji, reaction.emoji));
+                if (!roleEntry) break;
+                const member = await reaction.message.guild.members.fetch(user.id).catch(() => null);
+                if (member) await member.roles.add(roleEntry.role_id).catch(() => {});
+                break;
+            }
+        }
+    }
 
     const sbData = loadStarboardData();
     const guildSB = sbData.guilds[reaction.message.guild.id];
@@ -3622,6 +3645,27 @@ client.on('messageReactionAdd', async (reaction, user) => {
                 saveStarboardData(sbData);
             }
         }
+    }
+});
+
+client.on('messageReactionRemove', async (reaction, user) => {
+    if (user.bot) return;
+    if (reaction.partial) await reaction.fetch().catch(() => {});
+    if (!reaction.message.guild) return;
+    if (CUSTOM_GUILD_ID && reaction.message.guild.id !== CUSTOM_GUILD_ID) return;
+    if (guildHasCustomBot(reaction.message.guild.id)) return;
+
+    const rmData = loadRoleMenusData();
+    const guildId = reaction.message.guild.id;
+    const sr = rmData.guilds?.[guildId]?.self_roles;
+    if (!sr?.enabled) return;
+    for (const cat of (sr.categories || [])) {
+        if (cat.style !== 'reaction' || cat.message_id !== reaction.message.id) continue;
+        const roleEntry = cat.roles.find(r => _selfRoleEmojiMatch(r.emoji, reaction.emoji));
+        if (!roleEntry) break;
+        const member = await reaction.message.guild.members.fetch(user.id).catch(() => null);
+        if (member) await member.roles.remove(roleEntry.role_id).catch(() => {});
+        break;
     }
 });
 
@@ -8566,26 +8610,37 @@ client.on('interactionCreate', async (interaction) => {
         const category = rmGuild.self_roles.categories.find(c => c.id === categoryId);
         if (!category) return interaction.reply({ content: 'This category no longer exists.', ephemeral: true });
 
+        // Fetch member fresh to get accurate current role state
+        const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => interaction.member);
+
         const selectedRoleIds = interaction.values;
         const categoryRoleIds = category.roles.map(r => r.role_id);
 
-        // Remove all roles in this category that aren't selected
-        const toRemove = categoryRoleIds.filter(id => interaction.member.roles.cache.has(id) && !selectedRoleIds.includes(id));
-        // Add all selected roles
-        const toAdd = selectedRoleIds.filter(id => !interaction.member.roles.cache.has(id));
+        const toRemove = categoryRoleIds.filter(id => member.roles.cache.has(id) && !selectedRoleIds.includes(id));
+        const toAdd = selectedRoleIds.filter(id => !member.roles.cache.has(id));
 
-        for (const id of toRemove) await interaction.member.roles.remove(id).catch(() => {});
-        for (const id of toAdd) await interaction.member.roles.add(id).catch(() => {});
+        const failedAdd = [], failedRemove = [];
+        for (const id of toRemove) {
+            try { await member.roles.remove(id); }
+            catch (e) { failedRemove.push(id); }
+        }
+        for (const id of toAdd) {
+            try { await member.roles.add(id); }
+            catch (e) { failedAdd.push(id); }
+        }
 
-        const added = toAdd.map(id => category.roles.find(r => r.role_id === id)?.label || id);
-        const removed = toRemove.map(id => category.roles.find(r => r.role_id === id)?.label || id);
+        const successAdd = toAdd.filter(id => !failedAdd.includes(id));
+        const successRemove = toRemove.filter(id => !failedRemove.includes(id));
+        const added = successAdd.map(id => category.roles.find(r => r.role_id === id)?.label || id);
+        const removed = successRemove.map(id => category.roles.find(r => r.role_id === id)?.label || id);
 
         let msg = '';
         if (added.length > 0) msg += `✅ Added: **${added.join(', ')}**\n`;
-        if (removed.length > 0) msg += `🗑️ Removed: **${removed.join(', ')}**`;
+        if (removed.length > 0) msg += `🗑️ Removed: **${removed.join(', ')}**\n`;
+        if (failedAdd.length > 0 || failedRemove.length > 0) msg += `⚠️ Some changes failed — the bot may be missing **Manage Roles** permission or the role may be above the bot in the role list.`;
         if (!msg) msg = 'No changes made.';
 
-        return interaction.reply({ content: msg, ephemeral: true });
+        return interaction.reply({ content: msg.trim(), ephemeral: true });
     }
 
     // ==================== PROFILE ====================

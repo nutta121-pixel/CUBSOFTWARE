@@ -3284,35 +3284,6 @@
                 </div>
             </section>
 
-            <!-- Color Roles -->
-            <section class="content-section" id="colorRolesSection" data-section="color-roles">
-                <div class="section-header">
-                    <div class="section-title"><h1>Color Roles</h1><p>Let members pick a color for their username</p></div>
-                </div>
-                <div class="settings-card">
-                    <div class="settings-row">
-                        <div class="settings-info"><h4>Color Roles</h4><p>Enable the color roles panel</p></div>
-                        <label class="toggle"><input type="checkbox" id="color-roles-enabled" onchange="window.cpSaveColorRoles()"><span class="toggle-slider"></span></label>
-                    </div>
-                    <div class="form-group" style="margin-top:1rem;"><label>Panel Channel <small style="color:var(--text-muted);">(use <code>/color-roles setup</code> in Discord to post/refresh the panel)</small></label>
-                        <select id="color-roles-channel" class="form-select" onchange="window.cpSaveColorRoles()"><option value="">-- Select Channel --</option></select>
-                    </div>
-                </div>
-                <div class="settings-card" style="margin-top:1rem;">
-                    <h3 style="margin-bottom:1rem;">Add Color Preset</h3>
-                    <div class="form-row">
-                        <div class="form-group"><label>Name</label><input type="text" id="cr-add-name" placeholder="e.g. Crimson" maxlength="50"></div>
-                        <div class="form-group"><label>Hex Color</label><input type="text" id="cr-add-hex" placeholder="#FF0000" maxlength="7"></div>
-                        <div class="form-group"><label>Emoji (optional)</label><input type="text" id="cr-add-emoji" placeholder="🔴" maxlength="4"></div>
-                        <div class="form-group" style="align-self:flex-end;"><button class="control-btn primary" onclick="window.cpAddColorRole()">Add Color</button></div>
-                    </div>
-                </div>
-                <div class="settings-card" style="margin-top:1rem;">
-                    <h3 style="margin-bottom:1rem;">Current Colors</h3>
-                    <div id="color-roles-list"><p style="color:var(--text-muted);">Loading...</p></div>
-                </div>
-            </section>
-
             <!-- Sticky Messages -->
             <section class="content-section" id="stickyMessagesSection" data-section="sticky-messages">
                 <div class="section-header">
@@ -3549,13 +3520,12 @@
             <!-- Tools: Roles -->
             <section class="content-section" data-section="role-tools">
                 <div class="section-header">
-                    <div class="section-title"><h1>Roles</h1><p>Role management, auto-assign, temp roles, and colors</p></div>
+                    <div class="section-title"><h1>Roles</h1><p>Role management, auto-assign, temp roles, and self roles</p></div>
                 </div>
                 <div class="sub-tabs">
                     <button class="sub-tab active" data-subtab="role-manager">Role Manager</button>
                     <button class="sub-tab" data-subtab="autoroles">Auto-Roles</button>
                     <button class="sub-tab" data-subtab="temp-roles">Temp Roles</button>
-                    <button class="sub-tab" data-subtab="color-roles">Color Roles</button>
                     <button class="sub-tab" data-subtab="self-roles">Self Roles</button>
                 </div>
             </section>

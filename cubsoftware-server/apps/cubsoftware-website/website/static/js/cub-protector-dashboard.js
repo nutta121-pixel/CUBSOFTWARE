@@ -7453,14 +7453,28 @@
             el.innerHTML = '<p style="color:var(--text-muted);">No categories yet. Add one above to get started.</p>';
             return;
         }
-        el.innerHTML = categories.map(cat => `
-            <div class="settings-card" style="margin-bottom:0.75rem;background:var(--bg-tertiary);">
+        el.innerHTML = categories.map(cat => {
+            const isReaction = cat.style === 'reaction';
+            return `<div class="settings-card" style="margin-bottom:0.75rem;background:var(--bg-tertiary);">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
                     <div>
                         <strong>${escapeHtml(cat.emoji || '🎭')} ${escapeHtml(cat.name)}</strong>
                         <span style="color:var(--text-muted);font-size:0.85rem;margin-left:0.5rem;">${cat.roles.length} role(s)${cat.preset ? ' · preset: ' + escapeHtml(cat.preset) : ''}</span>
                     </div>
-                    <button class="control-btn danger small" onclick="window.cpDeleteSelfRoleCategory('${cat.id}')">Remove Category</button>
+                    <button class="control-btn danger small" onclick="window.cpDeleteSelfRoleCategory('${cat.id}')">Remove</button>
+                </div>
+                <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap;align-items:center;">
+                    <div>
+                        <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:2px;">Style</label>
+                        <select class="form-select" style="width:160px;" onchange="window.cpUpdateSelfRoleCategory('${cat.id}','style',this.value)">
+                            <option value="select" ${!isReaction ? 'selected' : ''}>Dropdown Menu</option>
+                            <option value="reaction" ${isReaction ? 'selected' : ''}>Reaction Roles</option>
+                        </select>
+                    </div>
+                    ${!isReaction ? `<div>
+                        <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:2px;">Max Selections <small>(0 = unlimited)</small></label>
+                        <input type="number" class="form-input" value="${cat.max_select || 0}" min="0" max="25" style="width:80px;" onchange="window.cpUpdateSelfRoleCategory('${cat.id}','max_select',parseInt(this.value)||0)">
+                    </div>` : '<small style="color:var(--text-muted);align-self:flex-end;padding-bottom:4px;">Each role needs an emoji set below</small>'}
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
                     ${cat.roles.map(r => {
@@ -7475,10 +7489,11 @@
                         ${selfRolesGuildRoles.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('')}
                     </select>
                     <input type="text" id="sr-label-${cat.id}" placeholder="Label (optional)" style="width:130px;" maxlength="25">
-                    <input type="text" id="sr-emoji-${cat.id}" placeholder="Emoji" style="width:70px;" maxlength="4">
+                    <input type="text" id="sr-emoji-${cat.id}" placeholder="Emoji${isReaction ? ' (required)' : ''}" style="width:90px;" maxlength="64">
                     <button class="control-btn primary small" onclick="window.cpAddRoleToSelfCategory('${cat.id}')">Add Role</button>
                 </div>
-            </div>`).join('');
+            </div>`;
+        }).join('');
     }
 
     window.cpSaveSelfRoles = async function() {
@@ -7492,6 +7507,18 @@
             });
             showToast('Self roles settings saved', 'success');
         } catch (e) { showToast('Failed to save', 'error'); }
+    };
+
+    window.cpUpdateSelfRoleCategory = async function(catId, field, value) {
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/self-roles/categories/${catId}`, {
+                method: 'PATCH', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({[field]: value})
+            });
+            const data = await res.json();
+            if (data.success) { if (field === 'style') loadSelfRoles(); }
+            else showToast(data.error || 'Failed to update', 'error');
+        } catch (e) { showToast('Failed to update category', 'error'); }
     };
 
     window.cpPublishSelfRoles = async function() {

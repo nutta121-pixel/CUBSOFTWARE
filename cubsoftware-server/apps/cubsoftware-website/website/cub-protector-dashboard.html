@@ -17,9 +17,13 @@
     <link rel="stylesheet" href="/static/css/admin-dashboard.css?v={{ v }}">
     <link rel="stylesheet" href="/static/css/cub-protector-dashboard.css?v={{ v }}">
     <style>
+        /* Make site header fixed on dashboard */
+        .site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
+        .admin-layout { padding-top: 62px; }
         /* Push fixed sidebar below the site header */
         .admin-sidebar { top: 62px; }
         @media (max-width: 768px) {
+            .admin-layout { padding-top: 54px; }
             /* Mobile-header sits below the site header, not on top of it */
             .mobile-header { top: 54px; z-index: 95; }
             /* Sidebar starts below both the site header and mobile-header */
@@ -293,7 +297,7 @@
 
         <!-- Mobile Header -->
         <header class="mobile-header" id="mobileHeader">
-            <button class="mobile-menu-btn" id="mobileMenuBtn">
+            <button class="mobile-menu-btn" id="dashboardMobileBtn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="3" y1="12" x2="21" y2="12"></line>
                     <line x1="3" y1="6" x2="21" y2="6"></line>

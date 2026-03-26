@@ -97,7 +97,7 @@
         dashboardLayout: document.getElementById('dashboardLayout'),
         sidebar: document.getElementById('adminSidebar'),
         sidebarOverlay: document.getElementById('sidebarOverlay'),
-        mobileMenuBtn: document.getElementById('mobileMenuBtn'),
+        mobileMenuBtn: document.getElementById('dashboardMobileBtn'),
         navItems: document.querySelectorAll('.nav-item'),
         sections: document.querySelectorAll('.content-section'),
     };

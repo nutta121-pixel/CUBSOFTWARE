@@ -1050,6 +1050,13 @@ a:hover {
         padding: 1.25rem;
     }
 
+    /* Header inside a padded container should still be full-width */
+    .main-container > .site-header {
+        margin-left: -1.25rem;
+        margin-right: -1.25rem;
+        width: calc(100% + 2.5rem);
+    }
+
     /* Common grid patterns → 2 columns */
     .tools-grid, .apps-grid, .features-grid, .cards-grid {
         grid-template-columns: repeat(2, 1fr) !important;
@@ -1070,6 +1077,13 @@ a:hover {
     .content-wrapper, .tool-container, .page-content {
         padding: 1rem;
         max-width: 100%;
+    }
+
+    /* Header inside a padded container should still be full-width */
+    .main-container > .site-header {
+        margin-left: -1rem;
+        margin-right: -1rem;
+        width: calc(100% + 2rem);
     }
 
     /* All grids → single column */
@@ -1163,6 +1177,13 @@ a:hover {
     .main-container, .container, .page-container,
     .content-wrapper, .tool-container, .page-content {
         padding: 0.75rem;
+    }
+
+    /* Header inside a padded container should still be full-width */
+    .main-container > .site-header {
+        margin-left: -0.75rem;
+        margin-right: -0.75rem;
+        width: calc(100% + 1.5rem);
     }
 
     h1 { font-size: clamp(1.2rem, 6vw, 1.6rem); }

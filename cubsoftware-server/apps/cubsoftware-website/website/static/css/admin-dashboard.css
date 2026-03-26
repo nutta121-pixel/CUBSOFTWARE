@@ -1169,8 +1169,16 @@ body {
 }
 
 @media (max-width: 768px) {
+    .admin-layout {
+        flex-direction: column;
+    }
+
     .admin-sidebar {
         transform: translateX(-100%);
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        z-index: 200;
     }
 
     .admin-sidebar.active {
@@ -1179,12 +1187,16 @@ body {
 
     .mobile-header {
         display: flex;
+        width: 100%;
+        position: relative;
+        top: auto;
+        z-index: 95;
     }
 
     .admin-content {
         margin-left: 0;
         padding: 1rem;
-        padding-top: calc(var(--header-height) + 1rem);
+        padding-top: 1rem;
     }
 
     .section-header {

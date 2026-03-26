@@ -7479,10 +7479,11 @@
                             <option value="reaction" ${isReaction ? 'selected' : ''}>Reaction Roles</option>
                         </select>
                     </div>
-                    ${!isReaction ? `<div>
+                    <div>
                         <label style="font-size:0.8rem;color:var(--text-muted);display:block;margin-bottom:2px;">Max Selections <small>(0 = unlimited)</small></label>
                         <input type="number" class="form-input" value="${cat.max_select || 0}" min="0" max="25" style="width:80px;" onchange="window.cpUpdateSelfRoleCategory('${cat.id}','max_select',parseInt(this.value)||0)">
-                    </div>` : '<small style="color:var(--text-muted);align-self:flex-end;padding-bottom:4px;">Each role needs an emoji set below</small>'}
+                    </div>
+                    ${isReaction ? '<small style="color:var(--text-muted);align-self:flex-end;padding-bottom:4px;">Each role needs an emoji set below</small>' : ''}
                 </div>
                 <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
                     ${cat.roles.map(r => {

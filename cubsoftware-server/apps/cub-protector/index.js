@@ -3596,16 +3596,19 @@ client.on('messageReactionAdd', async (reaction, user) => {
         try {
             const rmData = loadRoleMenusData();
             const sr = rmData.guilds?.[srGuildId]?.self_roles;
+            console.log(`[SR] emoji:${reaction.emoji.name} msg:${reaction.message.id} enabled:${sr?.enabled} cats:${sr?.categories?.length}`);
             if (sr?.enabled) {
                 const matchCat = (sr.categories || []).find(c =>
                     c.style === 'reaction' && String(c.message_id) === String(reaction.message.id)
                 );
+                console.log(`[SR] matchCat:${matchCat?.name} roleEntry:${matchCat?.roles?.find(r=>_selfRoleEmojiMatch(r.emoji,reaction.emoji))?.role_id}`);
                 if (matchCat) {
                     const roleEntry = matchCat.roles.find(r => _selfRoleEmojiMatch(r.emoji, reaction.emoji));
                     if (roleEntry) {
                         const member = await _srGuild.members.fetch(user.id).catch(() => null);
                         if (member) {
-                            await member.roles.add(roleEntry.role_id).catch(() => {});
+                            await member.roles.add(roleEntry.role_id).catch(e => console.error('[SR] add failed:',e.message));
+                            console.log(`[SR] added ${roleEntry.role_id} to ${user.id}`);
                             // Exclusive: max_select=1 removes all other roles and reactions in this category
                             if ((matchCat.max_select || 0) === 1) {
                                 for (const r of matchCat.roles) {

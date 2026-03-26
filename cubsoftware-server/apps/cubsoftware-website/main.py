@@ -16472,6 +16472,89 @@ def cp_self_roles_add_role(guild_id, category_id):
     save_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE, data)
     return jsonify({'success': True})
 
+@app.route('/api/cub-protector/guilds/<guild_id>/self-roles/categories/<cat_id>/republish', methods=['POST'])
+@cub_protector_auth_required
+def cp_self_roles_republish_category(guild_id, cat_id):
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    data = load_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE)
+    _cp_ensure_role_menus_guild(data, guild_id)
+    sr = data['guilds'][guild_id].get('self_roles', {})
+    channel_id = sr.get('channel_id')
+    if not channel_id:
+        return jsonify({'error': 'No channel configured'}), 400
+    cat = next((c for c in sr.get('categories', []) if c['id'] == cat_id), None)
+    if not cat:
+        return jsonify({'error': 'Category not found'}), 404
+    roles = cat.get('roles', [])
+    if not roles:
+        return jsonify({'error': 'No roles in category'}), 400
+
+    import re as _re, urllib.parse as _urlparse
+    token = _get_guild_bot_token(guild_id)
+
+    def _parse_emoji_for_component(raw):
+        if not raw: return None
+        m = _re.match(r'<a?:(\w+):(\d+)>', raw)
+        if m: return {'name': m.group(1), 'id': m.group(2)}
+        return {'name': raw.strip()}
+
+    def _encode_emoji_for_reaction(raw):
+        if not raw: return None
+        m = _re.match(r'<a?:(\w+):(\d+)>', raw)
+        if m: return f"{m.group(1)}:{m.group(2)}"
+        return _urlparse.quote(raw.strip())
+
+    # Delete old message if exists
+    old_mid = cat.get('message_id')
+    if old_mid:
+        cub_protector_bot_request('DELETE', f'/channels/{channel_id}/messages/{old_mid}', token=token)
+        cat['message_id'] = None
+
+    style = cat.get('style', 'select')
+    cat_emoji = cat.get('emoji', '').strip()
+    embed_title = f"{cat_emoji} {cat.get('name', '')}".strip() if cat_emoji else cat.get('name', '')
+    embed_color = int(cat.get('embed_color', '5865F2'), 16)
+
+    if style == 'reaction':
+        lines = []
+        for r in roles:
+            e = r.get('emoji', '▫️') or '▫️'
+            lines.append(f"{e} = **{r.get('label') or r.get('role_id', '')}**")
+        desc = (cat.get('description') or 'React to this message to get your roles!') + '\n\n' + '\n'.join(lines)
+        embed = {'color': embed_color, 'title': embed_title, 'description': desc}
+        result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json={'embeds': [embed]}, token=token)
+        if result and result.get('id'):
+            cat['message_id'] = result['id']
+            for r in roles[:25]:
+                encoded = _encode_emoji_for_reaction(r.get('emoji', ''))
+                if encoded:
+                    cub_protector_bot_request('PUT', f'/channels/{channel_id}/messages/{result["id"]}/reactions/{encoded}/@me', token=token)
+        else:
+            return jsonify({'error': 'Failed to post message'}), 500
+    else:
+        options = []
+        for r in roles[:25]:
+            opt = {'label': (r.get('label') or r.get('role_id', ''))[:25], 'value': r.get('role_id', '')}
+            parsed = _parse_emoji_for_component(r.get('emoji', ''))
+            if parsed: opt['emoji'] = parsed
+            if r.get('description'): opt['description'] = r['description'][:50]
+            options.append(opt)
+        max_v = min(cat.get('max_select') or 1, len(options))
+        desc = cat.get('description', '') or ''
+        embed = {'color': embed_color, 'title': embed_title, 'description': desc or None}
+        embed = {k: v for k, v in embed.items() if v is not None}
+        component = {'type': 1, 'components': [{'type': 3, 'custom_id': f'selfrole_{cat["id"]}', 'options': options, 'placeholder': f'Select role(s)', 'min_values': 0, 'max_values': max_v}]}
+        result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json={'embeds': [embed], 'components': [component]}, token=token)
+        if result and result.get('id'):
+            cat['message_id'] = result['id']
+        else:
+            return jsonify({'error': 'Failed to post message'}), 500
+
+    save_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE, data)
+    return jsonify({'success': True, 'message_id': cat.get('message_id')})
+
+
 @app.route('/api/cub-protector/guilds/<guild_id>/self-roles/publish', methods=['POST'])
 @cub_protector_auth_required
 def cp_self_roles_publish(guild_id):

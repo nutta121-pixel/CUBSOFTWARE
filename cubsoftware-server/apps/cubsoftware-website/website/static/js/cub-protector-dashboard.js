@@ -7461,7 +7461,10 @@
                         <strong>${cat.emoji ? escapeHtml(cat.emoji) + ' ' : ''}${escapeHtml(cat.name)}</strong>
                         <span style="color:var(--text-muted);font-size:0.85rem;margin-left:0.5rem;">${cat.roles.length} role(s)${cat.preset ? ' · preset: ' + escapeHtml(cat.preset) : ''}</span>
                     </div>
-                    <button class="control-btn danger small" onclick="window.cpDeleteSelfRoleCategory('${cat.id}')">Remove</button>
+                    <div style="display:flex;gap:0.5rem;">
+                        <button class="control-btn small" onclick="window.cpRepublishSelfRoleCategory('${cat.id}')">Republish</button>
+                        <button class="control-btn danger small" onclick="window.cpDeleteSelfRoleCategory('${cat.id}')">Remove</button>
+                    </div>
                 </div>
                 <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap;align-items:center;">
                     <div>
@@ -7569,6 +7572,16 @@
             showToast('Category removed', 'success');
             loadSelfRoles();
         } catch (e) { showToast('Failed to remove', 'error'); }
+    };
+
+    window.cpRepublishSelfRoleCategory = async function(catId) {
+        if (!confirm('Republish this category? The existing Discord message will be deleted and a new one will be posted.')) return;
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/self-roles/categories/${catId}/republish`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) { showToast('Category republished', 'success'); loadSelfRoles(); }
+            else showToast(data.error || 'Failed to republish', 'error');
+        } catch (e) { showToast('Failed to republish', 'error'); }
     };
 
     window.cpAddRoleToSelfCategory = async function(catId) {

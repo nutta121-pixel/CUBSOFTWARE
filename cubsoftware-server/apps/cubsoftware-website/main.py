@@ -17083,18 +17083,6 @@ def api_status():
         'description': 'Discord cleanup/utility bot',
     })
 
-    # CUB SOFTWARE Bot
-    csb_info = pm2_map.get('cubsoftware-bot', {})
-    services.append({
-        'name': 'CUB SOFTWARE Bot',
-        'type': 'bot',
-        'status': csb_info.get('status', 'unknown'),
-        'uptime': csb_info.get('uptime', 0),
-        'memory_mb': round(csb_info.get('memory', 0) / 1024 / 1024, 1),
-        'restarts': csb_info.get('restarts', 0),
-        'description': 'Main CUB SOFTWARE Discord bot',
-    })
-
     # API endpoints status
     api_endpoints = [
         {'name': 'Main API', 'path': '/api/status', 'status': 'online'},

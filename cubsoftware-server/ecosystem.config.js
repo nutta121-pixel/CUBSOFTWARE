@@ -151,34 +151,6 @@ module.exports = {
         },
 
         // ============================================
-        // CUB SOFTWARE Bot (Discord Bot)
-        // ============================================
-        {
-            name: 'cubsoftware-bot',
-            script: 'start.js',
-            cwd: './apps/cubsoftware-bot',
-            interpreter: 'node',
-            watch: false,
-            autorestart: true,
-            max_restarts: 10,
-            restart_delay: 5000,
-            // Node.js specific settings
-            node_args: '--max-old-space-size=256',
-            // Environment variables
-            env: {
-                NODE_ENV: 'production'
-            },
-            env_development: {
-                NODE_ENV: 'development'
-            },
-            // Logging
-            error_file: './logs/cubsoftware-bot-error.log',
-            out_file: './logs/cubsoftware-bot-out.log',
-            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-            merge_logs: true
-        },
-
-        // ============================================
         // CUB PROTECTOR (Discord Moderation Bot)
         // ============================================
         {

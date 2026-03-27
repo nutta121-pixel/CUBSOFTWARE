@@ -2216,12 +2216,13 @@ function startCubReactiveWebSocket() {
                     if (uc && uc.enabled === false) { ws.send(JSON.stringify({ type: 'DISABLED', userId: data.userId })); ws.close(); return; }
                     ws.userId = data.userId;
                     ws.isGroupMode = data.mode === 'group';
+                    ws.isOverlay = (data.mode === 'individual' || data.mode === 'group');
                     if (!crOverlayConns.has(data.userId)) crOverlayConns.set(data.userId, []);
                     crOverlayConns.get(data.userId).push(ws);
                     const cur = crVoiceStates.get(data.userId);
                     if (cur) {
                         ws.send(JSON.stringify({ type: 'VOICE_STATE_UPDATE', userId: data.userId, data: cur }));
-                        if (cur.channelId && cur.guildId) crTrackUser(data.userId, cur.channelId, cur.guildId);
+                        if (ws.isOverlay && cur.channelId && cur.guildId) crTrackUser(data.userId, cur.channelId, cur.guildId);
                         if (ws.isGroupMode && cur.channelId) crBroadcastChannel(cur.channelId);
                     } else { ws.send(JSON.stringify({ type: 'NOT_IN_VOICE', userId: data.userId })); }
                 }
@@ -2235,8 +2236,9 @@ function startCubReactiveWebSocket() {
                 if (conns) {
                     const i = conns.indexOf(ws);
                     if (i > -1) conns.splice(i, 1);
-                    if (conns.length === 0) {
-                        crOverlayConns.delete(ws.userId);
+                    if (conns.length === 0) crOverlayConns.delete(ws.userId);
+                    // Only leave voice when the last actual overlay (not dashboard) closes
+                    if (ws.isOverlay && !conns.some(c => c.isOverlay && c.readyState === WebSocket.OPEN)) {
                         const vs = crVoiceStates.get(ws.userId);
                         if (vs?.channelId) crUntrackUser(ws.userId, vs.channelId);
                     }
@@ -2728,7 +2730,8 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     crVoiceStates.set(userId, state);
     crBroadcastVoice(userId, state);
     if (isNew) {
-        if (crOverlayConns.has(userId)) crTrackUser(userId, newChannelId, crGuildId);
+        const userConns = crOverlayConns.get(userId);
+        if (userConns?.some(c => c.isOverlay && c.readyState === WebSocket.OPEN)) crTrackUser(userId, newChannelId, crGuildId);
         crBroadcastChannel(newChannelId);
     }
     if (oldChannelId && oldChannelId !== newChannelId) {

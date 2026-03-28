@@ -18,6 +18,7 @@ ENV/
 .env.*
 .env.local
 .env.*.local
+!.env.example
 !.env.*.example
 
 # ── Logs ──────────────────────────────────────────────────────

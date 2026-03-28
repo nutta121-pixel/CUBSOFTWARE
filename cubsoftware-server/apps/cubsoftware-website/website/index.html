@@ -455,22 +455,6 @@
                         });
                     }
 
-                    // Scrolling strip — all 50 supporters
-                    const strip = document.getElementById('supportersStrip');
-                    const ticker = document.getElementById('supportersTicker');
-                    if (strip && ticker) {
-                        const pills = supporters.map(function(s) {
-                            const coffeeCount = s.coffees > 1 ? ' ×' + s.coffees : '';
-                            return '<a class="supporter-pill" href="https://buymeacoffee.com/cubsoftware" target="_blank" rel="noopener" title="' + escapeHtml(s.name) + ' — BuyMeACoffee Supporter">' +
-                                '<span class="pill-coffee">☕</span>' +
-                                '<span class="pill-name">' + escapeHtml(s.name) + '</span>' +
-                                (coffeeCount ? '<span class="pill-count">' + coffeeCount + '</span>' : '') +
-                                '</a>';
-                        }).join('');
-                        ticker.innerHTML = pills + pills; // duplicate for seamless loop
-                        ticker.style.animationDuration = Math.max(20, supporters.length * 2) + 's';
-                        strip.style.display = '';
-                    }
                 })
                 .catch(function() { /* silently ignore if API unavailable */ });
 
@@ -488,14 +472,6 @@
         <div class="container">
             <h1 class="hero-tagline">No Signup. No Ads. No Limits.</h1>
             <p class="hero-description">CUB PROTECTOR protects your server. CleanMe keeps it clean. QuestCord makes it an adventure. Built by CUB SOFTWARE, free forever — no accounts, no ads, no catches.</p>
-        </div>
-    </div>
-
-    <!-- BuyMeACoffee Supporters Strip -->
-    <div class="supporters-strip" id="supportersStrip" style="display:none" aria-label="BuyMeACoffee Supporters">
-        <span class="supporters-strip-title">☕ BuyMeACoffee Supporters</span>
-        <div class="supporters-ticker-wrap">
-            <div class="supporters-ticker" id="supportersTicker"></div>
         </div>
     </div>
 

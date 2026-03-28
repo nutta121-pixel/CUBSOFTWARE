@@ -30,12 +30,13 @@ def ensure_dirs(discord_id=None):
         os.makedirs(CUBDECK_DATA_DIR, exist_ok=True)
 
 def get_user():
-    return session.get('cubdeck_user')
+    # Discord login uses the site-wide cub_user session; Twitch login uses cubdeck_user
+    return session.get('cub_user') or session.get('cubdeck_user')
 
 def cubdeck_auth_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not session.get('cubdeck_user'):
+        if not get_user():
             if request.is_json:
                 return jsonify({'error': 'Authentication required'}), 401
             return redirect('/cubdeck')
@@ -137,8 +138,7 @@ def deck_redirect():
 def deck_redirect_named(discord_id):
     user = get_user()
     if not user:
-        session['cubdeck_return'] = f'/cubdeck/deck/{discord_id}/main'
-        return redirect('/cubdeck/auth/discord')
+        return redirect(f'/login/discord?next=/cubdeck/deck/{discord_id}/main')
     if user['id'] != discord_id:
         return 'This deck belongs to someone else.', 403
     return redirect(f'/cubdeck/deck/{discord_id}/main')
@@ -147,8 +147,7 @@ def deck_redirect_named(discord_id):
 def deck(discord_id, deck_name):
     user = get_user()
     if not user:
-        session['cubdeck_return'] = f'/cubdeck/deck/{discord_id}/{deck_name}'
-        return redirect('/cubdeck/auth/discord')
+        return redirect(f'/login/discord?next=/cubdeck/deck/{discord_id}/{deck_name}')
     if user['id'] != discord_id:
         return 'This deck belongs to someone else.', 403
     _migrate_legacy(discord_id)
@@ -165,52 +164,7 @@ def deck_overlay(discord_id, deck_name):
                            deck_name=safe_deck_name(deck_name))
 
 # ─── Auth ───
-
-@cubdeck_bp.route('/auth/discord')
-def auth_discord():
-    client_id = current_app.config.get('DISCORD_CLIENT_ID', '')
-    state = secrets.token_urlsafe(16)
-    session['cubdeck_oauth_state'] = state
-    params = {
-        'client_id': client_id,
-        'redirect_uri': 'https://cubsoftware.site/cubdeck/auth/callback',
-        'response_type': 'code',
-        'scope': 'identify',
-        'state': state
-    }
-    return redirect(f"https://discord.com/api/oauth2/authorize?{urllib.parse.urlencode(params)}")
-
-@cubdeck_bp.route('/auth/callback')
-def auth_callback():
-    import requests as http_requests
-    code = request.args.get('code')
-    state = request.args.get('state')
-    if state != session.get('cubdeck_oauth_state'):
-        return redirect('/cubdeck?error=invalid_state')
-    token_res = http_requests.post('https://discord.com/api/oauth2/token', data={
-        'client_id': current_app.config.get('DISCORD_CLIENT_ID', ''),
-        'client_secret': current_app.config.get('DISCORD_CLIENT_SECRET', ''),
-        'grant_type': 'authorization_code',
-        'code': code,
-        'redirect_uri': 'https://cubsoftware.site/cubdeck/auth/callback'
-    })
-    if not token_res.ok:
-        return redirect('/cubdeck?error=token_failed')
-    access_token = token_res.json().get('access_token')
-    user_res = http_requests.get('https://discord.com/api/users/@me',
-                                 headers={'Authorization': f'Bearer {access_token}'})
-    user = user_res.json()
-    avatar_hash = user.get('avatar')
-    avatar_url = (f"https://cdn.discordapp.com/avatars/{user['id']}/{avatar_hash}.png"
-                  if avatar_hash else 'https://cdn.discordapp.com/embed/avatars/0.png')
-    session['cubdeck_user'] = {
-        'id': user['id'],
-        'username': user.get('global_name') or user.get('username', 'User'),
-        'avatar': avatar_url
-    }
-    session.permanent = True
-    return_url = session.pop('cubdeck_return', None) or f'/cubdeck/deck/{user["id"]}/main'
-    return redirect(return_url)
+# Discord login uses the site-wide /login/discord → /login/discord/callback flow.
 
 @cubdeck_bp.route('/auth/twitch/session', methods=['POST'])
 def auth_twitch_session():

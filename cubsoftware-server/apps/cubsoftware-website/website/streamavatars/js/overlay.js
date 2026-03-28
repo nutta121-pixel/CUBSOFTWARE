@@ -3,8 +3,8 @@
  * Manages sprite instances for all active chatters.
  */
 
-const SPRITE_W     = 32;
-const SPRITE_H     = 48;
+const SPRITE_W     = 48;
+const SPRITE_H     = 64;
 const GROUND_FRAC  = 0.88;   // sprites sit at 88% of screen height
 const STATE_FPS    = { idle: 2, walk: 4, run: 6, jump: 4, talk: 3 };
 

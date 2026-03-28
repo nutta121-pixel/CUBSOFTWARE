@@ -7575,7 +7575,7 @@
     };
 
     window.cpRepublishSelfRoleCategory = async function(catId) {
-        if (!confirm('Republish this category? The existing Discord message will be deleted and a new one will be posted.')) return;
+        if (!confirm('Republish this category? The existing Discord message will be updated in place.')) return;
         try {
             const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/self-roles/categories/${catId}/republish`, { method: 'POST' });
             const data = await res.json();

@@ -724,8 +724,8 @@ async function postSelfRolesCategory(guild, channel, category) {
     if (category.message_id) {
         const existing = await channel.messages.fetch(category.message_id).catch(() => null);
         if (existing) {
-            await existing.edit({ embeds: [embed], components: [row] }).catch(() => {});
-            return existing;
+            const edited = await existing.edit({ embeds: [embed], components: [row] }).catch(() => null);
+            return edited || null;
         }
     }
     return await channel.send({ embeds: [embed], components: [row] }).catch(() => null);
@@ -8556,14 +8556,18 @@ client.on('interactionCreate', async (interaction) => {
             await interaction.deferReply({ ephemeral: true });
             const channel = await guild.channels.fetch(selfRoles.channel_id).catch(() => null);
             if (!channel) return interaction.editReply({ content: 'Panel channel not found. Run `/self-roles setup` again.' });
-            let posted = 0;
-            for (const category of selfRoles.categories) {
-                if (category.roles.length === 0) continue;
+            let posted = 0, failed = 0;
+            const catsToPost = selfRoles.categories.filter(c => c.roles.length > 0);
+            for (let i = 0; i < catsToPost.length; i++) {
+                const category = catsToPost[i];
+                if (i > 0) await new Promise(r => setTimeout(r, 1000));
                 const msg = await postSelfRolesCategory(guild, channel, category);
                 if (msg) { category.message_id = msg.id; posted++; }
+                else failed++;
             }
             saveRoleMenusData(rmData);
-            await interaction.editReply({ content: `✅ Self-roles panel updated — ${posted} categor${posted === 1 ? 'y' : 'ies'} posted in <#${selfRoles.channel_id}>.` });
+            const failNote = failed > 0 ? ` (${failed} failed — check bot permissions)` : '';
+            await interaction.editReply({ content: `✅ Self-roles panel updated — ${posted} categor${posted === 1 ? 'y' : 'ies'} posted in <#${selfRoles.channel_id}>${failNote}.` });
         }
 
         else if (sub === 'disable') {

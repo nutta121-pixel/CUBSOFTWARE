@@ -179,7 +179,7 @@ html, body { height: 100%; display: flex; flex-direction: column; margin: 0; }
 .frame-thumb-wrap { position: relative; }
 .frame-thumb {
     display: block;
-    width: 36px; height: 54px;
+    width: 36px; height: 48px;
     image-rendering: pixelated;
     background: #07070f;
     border: 1px solid #1e1e2e;
@@ -268,10 +268,11 @@ html, body { height: 100%; display: flex; flex-direction: column; margin: 0; }
     <input type="color" id="presetColor" value="#202838" title="Preset colour"
            style="width:28px;height:28px;border:1px solid #1e1e2e;border-radius:6px;
                   background:#07070f;cursor:pointer;padding:0;flex-shrink:0">
+    <button class="state-btn" onclick="loadPreset('fox')"     title="Fox preset">🦊</button>
     <button class="state-btn" onclick="loadPreset('wolf')"    title="Wolf preset">🐺</button>
     <button class="state-btn" onclick="loadPreset('onion')"   title="Onion DJ preset">🧅</button>
     <button class="state-btn" onclick="loadPreset('leopard')" title="Snow Leopard preset">❄️</button>
-    <button class="state-btn" onclick="loadPreset('kitsune')" title="Kitsune Fox preset">🦊</button>
+    <button class="state-btn" onclick="loadPreset('kitsune')" title="Kitsune preset">🌸</button>
     <button class="btn btn-sm" id="btnRecolor" title="Recolour current preset">🎨 Recolour</button>
     <button class="btn btn-primary btn-sm" id="btnSave">💾 Save</button>
 </div>
@@ -314,7 +315,7 @@ html, body { height: 100%; display: flex; flex-direction: column; margin: 0; }
         </div>
         <div class="panel-section">
             <div class="panel-section-title">Preview</div>
-            <canvas id="previewCanvas" width="96" height="144"></canvas>
+            <canvas id="previewCanvas" width="96" height="128"></canvas>
             <!-- Speed slider -->
             <div style="display:flex;align-items:center;gap:6px;margin-top:7px;">
                 <span style="font-size:10px;color:#444;flex-shrink:0">FPS</span>

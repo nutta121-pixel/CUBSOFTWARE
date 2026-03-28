@@ -12721,7 +12721,7 @@ def cub_protector_welcome_test(guild_id):
 def cub_protector_channels(guild_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
-    channels = _guild_bot_request(guild_id, f'/guilds/{guild_id}/channels')
+    channels = _guild_bot_request(guild_id, f'/guilds/{guild_id}/channels', bypass_cache=True)
     if not channels:
         return jsonify({'channels': []})
     return jsonify({'channels': [{'id': c['id'], 'name': c['name'], 'type': c.get('type', 0)} for c in channels]})
@@ -12731,7 +12731,7 @@ def cub_protector_channels(guild_id):
 def cub_protector_roles(guild_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
-    roles = _guild_bot_request(guild_id, f'/guilds/{guild_id}/roles')
+    roles = _guild_bot_request(guild_id, f'/guilds/{guild_id}/roles', bypass_cache=True)
     if not roles:
         return jsonify({'roles': []})
     # Filter out @everyone and managed/bot roles, sort by position descending
@@ -16491,7 +16491,6 @@ def cp_self_roles_republish_category(guild_id, cat_id):
         return jsonify({'error': 'No roles in category'}), 400
 
     import re as _re, urllib.parse as _urlparse
-    token = _get_guild_bot_token(guild_id)
 
     def _parse_emoji_for_component(raw):
         if not raw: return None
@@ -16505,12 +16504,7 @@ def cp_self_roles_republish_category(guild_id, cat_id):
         if m: return f"{m.group(1)}:{m.group(2)}"
         return _urlparse.quote(raw.strip())
 
-    # Delete old message if exists
-    old_mid = cat.get('message_id')
-    if old_mid:
-        cub_protector_bot_request('DELETE', f'/channels/{channel_id}/messages/{old_mid}', token=token)
-        cat['message_id'] = None
-
+    existing_mid = cat.get('message_id')
     style = cat.get('style', 'select')
     cat_emoji = cat.get('emoji', '').strip()
     embed_title = f"{cat_emoji} {cat.get('name', '')}".strip() if cat_emoji else cat.get('name', '')
@@ -16523,13 +16517,20 @@ def cp_self_roles_republish_category(guild_id, cat_id):
             lines.append(f"{e} = **{r.get('label') or r.get('role_id', '')}**")
         desc = (cat.get('description') or 'React to this message to get your roles!') + '\n\n' + '\n'.join(lines)
         embed = {'color': embed_color, 'title': embed_title, 'description': desc}
-        result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json={'embeds': [embed]}, token=token)
+        payload = {'embeds': [embed]}
+        result = None
+        if existing_mid:
+            result = _guild_bot_request(guild_id, 'PATCH', f'/channels/{channel_id}/messages/{existing_mid}', json=payload)
+        if result is None:
+            result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json=payload)
         if result and result.get('id'):
-            cat['message_id'] = result['id']
-            for r in roles[:25]:
-                encoded = _encode_emoji_for_reaction(r.get('emoji', ''))
-                if encoded:
-                    cub_protector_bot_request('PUT', f'/channels/{channel_id}/messages/{result["id"]}/reactions/{encoded}/@me', token=token)
+            new_mid = result['id']
+            cat['message_id'] = new_mid
+            if new_mid != existing_mid:
+                for r in roles[:25]:
+                    encoded = _encode_emoji_for_reaction(r.get('emoji', ''))
+                    if encoded:
+                        _guild_bot_request(guild_id, 'PUT', f'/channels/{channel_id}/messages/{new_mid}/reactions/{encoded}/@me')
         else:
             return jsonify({'error': 'Failed to post message'}), 500
     else:
@@ -16540,16 +16541,26 @@ def cp_self_roles_republish_category(guild_id, cat_id):
             if parsed: opt['emoji'] = parsed
             if r.get('description'): opt['description'] = r['description'][:50]
             options.append(opt)
-        max_v = min(cat.get('max_select') or 1, len(options))
-        desc = cat.get('description', '') or ''
-        embed = {'color': embed_color, 'title': embed_title, 'description': desc or None}
-        embed = {k: v for k, v in embed.items() if v is not None}
-        component = {'type': 1, 'components': [{'type': 3, 'custom_id': f'selfrole_{cat["id"]}', 'options': options, 'placeholder': f'Select role(s)', 'min_values': 0, 'max_values': max_v}]}
-        result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json={'embeds': [embed], 'components': [component]}, token=token)
+        max_v = min(cat.get('max_select') or len(options), len(options))
+        max_v = max(1, max_v)
+        desc = cat.get('description', '') or 'Select a role below!'
+        embed = {
+            'color': embed_color,
+            'title': embed_title,
+            'description': desc,
+            'footer': {'text': 'Selecting a role you already have will remove it'},
+        }
+        component = {'type': 1, 'components': [{'type': 3, 'custom_id': f'self_role_select_{cat["id"]}', 'options': options, 'placeholder': f"Choose from {cat.get('name', 'this category')}...", 'min_values': 0, 'max_values': max_v}]}
+        payload = {'embeds': [embed], 'components': [component]}
+        result = None
+        if existing_mid:
+            result = _guild_bot_request(guild_id, 'PATCH', f'/channels/{channel_id}/messages/{existing_mid}', json=payload)
+        if result is None:
+            result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json=payload)
         if result and result.get('id'):
             cat['message_id'] = result['id']
         else:
-            return jsonify({'error': 'Failed to post message'}), 500
+            return jsonify({'error': 'Failed to update message'}), 500
 
     save_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE, data)
     return jsonify({'success': True, 'message_id': cat.get('message_id')})
@@ -16572,7 +16583,6 @@ def cp_self_roles_publish(guild_id):
         return jsonify({'error': 'No categories with roles to publish.'}), 400
 
     import re as _re, urllib.parse as _urlparse
-    token = _get_guild_bot_token(guild_id)
     posted = 0
     errors = []
 
@@ -16615,17 +16625,18 @@ def cp_self_roles_publish(guild_id):
             payload = {'embeds': [embed]}
             result = None
             if existing_mid:
-                result = cub_protector_bot_request('PATCH', f'/channels/{channel_id}/messages/{existing_mid}', json=payload, token=token)
+                result = _guild_bot_request(guild_id, 'PATCH', f'/channels/{channel_id}/messages/{existing_mid}', json=payload)
             if result is None:
-                result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json=payload, token=token)
+                result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json=payload)
             if result and result.get('id'):
                 new_mid = result['id']
                 cat['message_id'] = new_mid
-                # Add reactions
-                for r in roles:
-                    encoded = _encode_emoji_for_reaction(r.get('emoji', ''))
-                    if encoded:
-                        cub_protector_bot_request('PUT', f'/channels/{channel_id}/messages/{new_mid}/reactions/{encoded}/@me', token=token)
+                if new_mid != existing_mid:
+                    # Add reactions only for newly created messages
+                    for r in roles:
+                        encoded = _encode_emoji_for_reaction(r.get('emoji', ''))
+                        if encoded:
+                            _guild_bot_request(guild_id, 'PUT', f'/channels/{channel_id}/messages/{new_mid}/reactions/{encoded}/@me')
                 posted += 1
             else:
                 errors.append(cat.get('name', cat['id']))
@@ -16657,9 +16668,9 @@ def cp_self_roles_publish(guild_id):
             payload = {'embeds': [embed], 'components': [{'type': 1, 'components': [component]}]}
             result = None
             if existing_mid:
-                result = cub_protector_bot_request('PATCH', f'/channels/{channel_id}/messages/{existing_mid}', json=payload, token=token)
+                result = _guild_bot_request(guild_id, 'PATCH', f'/channels/{channel_id}/messages/{existing_mid}', json=payload)
             if result is None:
-                result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json=payload, token=token)
+                result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json=payload)
                 if result and result.get('id'):
                     cat['message_id'] = result['id']
                     posted += 1

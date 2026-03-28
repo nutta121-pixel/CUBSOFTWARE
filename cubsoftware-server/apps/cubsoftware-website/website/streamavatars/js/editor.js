@@ -1,11 +1,11 @@
 /**
  * StreamAvatars Sprite Editor
- * Pixel-art editor: 32×48 canvas at 12× zoom, 5 animation states, multiple frames.
+ * Pixel-art editor: 48×64 canvas at 8× zoom, 5 animation states, multiple frames.
  */
 
-const CANVAS_W  = 32;
-const CANVAS_H  = 48;
-let   zoom      = 12;
+const CANVAS_W  = 48;
+const CANVAS_H  = 64;
+let   zoom      = 8;
 const ZOOM_MIN  = 4;
 const ZOOM_MAX  = 28;
 const STATES    = ['idle', 'walk', 'run', 'jump', 'talk'];
@@ -415,12 +415,13 @@ function _r(ctx,x,y,w,h,c){const x1=Math.max(x,0),y1=Math.max(y,0),x2=Math.min(x
 // ── Kitsune Fox (5 tails, kimono) ─────────────────────────────────────────────
 // Preset colour defaults (used when loading a preset without explicit hue)
 const PRESET_DEFAULTS = {
+    fox:     { hex: '#c84818', hue: 18  },
     wolf:    { hex: '#202838', hue: 220 },
     onion:   { hex: '#d4b060', hue: 40  },
     leopard: { hex: '#c8d8f0', hue: 210 },
     kitsune: { hex: '#d04020', hue: 30  },
 };
-let lastPreset = 'wolf';
+let lastPreset = 'fox';
 
 // ── Kitsune (5-tailed fox spirit, kimono, bipedal side-profile) ───────────────
 function generateKitsuneSprite(state, frame, hue) {
@@ -429,8 +430,9 @@ function generateKitsuneSprite(state, frame, hue) {
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
 
     const f  = frame % 2;
-    const p  = (x,y,c)     => _p(ctx,x,y,c);
-    const r  = (x,y,w,h,c) => _r(ctx,x,y,w,h,c);
+    const xO = 8, yO = 8;
+    const p  = (x,y,c)     => _p(ctx,x+xO,y+yO,c);
+    const r  = (x,y,w,h,c) => _r(ctx,x+xO,y+yO,w,h,c);
 
     const fur    = `hsl(${hue},80%,52%)`;
     const furD   = `hsl(${hue},82%,30%)`;
@@ -584,8 +586,9 @@ function generateWolfSprite(state, frame, hue) {
     const ctx = fc.getContext('2d');
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
     const f  = frame % 2;
-    const p  = (x,y,c)     => _p(ctx,x,y,c);
-    const r  = (x,y,w,h,c) => _r(ctx,x,y,w,h,c);
+    const xO = 8, yO = 8;
+    const p  = (x,y,c)     => _p(ctx,x+xO,y+yO,c);
+    const r  = (x,y,w,h,c) => _r(ctx,x+xO,y+yO,w,h,c);
 
     const fur  = `hsl(${hue},22%,22%)`;
     const furM = `hsl(${hue},18%,34%)`;
@@ -650,8 +653,9 @@ function generateOnionSprite(state, frame, hue) {
     const ctx = fc.getContext('2d');
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
     const f  = frame % 2;
-    const p  = (x,y,c)     => _p(ctx,x,y,c);
-    const r  = (x,y,w,h,c) => _r(ctx,x,y,w,h,c);
+    const xO = 8, yO = 8;
+    const p  = (x,y,c)     => _p(ctx,x+xO,y+yO,c);
+    const r  = (x,y,w,h,c) => _r(ctx,x+xO,y+yO,w,h,c);
 
     const bn1 = `hsl(${hue},52%,72%)`;
     const bn2 = `hsl(${hue},48%,58%)`;
@@ -762,8 +766,9 @@ function generateLeopardSprite(state, frame, hue) {
     const ctx = fc.getContext('2d');
     ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
     const f  = frame % 2;
-    const p  = (x,y,c)     => _p(ctx,x,y,c);
-    const r  = (x,y,w,h,c) => _r(ctx,x,y,w,h,c);
+    const xO = 8, yO = 8;
+    const p  = (x,y,c)     => _p(ctx,x+xO,y+yO,c);
+    const r  = (x,y,w,h,c) => _r(ctx,x+xO,y+yO,w,h,c);
 
     const fur  = `hsl(${hue},35%,82%)`;
     const furD = `hsl(${hue},35%,62%)`;
@@ -824,9 +829,163 @@ function generateLeopardSprite(state, frame, hue) {
     return fc;
 }
 
+// ── Fox (quadruped, 4 tails, red eyes — default preset) ──────────────────────
+function generateFoxSprite(state, frame, hue) {
+    const fc  = createFrameCanvas();
+    const ctx = fc.getContext('2d');
+    ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+    const f  = frame % 2;
+    const p  = (x,y,c)     => _p(ctx,x,y,c);
+    const r  = (x,y,w,h,c) => _r(ctx,x,y,w,h,c);
+
+    const fur    = `hsl(${hue},82%,46%)`;
+    const furD   = `hsl(${hue},85%,24%)`;
+    const furH   = `hsl(${hue},62%,68%)`;
+    const furM   = `hsl(${hue},78%,34%)`;
+    const belly  = '#d8c0d0';
+    const bellyD = '#b098a8';
+    const earPk  = '#f07080';
+    const eyeR   = '#ff1818';
+    const eyeD   = '#1a0000';
+    const eyeGl  = '#ff9090';
+    const noseC  = '#1a0800';
+    const tipW   = '#f4f0ec';
+    const tipL   = '#c4b4c4';
+
+    let yOff = 0;
+    if (state === 'jump') yOff = f === 0 ? 3 : -7;
+    else if ((state === 'idle' || state === 'talk') && f === 1) yOff = 1;
+
+    const hy = 18 + yOff;
+    const hx = 26;
+    const by = 32 + yOff;
+    const bx = 6;
+    const ly = 46 + yOff;
+
+    // ── 4 TAILS (behind body) ────────────────────────────────────────────────
+    function drawTails(positions) {
+        for (let i = 0; i < 4; i++) {
+            const {tx, ty} = positions[i];
+            const len = 13 - i;
+            r(tx,   ty+1, len,   4, furD);
+            r(tx,   ty,   len+1, 4, fur);
+            r(tx+2, ty,   len-2, 2, furH);
+            r(tx,   ty,   5,     4, tipW);
+            r(tx+1, ty-1, 3,     2, tipW);
+            p(tx,   ty+3, tipL);
+            p(tx+4, ty+3, tipL);
+        }
+    }
+    if (state === 'run') {
+        drawTails([{tx:0,ty:by+1},{tx:0,ty:by+5},{tx:0,ty:by+9},{tx:0,ty:by+13}]);
+    } else if (state === 'jump' && f === 1) {
+        drawTails([{tx:0,ty:hy+2},{tx:1,ty:hy+6},{tx:0,ty:hy+10},{tx:1,ty:hy+14}]);
+    } else if (state === 'jump' && f === 0) {
+        drawTails([{tx:0,ty:by+1},{tx:0,ty:by+4},{tx:0,ty:by+7},{tx:0,ty:by+10}]);
+    } else {
+        const sw = (state === 'walk' && f === 1) ? 1 : 0;
+        drawTails([{tx:0,ty:hy+4+sw},{tx:0,ty:hy+8+sw},{tx:0,ty:by+1+sw},{tx:0,ty:by+5+sw}]);
+    }
+
+    // ── BODY ─────────────────────────────────────────────────────────────────
+    r(bx,    by,    24, 14, fur);
+    r(bx+1,  by-1,  22,  1, furM);
+    r(bx+1,  by+14, 22,  1, furD);
+    p(bx,    by,    furD); p(bx+23, by,    furD);
+    p(bx,    by+13, furD); p(bx+23, by+13, furD);
+    r(bx+12, by,    10,  5, furH);
+    r(bx,    by+5,   6,  7, furM);
+    r(bx+20, by+2,   4, 10, furM);
+    r(bx+6,  by+7,  12,  7, belly);
+    r(bx+7,  by+6,  10,  8, belly);
+    r(bx+6,  by+13, 12,  1, bellyD);
+
+    // ── NECK ─────────────────────────────────────────────────────────────────
+    r(hx-2, by+1,  6, 12, fur);
+    r(hx-1, by,    4,  2, furH);
+    r(hx-2, by+3,  2,  8, furM);
+
+    // ── EARS ─────────────────────────────────────────────────────────────────
+    r(hx+4,  hy,    4,  6, furD);
+    r(hx+5,  hy-1,  3,  4, furM);
+    r(hx+5,  hy,    2,  3, earPk);
+    r(hx+9,  hy-2,  4,  8, fur);
+    r(hx+10, hy-3,  3,  5, furH);
+    p(hx+11, hy-3,  furH);
+    r(hx+10, hy-1,  2,  5, earPk);
+
+    // ── HEAD ─────────────────────────────────────────────────────────────────
+    r(hx-1, hy+2,  19, 17, furD);
+    r(hx,   hy+3,  17, 15, fur);
+    r(hx+1, hy+2,  15, 16, fur);
+    r(hx+2, hy+1,  13,  2, fur);
+    r(hx+1, hy+2,  10,  6, furH);
+    r(hx+12,hy+7,   6,  7, furH);
+
+    // ── MUZZLE ───────────────────────────────────────────────────────────────
+    r(hx+12, hy+9,  7,  7, belly);
+    r(hx+13, hy+8,  6,  8, belly);
+    r(hx+15, hy+7,  4,  8, belly);
+    r(hx+12, hy+9,  7,  1, bellyD);
+    r(hx+16, hy+7,  3,  3, noseC);
+    p(hx+16, hy+7, '#3c1a08');
+    p(hx+15, hy+9,  bellyD); p(hx+16, hy+9, bellyD);
+
+    // ── EYE (always red) ─────────────────────────────────────────────────────
+    r(hx+3, hy+4,  6,  5, eyeR);
+    r(hx+4, hy+5,  4,  3, eyeD);
+    p(hx+3, hy+4,  eyeGl); p(hx+8, hy+4, eyeGl);
+    p(hx+3, hy+7,  eyeGl); p(hx+8, hy+7, eyeGl);
+    p(hx+4, hy+5, '#500000');
+    r(hx+3, hy+3,  6,  1, furD);
+
+    // ── MOUTH ────────────────────────────────────────────────────────────────
+    if (state === 'talk' && f === 0) {
+        r(hx+13, hy+12, 5, 4, '#2a1008');
+        p(hx+14, hy+13, '#d86060'); p(hx+16, hy+13, '#d86060');
+    } else {
+        r(hx+13, hy+12, 4, 1, furD);
+        p(hx+12, hy+11, furD);
+    }
+    r(hx+1, hy+16, 7, 1, furD);
+
+    // ── LEGS (4-legged) ──────────────────────────────────────────────────────
+    function leg(lx, ly2, col, paw) {
+        r(lx,   ly2,    4, 12, col);
+        r(lx-1, ly2+11, 6,  3, paw);
+        r(lx,   ly2+13, 5,  1, furD);
+    }
+    const fa = furD, fp = furM, na = fur, np = furM;
+    if (state === 'walk') {
+        if (f === 0) { leg(10,ly+2,fa,fp); leg(18,ly,  fa,fp); leg(28,ly,  na,np); leg(34,ly+2,na,np); }
+        else         { leg(10,ly,  fa,fp); leg(18,ly+2,fa,fp); leg(28,ly+2,na,np); leg(34,ly,  na,np); }
+    } else if (state === 'run') {
+        if (f === 0) {
+            r(9, ly-1,4,13,fa); r(8, ly+11,6,3,fp); r(16,ly-1,4,13,fa); r(15,ly+11,6,3,fp);
+            leg(28,ly+2,na,np); leg(34,ly+2,na,np);
+        } else {
+            leg(12,ly+2,fa,fp); leg(18,ly+2,fa,fp);
+            r(27,ly-1,4,13,na); r(26,ly+11,6,3,np); r(34,ly-1,4,13,na); r(33,ly+11,6,3,np);
+        }
+    } else if (state === 'jump') {
+        if (f === 0) {
+            r(10,ly+3,4,8,fa); r(9, ly+10,6,3,fp); r(18,ly+3,4,8,fa); r(17,ly+10,6,3,fp);
+            r(28,ly+3,4,8,na); r(27,ly+10,6,3,np); r(34,ly+3,4,8,na); r(33,ly+10,6,3,np);
+        } else {
+            r(10,ly-2,4,12,fa); r(9, ly+9,6,3,fp); r(18,ly-2,4,12,fa); r(17,ly+9,6,3,fp);
+            r(28,ly-2,4,12,na); r(27,ly+9,6,3,np); r(36,ly-2,4,12,na); r(35,ly+9,6,3,np);
+        }
+    } else {
+        leg(10,ly,fa,fp); leg(18,ly,fa,fp); leg(28,ly,na,np); leg(34,ly,na,np);
+    }
+
+    return fc;
+}
+
 // ── Preset system ─────────────────────────────────────────────────────────────
 
 function generatePresetSprite(type, state, frame, hue) {
+    if (type === 'fox')     return generateFoxSprite(state, frame, hue);
     if (type === 'wolf')    return generateWolfSprite(state, frame, hue);
     if (type === 'onion')   return generateOnionSprite(state, frame, hue);
     if (type === 'leopard') return generateLeopardSprite(state, frame, hue);
@@ -834,7 +993,7 @@ function generatePresetSprite(type, state, frame, hue) {
 }
 
 function loadPreset(type, customHue) {
-    const def = PRESET_DEFAULTS[type] || PRESET_DEFAULTS.kitsune;
+    const def = PRESET_DEFAULTS[type] || PRESET_DEFAULTS.fox;
     const hue = customHue !== undefined ? customHue : def.hue;
     if (customHue === undefined) {
         const cel = document.getElementById('presetColor');
@@ -851,7 +1010,7 @@ function loadPreset(type, customHue) {
     updateFrameList(); render(); restartPreview();
 }
 
-function loadDefaultCharacter() { loadPreset('wolf'); }
+function loadDefaultCharacter() { loadPreset('fox'); }
 
 // Zoom buttons
 document.getElementById('btnZoomIn')?.addEventListener('click',  () => setZoom(zoom + 2));

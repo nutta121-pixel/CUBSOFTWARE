@@ -38,8 +38,8 @@ def init_db():
             state        TEXT    NOT NULL,
             frame_index  INTEGER NOT NULL,
             pixel_data   TEXT    NOT NULL,
-            width        INTEGER NOT NULL DEFAULT 32,
-            height       INTEGER NOT NULL DEFAULT 48
+            width        INTEGER NOT NULL DEFAULT 48,
+            height       INTEGER NOT NULL DEFAULT 64
         );
 
         CREATE TABLE IF NOT EXISTS sa_overlay_settings (

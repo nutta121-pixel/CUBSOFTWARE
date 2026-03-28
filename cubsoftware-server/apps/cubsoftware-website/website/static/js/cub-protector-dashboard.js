@@ -7554,6 +7554,17 @@
         } catch (e) { showToast('Failed to republish', 'error'); }
     };
 
+    window.cpRecreateAllSelfRoles = async function() {
+        if (!confirm('Recreate all category messages? The existing Discord messages will be deleted and brand new ones posted. Use this to fix broken panels.')) return;
+        try {
+            showToast('Recreating all categories…', 'info');
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/self-roles/recreate`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) showToast(data.message || 'All categories recreated!', 'success');
+            else showToast(data.error || data.message || 'Failed to recreate', 'error');
+        } catch (e) { showToast('Failed to recreate', 'error'); }
+    };
+
     window.cpAddSelfRoleCategory = async function() {
         const name = document.getElementById('sr-add-name').value.trim();
         const desc = document.getElementById('sr-add-desc').value.trim();

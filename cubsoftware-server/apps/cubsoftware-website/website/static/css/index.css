@@ -292,20 +292,24 @@
     position: absolute;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(88, 101, 242, 0.25);
     border-radius: 20px;
-    padding: 6px 14px;
+    padding: 7px 14px;
     font-size: 0.8rem;
     color: var(--text-secondary);
     backdrop-filter: blur(6px);
-    white-space: nowrap;
     animation: sticker-float var(--float-duration, 4s) ease-in-out var(--float-delay, 0s) infinite;
     pointer-events: auto;
-    cursor: default;
+    cursor: pointer;
     opacity: 0;
-    transition: opacity 0.6s ease;
+    transition: opacity 0.6s ease, border-color 0.15s, background 0.15s;
+}
+
+.supporter-sticker:hover {
+    background: rgba(88, 101, 242, 0.15);
+    border-color: rgba(88, 101, 242, 0.5);
 }
 
 .supporter-sticker.visible {
@@ -314,16 +318,33 @@
 
 .sticker-coffee {
     font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.sticker-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
 }
 
 .sticker-name {
     font-weight: 600;
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sticker-label {
+    font-size: 0.6rem;
+    color: #fbbf24;
+    opacity: 0.8;
+    letter-spacing: 0.02em;
 }
 
 .sticker-count {
     color: #f97316;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
 }
 
@@ -331,6 +352,74 @@
     0%, 100% { transform: translateY(0px) rotate(var(--float-tilt, 0deg)); }
     50% { transform: translateY(-8px) rotate(var(--float-tilt, 0deg)); }
 }
+
+/* Supporters scrolling strip */
+.supporters-strip {
+    display: flex;
+    align-items: center;
+    background: rgba(251, 191, 36, 0.04);
+    border-top: 1px solid rgba(251, 191, 36, 0.1);
+    border-bottom: 1px solid rgba(251, 191, 36, 0.1);
+    padding: 9px 0;
+    overflow: hidden;
+}
+
+.supporters-strip-title {
+    flex-shrink: 0;
+    padding: 0 18px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #fbbf24;
+    white-space: nowrap;
+    border-right: 1px solid rgba(251, 191, 36, 0.2);
+    margin-right: 12px;
+    letter-spacing: 0.02em;
+}
+
+.supporters-ticker-wrap {
+    flex: 1;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+
+.supporters-ticker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: max-content;
+    animation: ticker-scroll linear infinite;
+}
+
+@keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+.supporter-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(88, 101, 242, 0.18);
+    border-radius: 14px;
+    padding: 3px 11px;
+    font-size: 0.77rem;
+    white-space: nowrap;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.supporter-pill:hover {
+    background: rgba(88, 101, 242, 0.15);
+    border-color: rgba(88, 101, 242, 0.45);
+}
+
+.pill-coffee { font-size: 0.82rem; }
+.pill-name { font-weight: 600; color: var(--text-primary); }
+.pill-count { color: #f97316; font-size: 0.68rem; font-weight: 600; }
 
 /* Mobile */
 @media (max-width: 768px) {

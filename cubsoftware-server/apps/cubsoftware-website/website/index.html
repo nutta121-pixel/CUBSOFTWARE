@@ -407,12 +407,11 @@
             }, 1000);
         })();
 
-        // Supporter stickers — fetch last 5 donors and float them around the hero
+        // Supporter stickers — fetch last 50 donors, float 5 around the hero, scroll all in strip
         (function loadSupporterStickers() {
             const container = document.getElementById('supporterStickers');
-            if (!container) return;
 
-            // Preset positions (avoid center where text lives)
+            // Preset positions for floating stickers (avoid center where text lives)
             const POSITIONS = [
                 { top: '12%',  left: '4%',   tilt: '-3deg', dur: '4.2s', delay: '0s'   },
                 { top: '10%',  right: '4%',  tilt: '2deg',  dur: '3.8s', delay: '0.7s' },
@@ -425,28 +424,53 @@
                 .then(function(r) { return r.ok ? r.json() : []; })
                 .then(function(supporters) {
                     if (!supporters || supporters.length === 0) return;
-                    supporters.slice(0, POSITIONS.length).forEach(function(s, i) {
-                        const pos = POSITIONS[i];
-                        const el = document.createElement('div');
-                        el.className = 'supporter-sticker';
-                        el.title = s.note ? s.note : 'Thank you!';
-                        el.style.setProperty('--float-duration', pos.dur);
-                        el.style.setProperty('--float-delay', pos.delay);
-                        el.style.setProperty('--float-tilt', pos.tilt);
-                        if (pos.top)    el.style.top    = pos.top;
-                        if (pos.bottom) el.style.bottom = pos.bottom;
-                        if (pos.left)   el.style.left   = pos.left;
-                        if (pos.right)  el.style.right  = pos.right;
 
-                        const coffeeCount = s.coffees > 1 ? ' ×' + s.coffees : '';
-                        el.innerHTML =
-                            '<span class="sticker-coffee">☕</span>' +
-                            '<span class="sticker-name">' + escapeHtml(s.name) + '</span>' +
-                            (coffeeCount ? '<span class="sticker-count">' + coffeeCount + '</span>' : '');
-                        container.appendChild(el);
-                        // Fade in with slight stagger
-                        setTimeout(function() { el.classList.add('visible'); }, 200 + i * 150);
-                    });
+                    // Floating stickers (up to 5, hero decoration)
+                    if (container) {
+                        supporters.slice(0, POSITIONS.length).forEach(function(s, i) {
+                            const pos = POSITIONS[i];
+                            const el = document.createElement('div');
+                            el.className = 'supporter-sticker';
+                            el.title = s.note ? s.note : 'Thank you!';
+                            el.setAttribute('role', 'link');
+                            el.setAttribute('tabindex', '0');
+                            el.onclick = function() { window.open('https://buymeacoffee.com/cubsoftware', '_blank', 'noopener'); };
+                            el.style.setProperty('--float-duration', pos.dur);
+                            el.style.setProperty('--float-delay', pos.delay);
+                            el.style.setProperty('--float-tilt', pos.tilt);
+                            if (pos.top)    el.style.top    = pos.top;
+                            if (pos.bottom) el.style.bottom = pos.bottom;
+                            if (pos.left)   el.style.left   = pos.left;
+                            if (pos.right)  el.style.right  = pos.right;
+
+                            const coffeeCount = s.coffees > 1 ? ' ×' + s.coffees : '';
+                            el.innerHTML =
+                                '<span class="sticker-coffee">☕</span>' +
+                                '<span class="sticker-body">' +
+                                    '<span class="sticker-name">' + escapeHtml(s.name) + (coffeeCount ? '<span class="sticker-count">' + coffeeCount + '</span>' : '') + '</span>' +
+                                    '<span class="sticker-label">BuyMeACoffee Supporter</span>' +
+                                '</span>';
+                            container.appendChild(el);
+                            setTimeout(function() { el.classList.add('visible'); }, 200 + i * 150);
+                        });
+                    }
+
+                    // Scrolling strip — all 50 supporters
+                    const strip = document.getElementById('supportersStrip');
+                    const ticker = document.getElementById('supportersTicker');
+                    if (strip && ticker) {
+                        const pills = supporters.map(function(s) {
+                            const coffeeCount = s.coffees > 1 ? ' ×' + s.coffees : '';
+                            return '<a class="supporter-pill" href="https://buymeacoffee.com/cubsoftware" target="_blank" rel="noopener" title="' + escapeHtml(s.name) + ' — BuyMeACoffee Supporter">' +
+                                '<span class="pill-coffee">☕</span>' +
+                                '<span class="pill-name">' + escapeHtml(s.name) + '</span>' +
+                                (coffeeCount ? '<span class="pill-count">' + coffeeCount + '</span>' : '') +
+                                '</a>';
+                        }).join('');
+                        ticker.innerHTML = pills + pills; // duplicate for seamless loop
+                        ticker.style.animationDuration = Math.max(20, supporters.length * 2) + 's';
+                        strip.style.display = '';
+                    }
                 })
                 .catch(function() { /* silently ignore if API unavailable */ });
 
@@ -464,6 +488,14 @@
         <div class="container">
             <h1 class="hero-tagline">No Signup. No Ads. No Limits.</h1>
             <p class="hero-description">CUB PROTECTOR protects your server. CleanMe keeps it clean. QuestCord makes it an adventure. Built by CUB SOFTWARE, free forever — no accounts, no ads, no catches.</p>
+        </div>
+    </div>
+
+    <!-- BuyMeACoffee Supporters Strip -->
+    <div class="supporters-strip" id="supportersStrip" style="display:none" aria-label="BuyMeACoffee Supporters">
+        <span class="supporters-strip-title">☕ BuyMeACoffee Supporters</span>
+        <div class="supporters-ticker-wrap">
+            <div class="supporters-ticker" id="supportersTicker"></div>
         </div>
     </div>
 

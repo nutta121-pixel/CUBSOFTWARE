@@ -151,12 +151,12 @@ def bmac_supporters():
             _bmac_cache['ts'] = now
         except Exception as e:
             app.logger.warning(f'[BMAC] Failed to fetch supporters: {e}')
-    # Return last 5 sorted newest-first, only public info
+    # Return last 50 sorted newest-first, only public info
     supporters = sorted(
         _bmac_cache['data'],
         key=lambda x: x.get('support_created_on', ''),
         reverse=True
-    )[:5]
+    )[:50]
     result = [{
         'name':    s.get('supporter_name') or s.get('payer_name') or 'Anonymous',
         'coffees': s.get('support_coffees', 1),

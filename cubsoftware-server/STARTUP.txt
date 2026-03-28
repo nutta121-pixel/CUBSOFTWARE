@@ -2,63 +2,115 @@
   CUBSOFTWARE SERVER - STARTUP GUIDE
 ================================================================
 
-PREREQUISITES (install once if not already on the VPS)
+  If you are RE-DEPLOYING on an existing VPS, run this first:
+  rm -rf ~/cubsoftware
+  Then start from STEP 1 below.
+
+================================================================
+
+
+STEP 1 — Install system prerequisites (fresh VPS only)
 -------------------------------------------------------
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-sudo apt install -y nodejs python3 python3-pip git
+sudo apt install -y nodejs python3 python3-full python3-pip git nginx
 sudo npm install -g pm2
 
 
-STEP 1 — Clone the repo
+STEP 2 — Add SSH key to GitHub (fresh VPS only)
+-------------------------------------------------
+ssh-keygen -t ed25519 -C "cubsoftware-vps" -f ~/.ssh/id_ed25519 -N ""
+cat ~/.ssh/id_ed25519.pub
+# Go to github.com -> Settings -> SSH keys -> New SSH key -> paste the output above
+ssh -T git@github.com   # confirm it says: Hi HexEchoTV! You've successfully authenticated
+
+
+STEP 3 — Clone the repo
 ------------------------
 git clone git@github.com:HexEchoTV/CUBSOFTWARE.git ~/cubsoftware
 cd ~/cubsoftware/cubsoftware-server
 
 
-STEP 2 — Set up environment files
------------------------------------
-# Website
-cp apps/cubsoftware-website/.env.example apps/cubsoftware-website/.env
-nano apps/cubsoftware-website/.env        # fill in all values
-
-# Cub Protector bot
-cp apps/cub-protector/.env.example apps/cub-protector/.env
-nano apps/cub-protector/.env             # fill in all values
-
-
-STEP 3 — Install dependencies
+STEP 4 — Set up the .env file
 -------------------------------
-# Bot (Node.js)
+cp .env.example .env
+nano .env
+# Fill in any blanks: FLASK_SECRET_KEY, KERAPLAST_ADMIN_PASSWORD,
+# CLEANME_BOT_TOKEN, CLEANME_BOT_CLIENT_ID, ANTHROPIC_API_KEY etc.
+# Generate FLASK_SECRET_KEY with:
+#   python3 -c "import secrets; print(secrets.token_hex(32))"
+
+
+STEP 5 — Install Python dependencies
+--------------------------------------
+python3 -m venv apps/cubsoftware-website/venv
+apps/cubsoftware-website/venv/bin/pip install -r apps/cubsoftware-website/requirements.txt
+
+
+STEP 6 — Install Node dependencies
+-------------------------------------
 cd apps/cub-protector && npm install && cd ../..
+cd apps/questcord && npm install && cd ../..
+cd apps/cleanme-bot && npm install && cd ../..
 
-# Website (Python)
-pip3 install -r apps/cubsoftware-website/requirements.txt
 
-
-STEP 4 — Create data directory
+STEP 7 — Create data directory
 --------------------------------
 sudo mkdir -p /var/cubsoftware-data
 sudo chown $USER:$USER /var/cubsoftware-data
 
 
-STEP 5 — Start with PM2
--------------------------
+STEP 8 — Set up Nginx
+-----------------------
+sudo cp nginx/nginx.conf /etc/nginx/sites-available/cubsoftware
+sudo ln -s /etc/nginx/sites-available/cubsoftware /etc/nginx/sites-enabled/cubsoftware
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t
+sudo systemctl enable --now nginx
+
+
+STEP 9 — Start everything with PM2
+-------------------------------------
 pm2 start ecosystem.config.js
 pm2 save
 pm2 startup
 # Copy and run the command that pm2 startup prints
 
 
+STEP 10 — Verify everything is running
+----------------------------------------
+pm2 list
+pm2 logs cubsoftware-website --lines 50
+
+
+STEP 11 — SSL (once DNS is pointed at this VPS)
+-------------------------------------------------
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d cubsoftware.site -d www.cubsoftware.site
+sudo certbot --nginx -d questcord.fun -d www.questcord.fun
+sudo systemctl reload nginx
+
+
+STEP 12 — Cloudflare DDNS auto-update (optional)
+--------------------------------------------------
+sudo mkdir -p /var/log/cubsoftware
+sudo chown $USER:$USER /var/log/cubsoftware
+chmod +x cloudflare-ddns.sh
+./cloudflare-ddns.sh        # test it manually first
+crontab -e
+# Add this line to run every 5 minutes:
+# */5 * * * * /home/$USER/cubsoftware/cubsoftware-server/cloudflare-ddns.sh
+
+
 ================================================================
   DEPLOYING UPDATES (after first setup)
 ================================================================
 
-On your local machine (or via GitHub Desktop):
+On your local machine:
   git push origin main
 
 On the VPS:
   cd ~/cubsoftware/cubsoftware-server
-  git pull origin main && pm2 restart cubsoftware-website cub-protector
+  git pull origin main && pm2 restart all
 
 
 ================================================================
@@ -67,7 +119,8 @@ On the VPS:
 
 pm2 list                        # show all running processes
 pm2 logs cubsoftware-website    # live logs for website
-pm2 logs cub-protector          # live logs for bot
+pm2 logs cub-protector          # live logs for cub protector
+pm2 logs questcord              # live logs for questcord
+pm2 logs cleanme-bot            # live logs for cleanme bot
 pm2 restart cubsoftware-website # restart website only
-pm2 restart cub-protector       # restart bot only
 pm2 restart all                 # restart everything

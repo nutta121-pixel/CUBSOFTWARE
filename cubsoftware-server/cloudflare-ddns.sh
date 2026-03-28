@@ -12,17 +12,17 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Load environment variables from .env.ddns
-if [ -f "$SCRIPT_DIR/.env.ddns" ]; then
-    export $(grep -v '^#' "$SCRIPT_DIR/.env.ddns" | xargs)
+# Load environment variables from .env
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    export $(grep -v '^#' "$SCRIPT_DIR/.env" | xargs)
 else
-    echo "ERROR: .env.ddns not found. Copy .env.ddns.example and fill in your values."
+    echo "ERROR: .env not found. Copy .env.example and fill in your values."
     exit 1
 fi
 
 # Validate required variables
 if [ -z "$CF_API_TOKEN" ] || [ "$CF_API_TOKEN" == "YOUR_API_TOKEN_HERE" ]; then
-    echo "ERROR: CF_API_TOKEN not set in .env.ddns"
+    echo "ERROR: CF_API_TOKEN not set in .env"
     exit 1
 fi
 

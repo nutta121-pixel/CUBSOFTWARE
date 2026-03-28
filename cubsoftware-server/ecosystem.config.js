@@ -13,19 +13,28 @@
  *   pm2 save                            # Save current process list
  *   pm2 startup                         # Generate startup script
  *
- * SECRETS: Do not put real secrets in this file — it is committed to git.
- * Instead, create a file called  .env.secrets  next to this file on the
- * server and put your real values there.  That file is gitignored and will
- * never be overwritten by a git pull.
- *
- * Example .env.secrets:
- *   DISCORD_CLIENT_SECRET=abc123
- *   TWITCH_CLIENT_SECRET=xyz789
- *   CLEANME_BOT_API_KEY=mysecretkey
+ * SECRETS: Copy .env.example to .env in this directory and fill in values.
+ * The .env file is gitignored and will never be overwritten by a git pull.
+ * All apps are configured from this single file.
  */
 
-// Secrets are read from process.env, which PM2 inherits from the shell.
-// Set them persistently via ~/.bashrc on the server (see .env.secrets.example).
+const fs   = require('fs');
+const path = require('path');
+
+// Load .env from the server root into process.env (won't override already-set vars)
+try {
+    const lines = fs.readFileSync(path.join(__dirname, '.env'), 'utf8').split('\n');
+    for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eq = trimmed.indexOf('=');
+        if (eq === -1) continue;
+        const key = trimmed.slice(0, eq).trim();
+        const val = trimmed.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
+        if (key && !(key in process.env)) process.env[key] = val;
+    }
+} catch (_) {}
+
 function s(key, fallback) { return process.env[key] || fallback || ''; }
 
 module.exports = {
@@ -45,20 +54,48 @@ module.exports = {
             env: {
                 FLASK_ENV: 'production',
                 FLASK_DEBUG: '0',
-                CLEANME_BOT_API_KEY: s('CLEANME_BOT_API_KEY'),
-                DISCORD_CLIENT_ID: '1412661083759579303',
+                DEV_MODE: s('DEV_MODE', '0'),
+                FLASK_SECRET_KEY: s('FLASK_SECRET_KEY'),
+                ADMIN_API_KEY: s('ADMIN_API_KEY'),
+                BOT_API_KEY: s('BOT_API_KEY'),
+                CLEANME_BOT_API_KEY: s('BOT_API_KEY'),   // alias used by website
+                CUBASSIST_ADMIN_KEY: s('CUBASSIST_ADMIN_KEY'),
+                // Discord
+                DISCORD_CLIENT_ID: s('DISCORD_CLIENT_ID'),
                 DISCORD_CLIENT_SECRET: s('DISCORD_CLIENT_SECRET'),
-                TWITCH_CLIENT_ID: '9n9yjc79p44kpsluv81kvvh6h9bxvu',
+                DISCORD_REDIRECT_URI: s('DISCORD_REDIRECT_URI'),
+                CUB_LOGIN_DISCORD_REDIRECT: s('CUB_LOGIN_DISCORD_REDIRECT'),
+                BOT_DASHBOARD_REDIRECT_URI: s('BOT_DASHBOARD_REDIRECT_URI'),
+                BAN_APPEAL_REDIRECT_URI: s('BAN_APPEAL_REDIRECT_URI'),
+                AFFILIATE_REDIRECT_URI: s('AFFILIATE_REDIRECT_URI'),
+                // Twitch
+                TWITCH_CLIENT_ID: s('TWITCH_CLIENT_ID'),
                 TWITCH_CLIENT_SECRET: s('TWITCH_CLIENT_SECRET'),
                 TWITCH_REDIRECT_URI: 'https://cubsoftware.site/apps/multi-twitch',
-                CUBASSIST_ADMIN_KEY: s('CUBASSIST_ADMIN_KEY'),
-                FLASK_SECRET_KEY: s('FLASK_SECRET_KEY'),
+                CUB_LOGIN_TWITCH_REDIRECT: s('CUB_LOGIN_TWITCH_REDIRECT'),
+                // CubReactive
+                CUBREACTIVE_REDIRECT_URI: s('CUBREACTIVE_REDIRECT_URI'),
+                CUBREACTIVE_RPC_REDIRECT_URI: s('CUBREACTIVE_RPC_REDIRECT_URI'),
+                CUBREACTIVE_WS_URL: s('CUBREACTIVE_WS_URL'),
+                // Cub Protector
+                CUB_PROTECTOR_TOKEN: s('CUB_PROTECTOR_TOKEN'),
+                CUB_PROTECTOR_REDIRECT_URI: s('CUB_PROTECTOR_REDIRECT_URI'),
+                // CleanMe
+                CLEANME_BOT_TOKEN: s('CLEANME_BOT_TOKEN'),
+                CLEANME_BOT_CLIENT_ID: s('CLEANME_BOT_CLIENT_ID'),
+                CLEANME_REDIRECT_URI: s('CLEANME_REDIRECT_URI'),
+                // Misc
+                LOG_SERVER_PORT: s('LOG_SERVER_PORT', '3847'),
+                LINKS_DISCORD_WEBHOOK: s('LINKS_DISCORD_WEBHOOK'),
+                CUBSOFTWARE_DATA_DIR: s('CUBSOFTWARE_DATA_DIR', '/var/cubsoftware-data'),
+                BMAC_TOKEN: s('BMAC_TOKEN'),
+                KERAPLAST_ADMIN_PASSWORD: s('KERAPLAST_ADMIN_PASSWORD'),
             },
             env_development: {
                 FLASK_ENV: 'development',
-                FLASK_DEBUG: '1'
+                FLASK_DEBUG: '1',
+                DEV_MODE: '1',
             },
-            // Logging
             error_file: './logs/cubsoftware-website-error.log',
             out_file: './logs/cubsoftware-website-out.log',
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
@@ -70,23 +107,30 @@ module.exports = {
         // ============================================
         {
             name: 'questcord',
-            script: 'src/index.js',  // Skip start.js to avoid npm install on every restart
+            script: 'src/index.js',
             cwd: './apps/questcord',
             interpreter: 'node',
             watch: false,
             autorestart: true,
             max_restarts: 10,
             restart_delay: 5000,
-            // Node.js specific settings
             node_args: '--max-old-space-size=512',
-            // Environment variables
             env: {
-                NODE_ENV: 'production'
+                NODE_ENV: 'production',
+                DISCORD_TOKEN: s('QUESTCORD_TOKEN'),
+                DISCORD_CLIENT_ID: s('QUESTCORD_CLIENT_ID'),
+                DISCORD_CLIENT_SECRET: s('QUESTCORD_CLIENT_SECRET'),
+                SUPPORT_SERVER_ID: s('QUESTCORD_SUPPORT_SERVER_ID'),
+                OWNER_ID: s('OWNER_IDS'),
+                OWNER_IDS: s('OWNER_IDS'),
+                TERMINAL_CHANNEL_ID: s('QUESTCORD_TERMINAL_CHANNEL_ID'),
+                SESSION_SECRET: s('QUESTCORD_SESSION_SECRET'),
+                DISCORD_CALLBACK_URL: 'https://questcord.fun/auth/discord/callback',
+                DISCORD_BASE_URL: 'https://questcord.fun',
             },
             env_development: {
                 NODE_ENV: 'development'
             },
-            // Logging
             error_file: './logs/questcord-error.log',
             out_file: './logs/questcord-out.log',
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
@@ -99,15 +143,13 @@ module.exports = {
         {
             name: 'onion-bot',
             script: 'index.js',
-            cwd: '../The Onion Bot',  // Relative to cubsoftware-server
+            cwd: '../The Onion Bot',
             interpreter: 'node',
             watch: false,
             autorestart: true,
             max_restarts: 10,
             restart_delay: 5000,
-            // Node.js specific settings
             node_args: '--max-old-space-size=256',
-            // Environment variables
             env: {
                 NODE_ENV: 'production'
             },
@@ -115,7 +157,6 @@ module.exports = {
                 NODE_ENV: 'development',
                 DEBUG: 'true'
             },
-            // Logging
             error_file: './logs/onion-bot-error.log',
             out_file: './logs/onion-bot-out.log',
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
@@ -134,16 +175,19 @@ module.exports = {
             autorestart: true,
             max_restarts: 10,
             restart_delay: 5000,
-            // Node.js specific settings
             node_args: '--max-old-space-size=256',
-            // Environment variables
             env: {
-                NODE_ENV: 'production'
+                NODE_ENV: 'production',
+                BOT_TOKEN: s('CLEANME_BOT_TOKEN'),
+                CLIENT_ID: s('CLEANME_BOT_CLIENT_ID'),
+                OWNER_IDS: s('OWNER_IDS'),
+                TERMINAL_CHANNEL_ID: s('CLEANME_TERMINAL_CHANNEL_ID'),
+                CLEANME_WEBSITE_URL: 'https://cubsoftware.site',
+                CLEANME_API_KEY: s('BOT_API_KEY'),
             },
             env_development: {
                 NODE_ENV: 'development'
             },
-            // Logging
             error_file: './logs/cleanme-bot-error.log',
             out_file: './logs/cleanme-bot-out.log',
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
@@ -162,16 +206,30 @@ module.exports = {
             autorestart: true,
             max_restarts: 10,
             restart_delay: 5000,
-            // Node.js specific settings
             node_args: '--max-old-space-size=256',
-            // Environment variables
             env: {
-                NODE_ENV: 'production'
+                NODE_ENV: 'production',
+                DISCORD_TOKEN: s('CUB_PROTECTOR_TOKEN'),
+                CLIENT_ID: s('CUB_PROTECTOR_CLIENT_ID'),
+                OWNER_IDS: s('OWNER_IDS'),
+                ADMIN_GUILD_ID: s('CUB_PROTECTOR_ADMIN_GUILD_ID'),
+                DEV_GUILD_ID: s('CUB_PROTECTOR_DEV_GUILD_ID'),
+                TERMINAL_CHANNEL_ID: s('CUB_PROTECTOR_TERMINAL_CHANNEL_ID'),
+                LINKS_LOG_CHANNEL_ID: s('CUB_PROTECTOR_LINKS_LOG_CHANNEL_ID'),
+                API_URL: 'https://cubsoftware.site',
+                API_KEY: s('BOT_API_KEY'),
+                LOG_SERVER_PORT: s('LOG_SERVER_PORT', '3847'),
+                CUBREACTIVE_WS_PORT: s('CUBREACTIVE_WS_PORT', '3848'),
+                TWITCH_CLIENT_ID: s('TWITCH_CLIENT_ID'),
+                TWITCH_CLIENT_SECRET: s('TWITCH_CLIENT_SECRET'),
+                YOUTUBE_API_KEY: s('YOUTUBE_API_KEY'),
+                ANTHROPIC_API_KEY: s('ANTHROPIC_API_KEY'),
+                CUBAI_TRIGGER: s('CUBAI_TRIGGER', 'cub'),
+                WHISPER_MODEL: s('WHISPER_MODEL', 'base'),
             },
             env_development: {
                 NODE_ENV: 'development'
             },
-            // Logging
             error_file: './logs/cub-protector-error.log',
             out_file: './logs/cub-protector-out.log',
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',

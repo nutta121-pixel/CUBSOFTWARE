@@ -7543,6 +7543,17 @@
         } catch (e) { showToast('Failed to publish panel', 'error'); }
     };
 
+    window.cpRepublishAllSelfRoles = async function() {
+        if (!confirm('Republish all categories? All existing Discord messages will be updated in place — no messages will be deleted.')) return;
+        try {
+            showToast('Republishing all categories…', 'info');
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/self-roles/publish`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) showToast(data.message || 'All categories republished!', 'success');
+            else showToast(data.error || data.message || 'Failed to republish', 'error');
+        } catch (e) { showToast('Failed to republish', 'error'); }
+    };
+
     window.cpAddSelfRoleCategory = async function() {
         const name = document.getElementById('sr-add-name').value.trim();
         const desc = document.getElementById('sr-add-desc').value.trim();

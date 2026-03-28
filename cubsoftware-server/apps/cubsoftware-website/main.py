@@ -15077,12 +15077,12 @@ def cub_protector_members_search(guild_id):
     if not query:
         return jsonify({'members': []})
     if query.isdigit():
-        m = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/members/{query}')
+        m = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/members/{query}', bypass_cache=True)
         if m and isinstance(m, dict) and 'user' in m:
             user = m.get('user', {})
             avatar = f"https://cdn.discordapp.com/avatars/{user['id']}/{user.get('avatar')}.png" if user.get('avatar') else ''
             return jsonify({'members': [{'id': user['id'], 'username': user.get('username', user['id']), 'avatar': avatar, 'roles': m.get('roles', []), 'joined_at': m.get('joined_at', '')}]})
-    result = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/members/search', params={'query': query, 'limit': 5})
+    result = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/members/search', params={'query': query, 'limit': 5}, bypass_cache=True)
     if not result or not isinstance(result, list):
         return jsonify({'members': []})
     members = []

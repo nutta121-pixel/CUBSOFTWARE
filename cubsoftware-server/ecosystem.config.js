@@ -46,7 +46,7 @@ module.exports = {
             name: 'cubsoftware-website',
             script: 'main.py',
             cwd: './apps/cubsoftware-website',
-            interpreter: './venv/bin/python3',
+            interpreter: path.join(__dirname, 'apps/cubsoftware-website/venv/bin/python3'),
             watch: false,
             autorestart: true,
             max_restarts: 10,

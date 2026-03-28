@@ -34,10 +34,73 @@ STEP 4 — Set up the .env file
 -------------------------------
 cp .env.example .env
 nano .env
-# Fill in any blanks: FLASK_SECRET_KEY, KERAPLAST_ADMIN_PASSWORD,
-# CLEANME_BOT_TOKEN, CLEANME_BOT_CLIENT_ID, ANTHROPIC_API_KEY etc.
-# Generate FLASK_SECRET_KEY with:
-#   python3 -c "import secrets; print(secrets.token_hex(32))"
+
+  WHERE TO GET EACH VALUE:
+  -------------------------
+
+  -- Generate these yourself (random strings) --
+  FLASK_SECRET_KEY         Run: python3 -c "import secrets; print('CUBSOFTWARE_KEY_' + secrets.token_hex(32))"
+                           Used by Flask to sign sessions. Just needs to be a long random string.
+
+  BOT_API_KEY              Run: python3 -c "import secrets; print('CUBSOFTWARE_KEY_' + secrets.token_hex(32))"
+                           This is a shared password between the website and the bots.
+                           You only set it ONCE here in .env — ecosystem.config.js
+                           automatically passes it to each bot under the name they expect:
+                             Cub Protector  -> API_KEY
+                             CleanMe bot    -> CLEANME_API_KEY
+                           If the bot sends the wrong key, the website rejects its requests.
+
+  ADMIN_API_KEY            Run: python3 -c "import secrets; print('CUBSOFTWARE_KEY_' + secrets.token_hex(32))"
+                           Used to protect admin-only API endpoints on the website.
+                           Only needed if you use those endpoints directly.
+
+  CUBASSIST_ADMIN_KEY      Run: python3 -c "import secrets; print('CUBSOFTWARE_KEY_' + secrets.token_hex(32))"
+                           Used to access /cubassist/admin/setup for the Twitch bot OAuth flow.
+                           Only needed once during initial Twitch bot setup.
+
+  QUESTCORD_SESSION_SECRET Run: node -e "console.log('CUBSOFTWARE_KEY_' + require('crypto').randomBytes(64).toString('hex'))"
+                           Used by QuestCord's web dashboard to sign sessions.
+
+  -- You choose these --
+  KERAPLAST_ADMIN_PASSWORD  Whatever password you want for the Keraplast calculator
+
+  -- Discord Developer Portal (discord.com/developers/applications) --
+  DISCORD_CLIENT_ID / DISCORD_CLIENT_SECRET
+      -> Your cubsoftware.site OAuth app -> OAuth2 -> Client ID / Secret
+  CUB_PROTECTOR_TOKEN / CUB_PROTECTOR_CLIENT_ID
+      -> Cub Protector app -> Bot -> Token  /  General -> Application ID
+  CLEANME_BOT_TOKEN / CLEANME_BOT_CLIENT_ID
+      -> CleanMe app -> Bot -> Token  /  General -> Application ID
+  QUESTCORD_TOKEN / QUESTCORD_CLIENT_ID / QUESTCORD_CLIENT_SECRET
+      -> QuestCord app -> Bot -> Token  /  General -> Application ID  /  OAuth2 -> Secret
+
+  -- Twitch Developer Console (dev.twitch.tv/console) --
+  TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET
+      -> Your app -> Manage -> Client ID / Secret
+
+  -- Cloudflare Dashboard (dash.cloudflare.com) --
+  CF_API_TOKEN          Profile -> API Tokens -> Create Token (Edit zone DNS permission)
+  ZONE_ID_CUBSOFTWARE   cubsoftware.site -> Overview -> right sidebar
+  ZONE_ID_QUESTCORD     questcord.fun -> Overview -> right sidebar
+
+  -- Discord Server (right-click server/channel -> Copy ID, needs Developer Mode on) --
+  CUB_PROTECTOR_ADMIN_GUILD_ID      Your main Discord server ID
+  CUB_PROTECTOR_DEV_GUILD_ID        Your dev/test Discord server ID
+  CUB_PROTECTOR_TERMINAL_CHANNEL_ID Channel ID for bot terminal output
+  CUB_PROTECTOR_LINKS_LOG_CHANNEL_ID Channel ID for logging links
+
+  -- Anthropic Console (console.anthropic.com) --
+  ANTHROPIC_API_KEY     API Keys -> Create Key
+
+  -- Google Cloud Console (console.cloud.google.com) --
+  YOUTUBE_API_KEY       APIs & Services -> Credentials -> Create API Key
+                        (enable YouTube Data API v3 first)
+
+  -- Buy Me a Coffee (buymeacoffee.com/dashboard) --
+  BMAC_TOKEN            Settings -> API
+
+  -- Discord (create a webhook in your server) --
+  LINKS_DISCORD_WEBHOOK Server Settings -> Integrations -> Webhooks -> New Webhook -> Copy URL
 
 
 STEP 5 — Install Python dependencies

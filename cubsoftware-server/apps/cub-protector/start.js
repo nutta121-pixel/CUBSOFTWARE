@@ -36,22 +36,19 @@ if (needsInstall()) {
     console.log('Dependencies already installed.');
 }
 
-// Check for .env file
+// Load .env file if present (not required — PM2 injects vars directly)
 const envPath = path.join(botDir, '.env');
-if (!fs.existsSync(envPath)) {
-    console.log('ERROR: .env file not found!');
-    process.exit(1);
+if (fs.existsSync(envPath)) {
+    require('dotenv').config({ path: envPath });
 }
 
-require('dotenv').config({ path: envPath });
-
 if (!process.env.DISCORD_TOKEN) {
-    console.log('ERROR: DISCORD_TOKEN not configured in .env file!');
+    console.log('ERROR: DISCORD_TOKEN not configured!');
     process.exit(1);
 }
 
 if (!process.env.CLIENT_ID) {
-    console.log('ERROR: CLIENT_ID not configured in .env file!');
+    console.log('ERROR: CLIENT_ID not configured!');
     process.exit(1);
 }
 

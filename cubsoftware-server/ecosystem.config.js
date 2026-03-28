@@ -151,7 +151,12 @@ module.exports = {
             restart_delay: 5000,
             node_args: '--max-old-space-size=256',
             env: {
-                NODE_ENV: 'production'
+                NODE_ENV: 'production',
+                DISCORD_TOKEN: s('ONION_BOT_TOKEN'),
+                CLIENT_ID: s('ONION_BOT_CLIENT_ID'),
+                CLIENT_SECRET: s('ONION_BOT_CLIENT_SECRET'),
+                CREATOR_ID: s('OWNER_IDS'),
+                OWNER_IDS: s('OWNER_IDS'),
             },
             env_development: {
                 NODE_ENV: 'development',

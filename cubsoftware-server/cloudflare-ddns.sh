@@ -98,6 +98,13 @@ log "Updating questcord.fun..."
 update_dns "$ZONE_ID_QUESTCORD" "questcord.fun" "questcord.fun"
 update_dns "$ZONE_ID_QUESTCORD" "questcord.fun" "www.questcord.fun"
 
+# Update cubsw.link records
+if [ -n "$ZONE_ID_CUBSW" ]; then
+    log "Updating cubsw.link..."
+    update_dns "$ZONE_ID_CUBSW" "cubsw.link" "cubsw.link"
+    update_dns "$ZONE_ID_CUBSW" "cubsw.link" "www.cubsw.link"
+fi
+
 # Save current IP
 echo "$CURRENT_IP" > "$IP_FILE"
 

@@ -181,6 +181,8 @@ client.once('ready', async () => {
         channelId: terminalConfig.terminalChannelId,
         eventsChannelId: terminalConfig.eventsChannelId,
         botName: 'CleanMe Bot',
+        botId: 'cleanme',
+        aliases: ['cleanmebot', 'cm'],
         autoClear: false,
     });
     terminal.init();

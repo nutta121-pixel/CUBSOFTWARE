@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
-const DEBUG_CHANNEL_ID = process.env.TERMINAL_CHANNEL_ID || '1466190431485427856';
+const DEBUG_CHANNEL_ID = process.env.BOT_EVENTS_CHANNEL_ID || '1466190584372003092';
 const SETTINGS_FILE = path.join(__dirname, '..', '..', 'debug-settings.json');
 
 class DebugLogger {

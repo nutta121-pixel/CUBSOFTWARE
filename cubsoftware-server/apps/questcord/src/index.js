@@ -46,6 +46,8 @@ async function main() {
             channelId: terminalConfig.terminalChannelId,
             eventsChannelId: terminalConfig.eventsChannelId,
             botName: 'QuestCord Bot & Website',
+            botId: 'questcord',
+            aliases: ['qc', 'quest'],
             autoClear: false,
         });
         terminal.init();

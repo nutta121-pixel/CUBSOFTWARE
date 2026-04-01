@@ -121,6 +121,8 @@ client.once('ready', () => {
         channelId: terminalConfig.terminalChannelId,
         eventsChannelId: terminalConfig.eventsChannelId,
         botName: 'Onion Bot',
+        botId: 'onionbot',
+        aliases: ['onion', 'ob', 'solibot'],
         autoClear: false,
     });
     terminal.init();

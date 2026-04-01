@@ -24,6 +24,15 @@ const fs        = require('fs');
 const execPromise = util.promisify(exec);
 
 const COLORS = { info: 0x3b82f6, success: 0x22c55e, warn: 0xf59e0b, error: 0xef4444, terminal: 0x5865f2 };
+
+// All known bot target slugs — used so a bot can silently ignore commands aimed at another bot.
+// Keep in sync with the botId/aliases set on each terminal instance.
+const ALL_BOT_IDS = new Set([
+    'cubprotector', 'cubprotect', 'cp', 'cub',
+    'questcord', 'quest', 'qc',
+    'cleanmebot', 'cleanme', 'cm',
+    'onionbot', 'onion', 'ob', 'solibot',
+]);
 const ICONS  = { info: 'ℹ️', success: '✅', warn: '⚠️', error: '❌' };
 const EVENT_TITLES = { info: '📋 Info', success: '✅ Online', warn: '⚠️ Warning', error: '❌ Error' };
 
@@ -38,6 +47,8 @@ class DiscordTerminal {
         this.channelId       = options.channelId || '';
         this.eventsChannelId = options.eventsChannelId || '';
         this.botName         = options.botName || 'Bot';
+        this.botId           = (options.botId || this._deriveBotId(this.botName)).toLowerCase();
+        this.aliases         = (options.aliases || []).map(a => a.toLowerCase());
         this.autoClear       = options.autoClear !== false;
 
         // Load persisted terminal-user whitelist
@@ -53,6 +64,16 @@ class DiscordTerminal {
         console.log(`[${this.botName}] Terminal ready — terminal: ${this.channelId} | events: ${this.eventsChannelId || 'none'}`);
         this.logEvent(`**${this.botName}** is online and ready`, 'success');
         if (this.channelId && this.autoClear) this._scheduleHourlyClear();
+    }
+
+    // ── Bot targeting ─────────────────────────────────────────────────────────
+    _deriveBotId(name) {
+        return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    _matchesThisBot(target) {
+        const t = target.toLowerCase();
+        return t === this.botId || this.aliases.includes(t);
     }
 
     // ── Access control ────────────────────────────────────────────────────────
@@ -197,7 +218,17 @@ class DiscordTerminal {
         const input = message.content.slice(this.prefix.length).trim();
         if (!input) return;
 
-        const [commandName, ...args] = input.split(/\s+/);
+        const parts = input.split(/\s+/);
+        const commandName = parts[0];
+        let args = parts.slice(1);
+
+        // Bot targeting: >command <botname> [args]
+        // If the first arg is a known bot slug, only respond if it matches this bot.
+        if (args.length > 0 && ALL_BOT_IDS.has(args[0].toLowerCase())) {
+            if (!this._matchesThisBot(args[0])) return;
+            args = args.slice(1); // strip the bot target before passing to command
+        }
+
         const command = this.commands.get(commandName.toLowerCase());
 
         if (!command) {
@@ -250,7 +281,7 @@ class DiscordTerminal {
                 await message.channel.send({ embeds: [{
                     color: COLORS.terminal,
                     title: `🖥️ ${self.botName} Terminal`,
-                    description: `All commands use the \`${self.prefix}\` prefix.\nAuthorised owners and whitelisted users only.\nCustom bot processes appear automatically in \`${self.prefix}status\`.`,
+                    description: `All commands use the \`${self.prefix}\` prefix.\nTarget this bot specifically: \`${self.prefix}<command> ${self.botId}\`\nAuthorised owners and whitelisted users only.\nCustom bot processes appear automatically in \`${self.prefix}status\`.`,
                     fields,
                     footer: { text: `${self.botName} • ${self.prefix}help` },
                     timestamp: new Date().toISOString()

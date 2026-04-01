@@ -177,7 +177,7 @@ const OWNER_IDS = (process.env.OWNER_IDS || '378501056008683530').split(',').map
 const ADMIN_GUILD_ID = process.env.ADMIN_GUILD_ID || null;
 const API_URL = process.env.API_URL || 'https://cubsoftware.site';
 const API_KEY = process.env.API_KEY || '';
-const TERMINAL_CHANNEL_ID = process.env.TERMINAL_CHANNEL_ID || '1466190584372003092';
+const TERMINAL_CHANNEL_ID = process.env.TERMINAL_CHANNEL_ID || '1466190431485427856';
 const LINKS_LOG_CHANNEL_ID = process.env.LINKS_LOG_CHANNEL_ID || '1466190584372003092';
 const LOG_SERVER_PORT = parseInt(process.env.LOG_SERVER_PORT) || 3847;
 const CUBREACTIVE_WS_PORT = parseInt(process.env.CUBREACTIVE_WS_PORT) || 3848;
@@ -2436,6 +2436,8 @@ if (DiscordTerminal) {
         channelId: TERMINAL_CHANNEL_ID,
         eventsChannelId: process.env.BOT_EVENTS_CHANNEL_ID || '1466190584372003092',
         botName: 'CUB PROTECTOR',
+        botId: 'cubprotector',
+        aliases: ['cp', 'cub', 'cubprotect'],
         autoClear: true,
     });
 

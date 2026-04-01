@@ -233,7 +233,7 @@ module.exports = {
                 TWITCH_CLIENT_ID: s('TWITCH_CLIENT_ID'),
                 TWITCH_CLIENT_SECRET: s('TWITCH_CLIENT_SECRET'),
                 YOUTUBE_API_KEY: s('YOUTUBE_API_KEY'),
-                ANTHROPIC_API_KEY: s('ANTHROPIC_API_KEY'),
+                CUBAI_API_KEY: s('CUBAI_API_KEY'),
                 CUBAI_TRIGGER: s('CUBAI_TRIGGER', 'cub'),
                 WHISPER_MODEL: s('WHISPER_MODEL', 'base'),
             },

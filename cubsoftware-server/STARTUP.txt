@@ -90,7 +90,7 @@ nano .env
   CUB_PROTECTOR_LINKS_LOG_CHANNEL_ID Channel ID for logging links
 
   -- Anthropic Console (console.anthropic.com) --
-  ANTHROPIC_API_KEY     API Keys -> Create Key
+  CUBAI_API_KEY         API Keys -> Create Key
 
   -- Google Cloud Console (console.cloud.google.com) --
   YOUTUBE_API_KEY       APIs & Services -> Credentials -> Create API Key

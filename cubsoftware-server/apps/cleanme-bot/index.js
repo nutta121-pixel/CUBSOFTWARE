@@ -184,6 +184,7 @@ client.once('ready', async () => {
         botId: 'cleanme',
         aliases: ['cleanmebot', 'cm'],
         autoClear: false,
+        systemCommands: false,
     });
     terminal.init();
 

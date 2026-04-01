@@ -50,6 +50,7 @@ class DiscordTerminal {
         this.botId           = (options.botId || this._deriveBotId(this.botName)).toLowerCase();
         this.aliases         = (options.aliases || []).map(a => a.toLowerCase());
         this.autoClear       = options.autoClear !== false;
+        this.systemCommands  = options.systemCommands !== false; // false = only help + ping
 
         // Load persisted terminal-user whitelist
         this._terminalUsers = this._loadTerminalUsers();
@@ -146,7 +147,7 @@ class DiscordTerminal {
         return {
             color: COLORS.terminal,
             description: description.length > 4000 ? description.substring(0, 4000) + '\n...' : description,
-            footer: { text: `${this.botName} • ${this.prefix}${cmdName}` },
+            footer: { text: `${this.botName} • ${this.prefix}${cmdName} ${this.botId}` },
             timestamp: new Date().toISOString()
         };
     }
@@ -232,6 +233,9 @@ class DiscordTerminal {
         const command = this.commands.get(commandName.toLowerCase());
 
         if (!command) {
+            // Secondary bots (systemCommands: false) silently ignore unknown commands
+            // so only the bot that actually has the command replies
+            if (!this.systemCommands) return;
             return message.reply({ embeds: [this._buildLogEmbed(`Unknown command: \`${commandName}\`. Use \`${this.prefix}help\` to see all commands.`, 'error')] });
         }
 
@@ -289,6 +293,8 @@ class DiscordTerminal {
                 return null;
             }
         });
+
+        if (!this.systemCommands) return; // secondary bots only get help + ping
 
         // ── status ────────────────────────────────────────────────────────────
         this.addCommand('status', {

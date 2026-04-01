@@ -124,6 +124,7 @@ client.once('ready', () => {
         botId: 'onionbot',
         aliases: ['onion', 'ob', 'solibot'],
         autoClear: false,
+        systemCommands: false,
     });
     terminal.init();
 });

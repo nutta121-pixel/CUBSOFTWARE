@@ -49,6 +49,7 @@ async function main() {
             botId: 'questcord',
             aliases: ['qc', 'quest'],
             autoClear: false,
+            systemCommands: false,
         });
         terminal.init();
 

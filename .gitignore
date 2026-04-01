@@ -32,11 +32,11 @@ build/
 coverage/
 .nyc_output/
 
-# ── Data / uploads (runtime, not versioned) ───────────────────
+# ── Data / uploads ────────────────────────────────────────────
 **/data/*.json
 **/data/
 **/uploads/*
-!**/uploads/cubreactive
+!**/uploads/cubreactive/
 !**/uploads/cubreactive/**
 backups/
 BackUps/

@@ -38,10 +38,10 @@ htmlcov/
 instance/
 *.spec
 
-# ── Data / uploads (runtime, not versioned) ───────────────────
-**/data/*.json
-**/data/
-**/uploads/
+# ── Uploads (allow cubreactive images for backup) ─────────────
+**/uploads/*
+!**/uploads/cubreactive/
+!**/uploads/cubreactive/**
 **/static/downloads/
 backups/
 BackUps/

@@ -6,7 +6,8 @@ const DiscordTerminal = require('../../shared/discord-terminal');
 
 const terminalConfig = {
     ownerIds: (process.env.OWNER_IDS || '378501056008683530').split(',').map(id => id.trim()),
-    terminalChannelId: process.env.TERMINAL_CHANNEL_ID || '1466190746401902855'
+    terminalChannelId: process.env.TERMINAL_CHANNEL_ID || '1466190431485427856',
+    eventsChannelId: process.env.BOT_EVENTS_CHANNEL_ID || '1466190584372003092',
 };
 
 let terminal = null;
@@ -178,7 +179,9 @@ client.once('ready', async () => {
         prefix: '>',
         ownerIds: terminalConfig.ownerIds,
         channelId: terminalConfig.terminalChannelId,
-        botName: 'CleanMe Bot'
+        eventsChannelId: terminalConfig.eventsChannelId,
+        botName: 'CleanMe Bot',
+        autoClear: false,
     });
     terminal.init();
 
@@ -1958,30 +1961,22 @@ client.on('guildDelete', async (guild) => {
 // Process handlers for logging
 process.on('unhandledRejection', (error) => {
     console.error('Unhandled rejection:', error);
-    if (terminal) {
-        terminal.log(`Unhandled rejection: ${error}`, 'error');
-    }
+    if (terminal) terminal.logEvent(`Unhandled rejection: ${error}`, 'error');
 });
 
 process.on('uncaughtException', async (error) => {
     console.error('Uncaught exception:', error);
-    if (terminal) {
-        await terminal.log(`Uncaught exception: ${error.message}`, 'error');
-    }
+    if (terminal) await terminal.logEvent(`Uncaught exception: ${error.message}`, 'error');
     process.exit(1);
 });
 
 process.on('SIGINT', async () => {
-    if (terminal) {
-        await terminal.log('Shutting down (SIGINT)', 'warn');
-    }
+    if (terminal) await terminal.logEvent('Shutting down (SIGINT)', 'warn');
     process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
-    if (terminal) {
-        await terminal.log('Shutting down (SIGTERM)', 'warn');
-    }
+    if (terminal) await terminal.logEvent('Shutting down (SIGTERM)', 'warn');
     process.exit(0);
 });
 

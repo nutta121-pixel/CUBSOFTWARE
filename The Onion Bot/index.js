@@ -6,7 +6,8 @@ const DiscordTerminal = require('../cubsoftware-server/shared/discord-terminal')
 
 const terminalConfig = {
     ownerIds: (process.env.OWNER_IDS || '378501056008683530').split(',').map(id => id.trim()),
-    terminalChannelId: process.env.TERMINAL_CHANNEL_ID || '1466190703637037250'
+    terminalChannelId: process.env.TERMINAL_CHANNEL_ID || '1466190431485427856',
+    eventsChannelId: process.env.BOT_EVENTS_CHANNEL_ID || '1466190584372003092',
 };
 
 let terminal = null;
@@ -118,7 +119,9 @@ client.once('ready', () => {
         prefix: '>',
         ownerIds: terminalConfig.ownerIds,
         channelId: terminalConfig.terminalChannelId,
-        botName: 'Onion Bot'
+        eventsChannelId: terminalConfig.eventsChannelId,
+        botName: 'Onion Bot',
+        autoClear: false,
     });
     terminal.init();
 });
@@ -126,28 +129,18 @@ client.once('ready', () => {
 // Handle graceful shutdown
 const shutdown = async (signal) => {
     console.log(`[SHUTDOWN] Received ${signal}, shutting down...`);
-    if (terminal) {
-        await terminal.log(`Shutting down (${signal})`, 'warn');
-    }
-
-    setTimeout(() => {
-        client.destroy();
-        process.exit(0);
-    }, 2000);
+    if (terminal) await terminal.logEvent(`Shutting down (${signal})`, 'warn');
+    setTimeout(() => { client.destroy(); process.exit(0); }, 2000);
 };
 
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('uncaughtException', async (error) => {
     console.error('[FATAL] Uncaught Exception:', error);
-    if (terminal) {
-        await terminal.log(`Uncaught Exception: ${error.message}`, 'error');
-    }
+    if (terminal) await terminal.logEvent(`Uncaught Exception: ${error.message}`, 'error');
     setTimeout(() => process.exit(1), 2000);
 });
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('[ERROR] Unhandled Rejection at:', promise, 'reason:', reason);
-    if (terminal) {
-        terminal.log(`Unhandled Rejection: ${reason}`, 'error');
-    }
+process.on('unhandledRejection', (reason) => {
+    console.error('[ERROR] Unhandled Rejection:', reason);
+    if (terminal) terminal.logEvent(`Unhandled Rejection: ${reason}`, 'error');
 });

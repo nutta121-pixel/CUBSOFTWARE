@@ -12,7 +12,8 @@ const { debugLogger } = require('./utils/debugLogger');
 
 const terminalConfig = {
     ownerIds: (process.env.OWNER_IDS || '378501056008683530').split(',').map(id => id.trim()),
-    terminalChannelId: process.env.TERMINAL_CHANNEL_ID || '1466190431485427856'
+    terminalChannelId: process.env.TERMINAL_CHANNEL_ID || '1466190431485427856',
+    eventsChannelId: process.env.BOT_EVENTS_CHANNEL_ID || '1466190584372003092',
 };
 
 let terminal = null;
@@ -43,7 +44,9 @@ async function main() {
             prefix: '>',
             ownerIds: terminalConfig.ownerIds,
             channelId: terminalConfig.terminalChannelId,
-            botName: 'QuestCord Bot & Website'
+            eventsChannelId: terminalConfig.eventsChannelId,
+            botName: 'QuestCord Bot & Website',
+            autoClear: false,
         });
         terminal.init();
 
@@ -145,17 +148,13 @@ async function main() {
 
 process.on('unhandledRejection', error => {
     console.error('Unhandled promise rejection:', error);
-    if (terminal) {
-        terminal.log(`Unhandled rejection: ${error.message}`, 'error');
-    }
+    if (terminal) terminal.logEvent(`Unhandled rejection: ${error.message}`, 'error');
 });
 
 process.on('uncaughtException', error => {
     console.error('Uncaught exception:', error);
     if (terminal) {
-        terminal.log(`Uncaught exception: ${error.message}`, 'error').then(() => {
-            process.exit(1);
-        });
+        terminal.logEvent(`Uncaught exception: ${error.message}`, 'error').then(() => process.exit(1));
     } else {
         process.exit(1);
     }
@@ -163,17 +162,13 @@ process.on('uncaughtException', error => {
 
 process.on('SIGINT', async () => {
     console.log('Received SIGINT, shutting down...');
-    if (terminal) {
-        await terminal.log('Shutting down (SIGINT)', 'warn');
-    }
+    if (terminal) await terminal.logEvent('Shutting down (SIGINT)', 'warn');
     process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
     console.log('Received SIGTERM, shutting down...');
-    if (terminal) {
-        await terminal.log('Shutting down (SIGTERM)', 'warn');
-    }
+    if (terminal) await terminal.logEvent('Shutting down (SIGTERM)', 'warn');
     process.exit(0);
 });
 

@@ -2434,7 +2434,9 @@ if (DiscordTerminal) {
         prefix: '>',
         ownerIds: OWNER_IDS,
         channelId: TERMINAL_CHANNEL_ID,
+        eventsChannelId: process.env.BOT_EVENTS_CHANNEL_ID || '1466190584372003092',
         botName: 'CUB PROTECTOR',
+        autoClear: true,
     });
 
     terminal.addCommand('whitelist', {
@@ -10615,11 +10617,13 @@ client.once('ready', async () => {
 // ============================================================
 // Error handlers — ensure crashes appear in PM2 logs
 // ============================================================
-process.on('unhandledRejection', (reason, promise) => {
+process.on('unhandledRejection', (reason) => {
     console.error('[FATAL] Unhandled Promise Rejection:', reason);
+    if (terminal) terminal.logEvent(`Unhandled rejection: ${reason}`, 'error');
 });
 process.on('uncaughtException', (err) => {
     console.error('[FATAL] Uncaught Exception:', err);
+    if (terminal) terminal.logEvent(`Uncaught exception: ${err.message}`, 'error');
     process.exit(1);
 });
 

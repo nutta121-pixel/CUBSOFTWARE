@@ -101,7 +101,7 @@ echo "$LOG_PREFIX Committing $TOTAL file(s):"
 echo "$BREAKDOWN"
 
 # ── Commit ───────────────────────────────────
-COMMIT_MSG="Auto-backup: $TIMESTAMP"
+COMMIT_MSG="CUBSOFTWARE"
 if ! git commit -m "$COMMIT_MSG"; then
     echo "$LOG_PREFIX ERROR: git commit failed"
     send_discord "**[Auto Push]** \`$TIMESTAMP\`

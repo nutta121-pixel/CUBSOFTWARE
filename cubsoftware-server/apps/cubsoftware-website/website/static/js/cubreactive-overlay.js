@@ -1,5 +1,8 @@
 // CubReactive Overlay - Bot WebSocket Connection & Rendering
 
+// Read overlay key from URL query param ?k=... (set by dashboard, required for bot join auth)
+const OVERLAY_KEY = new URLSearchParams(window.location.search).get('k') || null;
+
 class CubReactiveOverlay {
     constructor() {
         this.ws = null;
@@ -73,7 +76,8 @@ class CubReactiveOverlay {
                 this.send({
                     type: 'SUBSCRIBE',
                     userId: TARGET_USER_ID,
-                    mode: MODE
+                    mode: MODE,
+                    key: OVERLAY_KEY
                 });
             };
 

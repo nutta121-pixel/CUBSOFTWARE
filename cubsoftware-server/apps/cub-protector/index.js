@@ -2166,6 +2166,10 @@ function crLeaveIfUnneeded(channelId) {
 }
 
 function crTrackUser(userId, channelId, guildId) {
+    // Validate: the user must actually be in this channel right now.
+    // This prevents stale tracking or another user's overlay URL triggering a join.
+    const vs = crVoiceStates.get(userId);
+    if (!vs || vs.channelId !== channelId || vs.guildId !== guildId) return;
     if (!crOverlayChannels.has(channelId)) crOverlayChannels.set(channelId, new Set());
     crOverlayChannels.get(channelId).add(userId);
     setTimeout(() => crJoinChannel(channelId, guildId).catch(() => {}), 500);
@@ -2213,10 +2217,18 @@ function startCubReactiveWebSocket() {
                 if (data.type === 'SUBSCRIBE') {
                     const cubUsers = loadCubReactiveUsers();
                     const uc = cubUsers[data.userId];
+                    // Overlay mode requires the user to be a registered CubReactive user.
+                    // This prevents an unregistered user (or someone loading another user's overlay URL)
+                    // from triggering the bot to join a channel on their behalf.
+                    const isOverlayMode = (data.mode === 'individual' || data.mode === 'group');
+                    if (isOverlayMode && !uc) { ws.send(JSON.stringify({ type: 'NOT_REGISTERED', userId: data.userId })); ws.close(); return; }
                     if (uc && uc.enabled === false) { ws.send(JSON.stringify({ type: 'DISABLED', userId: data.userId })); ws.close(); return; }
+                    // If the user has an overlay_key set, the SUBSCRIBE must include the matching key.
+                    // This prevents someone else's OBS (with a stale/copied URL) from triggering bot joins.
+                    if (isOverlayMode && uc && uc.overlay_key && data.key !== uc.overlay_key) { ws.send(JSON.stringify({ type: 'INVALID_KEY', userId: data.userId })); ws.close(); return; }
                     ws.userId = data.userId;
                     ws.isGroupMode = data.mode === 'group';
-                    ws.isOverlay = (data.mode === 'individual' || data.mode === 'group');
+                    ws.isOverlay = isOverlayMode;
                     if (!crOverlayConns.has(data.userId)) crOverlayConns.set(data.userId, []);
                     crOverlayConns.get(data.userId).push(ws);
                     const cur = crVoiceStates.get(data.userId);

@@ -3303,14 +3303,22 @@ def cubreactive_home():
     """CubReactive - Discord Reactive Images for Streamers"""
     cubreactive_user = session.get('cubreactive_user')
     user_config = None
+    overlay_key = None
 
     if cubreactive_user:
         users = load_cubreactive_users()
         user_config = users.get(cubreactive_user['id'])
+        if user_config:
+            if not user_config.get('overlay_key'):
+                user_config['overlay_key'] = secrets.token_urlsafe(32)
+                users[cubreactive_user['id']] = user_config
+                save_cubreactive_users(users)
+            overlay_key = user_config['overlay_key']
 
     return render_template('cubreactive.html',
         cubreactive_user=cubreactive_user,
         user_config=user_config,
+        overlay_key=overlay_key,
         discord_client_id=load_pm2_config().get('discord_client_id', os.environ.get('DISCORD_CLIENT_ID', '')),
         ws_url=CUBREACTIVE_WS_URL
     )
@@ -3522,6 +3530,7 @@ def cubreactive_config():
             'avatar_url': user['avatar'],
             'images': {},
             'settings': {},
+            'overlay_key': secrets.token_urlsafe(32),
             'created': time.time()
         }
 

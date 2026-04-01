@@ -1358,7 +1358,7 @@
                             </div>
                             <p>Shows only your avatar. Use this for a single-person overlay.</p>
                             <div class="source-url-container">
-                                <input type="text" readonly value="{{ request.host_url }}apps/cubreactive/overlay/{{ cubreactive_user.id }}" id="individual-url">
+                                <input type="text" readonly value="{{ request.host_url }}apps/cubreactive/overlay/{{ cubreactive_user.id }}{% if overlay_key %}?k={{ overlay_key }}{% endif %}" id="individual-url">
                                 <button class="btn-copy" onclick="copyUrl('individual-url')">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -1377,7 +1377,7 @@
                             </div>
                             <p>Shows all participants in your voice channel. Perfect for collabs.</p>
                             <div class="source-url-container">
-                                <input type="text" readonly value="{{ request.host_url }}apps/cubreactive/overlay/group/{{ cubreactive_user.id }}" id="group-url">
+                                <input type="text" readonly value="{{ request.host_url }}apps/cubreactive/overlay/group/{{ cubreactive_user.id }}{% if overlay_key %}?k={{ overlay_key }}{% endif %}" id="group-url">
                                 <button class="btn-copy" onclick="copyUrl('group-url')">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>

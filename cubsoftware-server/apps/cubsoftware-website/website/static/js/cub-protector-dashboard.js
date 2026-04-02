@@ -135,14 +135,14 @@
 
             elements.pickerGrid.innerHTML = guilds.map(g => {
                 const icon = g.icon
-                    ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=128`
+                    ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.${g.icon.startsWith('a_') ? 'gif' : 'png'}?size=128`
                     : '/static/images/default-avatar.png';
                 const customBotBadge = g.has_custom_bot
                     ? `<span class="server-custom-bot-badge" title="Running a custom bot">Custom Bot</span>`
                     : '';
                 return `
                     <div class="server-picker-card" onclick="window.cpSelectServer('${g.id}')">
-                        <img src="${icon}" alt="" class="server-picker-icon">
+                        <img src="${icon}" alt="" class="server-picker-icon" onerror="this.src='/static/images/default-avatar.png'">
                         <div class="server-picker-info">
                             <div class="server-picker-name">${escapeHtml(g.name)}</div>
                             <div class="server-picker-meta">${g.member_count || '?'} members${customBotBadge}</div>
@@ -175,9 +175,11 @@
 
         // Update sidebar server info
         const icon = guild.icon
-            ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`
+            ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.${guild.icon.startsWith('a_') ? 'gif' : 'png'}?size=128`
             : '/static/images/default-avatar.png';
-        document.getElementById('sidebar-server-icon').src = icon;
+        const sidebarIcon = document.getElementById('sidebar-server-icon');
+        sidebarIcon.src = icon;
+        sidebarIcon.onerror = () => { sidebarIcon.src = '/static/images/default-avatar.png'; };
         document.getElementById('sidebar-server-name').textContent = guild.name;
         document.getElementById('sidebar-server-role').textContent = guild.role_label;
         document.getElementById('sidebar-server-role').className = `sidebar-server-role ${guild.role_class}`;

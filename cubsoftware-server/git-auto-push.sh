@@ -67,7 +67,7 @@ echo "$LOG_PREFIX Checking for changes in $REPO_DIR"
 # Pull latest from GitHub first (rebase keeps VPS data changes on top of any
 # code changes pushed from the dev machine, preventing non-fast-forward rejects)
 echo "$LOG_PREFIX Pulling latest from GitHub..."
-if ! git pull --rebase; then
+if ! git pull --rebase --autostash; then
     echo "$LOG_PREFIX ERROR: git pull --rebase failed (conflict?)"
     send_discord "**[Auto Push]** \`$TIMESTAMP\`
 ❌ Pull/rebase failed — check server logs."

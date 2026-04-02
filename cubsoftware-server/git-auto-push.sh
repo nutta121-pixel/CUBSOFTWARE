@@ -18,7 +18,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M %Z')
 LOG_PREFIX="[git-auto-push] [$TIMESTAMP]"
 
 # ── Load .env ───────────────────────────────

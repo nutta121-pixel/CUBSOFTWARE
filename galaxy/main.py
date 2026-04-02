@@ -11,7 +11,7 @@ from discord.ext import commands
 from discord.utils import get
 default_prefix = "."
 load_dotenv()
-BOT_OWNER_ID = int(os.getenv('OWNER_ID', '378501056008683530').split(',')[0].strip())
+BOT_OWNER_ID = int(os.getenv('OWNER_ID', '738723658352296017').split(',')[0].strip())
 BOT_TOKEN_ID = os.getenv('BOT_TOKEN_ID') or os.getenv('GALAXY_BOT_TOKEN')
 def load_settings():
      try:

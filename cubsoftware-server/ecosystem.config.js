@@ -139,6 +139,31 @@ module.exports = {
         },
 
         // ============================================
+        // Galaxy Bot (Discord Bot - Python)
+        // ============================================
+        {
+            name: 'galaxy-bot',
+            script: 'start.sh',
+            cwd: '../galaxy',
+            interpreter: 'bash',
+            watch: false,
+            autorestart: true,
+            max_restarts: 10,
+            restart_delay: 5000,
+            env: {
+                OWNER_ID: s('OWNER_IDS'),
+                BOT_TOKEN_ID: s('GALAXY_BOT_TOKEN'),
+            },
+            env_development: {
+                NODE_ENV: 'development'
+            },
+            error_file: './logs/galaxy-bot-error.log',
+            out_file: './logs/galaxy-bot-out.log',
+            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+            merge_logs: true
+        },
+
+        // ============================================
         // The Onion Bot (Solibot - Discord Bot)
         // ============================================
         {

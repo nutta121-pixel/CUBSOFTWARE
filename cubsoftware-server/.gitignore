@@ -54,6 +54,7 @@ apps/social-media-saver/downloads/*
 
 # ── Sensitive files ───────────────────────────────────────────
 youtube_cookies.txt
+apps/cub-protector/custom_bot_*.js
 
 # ── Databases ─────────────────────────────────────────────────
 *.db

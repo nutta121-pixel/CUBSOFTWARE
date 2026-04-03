@@ -51,12 +51,21 @@ class TwitchIRC {
                     this.ws.send('PONG :tmi.twitch.tv');
                     continue;
                 }
-                if (line.includes('JOIN') && line.includes(this.channel)) {
-                    this.connected = true;
-                    this.onStatus('connected');
+                // ROOMSTATE is sent by Twitch when we successfully join a channel
+                // (requires twitch.tv/commands cap, which we request — more reliable than JOIN)
+                if (line.includes('ROOMSTATE') && line.toLowerCase().includes('#' + this.channel)) {
+                    if (!this.connected) {
+                        this.connected = true;
+                        this.onStatus('connected');
+                    }
                     continue;
                 }
                 if (line.includes('PRIVMSG')) {
+                    // Fallback: first message proves we're in the channel
+                    if (!this.connected) {
+                        this.connected = true;
+                        this.onStatus('connected');
+                    }
                     const tagMatch = line.match(/^@([^ ]+) :(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.+)/);
                     const simpleMatch = !tagMatch && line.match(/:(\w+)!\w+@\w+\.tmi\.twitch\.tv PRIVMSG #\w+ :(.+)/);
                     if (tagMatch) {
@@ -329,6 +338,7 @@ function addStream(channel) {
     updateChatInputState(channel);
     addChannelTag(channel);
     createPlayer(channel);
+    updateSharedChatSelect();
     syncUrl();
 }
 
@@ -344,6 +354,7 @@ function removeStream(channel) {
     }
     refreshGrid();
     document.querySelector(`.channel-tag[data-channel="${channel}"]`)?.remove();
+    updateSharedChatSelect();
     syncUrl();
 }
 
@@ -428,20 +439,44 @@ function setChatMode(mode) {
     state.chatMode = mode;
     const grid = document.getElementById('streamsGrid');
     const unifiedPanel = document.getElementById('unifiedChatPanel');
+    const sharedPanel = document.getElementById('sharedChatPanel');
 
     const showPerStream = mode === 'per-stream';
     grid.querySelectorAll('.stream-chat').forEach(c => {
         c.style.display = showPerStream ? '' : 'none';
     });
 
-    if (unifiedPanel) {
-        unifiedPanel.style.display = mode === 'unified' ? 'flex' : 'none';
+    if (unifiedPanel) unifiedPanel.style.display = mode === 'unified' ? 'flex' : 'none';
+    if (sharedPanel) {
+        sharedPanel.style.display = mode === 'shared' ? 'flex' : 'none';
+        if (mode === 'shared') updateSharedChatEmbed();
     }
 
     document.querySelectorAll('.btn-chat-mode').forEach(b => {
         b.classList.toggle('active', b.dataset.mode === mode);
     });
     syncUrl();
+}
+
+/* ─── Shared Chat (native Twitch embed — auto-shows Twitch Shared Chat) ─── */
+function updateSharedChatSelect() {
+    const select = document.getElementById('sharedChatSelect');
+    if (!select) return;
+    const prev = select.value;
+    select.innerHTML = state.channels.map(ch =>
+        `<option value="${escapeHtml(ch)}">${escapeHtml(ch)}</option>`
+    ).join('');
+    if (prev && state.channels.includes(prev)) select.value = prev;
+    if (state.chatMode === 'shared') updateSharedChatEmbed();
+}
+
+function updateSharedChatEmbed() {
+    const select = document.getElementById('sharedChatSelect');
+    const iframe = document.getElementById('sharedChatIframe');
+    if (!iframe) return;
+    const channel = (select && select.value) || state.channels[0];
+    if (!channel) { iframe.src = 'about:blank'; return; }
+    iframe.src = `https://www.twitch.tv/embed/${encodeURIComponent(channel)}/chat?parent=${PARENT_DOMAIN}&darkpopout`;
 }
 
 /* ─── URL Sync ─── */
@@ -452,16 +487,6 @@ function syncUrl() {
     if (state.chatMode !== 'per-stream') params.set('chat', state.chatMode);
     const qs = params.toString();
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
-}
-
-function copyShareLink() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-        showNotice('Link copied to clipboard!');
-    }).catch(() => {
-        // fallback: show the URL in the notice so user can copy manually
-        showNotice(url);
-    });
 }
 
 /* ─── Helpers ─── */
@@ -488,7 +513,7 @@ async function init() {
     if (urlLayout && ['auto', 'focus', 'stacked', 'side'].includes(urlLayout)) {
         state.layout = urlLayout;
     }
-    if (urlChat && ['per-stream', 'unified', 'hidden'].includes(urlChat)) {
+    if (urlChat && ['per-stream', 'unified', 'shared', 'hidden'].includes(urlChat)) {
         state.chatMode = urlChat;
     }
 
@@ -511,6 +536,7 @@ async function init() {
                 <div class="ctrl-btns">
                     <button class="btn-chat-mode${state.chatMode === 'per-stream' ? ' active' : ''}" data-mode="per-stream" title="Show chat panel for each stream">Each</button>
                     <button class="btn-chat-mode${state.chatMode === 'unified' ? ' active' : ''}" data-mode="unified" title="Merge all stream chats into one panel">Merged</button>
+                    <button class="btn-chat-mode${state.chatMode === 'shared' ? ' active' : ''}" data-mode="shared" title="Native Twitch chat embed — automatically shows Twitch Shared Chat if active">Shared</button>
                     <button class="btn-chat-mode${state.chatMode === 'hidden' ? ' active' : ''}" data-mode="hidden" title="Hide all chats">Off</button>
                 </div>
             </div>
@@ -524,8 +550,10 @@ async function init() {
         btn.addEventListener('click', () => setChatMode(btn.dataset.mode));
     });
 
-    // Build unified chat panel inside streams-area (right of the grid)
+    // Build side panels inside streams-area (right of the grid)
     const streamsArea = document.getElementById('streamsArea');
+
+    // Merged chat panel
     const unifiedPanel = document.createElement('div');
     unifiedPanel.id = 'unifiedChatPanel';
     unifiedPanel.className = 'unified-chat-panel';
@@ -540,14 +568,20 @@ async function init() {
     `;
     streamsArea.appendChild(unifiedPanel);
 
-    // Share link button — injected before auth area content
-    const authArea = document.getElementById('twitchAuthArea');
-    const shareBtn = document.createElement('button');
-    shareBtn.className = 'btn-share-link';
-    shareBtn.title = 'Copy shareable link with all current streams';
-    shareBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share`;
-    shareBtn.addEventListener('click', copyShareLink);
-    authArea.insertBefore(shareBtn, authArea.firstChild);
+    // Shared chat panel (native Twitch embed — auto-handles Twitch Shared Chat)
+    const sharedPanel = document.createElement('div');
+    sharedPanel.id = 'sharedChatPanel';
+    sharedPanel.className = 'unified-chat-panel';
+    sharedPanel.style.display = state.chatMode === 'shared' ? 'flex' : 'none';
+    sharedPanel.innerHTML = `
+        <div class="unified-chat-header">
+            <span>Shared Chat</span>
+            <select id="sharedChatSelect" class="shared-chat-select"></select>
+        </div>
+        <iframe id="sharedChatIframe" src="about:blank" frameborder="0" allowtransparency="true"></iframe>
+    `;
+    sharedPanel.querySelector('#sharedChatSelect').addEventListener('change', updateSharedChatEmbed);
+    streamsArea.appendChild(sharedPanel);
 
     await initAuth();
 

@@ -675,30 +675,6 @@
     font-weight: 600;
 }
 
-/* ── Share Button ── */
-.btn-share-link {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 11px;
-    background: rgba(88, 101, 242, 0.07);
-    border: 1px solid rgba(88, 101, 242, 0.2);
-    border-radius: 6px;
-    color: rgba(165, 180, 252, 0.65);
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    font-size: 0.78rem;
-    font-weight: 500;
-    transition: all 0.2s;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-.btn-share-link:hover {
-    background: rgba(88, 101, 242, 0.16);
-    border-color: rgba(88, 101, 242, 0.42);
-    color: #a5b4fc;
-}
-
 /* ── Unified Chat Panel ── */
 .unified-chat-panel {
     width: 300px;
@@ -763,6 +739,32 @@
     border-top: 1px solid rgba(145, 71, 255, 0.1);
     flex-shrink: 0;
     font-style: italic;
+}
+
+/* ── Shared Chat iframe ── */
+#sharedChatIframe {
+    flex: 1 1 0;
+    min-height: 0;
+    border: none;
+    display: block;
+    width: 100%;
+}
+
+.shared-chat-select {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(145, 71, 255, 0.3);
+    border-radius: 4px;
+    color: #a5b4fc;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.72rem;
+    padding: 2px 6px;
+    cursor: pointer;
+    outline: none;
+    max-width: 120px;
+}
+.shared-chat-select option {
+    background: #1a1a2e;
+    color: #fff;
 }
 
 /* ── Responsive ── */

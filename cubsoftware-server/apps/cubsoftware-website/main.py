@@ -13714,7 +13714,7 @@ def cub_protector_backups_create(guild_id):
         'guild_icon': guild_data.get('icon', ''),
         'member_count': guild_data.get('approximate_member_count', 0),
         'roles': [{'id': r['id'], 'name': r['name'], 'color': r['color'], 'permissions': r['permissions'], 'position': r['position'], 'hoist': r.get('hoist', False), 'mentionable': r.get('mentionable', False)} for r in roles if r['name'] != '@everyone'],
-        'channels': [{'id': c['id'], 'name': c['name'], 'type': c['type'], 'position': c.get('position', 0), 'parent_id': c.get('parent_id'), 'topic': c.get('topic', ''), 'nsfw': c.get('nsfw', False), 'bitrate': c.get('bitrate'), 'user_limit': c.get('user_limit')} for c in channels],
+        'channels': [{'id': c['id'], 'name': c['name'], 'type': c['type'], 'position': c.get('position', 0), 'parent_id': c.get('parent_id'), 'topic': c.get('topic', ''), 'nsfw': c.get('nsfw', False), 'bitrate': c.get('bitrate'), 'user_limit': c.get('user_limit'), 'permission_overwrites': c.get('permission_overwrites', [])} for c in channels],
         'settings': {
             'verification_level': guild_data.get('verification_level', 0),
             'default_message_notifications': guild_data.get('default_message_notifications', 0),
@@ -13804,28 +13804,106 @@ def cub_protector_backups_restore(guild_id, backup_id):
                 save_cp_json(config_file, file_data)
         restored.append('configs')
 
-    # Restore roles (create missing roles)
+    # Restore roles (create missing roles, then fix positions)
     if 'roles' in restore_what:
+        # Fetch existing roles so we don't duplicate
+        existing_roles = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/roles') or []
+        existing_names = {r['name'] for r in existing_roles}
+
+        # Build old_role_id → new_role_id map (needed for permission overwrites)
+        role_id_map = {}
+        for er in existing_roles:
+            # Map same-named roles from backup
+            for br in backup.get('roles', []):
+                if br['name'] == er['name']:
+                    role_id_map[br['id']] = er['id']
+
+        # Create roles that don't exist yet, sorted lowest position first
+        created_roles = []
         for role in sorted(backup.get('roles', []), key=lambda r: r.get('position', 0)):
-            _guild_bot_request(guild_id, 'POST', f'/guilds/{guild_id}/roles', json={
+            if role['name'] in existing_names:
+                continue
+            result = _guild_bot_request(guild_id, 'POST', f'/guilds/{guild_id}/roles', json={
                 'name': role['name'],
                 'color': role['color'],
                 'permissions': str(role['permissions']),
                 'hoist': role.get('hoist', False),
                 'mentionable': role.get('mentionable', False),
             })
+            if result and result.get('id'):
+                role_id_map[role['id']] = result['id']
+                created_roles.append({'id': result['id'], 'original_position': role.get('position', 0)})
+
+        # Fix positions: PATCH /guilds/{guild_id}/roles with ordered list
+        if created_roles:
+            position_payload = [{'id': r['id'], 'position': r['original_position']} for r in created_roles]
+            _guild_bot_request(guild_id, 'PATCH', f'/guilds/{guild_id}/roles', json=position_payload)
+
         restored.append('roles')
 
-    # Restore channels (create missing channels)
+    # Restore channels (categories first, then children with remapped parent IDs and permission overwrites)
     if 'channels' in restore_what:
-        # Categories first
-        for ch in sorted(backup.get('channels', []), key=lambda c: (0 if c['type'] == 4 else 1, c.get('position', 0))):
-            payload = {'name': ch['name'], 'type': ch['type']}
-            if ch.get('parent_id') and ch['type'] != 4:
-                payload['parent_id'] = ch['parent_id']
+        # Fetch existing channels to avoid duplicates
+        existing_channels = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/channels') or []
+        existing_ch_names = {c['name'] for c in existing_channels}
+
+        # Map old category IDs → new category IDs
+        category_id_map = {}
+
+        # Step 1: Create categories first
+        categories = [c for c in backup.get('channels', []) if c['type'] == 4]
+        for cat in sorted(categories, key=lambda c: c.get('position', 0)):
+            if cat['name'] in existing_ch_names:
+                # Map to existing category with same name
+                for ec in existing_channels:
+                    if ec['name'] == cat['name'] and ec['type'] == 4:
+                        category_id_map[cat['id']] = ec['id']
+                        break
+                continue
+            overwrites = []
+            for ow in cat.get('permission_overwrites', []):
+                new_id = role_id_map.get(ow['id'], ow['id']) if 'role_id_map' in dir() else ow['id']
+                overwrites.append({'id': new_id, 'type': ow['type'], 'allow': ow.get('allow', '0'), 'deny': ow.get('deny', '0')})
+            payload = {
+                'name': cat['name'],
+                'type': 4,
+                'position': cat.get('position', 0),
+            }
+            if overwrites:
+                payload['permission_overwrites'] = overwrites
+            result = _guild_bot_request(guild_id, 'POST', f'/guilds/{guild_id}/channels', json=payload)
+            if result and result.get('id'):
+                category_id_map[cat['id']] = result['id']
+
+        # Step 2: Create non-category channels with remapped parent_id and permission overwrites
+        non_cats = [c for c in backup.get('channels', []) if c['type'] != 4]
+        for ch in sorted(non_cats, key=lambda c: c.get('position', 0)):
+            if ch['name'] in existing_ch_names:
+                continue
+            overwrites = []
+            for ow in ch.get('permission_overwrites', []):
+                new_id = role_id_map.get(ow['id'], ow['id']) if 'role_id_map' in dir() else ow['id']
+                overwrites.append({'id': new_id, 'type': ow['type'], 'allow': ow.get('allow', '0'), 'deny': ow.get('deny', '0')})
+            payload = {
+                'name': ch['name'],
+                'type': ch['type'],
+                'position': ch.get('position', 0),
+            }
+            # Remap parent_id to the newly created category's ID
+            if ch.get('parent_id'):
+                payload['parent_id'] = category_id_map.get(ch['parent_id'], ch['parent_id'])
             if ch.get('topic'):
                 payload['topic'] = ch['topic']
+            if ch.get('nsfw'):
+                payload['nsfw'] = ch['nsfw']
+            if ch.get('bitrate') and ch['type'] == 2:
+                payload['bitrate'] = ch['bitrate']
+            if ch.get('user_limit') and ch['type'] == 2:
+                payload['user_limit'] = ch['user_limit']
+            if overwrites:
+                payload['permission_overwrites'] = overwrites
             _guild_bot_request(guild_id, 'POST', f'/guilds/{guild_id}/channels', json=payload)
+
         restored.append('channels')
 
     return jsonify({'success': True, 'restored': restored})

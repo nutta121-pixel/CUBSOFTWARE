@@ -323,6 +323,18 @@
                 </div>
 
                 <div class="nav-section">
+                    <span class="nav-section-title">Bot Setup</span>
+                    <a href="#bot-masters" class="nav-item" data-section="bot-masters">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <span>Bot Masters</span>
+                    </a>
+                    <a href="#custom-bot" class="nav-item" data-section="custom-bot">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>Custom Bot</span>
+                    </a>
+                </div>
+
+                <div class="nav-section">
                     <span class="nav-section-title" style="display:flex;align-items:center;gap:6px;">Coming Soon <span style="font-size:0.6rem;background:rgba(88,101,242,0.25);color:#8b95f5;border:1px solid rgba(88,101,242,0.4);border-radius:4px;padding:1px 5px;font-weight:600;letter-spacing:0.03em;">SOON</span></span>
                     <span class="nav-item nav-item-disabled" title="Coming soon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -396,18 +408,6 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                         <span>Server Rules</span>
                     </span>
-                </div>
-
-                <div class="nav-section">
-                    <span class="nav-section-title">Bot Setup</span>
-                    <a href="#bot-masters" class="nav-item" data-section="bot-masters">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        <span>Bot Masters</span>
-                    </a>
-                    <a href="#custom-bot" class="nav-item" data-section="custom-bot">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        <span>Custom Bot</span>
-                    </a>
                 </div>
             </nav>
 
@@ -967,208 +967,6 @@
                             <div id="log-ignore-roles" class="multi-check-list"></div>
                             <small style="color: var(--text-muted);">Actions by users with these roles will not be logged</small>
                         </div>
-                    </div>
-                </div>
-                <div id="log-messages">
-                    <div class="settings-card">
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Enable Message Logging</h4><p>Log message edits, deletes, and other actions</p></div>
-                            <label class="toggle"><input type="checkbox" id="msglog-enabled"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="form-group"><label>Log Channel</label><select id="msglog-channel" class="form-select"><option value="">-- Select --</option></select></div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Edits</h4><p>Log when messages are edited</p></div>
-                            <label class="toggle"><input type="checkbox" id="msglog-edits"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Deletes</h4><p>Log when messages are deleted</p></div>
-                            <label class="toggle"><input type="checkbox" id="msglog-deletes"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Bulk Deletes</h4><p>Log bulk message deletions (purge)</p></div>
-                            <label class="toggle"><input type="checkbox" id="msglog-bulk"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Pin/Unpin</h4><p>Log when messages are pinned or unpinned</p></div>
-                            <label class="toggle"><input type="checkbox" id="msglog-pins"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Include Message Content</h4><p>Include the message content in logs</p></div>
-                            <label class="toggle"><input type="checkbox" id="msglog-content"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="form-group"><label>Ignore Channels</label><div id="msglog-ignore-channels" class="multi-check-list"></div></div>
-                        <div class="form-group"><label>Ignore Roles</label><div id="msglog-ignore-roles" class="multi-check-list"></div></div>
-                    </div>
-                </div>
-                <div id="log-voice">
-                    <div class="settings-card">
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Enable Voice Logging</h4><p>Log voice channel joins, leaves, and moves</p></div>
-                            <label class="toggle"><input type="checkbox" id="voicelog-enabled"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="form-group"><label>Log Channel</label><select id="voicelog-channel" class="form-select"><option value="">-- Select --</option></select></div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Joins/Leaves</h4><p>Log when members join or leave voice channels</p></div>
-                            <label class="toggle"><input type="checkbox" id="voicelog-joins"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Moves</h4><p>Log when members move between voice channels</p></div>
-                            <label class="toggle"><input type="checkbox" id="voicelog-moves"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Mute/Deafen</h4><p>Log when members mute or deafen</p></div>
-                            <label class="toggle"><input type="checkbox" id="voicelog-mute"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Streaming</h4><p>Log when members start or stop streaming</p></div>
-                            <label class="toggle"><input type="checkbox" id="voicelog-stream"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="form-group"><label>Ignore Channels</label><div id="voicelog-ignore-channels" class="multi-check-list"></div></div>
-                    </div>
-                </div>
-                <div id="log-joinleave">
-                    <div class="settings-card">
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Enable Join/Leave Logging</h4><p>Log when members join or leave the server</p></div>
-                            <label class="toggle"><input type="checkbox" id="joinlog-enabled"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="form-group"><label>Log Channel</label><select id="joinlog-channel" class="form-select"><option value="">-- Select --</option></select></div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Show Account Age</h4><p>Display how old the account is when joining</p></div>
-                            <label class="toggle"><input type="checkbox" id="joinlog-account-age"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Show Invite Used</h4><p>Show which invite link was used to join</p></div>
-                            <label class="toggle"><input type="checkbox" id="joinlog-invite"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Show Member Count</h4><p>Display the current member count on join/leave</p></div>
-                            <label class="toggle"><input type="checkbox" id="joinlog-member-count"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Flag New Accounts</h4><p>Highlight accounts created recently</p></div>
-                            <label class="toggle"><input type="checkbox" id="joinlog-flag-new"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="form-group"><label>New Account Threshold (days)</label><input type="number" id="joinlog-threshold" class="form-input" value="7" min="0"></div>
-                    </div>
-                </div>
-                <div id="log-names">
-                    <div class="settings-card">
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Enable Name Logging</h4><p>Log username and nickname changes</p></div>
-                            <label class="toggle"><input type="checkbox" id="namelog-enabled"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="form-group"><label>Log Channel</label><select id="namelog-channel" class="form-select"><option value="">-- Select --</option></select></div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Username Changes</h4><p>Log when members change their username</p></div>
-                            <label class="toggle"><input type="checkbox" id="namelog-usernames"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Nickname Changes</h4><p>Log when members change their server nickname</p></div>
-                            <label class="toggle"><input type="checkbox" id="namelog-nicknames"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Avatar Changes</h4><p>Log when members change their avatar</p></div>
-                            <label class="toggle"><input type="checkbox" id="namelog-avatars"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Discriminator Changes</h4><p>Log when members change their discriminator</p></div>
-                            <label class="toggle"><input type="checkbox" id="namelog-discriminators"><span class="toggle-slider"></span></label>
-                        </div>
-                    </div>
-                </div>
-                <div id="log-roles">
-                    <div class="settings-card">
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Enable Role Logging</h4><p>Log role create, delete, edit, and member role changes</p></div>
-                            <label class="toggle"><input type="checkbox" id="rolelog-enabled"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="form-group"><label>Log Channel</label><select id="rolelog-channel" class="form-select"><option value="">-- Select --</option></select></div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Role Creates</h4><p>Log when new roles are created</p></div>
-                            <label class="toggle"><input type="checkbox" id="rolelog-creates"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Role Deletes</h4><p>Log when roles are deleted</p></div>
-                            <label class="toggle"><input type="checkbox" id="rolelog-deletes"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Role Edits</h4><p>Log when roles are edited (name, color, permissions)</p></div>
-                            <label class="toggle"><input type="checkbox" id="rolelog-edits"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Member Role Changes</h4><p>Log when roles are added or removed from members</p></div>
-                            <label class="toggle"><input type="checkbox" id="rolelog-member-changes"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="form-group"><label>Ignore Roles</label><div id="rolelog-ignore-roles" class="multi-check-list"></div></div>
-                    </div>
-                </div>
-                <div id="log-emoji">
-                    <div class="settings-card">
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Enable Emoji Tracking</h4><p>Track emoji usage across the server</p></div>
-                            <label class="toggle"><input type="checkbox" id="emojistats-enabled"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div id="emojistats-list" style="margin-top:1rem;">Loading...</div>
-                        <div class="form-group"><label>Time Period</label>
-                            <select id="emojistats-period" class="form-select">
-                                <option value="7d">7 Days</option>
-                                <option value="14d">14 Days</option>
-                                <option value="30d">30 Days</option>
-                                <option value="90d">90 Days</option>
-                            </select>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Track Reactions Too</h4><p>Include emoji reactions in statistics</p></div>
-                            <label class="toggle"><input type="checkbox" id="emojistats-reactions"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Track Stickers</h4><p>Include sticker usage in statistics</p></div>
-                            <label class="toggle"><input type="checkbox" id="emojistats-stickers"><span class="toggle-slider"></span></label>
-                        </div>
-                    </div>
-                </div>
-                <div id="log-activity">
-                    <div class="settings-card">
-                        <div class="form-group"><label>Time Period</label>
-                            <select id="activity-period" class="form-select">
-                                <option value="24h">24 Hours</option>
-                                <option value="7d">7 Days</option>
-                                <option value="14d">14 Days</option>
-                                <option value="30d">30 Days</option>
-                            </select>
-                        </div>
-                        <div id="activity-list" style="margin-top:1rem;">Loading...</div>
-                        <div class="settings-row" style="margin-top:1rem;">
-                            <div class="settings-info"><h4>Track Thread Activity</h4><p>Include thread activity in statistics</p></div>
-                            <label class="toggle"><input type="checkbox" id="activity-threads"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Track Voice Activity</h4><p>Include voice channel activity in statistics</p></div>
-                            <label class="toggle"><input type="checkbox" id="activity-voice"><span class="toggle-slider"></span></label>
-                        </div>
-                    </div>
-                </div>
-                <div id="log-boosts">
-                    <div class="settings-card">
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Enable Boost Tracking</h4><p>Track server boost events</p></div>
-                            <label class="toggle"><input type="checkbox" id="boosttrack-enabled"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="form-group"><label>Log Channel</label><select id="boosttrack-channel" class="form-select"><option value="">-- Select --</option></select></div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log New Boosts</h4><p>Log when members boost the server</p></div>
-                            <label class="toggle"><input type="checkbox" id="boosttrack-new"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Removed Boosts</h4><p>Log when members remove their boost</p></div>
-                            <label class="toggle"><input type="checkbox" id="boosttrack-removed"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row">
-                            <div class="settings-info"><h4>Log Tier Changes</h4><p>Log when the server reaches a new boost tier</p></div>
-                            <label class="toggle"><input type="checkbox" id="boosttrack-tier"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div id="boosttrack-list" style="margin-top:1rem;">Loading...</div>
                     </div>
                 </div>
             </section>
@@ -3122,14 +2920,85 @@
                         <div class="form-group"><label>Announcement Hour (0-23)</label><input type="number" id="bday-hour" class="form-input" value="9" min="0" max="23"></div>
                         <div class="form-group"><label>Timezone</label>
                             <select id="bday-timezone" class="form-select">
-                                <option value="UTC">UTC</option>
-                                <option value="America/New_York">America/New_York</option>
-                                <option value="America/Chicago">America/Chicago</option>
-                                <option value="America/Los_Angeles">America/Los_Angeles</option>
-                                <option value="Europe/London">Europe/London</option>
-                                <option value="Europe/Paris">Europe/Paris</option>
-                                <option value="Asia/Tokyo">Asia/Tokyo</option>
-                                <option value="Australia/Sydney">Australia/Sydney</option>
+                                <optgroup label="UTC"><option value="UTC">UTC</option></optgroup>
+                                <optgroup label="Pacific">
+                                    <option value="Pacific/Auckland">New Zealand (Auckland) UTC+12/+13</option>
+                                    <option value="Pacific/Chatham">Chatham Islands UTC+12:45/+13:45</option>
+                                    <option value="Pacific/Fiji">Fiji UTC+12</option>
+                                    <option value="Pacific/Tongatapu">Tonga UTC+13</option>
+                                    <option value="Pacific/Apia">Samoa UTC+13</option>
+                                    <option value="Pacific/Honolulu">Hawaii UTC−10</option>
+                                    <option value="Pacific/Guam">Guam UTC+10</option>
+                                </optgroup>
+                                <optgroup label="Australia">
+                                    <option value="Australia/Sydney">Sydney/Melbourne — AEST UTC+10/+11</option>
+                                    <option value="Australia/Brisbane">Brisbane — AEST UTC+10</option>
+                                    <option value="Australia/Adelaide">Adelaide — ACST UTC+9:30/+10:30</option>
+                                    <option value="Australia/Darwin">Darwin — ACST UTC+9:30</option>
+                                    <option value="Australia/Perth">Perth — AWST UTC+8</option>
+                                    <option value="Australia/Hobart">Hobart — UTC+10/+11</option>
+                                </optgroup>
+                                <optgroup label="Asia">
+                                    <option value="Asia/Tokyo">Tokyo/Japan — JST UTC+9</option>
+                                    <option value="Asia/Seoul">Seoul — KST UTC+9</option>
+                                    <option value="Asia/Shanghai">Shanghai/Beijing — CST UTC+8</option>
+                                    <option value="Asia/Hong_Kong">Hong Kong — HKT UTC+8</option>
+                                    <option value="Asia/Singapore">Singapore — SGT UTC+8</option>
+                                    <option value="Asia/Manila">Manila — PHT UTC+8</option>
+                                    <option value="Asia/Jakarta">Jakarta — WIB UTC+7</option>
+                                    <option value="Asia/Bangkok">Bangkok — ICT UTC+7</option>
+                                    <option value="Asia/Ho_Chi_Minh">Ho Chi Minh City — ICT UTC+7</option>
+                                    <option value="Asia/Dhaka">Dhaka — BST UTC+6</option>
+                                    <option value="Asia/Kolkata">India — IST UTC+5:30</option>
+                                    <option value="Asia/Karachi">Karachi/Pakistan — PKT UTC+5</option>
+                                    <option value="Asia/Dubai">Dubai — GST UTC+4</option>
+                                    <option value="Asia/Tehran">Tehran — IRST UTC+3:30</option>
+                                    <option value="Asia/Riyadh">Riyadh — AST UTC+3</option>
+                                    <option value="Asia/Jerusalem">Jerusalem — IST UTC+2/+3</option>
+                                    <option value="Asia/Beirut">Beirut — EET UTC+2/+3</option>
+                                    <option value="Asia/Moscow">Moscow — MSK UTC+3</option>
+                                </optgroup>
+                                <optgroup label="Europe">
+                                    <option value="Europe/London">London/Dublin — GMT/BST UTC+0/+1</option>
+                                    <option value="Europe/Paris">Paris/Berlin/Rome — CET UTC+1/+2</option>
+                                    <option value="Europe/Berlin">Berlin — CET UTC+1/+2</option>
+                                    <option value="Europe/Amsterdam">Amsterdam — CET UTC+1/+2</option>
+                                    <option value="Europe/Stockholm">Stockholm — CET UTC+1/+2</option>
+                                    <option value="Europe/Warsaw">Warsaw — CET UTC+1/+2</option>
+                                    <option value="Europe/Athens">Athens — EET UTC+2/+3</option>
+                                    <option value="Europe/Helsinki">Helsinki — EET UTC+2/+3</option>
+                                    <option value="Europe/Kyiv">Kyiv — EET UTC+2/+3</option>
+                                    <option value="Europe/Moscow">Moscow — MSK UTC+3</option>
+                                    <option value="Europe/Istanbul">Istanbul — TRT UTC+3</option>
+                                    <option value="Europe/Reykjavik">Reykjavik — GMT UTC+0</option>
+                                </optgroup>
+                                <optgroup label="Africa">
+                                    <option value="Africa/Cairo">Cairo — EET UTC+2</option>
+                                    <option value="Africa/Johannesburg">Johannesburg — SAST UTC+2</option>
+                                    <option value="Africa/Lagos">Lagos — WAT UTC+1</option>
+                                    <option value="Africa/Nairobi">Nairobi — EAT UTC+3</option>
+                                    <option value="Africa/Accra">Accra — GMT UTC+0</option>
+                                </optgroup>
+                                <optgroup label="Americas — North">
+                                    <option value="America/New_York">New York — EST UTC−5/−4</option>
+                                    <option value="America/Chicago">Chicago — CST UTC−6/−5</option>
+                                    <option value="America/Denver">Denver — MST UTC−7/−6</option>
+                                    <option value="America/Phoenix">Phoenix — MST UTC−7</option>
+                                    <option value="America/Los_Angeles">Los Angeles — PST UTC−8/−7</option>
+                                    <option value="America/Anchorage">Anchorage — AKST UTC−9/−8</option>
+                                    <option value="America/Toronto">Toronto — EST UTC−5/−4</option>
+                                    <option value="America/Vancouver">Vancouver — PST UTC−8/−7</option>
+                                    <option value="America/Halifax">Halifax — AST UTC−4/−3</option>
+                                    <option value="America/Mexico_City">Mexico City — CST UTC−6/−5</option>
+                                </optgroup>
+                                <optgroup label="Americas — South">
+                                    <option value="America/Bogota">Bogotá — COT UTC−5</option>
+                                    <option value="America/Lima">Lima — PET UTC−5</option>
+                                    <option value="America/Santiago">Santiago — CLT UTC−4/−3</option>
+                                    <option value="America/Argentina/Buenos_Aires">Buenos Aires — ART UTC−3</option>
+                                    <option value="America/Sao_Paulo">São Paulo — BRT UTC−3</option>
+                                    <option value="America/Puerto_Rico">Puerto Rico — AST UTC−4</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>
@@ -3864,17 +3733,148 @@
                 <div class="form-group" id="counter-timezone-group" style="display:none;">
                     <label>Timezone</label>
                     <select id="counter-timezone" class="form-select">
-                        <option value="UTC">UTC</option>
-                        <option value="America/New_York">EST (Eastern)</option>
-                        <option value="America/Chicago">CST (Central)</option>
-                        <option value="America/Denver">MST (Mountain)</option>
-                        <option value="America/Los_Angeles">PST (Pacific)</option>
-                        <option value="Europe/London">GMT (London)</option>
-                        <option value="Europe/Paris">CET (Paris)</option>
-                        <option value="Europe/Berlin">CET (Berlin)</option>
-                        <option value="Asia/Tokyo">JST (Tokyo)</option>
-                        <option value="Asia/Shanghai">CST (Shanghai)</option>
-                        <option value="Australia/Sydney">AEST (Sydney)</option>
+                        <optgroup label="UTC">
+                            <option value="UTC">UTC</option>
+                        </optgroup>
+                        <optgroup label="Pacific">
+                            <option value="Pacific/Auckland">New Zealand Time (Auckland) — NZT UTC+12/+13</option>
+                            <option value="Pacific/Chatham">Chatham Islands — UTC+12:45/+13:45</option>
+                            <option value="Pacific/Fiji">Fiji — UTC+12</option>
+                            <option value="Pacific/Tongatapu">Tonga — UTC+13</option>
+                            <option value="Pacific/Apia">Samoa — UTC+13</option>
+                            <option value="Pacific/Honolulu">Hawaii — UTC−10</option>
+                            <option value="Pacific/Pago_Pago">American Samoa — UTC−11</option>
+                            <option value="Pacific/Guam">Guam — UTC+10</option>
+                            <option value="Pacific/Port_Moresby">Papua New Guinea — UTC+10</option>
+                        </optgroup>
+                        <optgroup label="Australia">
+                            <option value="Australia/Sydney">Sydney/Melbourne/Canberra — AEST UTC+10/+11</option>
+                            <option value="Australia/Brisbane">Brisbane/Queensland — AEST UTC+10</option>
+                            <option value="Australia/Adelaide">Adelaide — ACST UTC+9:30/+10:30</option>
+                            <option value="Australia/Darwin">Darwin — ACST UTC+9:30</option>
+                            <option value="Australia/Perth">Perth — AWST UTC+8</option>
+                            <option value="Australia/Hobart">Hobart — AEST UTC+10/+11</option>
+                            <option value="Australia/Lord_Howe">Lord Howe Island — UTC+10:30/+11</option>
+                        </optgroup>
+                        <optgroup label="Asia">
+                            <option value="Asia/Tokyo">Tokyo/Japan — JST UTC+9</option>
+                            <option value="Asia/Seoul">Seoul/South Korea — KST UTC+9</option>
+                            <option value="Asia/Shanghai">Shanghai/Beijing/China — CST UTC+8</option>
+                            <option value="Asia/Hong_Kong">Hong Kong — HKT UTC+8</option>
+                            <option value="Asia/Singapore">Singapore — SGT UTC+8</option>
+                            <option value="Asia/Taipei">Taipei/Taiwan — CST UTC+8</option>
+                            <option value="Asia/Kuala_Lumpur">Kuala Lumpur/Malaysia — MYT UTC+8</option>
+                            <option value="Asia/Manila">Manila/Philippines — PHT UTC+8</option>
+                            <option value="Asia/Jakarta">Jakarta/Indonesia — WIB UTC+7</option>
+                            <option value="Asia/Bangkok">Bangkok/Thailand — ICT UTC+7</option>
+                            <option value="Asia/Ho_Chi_Minh">Ho Chi Minh City/Vietnam — ICT UTC+7</option>
+                            <option value="Asia/Yangon">Yangon/Myanmar — MMT UTC+6:30</option>
+                            <option value="Asia/Dhaka">Dhaka/Bangladesh — BST UTC+6</option>
+                            <option value="Asia/Colombo">Colombo/Sri Lanka — IST UTC+5:30</option>
+                            <option value="Asia/Kolkata">Kolkata/Mumbai/India — IST UTC+5:30</option>
+                            <option value="Asia/Kathmandu">Kathmandu/Nepal — NPT UTC+5:45</option>
+                            <option value="Asia/Karachi">Karachi/Pakistan — PKT UTC+5</option>
+                            <option value="Asia/Tashkent">Tashkent/Uzbekistan — UTC+5</option>
+                            <option value="Asia/Kabul">Kabul/Afghanistan — AFT UTC+4:30</option>
+                            <option value="Asia/Dubai">Dubai/UAE — GST UTC+4</option>
+                            <option value="Asia/Baku">Baku/Azerbaijan — AZT UTC+4</option>
+                            <option value="Asia/Tehran">Tehran/Iran — IRST UTC+3:30/+4:30</option>
+                            <option value="Asia/Riyadh">Riyadh/Saudi Arabia — AST UTC+3</option>
+                            <option value="Asia/Kuwait">Kuwait — AST UTC+3</option>
+                            <option value="Asia/Baghdad">Baghdad/Iraq — AST UTC+3</option>
+                            <option value="Asia/Jerusalem">Jerusalem/Israel — IST UTC+2/+3</option>
+                            <option value="Asia/Beirut">Beirut/Lebanon — EET UTC+2/+3</option>
+                            <option value="Asia/Nicosia">Nicosia/Cyprus — EET UTC+2/+3</option>
+                            <option value="Asia/Yekaterinburg">Yekaterinburg/Russia — YEKT UTC+5</option>
+                            <option value="Asia/Novosibirsk">Novosibirsk/Russia — NOVT UTC+7</option>
+                            <option value="Asia/Krasnoyarsk">Krasnoyarsk/Russia — KRAT UTC+7</option>
+                            <option value="Asia/Irkutsk">Irkutsk/Russia — IRKT UTC+8</option>
+                            <option value="Asia/Yakutsk">Yakutsk/Russia — YAKT UTC+9</option>
+                            <option value="Asia/Vladivostok">Vladivostok/Russia — VLAT UTC+10</option>
+                            <option value="Asia/Magadan">Magadan/Russia — MAGT UTC+11</option>
+                            <option value="Asia/Kamchatka">Kamchatka/Russia — PETT UTC+12</option>
+                        </optgroup>
+                        <optgroup label="Europe">
+                            <option value="Europe/London">London/Dublin/Lisbon — GMT/BST UTC+0/+1</option>
+                            <option value="Europe/Paris">Paris/Berlin/Rome/Madrid — CET UTC+1/+2</option>
+                            <option value="Europe/Berlin">Berlin/Germany — CET UTC+1/+2</option>
+                            <option value="Europe/Amsterdam">Amsterdam/Netherlands — CET UTC+1/+2</option>
+                            <option value="Europe/Brussels">Brussels/Belgium — CET UTC+1/+2</option>
+                            <option value="Europe/Zurich">Zurich/Switzerland — CET UTC+1/+2</option>
+                            <option value="Europe/Stockholm">Stockholm/Sweden — CET UTC+1/+2</option>
+                            <option value="Europe/Oslo">Oslo/Norway — CET UTC+1/+2</option>
+                            <option value="Europe/Copenhagen">Copenhagen/Denmark — CET UTC+1/+2</option>
+                            <option value="Europe/Warsaw">Warsaw/Poland — CET UTC+1/+2</option>
+                            <option value="Europe/Prague">Prague/Czech Republic — CET UTC+1/+2</option>
+                            <option value="Europe/Vienna">Vienna/Austria — CET UTC+1/+2</option>
+                            <option value="Europe/Budapest">Budapest/Hungary — CET UTC+1/+2</option>
+                            <option value="Europe/Bucharest">Bucharest/Romania — EET UTC+2/+3</option>
+                            <option value="Europe/Sofia">Sofia/Bulgaria — EET UTC+2/+3</option>
+                            <option value="Europe/Athens">Athens/Greece — EET UTC+2/+3</option>
+                            <option value="Europe/Helsinki">Helsinki/Finland — EET UTC+2/+3</option>
+                            <option value="Europe/Riga">Riga/Latvia — EET UTC+2/+3</option>
+                            <option value="Europe/Tallinn">Tallinn/Estonia — EET UTC+2/+3</option>
+                            <option value="Europe/Vilnius">Vilnius/Lithuania — EET UTC+2/+3</option>
+                            <option value="Europe/Kyiv">Kyiv/Ukraine — EET UTC+2/+3</option>
+                            <option value="Europe/Moscow">Moscow/Russia — MSK UTC+3</option>
+                            <option value="Europe/Istanbul">Istanbul/Turkey — TRT UTC+3</option>
+                            <option value="Europe/Reykjavik">Reykjavik/Iceland — GMT UTC+0</option>
+                        </optgroup>
+                        <optgroup label="Africa">
+                            <option value="Africa/Cairo">Cairo/Egypt — EET UTC+2</option>
+                            <option value="Africa/Johannesburg">Johannesburg/South Africa — SAST UTC+2</option>
+                            <option value="Africa/Lagos">Lagos/Nigeria — WAT UTC+1</option>
+                            <option value="Africa/Nairobi">Nairobi/Kenya — EAT UTC+3</option>
+                            <option value="Africa/Accra">Accra/Ghana — GMT UTC+0</option>
+                            <option value="Africa/Casablanca">Casablanca/Morocco — WET UTC+0/+1</option>
+                            <option value="Africa/Addis_Ababa">Addis Ababa/Ethiopia — EAT UTC+3</option>
+                            <option value="Africa/Dar_es_Salaam">Dar es Salaam/Tanzania — EAT UTC+3</option>
+                            <option value="Africa/Khartoum">Khartoum/Sudan — CAT UTC+3</option>
+                            <option value="Africa/Tunis">Tunis/Tunisia — CET UTC+1</option>
+                        </optgroup>
+                        <optgroup label="Americas — North">
+                            <option value="America/New_York">New York/Eastern — EST UTC−5/−4</option>
+                            <option value="America/Chicago">Chicago/Central — CST UTC−6/−5</option>
+                            <option value="America/Denver">Denver/Mountain — MST UTC−7/−6</option>
+                            <option value="America/Phoenix">Phoenix/Arizona — MST UTC−7 (no DST)</option>
+                            <option value="America/Los_Angeles">Los Angeles/Pacific — PST UTC−8/−7</option>
+                            <option value="America/Anchorage">Anchorage/Alaska — AKST UTC−9/−8</option>
+                            <option value="America/Toronto">Toronto/Ontario — EST UTC−5/−4</option>
+                            <option value="America/Vancouver">Vancouver/BC — PST UTC−8/−7</option>
+                            <option value="America/Winnipeg">Winnipeg/Manitoba — CST UTC−6/−5</option>
+                            <option value="America/Edmonton">Edmonton/Alberta — MST UTC−7/−6</option>
+                            <option value="America/Halifax">Halifax/Atlantic — AST UTC−4/−3</option>
+                            <option value="America/St_Johns">St. John's/Newfoundland — NST UTC−3:30/−2:30</option>
+                            <option value="America/Mexico_City">Mexico City — CST UTC−6/−5</option>
+                            <option value="America/Tijuana">Tijuana/Mexico — PST UTC−8/−7</option>
+                        </optgroup>
+                        <optgroup label="Americas — Central &amp; South">
+                            <option value="America/Bogota">Bogotá/Colombia — COT UTC−5</option>
+                            <option value="America/Lima">Lima/Peru — PET UTC−5</option>
+                            <option value="America/Caracas">Caracas/Venezuela — VET UTC−4</option>
+                            <option value="America/La_Paz">La Paz/Bolivia — BOT UTC−4</option>
+                            <option value="America/Manaus">Manaus/Brazil — AMT UTC−4</option>
+                            <option value="America/Santiago">Santiago/Chile — CLT UTC−4/−3</option>
+                            <option value="America/Asuncion">Asunción/Paraguay — PYT UTC−4/−3</option>
+                            <option value="America/Argentina/Buenos_Aires">Buenos Aires/Argentina — ART UTC−3</option>
+                            <option value="America/Montevideo">Montevideo/Uruguay — UYT UTC−3</option>
+                            <option value="America/Sao_Paulo">São Paulo/Brazil — BRT UTC−3/−2</option>
+                            <option value="America/Fortaleza">Fortaleza/Brazil — BRT UTC−3</option>
+                            <option value="America/Noronha">Fernando de Noronha — FNT UTC−2</option>
+                            <option value="America/Guyana">Guyana — GYT UTC−4</option>
+                            <option value="America/Paramaribo">Suriname — SRT UTC−3</option>
+                            <option value="America/Panama">Panama — EST UTC−5 (no DST)</option>
+                            <option value="America/Costa_Rica">Costa Rica — CST UTC−6</option>
+                            <option value="America/Havana">Havana/Cuba — CST UTC−5/−4</option>
+                            <option value="America/Jamaica">Jamaica — EST UTC−5 (no DST)</option>
+                            <option value="America/Puerto_Rico">Puerto Rico — AST UTC−4</option>
+                        </optgroup>
+                        <optgroup label="Atlantic &amp; Indian Ocean">
+                            <option value="Atlantic/Azores">Azores — AZOT UTC−1/+0</option>
+                            <option value="Atlantic/Cape_Verde">Cape Verde — CVT UTC−1</option>
+                            <option value="Indian/Mauritius">Mauritius — MUT UTC+4</option>
+                            <option value="Indian/Maldives">Maldives — MVT UTC+5</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="form-group">

@@ -300,21 +300,28 @@
             window.location.hash = section;
             loadSectionData(activeSubId);
         } else if (parentGroup) {
-            // Sub-section of a group (e.g. from Quick Access) - show group + this sub
+            // Sub-section of a group — check whether the hub wrapper still exists in the DOM
+            const groupSec = document.querySelector(`.content-section[data-section="${parentGroup}"]`);
+            if (!groupSec) {
+                // Hub wrapper removed: treat this section as a regular standalone section
+                document.querySelector(`.content-section[data-section="${section}"]`)?.classList.add('active');
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.toggle('active', item.dataset.section === section);
+                });
+                window.location.hash = section;
+                loadSectionData(section);
+            } else {
+            // Hub wrapper still present — original sub-tab logic
             sectionGroups[parentGroup]._activeTab = section;
 
-            const groupSec = document.querySelector(`.content-section[data-section="${parentGroup}"]`);
             const subSecEl = document.querySelector(`.content-section[data-section="${section}"]`);
-            if (groupSec) {
-                groupSec.classList.add('active');
-                groupSec.querySelectorAll('.sub-tab').forEach(t => {
-                    t.classList.toggle('active', t.dataset.subtab === section);
-                });
-            }
+            groupSec.classList.add('active');
+            groupSec.querySelectorAll('.sub-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.subtab === section);
+            });
             if (subSecEl) {
                 subSecEl.classList.add('sub-section-active');
-                // Ensure tab bar is always before the sub-section content in the DOM
-                if (groupSec && groupSec.parentNode === subSecEl.parentNode) {
+                if (groupSec.parentNode === subSecEl.parentNode) {
                     subSecEl.parentNode.insertBefore(groupSec, subSecEl);
                 }
             }
@@ -324,6 +331,7 @@
             });
             window.location.hash = parentGroup;
             loadSectionData(section);
+            }
         } else {
             // Regular standalone section
             document.querySelector(`.content-section[data-section="${section}"]`)?.classList.add('active');
@@ -364,7 +372,7 @@
             case 'voice-mods': await loadVoiceMods(); break;
             case 'moderation': await loadModLogs(); break;
             case 'automod': await loadAutoMod(); break;
-            case 'logging': await loadLogging(); loadMessageLogger(); loadVoiceLogger(); loadJoinLeaveLogger(); loadNameLogger(); loadRoleLogger(); loadEmojiStats(); loadChannelActivity(); loadBoostTracker(); break;
+            case 'logging': await loadLogging(); break;
             case 'welcome': await loadWelcome(); break;
             case 'leveling': await loadLeveling(); break;
             case 'economy': await loadEconomy(); break;
@@ -1455,13 +1463,38 @@
     // ==================== LOGGING CONFIG ====================
     let loggingTextChannels = [];
 
+    function syncLogChannels() {
+        const get = id => document.getElementById(id)?.value || '';
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+        set('msglog-channel', get('log-ch-messageDelete') || get('log-ch-messageEdit'));
+        set('voicelog-channel', get('log-ch-voiceActivity'));
+        set('joinlog-channel', get('log-ch-memberJoin') || get('log-ch-memberLeave'));
+        set('namelog-channel', get('log-ch-memberUpdate'));
+        set('rolelog-channel', get('log-ch-roleChanges'));
+    }
+
+    function updateLogInlinePanels() {
+        const allSet = !!document.getElementById('log-ch-all')?.value;
+        const has = id => !!document.getElementById(id)?.value;
+        const show = (id, cond) => {
+            const p = document.getElementById(id);
+            if (p) p.style.display = (!allSet && cond) ? '' : 'none';
+        };
+        show('log-inline-message', has('log-ch-messageDelete') || has('log-ch-messageEdit'));
+        show('log-inline-voice', has('log-ch-voiceActivity'));
+        show('log-inline-joinleave', has('log-ch-memberJoin') || has('log-ch-memberLeave'));
+        show('log-inline-names', has('log-ch-memberUpdate'));
+        show('log-inline-roles', has('log-ch-roleChanges'));
+    }
+
     async function loadLogging() {
         const el = document.getElementById('logging-channels-list');
         try {
+            const gid = selectedGuild.id;
             const [configRes, channelsRes, rolesRes] = await Promise.all([
-                fetch(`/api/cub-protector/guilds/${selectedGuild.id}/logging`),
-                fetch(`/api/cub-protector/guilds/${selectedGuild.id}/channels`),
-                fetch(`/api/cub-protector/guilds/${selectedGuild.id}/roles`)
+                fetch(`/api/cub-protector/guilds/${gid}/logging`),
+                fetch(`/api/cub-protector/guilds/${gid}/channels`),
+                fetch(`/api/cub-protector/guilds/${gid}/roles`)
             ]);
             const data = await configRes.json();
             const chData = await channelsRes.json();
@@ -1469,7 +1502,17 @@
             const config = data.config || {};
             const channels = config.channels || {};
             loggingTextChannels = (chData.channels || []).filter(c => c.type === 0);
-            const loggingRoles = rolesData.roles || [];
+            const loggingVoiceChannels = (chData.channels || []).filter(c => c.type === 2);
+            const loggingRoles = (rolesData.roles || []).filter(r => r.name !== '@everyone');
+
+            // Fetch sub-logger configs (silent failures use defaults)
+            const [ms, vs, js, ns, rs] = await Promise.all([
+                fetch(`/api/cub-protector/guilds/${gid}/message-logger`).then(r=>r.json()).then(d=>d.settings||d).catch(()=>({})),
+                fetch(`/api/cub-protector/guilds/${gid}/voice-logger`).then(r=>r.json()).then(d=>d.settings||d).catch(()=>({})),
+                fetch(`/api/cub-protector/guilds/${gid}/join-leave-logger`).then(r=>r.json()).then(d=>d.settings||d).catch(()=>({})),
+                fetch(`/api/cub-protector/guilds/${gid}/name-logger`).then(r=>r.json()).then(d=>d.settings||d).catch(()=>({})),
+                fetch(`/api/cub-protector/guilds/${gid}/role-logger`).then(r=>r.json()).then(d=>d.settings||d).catch(()=>({})),
+            ]);
 
             document.getElementById('log-enabled').checked = config.enabled || false;
             document.getElementById('log-bot-actions').checked = config.log_bot_actions || false;
@@ -1495,34 +1538,118 @@
             const channelOptions = '<option value="">-- None --</option>' +
                 loggingTextChannels.map(c => `<option value="${c.id}">#${escapeHtml(c.name)}</option>`).join('');
 
-            el.innerHTML = events.map(evt => `
-                <div class="settings-row" style="flex-wrap: wrap; gap: 0.5rem;">
-                    <div class="settings-info" style="min-width: 180px;">
-                        <h4>${evt.label}</h4>
-                        <p>${evt.desc}</p>
-                    </div>
-                    <select id="log-ch-${evt.key}" class="form-select" style="max-width: 220px;">
-                        ${channelOptions}
-                    </select>
+            // Build event channel rows
+            let html = events.map(evt => `
+                <div class="settings-row log-ch-row" style="flex-wrap:wrap;gap:0.5rem;">
+                    <div class="settings-info" style="min-width:180px;"><h4>${evt.label}</h4><p>${evt.desc}</p></div>
+                    <select id="log-ch-${evt.key}" class="form-select log-ch-select" style="max-width:220px;">${channelOptions}</select>
                 </div>`).join('');
 
-            // Set selected values
+            // Helper builders for inline panel content
+            const inlinePanel = (id, title, content) =>
+                `<div id="${id}" class="log-inline-extras" style="display:none;margin:0.25rem 0 0.5rem 1.5rem;padding:0.85rem 1rem;background:var(--bg-tertiary);border-radius:8px;border-left:3px solid var(--accent-color);">
+                    <p style="color:var(--text-muted);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.75rem;font-weight:600;">${title}</p>
+                    ${content}
+                </div>`;
+            const row = (label, desc, id, checked) =>
+                `<div class="settings-row"><div class="settings-info"><h4>${label}</h4><p>${desc}</p></div><label class="toggle"><input type="checkbox" id="${id}" ${checked?'checked':''}><span class="toggle-slider"></span></label></div>`;
+            const mkChk = (items, sel) => items.map(c =>
+                `<label class="multi-check-item"><input type="checkbox" value="${c.id}" ${(sel||[]).includes(c.id)?'checked':''}><span>#${escapeHtml(c.name)}</span></label>`
+            ).join('') || '<span style="color:var(--text-muted);font-size:0.85rem;">None</span>';
+            const mkRoleChk = (items, sel) => items.map(r =>
+                `<label class="multi-check-item"><input type="checkbox" value="${r.id}" ${(sel||[]).includes(r.id)?'checked':''}><span>@${escapeHtml(r.name)}</span></label>`
+            ).join('') || '<span style="color:var(--text-muted);font-size:0.85rem;">None</span>';
+
+            // Message logger inline panel
+            html += inlinePanel('log-inline-message', 'Message Logging Options',
+                `<input type="checkbox" id="msglog-enabled" checked style="display:none">
+                <input type="hidden" id="msglog-channel" value="">
+                ${row('Log Edits','Log when messages are edited','msglog-edits',ms.edits!==false)}
+                ${row('Log Deletes','Log when messages are deleted','msglog-deletes',ms.deletes!==false)}
+                ${row('Log Bulk Deletes','Log bulk message deletions (purge)','msglog-bulk',ms.bulk||false)}
+                ${row('Log Pin/Unpin','Log when messages are pinned or unpinned','msglog-pins',ms.pins||false)}
+                ${row('Include Message Content','Include the message content in logs','msglog-content',ms.content!==false)}
+                <div class="form-group" style="margin-top:0.75rem;"><label>Ignore Channels</label><div id="msglog-ignore-channels" class="multi-check-list">${mkChk(loggingTextChannels,ms.ignore_channels)}</div></div>
+                <div class="form-group"><label>Ignore Roles</label><div id="msglog-ignore-roles" class="multi-check-list">${mkRoleChk(loggingRoles,ms.ignore_roles)}</div></div>
+                <button class="btn btn-primary btn-sm" style="margin-top:0.5rem;" onclick="window.cpSaveMessageLogger()">Save Message Logging</button>`
+            );
+
+            // Voice logger inline panel
+            html += inlinePanel('log-inline-voice', 'Voice Logging Options',
+                `<input type="checkbox" id="voicelog-enabled" checked style="display:none">
+                <input type="hidden" id="voicelog-channel" value="">
+                ${row('Log Joins/Leaves','Log when members join or leave voice channels','voicelog-joins',vs.joins!==false)}
+                ${row('Log Moves','Log when members move between voice channels','voicelog-moves',vs.moves!==false)}
+                ${row('Log Mute/Deafen','Log when members mute or deafen','voicelog-mute',vs.mute||false)}
+                ${row('Log Streaming','Log when members start or stop streaming','voicelog-stream',vs.stream||false)}
+                <div class="form-group" style="margin-top:0.75rem;"><label>Ignore Voice Channels</label><div id="voicelog-ignore-channels" class="multi-check-list">${mkChk(loggingVoiceChannels,vs.ignore_channels)}</div></div>
+                <button class="btn btn-primary btn-sm" style="margin-top:0.5rem;" onclick="window.cpSaveVoiceLogger()">Save Voice Logging</button>`
+            );
+
+            // Join/leave logger inline panel
+            html += inlinePanel('log-inline-joinleave', 'Join/Leave Logging Options',
+                `<input type="checkbox" id="joinlog-enabled" checked style="display:none">
+                <input type="hidden" id="joinlog-channel" value="">
+                ${row('Show Account Age','Display how old the account is when joining','joinlog-account-age',js.account_age!==false)}
+                ${row('Show Invite Used','Show which invite link was used to join','joinlog-invite',js.invite||false)}
+                ${row('Show Member Count','Display the current member count on join/leave','joinlog-member-count',js.member_count||false)}
+                ${row('Flag New Accounts','Highlight accounts created recently','joinlog-flag-new',js.flag_new||false)}
+                <div class="form-group"><label>New Account Threshold (days)</label><input type="number" id="joinlog-threshold" class="form-input" value="${js.threshold||7}" min="0" style="max-width:100px;"></div>
+                <button class="btn btn-primary btn-sm" style="margin-top:0.5rem;" onclick="window.cpSaveJoinLeaveLogger()">Save Join/Leave Logging</button>`
+            );
+
+            // Member updates logger inline panel
+            html += inlinePanel('log-inline-names', 'Member Update Logging Options',
+                `<input type="checkbox" id="namelog-enabled" checked style="display:none">
+                <input type="hidden" id="namelog-channel" value="">
+                ${row('Log Username Changes','Log when members change their username','namelog-usernames',ns.usernames!==false)}
+                ${row('Log Nickname Changes','Log when members change their server nickname','namelog-nicknames',ns.nicknames!==false)}
+                ${row('Log Avatar Changes','Log when members change their avatar','namelog-avatars',ns.avatars||false)}
+                ${row('Log Discriminator Changes','Log when members change their discriminator','namelog-discriminators',ns.discriminators||false)}
+                <button class="btn btn-primary btn-sm" style="margin-top:0.5rem;" onclick="window.cpSaveNameLogger()">Save Member Update Logging</button>`
+            );
+
+            // Role logger inline panel
+            html += inlinePanel('log-inline-roles', 'Role Logging Options',
+                `<input type="checkbox" id="rolelog-enabled" checked style="display:none">
+                <input type="hidden" id="rolelog-channel" value="">
+                ${row('Log Role Creates','Log when new roles are created','rolelog-creates',rs.creates!==false)}
+                ${row('Log Role Deletes','Log when roles are deleted','rolelog-deletes',rs.deletes!==false)}
+                ${row('Log Role Edits','Log when roles are edited (name, color, permissions)','rolelog-edits',rs.edits!==false)}
+                ${row('Log Member Role Changes','Log when roles are added or removed from members','rolelog-member-changes',rs.member_changes!==false)}
+                <div class="form-group" style="margin-top:0.75rem;"><label>Ignore Roles</label><div id="rolelog-ignore-roles" class="multi-check-list">${mkRoleChk(loggingRoles,rs.ignore_roles)}</div></div>
+                <button class="btn btn-primary btn-sm" style="margin-top:0.5rem;" onclick="window.cpSaveRoleLogger()">Save Role Logging</button>`
+            );
+
+            el.innerHTML = html;
+
+            // Set selected values on event channel selects
             events.forEach(evt => {
                 const sel = document.getElementById(`log-ch-${evt.key}`);
                 if (sel && channels[evt.key]) sel.value = channels[evt.key];
             });
 
-            // Populate ignore channels checkbox list
-            const ignoreChSelect = document.getElementById('log-ignore-channels');
-            ignoreChSelect.innerHTML = loggingTextChannels.map(c =>
-                `<label class="multi-check-item"><input type="checkbox" value="${c.id}" ${(config.ignore_channels || []).includes(c.id) ? 'checked' : ''}><span>#${escapeHtml(c.name)}</span></label>`
+            // Populate general ignore lists
+            const ignoreChEl = document.getElementById('log-ignore-channels');
+            if (ignoreChEl) ignoreChEl.innerHTML = loggingTextChannels.map(c =>
+                `<label class="multi-check-item"><input type="checkbox" value="${c.id}" ${(config.ignore_channels||[]).includes(c.id)?'checked':''}><span>#${escapeHtml(c.name)}</span></label>`
+            ).join('');
+            const ignoreRoleEl = document.getElementById('log-ignore-roles');
+            if (ignoreRoleEl) ignoreRoleEl.innerHTML = loggingRoles.map(r =>
+                `<label class="multi-check-item"><input type="checkbox" value="${r.id}" ${(config.ignore_roles||[]).includes(r.id)?'checked':''}><span>@${escapeHtml(r.name)}</span></label>`
             ).join('');
 
-            // Populate ignore roles checkbox list
-            const ignoreRoleSelect = document.getElementById('log-ignore-roles');
-            ignoreRoleSelect.innerHTML = loggingRoles.map(r =>
-                `<label class="multi-check-item"><input type="checkbox" value="${r.id}" ${(config.ignore_roles || []).includes(r.id) ? 'checked' : ''}><span>@${escapeHtml(r.name)}</span></label>`
-            ).join('');
+            // Sync hidden channel fields and show/hide inline panels
+            syncLogChannels();
+            updateLogInlinePanels();
+
+            // Re-evaluate on every channel select change
+            el.querySelectorAll('.log-ch-select').forEach(sel => {
+                sel.addEventListener('change', () => {
+                    syncLogChannels();
+                    updateLogInlinePanels();
+                });
+            });
 
         } catch (e) { el.innerHTML = '<p>Failed to load logging config.</p>'; }
     }
@@ -7157,6 +7284,7 @@
         'auto-thread': () => window.cpSaveAutoThread?.(),
         'server-rules': () => window.cpSaveServerRules?.(),
         'polls': () => window.cpSavePolls?.(),
+        'logging': () => window.cpSaveLogging?.(),
         'log-general': () => window.cpSaveLogging?.(),
         'log-messages': () => window.cpSaveMessageLogger?.(),
         'log-voice': () => window.cpSaveVoiceLogger?.(),

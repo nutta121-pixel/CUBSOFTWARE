@@ -8,7 +8,8 @@ const state = {
     ircs: {},
     players: {},
     twitchUser: null,
-    chatsHidden: false,
+    chatMode: 'per-stream', // 'per-stream' | 'unified' | 'hidden'
+    layout: 'auto',         // 'auto' | 'focus' | 'stacked' | 'side'
     authReason: 'login'
 };
 
@@ -33,6 +34,8 @@ class TwitchIRC {
         this.ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
 
         this.ws.onopen = () => {
+            // Reset retry count on successful open
+            this.retryCount = 0;
             const token = state.twitchUser ? state.twitchUser.token : null;
             const nick = state.twitchUser ? state.twitchUser.login : `justinfan${Math.floor(Math.random() * 999999)}`;
             this.ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
@@ -71,8 +74,11 @@ class TwitchIRC {
         this.ws.onclose = () => {
             this.connected = false;
             if (!this.destroyed) {
+                this.retryCount = (this.retryCount || 0) + 1;
+                // Exponential backoff: 3s, 6s, 12s, 24s, capped at 30s
+                const delay = Math.min(3000 * Math.pow(2, this.retryCount - 1), 30000);
                 this.onStatus('disconnected');
-                this.reconnectTimer = setTimeout(() => this.connect(), 4000);
+                this.reconnectTimer = setTimeout(() => this.connect(), delay);
             }
         };
 
@@ -242,13 +248,16 @@ function updateChatInputState(channel) {
 
 function appendMessage(channel, { username, message, color }) {
     const msgs = document.getElementById(`msgs-${channel}`);
-    if (!msgs) return;
-    const div = document.createElement('div');
-    div.className = 'chat-msg';
-    div.innerHTML = `<span class="chat-msg-user" style="color:${color || '#9147ff'}">${escapeHtml(username)}</span>: <span class="chat-msg-text">${escapeHtml(message)}</span>`;
-    msgs.appendChild(div);
-    while (msgs.children.length > 200) msgs.firstChild.remove();
-    msgs.scrollTop = msgs.scrollHeight;
+    if (msgs) {
+        const div = document.createElement('div');
+        div.className = 'chat-msg';
+        div.innerHTML = `<span class="chat-msg-user" style="color:${color || '#9147ff'}">${escapeHtml(username)}</span>: <span class="chat-msg-text">${escapeHtml(message)}</span>`;
+        msgs.appendChild(div);
+        while (msgs.children.length > 200) msgs.firstChild.remove();
+        msgs.scrollTop = msgs.scrollHeight;
+    }
+    // Also route to unified chat panel
+    appendToUnified(channel, { username, message, color });
 }
 
 function appendSystem(channel, text) {
@@ -261,6 +270,17 @@ function appendSystem(channel, text) {
     msgs.scrollTop = msgs.scrollHeight;
 }
 
+function appendToUnified(channel, { username, message, color }) {
+    const msgs = document.getElementById('unifiedChatMsgs');
+    if (!msgs) return;
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    div.innerHTML = `<span class="unified-ch-tag">${escapeHtml(channel)}</span> <span class="chat-msg-user" style="color:${color || '#9147ff'}">${escapeHtml(username)}</span>: <span class="chat-msg-text">${escapeHtml(message)}</span>`;
+    msgs.appendChild(div);
+    while (msgs.children.length > 300) msgs.firstChild.remove();
+    msgs.scrollTop = msgs.scrollHeight;
+}
+
 function reconnectIRC(channel) {
     if (state.ircs[channel]) {
         state.ircs[channel].destroy();
@@ -270,19 +290,27 @@ function reconnectIRC(channel) {
         channel,
         (msg) => appendMessage(channel, msg),
         (status) => {
+            const msgs = document.getElementById(`msgs-${channel}`);
+            if (!msgs) return;
             if (status === 'connected') {
-                const msgs = document.getElementById(`msgs-${channel}`);
-                if (msgs) {
-                    const connecting = msgs.querySelector('.chat-connecting');
-                    if (connecting) connecting.remove();
-                }
+                msgs.querySelector('.chat-connecting')?.remove();
+                msgs.querySelector('.chat-status')?.remove();
             } else {
-                appendSystem(channel, 'Reconnecting...');
+                // Reuse a single status element — never spam multiple "Reconnecting..." lines
+                let el = msgs.querySelector('.chat-status');
+                if (!el) {
+                    el = document.createElement('div');
+                    el.className = 'chat-msg system chat-status';
+                    msgs.appendChild(el);
+                }
+                el.textContent = 'Reconnecting...';
+                msgs.scrollTop = msgs.scrollHeight;
             }
         }
     );
 }
 
+/* ─── Stream management ─── */
 function addStream(channel) {
     channel = channel.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
     if (!channel) return;
@@ -301,6 +329,7 @@ function addStream(channel) {
     updateChatInputState(channel);
     addChannelTag(channel);
     createPlayer(channel);
+    syncUrl();
 }
 
 function removeStream(channel) {
@@ -315,6 +344,7 @@ function removeStream(channel) {
     }
     refreshGrid();
     document.querySelector(`.channel-tag[data-channel="${channel}"]`)?.remove();
+    syncUrl();
 }
 
 function refreshGrid() {
@@ -323,18 +353,35 @@ function refreshGrid() {
     if (state.channels.length === 0) {
         grid.querySelectorAll('.stream-panel').forEach(p => p.remove());
         grid.removeAttribute('data-count');
+        grid.removeAttribute('data-layout');
+        grid.style.gridTemplateColumns = '';
+        grid.style.gridTemplateRows = '';
         if (emptyStateNode && !grid.contains(emptyStateNode)) {
             grid.appendChild(emptyStateNode);
         }
         return;
     }
 
-    // Hide empty state without removing it from memory
     if (emptyStateNode && grid.contains(emptyStateNode)) {
         emptyStateNode.remove();
     }
 
-    grid.dataset.count = state.channels.length;
+    const count = state.channels.length;
+    grid.dataset.count = count;
+    grid.dataset.layout = state.layout;
+
+    // Apply layout-specific grid overrides
+    if (state.layout === 'side') {
+        grid.style.gridTemplateColumns = `repeat(${count}, 1fr)`;
+        grid.style.gridTemplateRows = '1fr';
+    } else if (state.layout === 'stacked') {
+        grid.style.gridTemplateColumns = '1fr';
+        grid.style.gridTemplateRows = '';
+    } else {
+        // 'auto' and 'focus' handled by CSS
+        grid.style.gridTemplateColumns = '';
+        grid.style.gridTemplateRows = '';
+    }
 
     // Remove panels for channels no longer in list
     grid.querySelectorAll('.stream-panel').forEach(p => {
@@ -351,8 +398,9 @@ function refreshGrid() {
     }
 
     // Apply chat visibility
+    const showPerStream = state.chatMode === 'per-stream';
     grid.querySelectorAll('.stream-chat').forEach(c => {
-        c.style.display = state.chatsHidden ? 'none' : '';
+        c.style.display = showPerStream ? '' : 'none';
     });
 }
 
@@ -366,13 +414,54 @@ function addChannelTag(channel) {
     tags.appendChild(tag);
 }
 
-/* ─── Toggle Chats ─── */
-function toggleChats() {
-    state.chatsHidden = !state.chatsHidden;
-    document.getElementById('streamsGrid').querySelectorAll('.stream-chat').forEach(c => {
-        c.style.display = state.chatsHidden ? 'none' : '';
+/* ─── Layout & Chat Mode ─── */
+function setLayout(layout) {
+    state.layout = layout;
+    document.querySelectorAll('.btn-layout').forEach(b => {
+        b.classList.toggle('active', b.dataset.layout === layout);
     });
-    document.getElementById('toggleChatsBtn').textContent = state.chatsHidden ? 'Show Chats' : 'Hide Chats';
+    refreshGrid();
+    syncUrl();
+}
+
+function setChatMode(mode) {
+    state.chatMode = mode;
+    const grid = document.getElementById('streamsGrid');
+    const unifiedPanel = document.getElementById('unifiedChatPanel');
+
+    const showPerStream = mode === 'per-stream';
+    grid.querySelectorAll('.stream-chat').forEach(c => {
+        c.style.display = showPerStream ? '' : 'none';
+    });
+
+    if (unifiedPanel) {
+        unifiedPanel.style.display = mode === 'unified' ? 'flex' : 'none';
+    }
+
+    document.querySelectorAll('.btn-chat-mode').forEach(b => {
+        b.classList.toggle('active', b.dataset.mode === mode);
+    });
+    syncUrl();
+}
+
+/* ─── URL Sync ─── */
+function syncUrl() {
+    const params = new URLSearchParams();
+    if (state.channels.length) params.set('streams', state.channels.join(','));
+    if (state.layout !== 'auto') params.set('layout', state.layout);
+    if (state.chatMode !== 'per-stream') params.set('chat', state.chatMode);
+    const qs = params.toString();
+    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname);
+}
+
+function copyShareLink() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+        showNotice('Link copied to clipboard!');
+    }).catch(() => {
+        // fallback: show the URL in the notice so user can copy manually
+        showNotice(url);
+    });
 }
 
 /* ─── Helpers ─── */
@@ -382,7 +471,7 @@ function escapeHtml(str) {
 
 function showNotice(msg) {
     const n = document.createElement('div');
-    n.style.cssText = 'position:fixed;top:80px;right:20px;background:#333;color:#fff;padding:10px 16px;border-radius:6px;font-size:0.85rem;z-index:9999;border-left:3px solid #9147ff;';
+    n.style.cssText = 'position:fixed;top:80px;right:20px;background:#1a1a2e;color:#fff;padding:10px 16px;border-radius:6px;font-size:0.85rem;z-index:9999;border-left:3px solid #9147ff;box-shadow:0 4px 16px rgba(0,0,0,0.5);';
     n.textContent = msg;
     document.body.appendChild(n);
     setTimeout(() => n.remove(), 2500);
@@ -390,17 +479,75 @@ function showNotice(msg) {
 
 /* ─── Init ─── */
 async function init() {
-    // Capture emptyState before any DOM manipulation so getElementById never returns null later
     emptyStateNode = document.getElementById('emptyState');
 
-    // Inject Hide Chats button into the center slot
+    // Read URL params before building UI so controls reflect restored state
+    const params = new URLSearchParams(window.location.search);
+    const urlLayout = params.get('layout');
+    const urlChat = params.get('chat');
+    if (urlLayout && ['auto', 'focus', 'stacked', 'side'].includes(urlLayout)) {
+        state.layout = urlLayout;
+    }
+    if (urlChat && ['per-stream', 'unified', 'hidden'].includes(urlChat)) {
+        state.chatMode = urlChat;
+    }
+
+    // Build layout + chat controls in topbar center
     const topbarCenter = document.querySelector('.topbar-center');
-    const toggleBtn = document.createElement('button');
-    toggleBtn.id = 'toggleChatsBtn';
-    toggleBtn.textContent = 'Hide Chats';
-    toggleBtn.className = 'btn-toggle-chats';
-    toggleBtn.addEventListener('click', toggleChats);
-    topbarCenter.appendChild(toggleBtn);
+    topbarCenter.innerHTML = `
+        <div class="layout-controls">
+            <div class="ctrl-group">
+                <span class="ctrl-label">Layout</span>
+                <div class="ctrl-btns">
+                    <button class="btn-layout${state.layout === 'auto' ? ' active' : ''}" data-layout="auto" title="Auto grid">Auto</button>
+                    <button class="btn-layout${state.layout === 'focus' ? ' active' : ''}" data-layout="focus" title="First stream large, others stacked to the side">Focus</button>
+                    <button class="btn-layout${state.layout === 'stacked' ? ' active' : ''}" data-layout="stacked" title="Stack all streams vertically">Stack</button>
+                    <button class="btn-layout${state.layout === 'side' ? ' active' : ''}" data-layout="side" title="All streams in one row">Side</button>
+                </div>
+            </div>
+            <div class="ctrl-sep"></div>
+            <div class="ctrl-group">
+                <span class="ctrl-label">Chat</span>
+                <div class="ctrl-btns">
+                    <button class="btn-chat-mode${state.chatMode === 'per-stream' ? ' active' : ''}" data-mode="per-stream" title="Show chat panel for each stream">Each</button>
+                    <button class="btn-chat-mode${state.chatMode === 'unified' ? ' active' : ''}" data-mode="unified" title="Merge all stream chats into one panel">Merged</button>
+                    <button class="btn-chat-mode${state.chatMode === 'hidden' ? ' active' : ''}" data-mode="hidden" title="Hide all chats">Off</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    topbarCenter.querySelectorAll('.btn-layout').forEach(btn => {
+        btn.addEventListener('click', () => setLayout(btn.dataset.layout));
+    });
+    topbarCenter.querySelectorAll('.btn-chat-mode').forEach(btn => {
+        btn.addEventListener('click', () => setChatMode(btn.dataset.mode));
+    });
+
+    // Build unified chat panel inside streams-area (right of the grid)
+    const streamsArea = document.getElementById('streamsArea');
+    const unifiedPanel = document.createElement('div');
+    unifiedPanel.id = 'unifiedChatPanel';
+    unifiedPanel.className = 'unified-chat-panel';
+    unifiedPanel.style.display = state.chatMode === 'unified' ? 'flex' : 'none';
+    unifiedPanel.innerHTML = `
+        <div class="unified-chat-header">
+            <span>Merged Chat</span>
+            <span class="unified-chat-channels" id="unifiedChatChannels"></span>
+        </div>
+        <div id="unifiedChatMsgs"></div>
+        <div class="unified-chat-hint">View-only &mdash; chat via individual stream panels</div>
+    `;
+    streamsArea.appendChild(unifiedPanel);
+
+    // Share link button — injected before auth area content
+    const authArea = document.getElementById('twitchAuthArea');
+    const shareBtn = document.createElement('button');
+    shareBtn.className = 'btn-share-link';
+    shareBtn.title = 'Copy shareable link with all current streams';
+    shareBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Share`;
+    shareBtn.addEventListener('click', copyShareLink);
+    authArea.insertBefore(shareBtn, authArea.firstChild);
 
     await initAuth();
 
@@ -419,7 +566,6 @@ async function init() {
     });
 
     // Load channels from URL ?streams=ch1,ch2
-    const params = new URLSearchParams(window.location.search);
     const streams = params.get('streams');
     if (streams) {
         streams.split(',').slice(0, MAX_STREAMS).forEach(ch => addStream(ch.trim()));

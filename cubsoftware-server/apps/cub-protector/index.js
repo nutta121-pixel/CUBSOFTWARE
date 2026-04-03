@@ -10374,6 +10374,11 @@ client.once('ready', async () => {
                     const wasLive = !!streamer.is_live;
                     const newStreamId = streamInfo?.id || '';
 
+                    if (nowLive) {
+                        // Reset offline debounce whenever we see the stream live
+                        streamer.offline_count = 0;
+                    }
+
                     if (nowLive && (!wasLive || (newStreamId && newStreamId !== streamer.last_stream_id))) {
                         // Went live — send alert
                         streamer.is_live = true;
@@ -10419,8 +10424,16 @@ client.once('ready', async () => {
                             streamer.alert_channel_id = channel.id;
                         }
                     } else if (!nowLive && wasLive) {
+                        // Debounce: require 2 consecutive offline checks before marking as offline
+                        // This prevents a transient API error from triggering a false re-alert
+                        streamer.offline_count = (streamer.offline_count || 0) + 1;
+                        if (streamer.offline_count < 2) {
+                            changed = true; // save the incremented count
+                            continue; // don't mark offline yet
+                        }
                         streamer.is_live = false;
                         streamer.last_stream_id = '';
+                        streamer.offline_count = 0;
                         changed = true;
                         // Auto-delete the live alert message when stream ends
                         if (streamer.auto_delete && streamer.alert_message_id && streamer.alert_channel_id) {

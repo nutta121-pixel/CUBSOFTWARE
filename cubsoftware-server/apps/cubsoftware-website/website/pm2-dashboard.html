@@ -92,29 +92,7 @@
                 </div>
 
                 <div class="nav-section">
-                    <span class="nav-section-title">Games</span>
-                    <a href="#marbles" class="nav-item" data-section="marbles">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <circle cx="12" cy="12" r="4"></circle>
-                            <line x1="4.22" y1="4.22" x2="9.17" y2="9.17"></line>
-                            <line x1="14.83" y1="14.83" x2="19.78" y2="19.78"></line>
-                            <line x1="14.83" y1="9.17" x2="19.78" y2="4.22"></line>
-                            <line x1="4.22" y1="19.78" x2="9.17" y2="14.83"></line>
-                        </svg>
-                        <span>Marbles</span>
-                        <span class="nav-badge" id="marblesBadge" style="display:none;">0</span>
-                    </a>
-                </div>
-
-                <div class="nav-section">
                     <span class="nav-section-title">System</span>
-                    <a href="#cubassist" class="nav-item" data-section="cubassist">
-                        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                            <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
-                        </svg>
-                        <span>CubAssist</span>
-                    </a>
                     <a href="#custom-bots" class="nav-item" data-section="custom-bots">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><circle cx="15" cy="9" r="2"/><path d="M9 15s1 1 3 1 3-1 3-1"/>
@@ -424,7 +402,6 @@
                 <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border-color);padding-bottom:0.75rem;">
                     <button class="control-btn small wl-tab-btn active" data-wl="pm2" onclick="switchWhitelistTab('pm2')">Server Dashboard</button>
                     <button class="control-btn small wl-tab-btn" data-wl="streamavatars" onclick="switchWhitelistTab('streamavatars')">StreamAvatars</button>
-                    <button class="control-btn small wl-tab-btn" data-wl="marbles" onclick="switchWhitelistTab('marbles')">Marbles</button>
                 </div>
 
                 <div id="wl-pm2-panel" class="wl-panel">
@@ -469,26 +446,6 @@
                     </div>
                 </div>
 
-                <div id="wl-marbles-panel" class="wl-panel" style="display:none;">
-                    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">Users who can access Marbles (<code>/marbles</code>). Leave empty to allow everyone.</p>
-                    <div class="whitelist-container">
-                        <div class="whitelist-add-card">
-                            <h3>Add User</h3>
-                            <p class="help-text">Enable Developer Mode in Discord settings, then right-click a user → Copy ID.</p>
-                            <div class="add-user-form">
-                                <input type="text" id="newMbUserId" placeholder="Discord User ID" class="input-field">
-                                <button class="control-btn primary" onclick="addToAppWhitelist('marbles')">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    Add
-                                </button>
-                            </div>
-                        </div>
-                        <div class="whitelist-users-card">
-                            <h3>Whitelisted Users</h3>
-                            <div class="whitelist-list" id="mbWhitelistList"><div class="loading">Loading...</div></div>
-                        </div>
-                    </div>
-                </div>
             </section>
 
             <!-- IP Bans Section -->
@@ -593,63 +550,6 @@
                     <div class="passwords-list" id="passwordsList">
                         <div class="loading">Loading passwords...</div>
                     </div>
-                </div>
-            </section>
-
-            <!-- CubAssist Section -->
-            <section class="content-section" id="cubassistSection" data-section="cubassist">
-                <div class="section-header">
-                    <div class="section-title">
-                        <h1>CubAssist</h1>
-                        <p>Manage the CubAssist Twitch bot account and token</p>
-                    </div>
-                    <div class="section-actions">
-                        <button class="control-btn primary" onclick="loadCubAssist()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                                <polyline points="23 4 23 10 17 10"></polyline>
-                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                            </svg>
-                            Refresh
-                        </button>
-                    </div>
-                </div>
-
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:900px;">
-
-                    <!-- Connection status card -->
-                    <div class="stat-card" style="padding:20px;">
-                        <div style="font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Bot Account</div>
-                        <div id="cubassistBotStatus" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                            <span id="cubassistDot" style="width:10px;height:10px;border-radius:50%;background:var(--text-muted);flex-shrink:0;"></span>
-                            <span id="cubassistNick" style="font-size:1.1rem;font-weight:600;color:var(--text-primary);">Loading…</span>
-                        </div>
-                        <div id="cubassistWarnings" style="display:none;"></div>
-                        <div style="font-size:.8rem;color:var(--text-muted);line-height:1.5;margin-top:10px;">
-                            Connect once using the button below. The token refreshes automatically on every reconnect — you should never need to do this again.
-                        </div>
-                    </div>
-
-                    <!-- Actions card -->
-                    <div class="stat-card" style="padding:20px;">
-                        <div style="font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:12px;">Token Management</div>
-                        <div style="display:flex;flex-direction:column;gap:10px;">
-                            <button class="control-btn start" id="cubassistConnectBtn" onclick="cubassistConnect()" style="justify-content:center;">
-                                <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15" style="margin-right:6px;">
-                                    <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
-                                </svg>
-                                Connect Bot Account
-                            </button>
-                            <button class="control-btn secondary" id="cubassistRefreshBtn" onclick="cubassistRefreshToken()" style="justify-content:center;">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" style="margin-right:6px;">
-                                    <polyline points="23 4 23 10 17 10"></polyline>
-                                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                                </svg>
-                                Refresh Token Now
-                            </button>
-                        </div>
-                        <div id="cubassistActionHint" style="margin-top:10px;font-size:.8rem;color:var(--text-muted);min-height:18px;"></div>
-                    </div>
-
                 </div>
             </section>
 
@@ -838,137 +738,6 @@
 
             </section>
 
-            <!-- Marbles Section -->
-            <section class="content-section" id="marblesSection" data-section="marbles">
-                <div class="section-header">
-                    <div class="section-title">
-                        <h1>Marbles Admin</h1>
-                        <p>Sessions, maps, and race history for the marble racing game</p>
-                    </div>
-                    <div class="section-actions">
-                        <button class="control-btn primary" onclick="loadMarblesAdmin()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                                <polyline points="23 4 23 10 17 10"></polyline>
-                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-                            </svg>
-                            Refresh
-                        </button>
-                    </div>
-                </div>
-
-                <!-- IRC Status -->
-                <div id="marblesIrcStatus" style="display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;padding:10px 14px;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;font-size:12px;color:var(--text-muted);">
-                    <span class="status-dot" id="marblesIrcDot"></span>
-                    <span id="marblesIrcText">Loading IRC status…</span>
-                </div>
-
-                <!-- Active Sessions -->
-                <h3 style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;text-transform:uppercase;letter-spacing:.1em;">Active Sessions</h3>
-                <div class="table-wrapper" style="margin-bottom:2rem;">
-                    <table class="data-table" id="marblesSessionsTable">
-                        <thead>
-                            <tr>
-                                <th>Session ID</th>
-                                <th>Channel</th>
-                                <th>State</th>
-                                <th>Players</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="marblesSessionsBody">
-                            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem;">Loading…</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Map Manager -->
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <h3 style="font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.1em;">Map Manager</h3>
-                    <input type="text" id="marblesMapSearch" placeholder="Search maps…" oninput="filterMarblesAdminMaps()" style="background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:6px;padding:5px 10px;font-size:12px;width:180px;font-family:inherit;outline:none;">
-                </div>
-                <div class="table-wrapper" style="margin-bottom:2rem;">
-                    <table class="data-table" id="marblesMapTable">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Author</th>
-                                <th>Pieces</th>
-                                <th>Plays</th>
-                                <th>Rating</th>
-                                <th>Featured</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="marblesMapBody">
-                            <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:1.5rem;">Loading…</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Race History -->
-                <h3 style="font-size:13px;color:var(--text-secondary);margin-bottom:10px;text-transform:uppercase;letter-spacing:.1em;">Race History</h3>
-                <div class="table-wrapper" style="margin-bottom:2rem;">
-                    <table class="data-table" id="marblesRaceTable">
-                        <thead>
-                            <tr>
-                                <th>Race ID</th>
-                                <th>Map</th>
-                                <th>Channel</th>
-                                <th>Winner</th>
-                                <th>Players</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="marblesRaceBody">
-                            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1.5rem;">Loading…</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Season Management -->
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <h3 style="font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.1em;">Season Management</h3>
-                    <div style="display:flex;gap:8px;align-items:center;">
-                        <span id="marblesSeasonStatus" style="font-size:11px;color:var(--text-muted);">—</span>
-                        <input type="text" id="marblesSeasonNameInput" placeholder="Season name…" style="background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:6px;padding:5px 10px;font-size:12px;font-family:inherit;outline:none;width:140px;">
-                        <button class="control-btn primary" onclick="marblesStartSeason()" style="font-size:11px;padding:5px 10px;">Start Season</button>
-                        <button class="control-btn danger" onclick="marblesEndSeason()" style="font-size:11px;padding:5px 10px;">End Season</button>
-                    </div>
-                </div>
-                <div class="table-wrapper" style="margin-bottom:2rem;">
-                    <table class="data-table" id="marblesSeasonsTable">
-                        <thead><tr><th>Season</th><th>Name</th><th>Started</th><th>Ended</th><th>Winner</th><th>Status</th></tr></thead>
-                        <tbody id="marblesSeasonsBody">
-                            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:1rem;">No seasons yet</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Leaderboard Admin -->
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <h3 style="font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.1em;">Leaderboard Admin</h3>
-                    <div style="display:flex;gap:8px;">
-                        <button class="control-btn danger" onclick="marblesResetAllRecords()" style="font-size:11px;padding:5px 10px;">Reset All Track Records</button>
-                    </div>
-                </div>
-                <div style="display:flex;gap:8px;margin-bottom:12px;">
-                    <input type="text" id="marblesAdminPlayerInput" placeholder="twitch_login" style="background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary);border-radius:6px;padding:5px 10px;font-size:12px;font-family:inherit;outline:none;flex:1;">
-                    <button class="control-btn" onclick="marblesAdminBanPlayer()" style="font-size:11px;padding:5px 10px;">Ban from LB</button>
-                    <button class="control-btn" onclick="marblesAdminUnbanPlayer()" style="font-size:11px;padding:5px 10px;">Unban</button>
-                    <button class="control-btn" onclick="marblesAdminResetPoints()" style="font-size:11px;padding:5px 10px;">Reset Points</button>
-                </div>
-                <div class="table-wrapper">
-                    <table class="data-table" id="marblesBannedTable">
-                        <thead>
-                            <tr><th>Player</th><th>Points</th><th>Wins</th><th>Races</th><th>Actions</th></tr>
-                        </thead>
-                        <tbody id="marblesBannedBody">
-                            <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:1.5rem;">No banned players</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
 
         </main>
     </div>

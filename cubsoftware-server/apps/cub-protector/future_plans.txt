@@ -1,0 +1,32 @@
+CUB PROTECTOR — Future Feature Plans
+=====================================
+These features have dashboard UI and API routes already built,
+but are not yet implemented in the bot (index.js). The settings
+pages are hidden from the sidebar until the bot logic is complete.
+
+PROTECTION
+----------
+- Anti-Raid        (auto-lockdown on rapid join spikes)
+- Anti-Nuke        (detect and revert mass channel/role deletion)
+- Alt Detection    (flag accounts below minimum age on join)
+- Anti-Phishing    (scan messages for known phishing domains)
+- Quarantine       (isolate suspicious members automatically)
+- Mention Protection (additional mass-mention detection beyond automod)
+- Word Filter      (expanded word/phrase filter beyond automod bad-words)
+- Link Filter      (domain blacklist/whitelist beyond automod link check)
+- Anti-Hoist       (auto-rename members using hoisting characters)
+
+MEMBER ENGAGEMENT
+-----------------
+- Birthdays        (track member birthdays, post celebrations)
+- Boost Rewards    (auto-assign roles/perks when members boost)
+- Temp Roles       (time-limited role assignments)
+- Invite Tracker   (track which invites brought which members)
+
+AUTOMATION
+----------
+- Auto Responder   (trigger custom responses to message patterns)
+- Keyword Alerts   (DM staff when specific keywords are detected)
+- Sticky Messages  (re-post a pinned message after each new message)
+- Auto Thread      (auto-create threads on new messages in configured channels)
+- Server Rules     (post/update a rules embed from the dashboard)

@@ -1,1 +1,0 @@
-# CubBot — Twitch Chat Bot

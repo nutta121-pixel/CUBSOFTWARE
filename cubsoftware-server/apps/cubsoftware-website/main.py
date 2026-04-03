@@ -2156,6 +2156,9 @@ def multi_twitch_chat_token():
                 'avatar': cub.get('avatar', ''),
                 'token': token,
             })
+        # Twitch user but session expired (token not in remember cookie) — ask them to re-login
+        return jsonify({'authenticated': False, 'reason': 'reauth_twitch',
+                        'login': cub.get('login', cub.get('username', ''))})
     linked = cub.get('linked_account', {})
     if linked and linked.get('provider') == 'twitch':
         token = linked.get('access_token')

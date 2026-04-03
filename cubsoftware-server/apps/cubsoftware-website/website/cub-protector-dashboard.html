@@ -208,14 +208,6 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                         <span>Welcome</span>
                     </a>
-                    <a href="#profiles" class="nav-item" data-section="profiles">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-                        <span>Profiles</span>
-                    </a>
-                    <a href="#rep-social" class="nav-item" data-section="rep-social">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-                        <span>Rep &amp; Relationships</span>
-                    </a>
                     <a href="#leveling" class="nav-item" data-section="leveling">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
                         <span>Leveling</span>
@@ -260,10 +252,6 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         <span>Fun Channels</span>
                     </a>
-                    <a href="#starboard" class="nav-item" data-section="starboard">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                        <span>Starboard</span>
-                    </a>
                     <a href="#suggestions" class="nav-item" data-section="suggestions">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                         <span>Suggestions</span>
@@ -275,10 +263,6 @@
                     <a href="#afk" class="nav-item" data-section="afk">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
                         <span>AFK</span>
-                    </a>
-                    <a href="#games" class="nav-item" data-section="games">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 12h4m-2-2v4"/><circle cx="16" cy="10" r="1" fill="currentColor"/><circle cx="18" cy="12" r="1" fill="currentColor"/></svg>
-                        <span>Games</span>
                     </a>
                     <a href="#tournaments" class="nav-item" data-section="tournaments">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
@@ -455,6 +439,7 @@
         <main class="admin-content">
 
             <!-- Overview Section -->
+            <!-- TODO: scope to selected guild -->
             <section class="content-section active" id="overviewSection" data-section="overview">
                 <div class="section-header">
                     <div class="section-title">
@@ -2084,45 +2069,6 @@
                 </div>
             </section>
 
-            <!-- Starboard Section -->
-            <section class="content-section" id="starboardSection" data-section="starboard">
-                <div class="section-header">
-                    <div class="section-title"><h1>Starboard</h1><p>Highlight the best messages in a dedicated channel</p></div>
-                </div>
-                <div class="settings-card">
-                    <div class="settings-row">
-                        <div class="settings-info"><h4>Starboard</h4><p>Enable the starboard system</p></div>
-                        <label class="toggle"><input type="checkbox" id="starboard-enabled" onchange="window.cpSaveStarboard()"><span class="toggle-slider"></span></label>
-                    </div>
-                    <div class="form-row" style="margin-top:1rem;">
-                        <div class="form-group"><label>Starboard Channel</label>
-                            <select id="starboard-channel" class="form-select" onchange="window.cpSaveStarboard()"><option value="">-- Select --</option></select>
-                        </div>
-                        <div class="form-group"><label>Star Emoji</label>
-                            <input type="text" id="starboard-emoji" value="⭐" onchange="window.cpSaveStarboard()">
-                        </div>
-                        <div class="form-group"><label>Min Stars</label>
-                            <input type="number" id="starboard-threshold" value="3" min="1" max="50" onchange="window.cpSaveStarboard()">
-                        </div>
-                    </div>
-                    <div class="form-row" style="margin-top:0.5rem;">
-                        <div class="settings-row"><div class="settings-info"><h4>Self-Star</h4><p>Allow users to star their own messages</p></div>
-                            <label class="toggle"><input type="checkbox" id="starboard-self-star" onchange="window.cpSaveStarboard()"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row"><div class="settings-info"><h4>Ignore NSFW</h4><p>Skip NSFW channels</p></div>
-                            <label class="toggle"><input type="checkbox" id="starboard-ignore-nsfw" checked onchange="window.cpSaveStarboard()"><span class="toggle-slider"></span></label>
-                        </div>
-                        <div class="settings-row"><div class="settings-info"><h4>Allow Bots</h4><p>Star bot messages</p></div>
-                            <label class="toggle"><input type="checkbox" id="starboard-bots" onchange="window.cpSaveStarboard()"><span class="toggle-slider"></span></label>
-                        </div>
-                    </div>
-                </div>
-                <div class="settings-card" style="margin-top:1rem;">
-                    <h3 style="margin-bottom:1rem;">Recent Starred Messages</h3>
-                    <div id="starboard-recent"><p style="color:var(--text-muted);">Loading...</p></div>
-                </div>
-            </section>
-
             <!-- AFK Section -->
             <section class="content-section" id="afkSection" data-section="afk">
                 <div class="section-header">
@@ -3541,151 +3487,6 @@
 
 
 
-            <!-- ==================== GROUP TAB SECTIONS ==================== -->
-
-            <!-- Protection: Anti-Abuse -->
-            <section class="content-section" data-section="anti-abuse">
-                <div class="section-header">
-                    <div class="section-title"><h1>Anti-Abuse</h1><p>Protection against raids, nuking, alts, and phishing</p></div>
-                </div>
-                <div class="sub-tabs">
-                    <button class="sub-tab active" data-subtab="anti-raid">Anti-Raid</button>
-                    <button class="sub-tab" data-subtab="anti-nuke">Anti-Nuke</button>
-                    <button class="sub-tab" data-subtab="alt-detection">Alt Detection</button>
-                    <button class="sub-tab" data-subtab="anti-phishing">Anti-Phishing</button>
-                    <button class="sub-tab" data-subtab="quarantine">Quarantine</button>
-                </div>
-            </section>
-
-            <!-- Protection: Filters -->
-            <section class="content-section" data-section="filters">
-                <div class="section-header">
-                    <div class="section-title"><h1>Filters</h1><p>Content filtering and keyword protection</p></div>
-                </div>
-                <div class="sub-tabs">
-                    <button class="sub-tab active" data-subtab="word-filter">Word Filter</button>
-                    <button class="sub-tab" data-subtab="link-filter">Link Filter</button>
-                    <button class="sub-tab" data-subtab="mention-protection">Mentions</button>
-                    <button class="sub-tab" data-subtab="anti-hoist">Anti-Hoist</button>
-                    <button class="sub-tab" data-subtab="keyword-alerts">Keywords</button>
-                </div>
-            </section>
-
-            <!-- Protection: Server Control -->
-            <section class="content-section" data-section="server-control">
-                <div class="section-header">
-                    <div class="section-title"><h1>Server Control</h1><p>Channel management, lockdown, and verification</p></div>
-                </div>
-                <div class="sub-tabs">
-                    <button class="sub-tab active" data-subtab="slowmode">Slowmode</button>
-                    <button class="sub-tab" data-subtab="lockdown">Lockdown</button>
-                    <button class="sub-tab" data-subtab="purge">Purge</button>
-                    <button class="sub-tab" data-subtab="verification">Verification</button>
-                </div>
-            </section>
-
-            <!-- Engagement: Rewards -->
-            <section class="content-section" data-section="rewards">
-                <div class="section-header">
-                    <div class="section-title"><h1>Rewards & XP</h1><p>Leveling, economy, and boost rewards</p></div>
-                </div>
-                <div class="sub-tabs">
-                    <button class="sub-tab active" data-subtab="leveling">Leveling</button>
-                    <button class="sub-tab" data-subtab="economy">Economy</button>
-                    <button class="sub-tab" data-subtab="boost-rewards">Boost Rewards</button>
-                </div>
-            </section>
-
-            <!-- Engagement: Social -->
-            <section class="content-section" data-section="social">
-                <div class="section-header">
-                    <div class="section-title"><h1>Social</h1><p>Welcome messages, giveaways, reactions, and birthdays</p></div>
-                </div>
-                <div class="sub-tabs">
-                    <button class="sub-tab active" data-subtab="welcome">Welcome</button>
-                    <button class="sub-tab" data-subtab="giveaways">Giveaways</button>
-                    <button class="sub-tab" data-subtab="reaction-roles">Reactions</button>
-                    <button class="sub-tab" data-subtab="birthdays">Birthdays</button>
-                </div>
-            </section>
-
-            <!-- Engagement: Community Fun -->
-            <section class="content-section" data-section="community-fun">
-                <div class="section-header">
-                    <div class="section-title"><h1>Community</h1><p>Starboard, suggestions, polls, and AFK</p></div>
-                </div>
-                <div class="sub-tabs">
-                    <button class="sub-tab active" data-subtab="starboard">Starboard</button>
-                    <button class="sub-tab" data-subtab="suggestions">Suggestions</button>
-                    <button class="sub-tab" data-subtab="polls">Polls</button>
-                    <button class="sub-tab" data-subtab="afk">AFK</button>
-                </div>
-            </section>
-
-            <!-- Community: Messaging -->
-            <section class="content-section" data-section="messaging">
-                <div class="section-header">
-                    <div class="section-title"><h1>Messaging</h1><p>Commands, auto-reply, announcements, and scheduling</p></div>
-                </div>
-                <div class="sub-tabs">
-                    <button class="sub-tab active" data-subtab="custom-commands">Commands</button>
-                    <button class="sub-tab" data-subtab="auto-responder">Auto Reply</button>
-                    <button class="sub-tab" data-subtab="announcements">Announce</button>
-                    <button class="sub-tab" data-subtab="scheduled-messages">Scheduled</button>
-                </div>
-            </section>
-
-            <!-- Community: Content -->
-            <section class="content-section" data-section="content-tools">
-                <div class="section-header">
-                    <div class="section-title"><h1>Content</h1><p>Embeds, social feeds, auto-threads, and rules</p></div>
-                </div>
-                <div class="sub-tabs">
-                    <button class="sub-tab active" data-subtab="custom-embeds">Embeds</button>
-                    <button class="sub-tab" data-subtab="social-feeds">Social Feeds</button>
-                    <button class="sub-tab" data-subtab="auto-thread">Auto Thread</button>
-                    <button class="sub-tab" data-subtab="server-rules">Server Rules</button>
-                </div>
-            </section>
-
-            <!-- Tools: Roles -->
-            <section class="content-section" data-section="role-tools">
-                <div class="section-header">
-                    <div class="section-title"><h1>Roles</h1><p>Role management, auto-assign, temp roles, and self roles</p></div>
-                </div>
-                <div class="sub-tabs">
-                    <button class="sub-tab active" data-subtab="role-manager">Role Manager</button>
-                    <button class="sub-tab" data-subtab="autoroles">Auto-Roles</button>
-                    <button class="sub-tab" data-subtab="temp-roles">Temp Roles</button>
-                    <button class="sub-tab" data-subtab="self-roles">Self Roles</button>
-                </div>
-            </section>
-
-            <!-- Tools: Channels -->
-            <section class="content-section" data-section="channel-tools">
-                <div class="section-header">
-                    <div class="section-title"><h1>Channels</h1><p>Counter channels, sticky messages, and media-only</p></div>
-                </div>
-                <div class="sub-tabs">
-                    <button class="sub-tab active" data-subtab="counters">Counters</button>
-                    <button class="sub-tab" data-subtab="sticky-messages">Sticky Msgs</button>
-                    <button class="sub-tab" data-subtab="media-channels">Media Only</button>
-                </div>
-            </section>
-
-            <!-- Tools: Utilities -->
-            <section class="content-section" data-section="utilities">
-                <div class="section-header">
-                    <div class="section-title"><h1>Utilities</h1><p>Nicknames, invite tracking, backups, and reminders</p></div>
-                </div>
-                <div class="sub-tabs">
-                    <button class="sub-tab active" data-subtab="nicknames">Nicknames</button>
-                    <button class="sub-tab" data-subtab="invite-tracker">Invites</button>
-                    <button class="sub-tab" data-subtab="backups">Backups</button>
-                    <button class="sub-tab" data-subtab="reminders">Reminders</button>
-                </div>
-            </section>
-
             <!-- Custom Bot Section -->
             <section class="content-section" id="customBotSection" data-section="custom-bot">
                 <div class="section-header">
@@ -3849,13 +3650,6 @@
                         &nbsp;<button class="control-btn danger small" onclick="window.cpResetCount()" style="margin-left:0.5rem;">Reset</button></p>
                 </div>
 
-                <div class="settings-card" style="margin-top:1rem;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-                        <h3>💬 Quotes (<span id="quotes-count">0</span>)</h3>
-                        <small style="color:var(--text-muted);">Use <code>/quote add</code> in Discord</small>
-                    </div>
-                    <div id="quotes-list"><p style="color:var(--text-muted);">Loading...</p></div>
-                </div>
 
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:1rem;">🔒 Confession Channel</h3>
@@ -3917,40 +3711,6 @@
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:1rem;">Categories</h3>
                     <div id="self-roles-categories"><p style="color:var(--text-muted);">Loading...</p></div>
-                </div>
-            </section>
-
-            <!-- Profiles (includes Moods) -->
-            <section class="content-section" id="profilesSection" data-section="profiles">
-                <div class="section-header"><div class="section-title"><h1>Profiles</h1><p>Member profile cards and mood statuses</p></div></div>
-                <div class="settings-card">
-                    <h3 style="margin-bottom:0.75rem;">👤 Member Profiles</h3>
-                    <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Members set their bio, color, and links with <code>/profile bio</code>, <code>/profile color</code>, and <code>/profile link</code>. View any profile with <code>/profile view @user</code>.</p>
-                    <div id="profiles-list"><p style="color:var(--text-muted);">Loading...</p></div>
-                </div>
-                <div class="settings-card" style="margin-top:1rem;">
-                    <h3 style="margin-bottom:0.75rem;">😊 Active Moods</h3>
-                    <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Members set moods with <code>/mood set 😊 Feeling great!</code> — shown on their profile card.</p>
-                    <div id="moods-list"><p style="color:var(--text-muted);">Loading...</p></div>
-                </div>
-            </section>
-
-            <!-- Social (Reputation + Relationships) -->
-            <section class="content-section" id="repSocialSection" data-section="rep-social">
-                <div class="section-header"><div class="section-title"><h1>Rep &amp; Relationships</h1><p>Reputation system, marriages, and friendships</p></div></div>
-                <div class="settings-card">
-                    <h3 style="margin-bottom:0.75rem;">⭐ Reputation</h3>
-                    <div class="settings-row">
-                        <div class="settings-info"><h4>Rep Cooldown (hours)</h4><p>How long before a user can rep the same person again</p></div>
-                        <input type="number" id="rep-cooldown" class="form-input" value="24" min="1" max="168" style="width:80px;" onchange="window.cpSaveRepSettings()">
-                    </div>
-                    <h4 style="margin-top:1.25rem;margin-bottom:0.5rem;">Leaderboard</h4>
-                    <div id="rep-leaderboard"><p style="color:var(--text-muted);">Loading...</p></div>
-                </div>
-                <div class="settings-card" style="margin-top:1rem;">
-                    <h3 style="margin-bottom:0.75rem;">💍 Relationships</h3>
-                    <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Members propose with <code>/propose @user</code>, send friend requests with <code>/friend @user</code>. Accepted via Discord buttons.</p>
-                    <div id="relationships-list"><p style="color:var(--text-muted);">Loading...</p></div>
                 </div>
             </section>
 

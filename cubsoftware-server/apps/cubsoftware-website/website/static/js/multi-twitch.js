@@ -34,10 +34,11 @@ class TwitchIRC {
         this.ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
 
         this.ws.onopen = () => {
-            // Reset retry count on successful open
             this.retryCount = 0;
-            const token = state.twitchUser ? state.twitchUser.token : null;
-            const nick = state.twitchUser ? state.twitchUser.login : `justinfan${Math.floor(Math.random() * 999999)}`;
+            // If we previously got an auth failure, connect anonymously
+            const useAuth = !this.authFailed && state.twitchUser;
+            const token = useAuth ? state.twitchUser.token : null;
+            const nick = useAuth ? state.twitchUser.login : `justinfan${Math.floor(Math.random() * 999999)}`;
             this.ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
             this.ws.send(`PASS ${token ? 'oauth:' + token : 'SCHMOOPIIE'}`);
             this.ws.send(`NICK ${nick}`);
@@ -51,8 +52,13 @@ class TwitchIRC {
                     this.ws.send('PONG :tmi.twitch.tv');
                     continue;
                 }
-                // ROOMSTATE is sent by Twitch when we successfully join a channel
-                // (requires twitch.tv/commands cap, which we request — more reliable than JOIN)
+                // Twitch sends this when the OAuth token is rejected — fall back to anonymous
+                if (line.includes('NOTICE') && line.includes('Login authentication failed')) {
+                    this.authFailed = true;
+                    this.ws.close();
+                    continue;
+                }
+                // ROOMSTATE arrives when we've successfully joined — use as "connected" signal
                 if (line.includes('ROOMSTATE') && line.toLowerCase().includes('#' + this.channel)) {
                     if (!this.connected) {
                         this.connected = true;
@@ -61,7 +67,7 @@ class TwitchIRC {
                     continue;
                 }
                 if (line.includes('PRIVMSG')) {
-                    // Fallback: first message proves we're in the channel
+                    // Fallback: a received message also proves we're in the channel
                     if (!this.connected) {
                         this.connected = true;
                         this.onStatus('connected');
@@ -84,8 +90,8 @@ class TwitchIRC {
             this.connected = false;
             if (!this.destroyed) {
                 this.retryCount = (this.retryCount || 0) + 1;
-                // Exponential backoff: 3s, 6s, 12s, 24s, capped at 30s
-                const delay = Math.min(3000 * Math.pow(2, this.retryCount - 1), 30000);
+                // Auth failures reconnect immediately (anonymous fallback); other failures back off
+                const delay = this.authFailed ? 100 : Math.min(3000 * Math.pow(2, this.retryCount - 1), 30000);
                 this.onStatus('disconnected');
                 this.reconnectTimer = setTimeout(() => this.connect(), delay);
             }

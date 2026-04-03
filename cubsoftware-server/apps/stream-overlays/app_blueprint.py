@@ -131,8 +131,8 @@ DEFAULT_CONFIGS = {
         'animation': 'fade', 'logo_url': '',
         'social': {'twitch': '', 'twitter': '', 'discord': '', 'youtube': '', 'instagram': '', 'tiktok': ''},
         'custom_message': '', 'custom_css': '',
-        'co_players': [], 'co_players_position': 'right',
-        'games_list': [], 'games_position': 'right',
+        'co_players': [], 'co_players_position': 'right-bottom',
+        'games_list': [], 'games_position': 'right-top',
         'show_alerts': False, **_SCENE_VISUAL_EXTRAS,
     },
     'brb': {
@@ -164,8 +164,8 @@ DEFAULT_CONFIGS = {
         'animation': 'none', 'logo_url': '',
         'social': {'twitch': '', 'twitter': '', 'discord': '', 'youtube': '', 'instagram': '', 'tiktok': ''},
         'show_live_badge': True, 'custom_css': '',
-        'co_players': [], 'co_players_position': 'right',
-        'games_list': [], 'games_position': 'right',
+        'co_players': [], 'co_players_position': 'right-bottom',
+        'games_list': [], 'games_position': 'right-top',
         'show_alerts': False, **_SCENE_VISUAL_EXTRAS,
     },
     'offline': {

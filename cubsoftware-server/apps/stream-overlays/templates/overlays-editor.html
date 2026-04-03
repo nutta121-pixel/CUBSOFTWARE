@@ -225,9 +225,12 @@
                 <div class="ov-ctrl-row">
                     <label>Position</label>
                     <select class="ov-select" id="cfg_co_players_position" data-key="co_players_position">
-                        <option value="left" {% if scene.config.get('co_players_position','right')=='left' %}selected{% endif %}>Left</option>
-                        <option value="center" {% if scene.config.get('co_players_position','right')=='center' %}selected{% endif %}>Center</option>
-                        <option value="right" {% if scene.config.get('co_players_position','right')=='right' or not scene.config.get('co_players_position') %}selected{% endif %}>Right</option>
+                        <option value="left-top" {% if scene.config.get('co_players_position')=='left-top' %}selected{% endif %}>Left — Top</option>
+                        <option value="left-center" {% if scene.config.get('co_players_position')=='left-center' %}selected{% endif %}>Left — Center</option>
+                        <option value="left-bottom" {% if scene.config.get('co_players_position')=='left-bottom' %}selected{% endif %}>Left — Bottom</option>
+                        <option value="right-top" {% if scene.config.get('co_players_position')=='right-top' %}selected{% endif %}>Right — Top</option>
+                        <option value="right-center" {% if scene.config.get('co_players_position')=='right-center' %}selected{% endif %}>Right — Center</option>
+                        <option value="right-bottom" {% if scene.config.get('co_players_position','right-bottom') in ['right-bottom','right'] or not scene.config.get('co_players_position') %}selected{% endif %}>Right — Bottom</option>
                     </select>
                 </div>
                 <div id="coPlayersList">
@@ -248,9 +251,12 @@
                 <div class="ov-ctrl-row">
                     <label>Position</label>
                     <select class="ov-select" id="cfg_games_position" data-key="games_position">
-                        <option value="left" {% if scene.config.get('games_position','right')=='left' %}selected{% endif %}>Left</option>
-                        <option value="center" {% if scene.config.get('games_position','right')=='center' %}selected{% endif %}>Center</option>
-                        <option value="right" {% if scene.config.get('games_position','right')=='right' or not scene.config.get('games_position') %}selected{% endif %}>Right</option>
+                        <option value="left-top" {% if scene.config.get('games_position')=='left-top' %}selected{% endif %}>Left — Top</option>
+                        <option value="left-center" {% if scene.config.get('games_position')=='left-center' %}selected{% endif %}>Left — Center</option>
+                        <option value="left-bottom" {% if scene.config.get('games_position')=='left-bottom' %}selected{% endif %}>Left — Bottom</option>
+                        <option value="right-top" {% if scene.config.get('games_position','right-top') in ['right-top','right'] or not scene.config.get('games_position') %}selected{% endif %}>Right — Top</option>
+                        <option value="right-center" {% if scene.config.get('games_position')=='right-center' %}selected{% endif %}>Right — Center</option>
+                        <option value="right-bottom" {% if scene.config.get('games_position')=='right-bottom' %}selected{% endif %}>Right — Bottom</option>
                     </select>
                 </div>
                 <div id="sceneGamesList">

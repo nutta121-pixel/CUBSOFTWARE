@@ -159,7 +159,7 @@ async function startWebServer(client) {
 
     wss.on('connection', (ws, req) => {
         const clientIp = getClientIP(req);
-        console.log('New WebSocket connection');
+        console.log('[WebSocket] New connection');
 
         debugLogger.info('WEBSOCKET', 'New WebSocket connection established', {
             ip: clientIp,
@@ -167,7 +167,7 @@ async function startWebServer(client) {
         });
 
         ws.on('close', () => {
-            console.log('WebSocket connection closed');
+            console.log('[WebSocket] Connection closed');
             debugLogger.info('WEBSOCKET', 'WebSocket connection closed', {
                 ip: clientIp,
                 connectedClients: wss.clients.size

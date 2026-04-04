@@ -47,7 +47,7 @@ class BotClient extends Client {
 
                     if ('data' in command && 'execute' in command) {
                         this.commands.set(command.data.name, command);
-                        console.log(`Loaded command: ${command.data.name}`);
+                        console.log(`[Commands] Loaded: ${command.data.name}`);
                     } else {
                         console.warn(`Command at ${itemPath} is missing required "data" or "execute" property`);
                     }
@@ -77,7 +77,7 @@ class BotClient extends Client {
                 this.on(event.name, (...args) => event.execute(...args));
             }
 
-            console.log(`Loaded event: ${event.name}`);
+            console.log(`[Events] Loaded: ${event.name}`);
         }
     }
 }

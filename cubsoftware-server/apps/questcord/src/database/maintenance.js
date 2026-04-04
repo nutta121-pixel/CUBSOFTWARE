@@ -5,22 +5,22 @@ const cron = require('node-cron');
 class DatabaseMaintenance {
     static start() {
         cron.schedule('0 3 * * *', () => {
-            console.log('Running daily database maintenance...');
+            console.log('[Database] Running daily maintenance...');
 
             if (DatabaseUtils.checkIntegrity()) {
-                console.log('Database integrity check passed');
+                console.log('[Database] Integrity check passed');
             } else {
-                console.error('Database integrity check FAILED! Manual intervention required.');
+                console.error('[Database] Integrity check FAILED! Manual intervention required.');
             }
 
             DatabaseUtils.createBackup();
             DatabaseUtils.optimize();
 
-            console.log('Database maintenance completed');
+            console.log('[Database] Maintenance completed');
         });
 
         cron.schedule('0 */6 * * *', () => {
-            console.log('Running periodic database optimization...');
+            console.log('[Database] Running periodic optimization...');
             DatabaseUtils.optimize();
         });
 
@@ -29,7 +29,7 @@ class DatabaseMaintenance {
             this.cleanupExpiredConfinements();
         });
 
-        console.log('Database maintenance scheduler started');
+        console.log('[Database] Maintenance scheduler started');
     }
 
     static cleanupExpiredConfinements() {

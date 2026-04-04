@@ -1,12 +1,11 @@
+{ const _l = console.log.bind(console); console.log = (...a) => { if (typeof a[0] === 'string') a[0] = a[0].replace(/\[([A-Za-z][A-Za-z0-9 _-]*)\]/g, '\x1b[32m[$1]\x1b[0m'); _l(...a); }; }
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
 const botDir = __dirname;
 
-console.log('='.repeat(50));
-console.log('       CUB PROTECTOR Bot - Startup');
-console.log('='.repeat(50));
+console.log('[Startup] CUB PROTECTOR Bot starting...');
 
 // Check if node_modules exists
 const nodeModulesPath = path.join(botDir, 'node_modules');
@@ -24,16 +23,16 @@ function needsInstall() {
 }
 
 if (needsInstall()) {
-    console.log('Installing dependencies...');
+    console.log('[Startup] Installing dependencies...');
     try {
         execSync('npm install --legacy-peer-deps', { cwd: botDir, stdio: 'inherit' });
-        console.log('Dependencies installed successfully!');
+        console.log('[Startup] Dependencies installed successfully!');
     } catch (error) {
-        console.error('Failed to install dependencies:', error.message);
+        console.error('[Startup] Failed to install dependencies:', error.message);
         process.exit(1);
     }
 } else {
-    console.log('Dependencies already installed.');
+    console.log('[Startup] Dependencies already installed.');
 }
 
 // Load .env file if present (not required — PM2 injects vars directly)
@@ -52,9 +51,7 @@ if (!process.env.CLIENT_ID) {
     process.exit(1);
 }
 
-console.log('Configuration validated!');
-console.log('Starting bot...');
-console.log('='.repeat(50));
-console.log('');
+console.log('[Startup] Configuration validated!');
+console.log('[Startup] Starting bot...');
 
 require('./index.js');

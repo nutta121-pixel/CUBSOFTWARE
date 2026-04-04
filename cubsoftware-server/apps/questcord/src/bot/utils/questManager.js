@@ -7,7 +7,7 @@ const config = require('../../../config.json');
 class QuestManager {
     static initialize() {
         this.scheduleQuestRotation();
-        console.log('Quest rotation scheduler initialized for NZ timezone');
+        console.log('[Quests] Quest rotation scheduler initialized');
     }
 
     static scheduleQuestRotation() {
@@ -16,7 +16,7 @@ class QuestManager {
             const currentHour = nzTime.hour();
 
             if (currentHour === 0) {
-                console.log('Rotating quests at NZ midnight...');
+                console.log('[Quests] Rotating at NZ midnight...');
                 this.rotateQuests();
             }
         }, {
@@ -52,10 +52,10 @@ class QuestManager {
                     );
                 }
 
-                console.log(`Assigned ${quests.length} quests to server: ${server.name}`);
+                console.log(`[Quests] Assigned ${quests.length} quests to server: ${server.name}`);
             }
 
-            console.log('Quest rotation completed successfully');
+            console.log('[Quests] Rotation completed successfully');
         } catch (error) {
             console.error('Error rotating quests:', error);
         }

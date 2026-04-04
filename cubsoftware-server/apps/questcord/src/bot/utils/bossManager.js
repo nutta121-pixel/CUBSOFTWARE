@@ -11,7 +11,7 @@ class BossManager {
         this.client = client;
         this.scheduleNextBoss();
         this.startNotificationUpdater();
-        console.log('Boss spawning system initialized');
+        console.log('[Boss] Boss spawning system initialized');
     }
 
     static async scheduleNextBoss() {
@@ -32,7 +32,7 @@ class BossManager {
             const timeRemaining = (currentActiveBoss.expires_at * 1000) - Date.now();
             if (timeRemaining > 0) {
                 setTimeout(() => this.scheduleNextBoss(), timeRemaining + config.boss.cooldownDuration);
-                console.log(`Active boss found. Next check in ${Math.round(timeRemaining / 60000)} minutes`);
+                console.log(`[Boss] Active boss found. Next check in ${Math.round(timeRemaining / 60000)} minutes`);
                 return;
             }
         }
@@ -43,7 +43,7 @@ class BossManager {
         if (timeSinceLastBoss < (config.boss.cooldownDuration / 1000)) {
             const waitTime = (config.boss.cooldownDuration / 1000) - timeSinceLastBoss;
             setTimeout(() => this.scheduleNextBoss(), waitTime * 1000);
-            console.log(`Boss cooldown active. Next spawn check in ${Math.round(waitTime / 60)} minutes`);
+            console.log(`[Boss] Cooldown active. Next spawn check in ${Math.round(waitTime / 60)} minutes`);
             return;
         }
 
@@ -53,14 +53,14 @@ class BossManager {
             this.spawnBoss();
         }, delay);
 
-        console.log(`Next boss will spawn in approximately ${Math.round(delay / 60000)} minutes`);
+        console.log(`[Boss] Next boss will spawn in approximately ${Math.round(delay / 60000)} minutes`);
     }
 
     static async spawnBoss() {
         try {
             const servers = ServerModel.getOptedInServers();
             if (servers.length === 0) {
-                console.log('No opted-in servers available for boss spawn');
+                console.log('[Boss] No opted-in servers available for boss spawn');
                 this.scheduleNextBoss();
                 return;
             }
@@ -83,7 +83,7 @@ class BossManager {
             const now = Math.floor(Date.now() / 1000);
             GlobalStatsModel.updateLastBossSpawn(now);
 
-            console.log(`Boss spawned: ${bossTemplate.name} in server ${randomServer.name}`);
+            console.log(`[Boss] Spawned: ${bossTemplate.name} in server ${randomServer.name}`);
 
             await debugLogger.success('BOSS', `Boss spawned: ${bossTemplate.name}`, {
                 bossId: result.lastInsertRowid,

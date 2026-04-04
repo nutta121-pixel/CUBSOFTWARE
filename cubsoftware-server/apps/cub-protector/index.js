@@ -1,7 +1,5 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AuditLogEvent, AttachmentBuilder, ActivityType } = require('discord.js');
 
-// Green [Tag] labels in PM2 log output
-{ const _l = console.log.bind(console); console.log = (...a) => { if (typeof a[0] === 'string') a[0] = a[0].replace(/\[([A-Za-z][A-Za-z0-9 _-]*)\]/g, '\x1b[32m[$1]\x1b[0m'); _l(...a); }; }
 
 // Helper: creates an EmbedBuilder pre-loaded with CUB SOFTWARE branding footer
 function cubEmbed() {
@@ -1861,11 +1859,11 @@ async function registerCommands() {
     try {
         if (CUSTOM_GUILD_ID) {
             // Custom bot mode: register guild-specific commands (instant, no propagation delay)
-            console.log(`Registering guild commands for custom bot (guild: ${CUSTOM_GUILD_ID})...`);
+            console.log(`[Commands] Registering guild commands for custom bot (guild: ${CUSTOM_GUILD_ID})...`);
             await rest.put(Routes.applicationGuildCommands(CLIENT_ID, CUSTOM_GUILD_ID), {
                 body: commands.filter(c => !MAIN_BOT_ONLY_COMMANDS.has(c.name)).map(c => c.toJSON()),
             });
-            console.log('Custom bot guild commands registered!');
+            console.log('[Commands] Custom bot guild commands registered!');
         } else {
             // Main bot: clear global commands and register per-guild instead.
             // Guild-specific commands take priority over globals immediately; the global
@@ -1978,7 +1976,7 @@ function startKeepAliveTimer(channelId, keepAliveMinutes, guild) {
                     delete guildData.active_channels[channelId];
                     saveTempVoiceData(data);
                     await channel.delete('Temporary voice channel expired').catch(() => {});
-                    console.log(`Deleted expired temp channel: ${channel.name}`);
+                    console.log(`[TempVC] Deleted expired temp channel: ${channel.name}`);
                 }
             }
         } catch (e) {
@@ -2745,7 +2743,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             };
             saveTempVoiceData(data);
 
-            console.log(`Created temp VC "${channelName}" for ${member.user.tag}`);
+            console.log(`[TempVC] Created "${channelName}" for ${member.user.tag}`);
         } catch (e) {
             console.error('Failed to create temp voice channel:', e);
         }
@@ -2766,7 +2764,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 delete guildData.active_channels[oldState.channelId];
                 saveTempVoiceData(data);
                 await channel.delete('Temporary voice channel empty').catch(() => {});
-                console.log(`Deleted empty temp VC: ${channel.name}`);
+                console.log(`[TempVC] Deleted empty temp VC: ${channel.name}`);
             } else {
                 // Start keep-alive timer
                 startKeepAliveTimer(oldState.channelId, keepAlive, guild);
@@ -4431,6 +4429,8 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     const { commandName, member, guild } = interaction;
+
+    console.log(`[Command] /${commandName} by ${interaction.user.username} in ${guild?.name || 'DM'}`);
 
     // ── Games config guard ────────────────────────────────────────────────────
     {
@@ -10024,6 +10024,7 @@ client.on('guildCreate', async (guild) => {
         }
     } else {
         // Main bot joined a new guild — register the appropriate command set immediately
+        console.log(`[Guild] Joined: ${guild.name} (${guild.id}) | Now in ${guild.client.guilds.cache.size} servers`);
         console.log(`[Commands] Bot joined guild ${guild.id} — syncing commands...`);
         await syncGuildCommands(guild.id);
     }
@@ -10032,6 +10033,7 @@ client.on('guildCreate', async (guild) => {
 // When the custom bot is removed from its guild, mark it as disabled so the main bot
 // knows to restore its full command set for that guild.
 client.on('guildDelete', async (guild) => {
+    console.log(`[Guild] Left: ${guild.name} (${guild.id}) | Now in ${guild.client.guilds.cache.size} servers`);
     if (!CUSTOM_GUILD_ID || guild.id !== CUSTOM_GUILD_ID) return;
     console.log(`[CustomBot] Removed from guild ${guild.id} — marking as disabled.`);
     try {
@@ -10223,7 +10225,7 @@ client.once('ready', async () => {
                             }
                         } catch {}
                     }, remaining);
-                    console.log(`Recovered temp ban timer for ${c.target_id} in ${gId} (${Math.round(remaining / 1000)}s remaining)`);
+                    console.log(`[Moderation] Recovered temp ban timer for ${c.target_id} in ${gId} (${Math.round(remaining / 1000)}s remaining)`);
                 } else {
                     // Expired while offline - unban now
                     try {
@@ -10248,7 +10250,7 @@ client.once('ready', async () => {
                     if (g.ends_at > Date.now()) {
                         const timer = setTimeout(() => endGiveaway(gId, g.message_id), g.ends_at - Date.now());
                         giveawayTimers.set(g.message_id, timer);
-                        console.log(`Synced dashboard giveaway timer: ${g.message_id}`);
+                        console.log(`[Giveaway] Synced dashboard timer: ${g.message_id}`);
                     } else {
                         endGiveaway(gId, g.message_id);
                     }
@@ -10766,6 +10768,12 @@ client.once('ready', async () => {
     const _totalMembers = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
     console.log(`[Stats] ${client.guilds.cache.size} servers, ${_totalMembers} total members`);
     console.log('[Ready] CUB PROTECTOR is ready!');
+
+    // Log stats every 60 seconds
+    setInterval(() => {
+        const total = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
+        console.log(`[Stats] ${client.guilds.cache.size} servers, ${total} total members`);
+    }, 60000);
 });
 
 // ============================================================

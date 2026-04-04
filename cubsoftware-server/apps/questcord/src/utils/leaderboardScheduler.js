@@ -5,11 +5,11 @@ const config = require('../../config.json');
 class LeaderboardScheduler {
     static initialize() {
         cron.schedule('0 0 1 * *', () => {
-            console.log('Running monthly leaderboard reset and reward distribution...');
+            console.log('[Leaderboard] Running monthly reset and reward distribution...');
             this.processMonthlyReset();
         });
 
-        console.log('Leaderboard scheduler initialized');
+        console.log('[Leaderboard] Scheduler initialized');
     }
 
     static processMonthlyReset() {

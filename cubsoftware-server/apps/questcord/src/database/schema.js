@@ -299,42 +299,42 @@ function initializeDatabase() {
     const hasTotalExperience = userTableInfo.some(col => col.name === 'total_experience');
 
     if (!hasLastQuestTime) {
-        console.log('Running migration: Adding last_quest_time to users...');
+        console.log('[Database] Running migration: Adding last_quest_time to users...');
         db.exec('ALTER TABLE users ADD COLUMN last_quest_time INTEGER DEFAULT 0');
-        console.log('Migration completed: last_quest_time added');
+        console.log('[Database] Migration completed: last_quest_time added');
     }
 
     if (!hasLevel) {
-        console.log('Running migration: Adding level to users...');
+        console.log('[Database] Running migration: Adding level to users...');
         db.exec('ALTER TABLE users ADD COLUMN level INTEGER DEFAULT 1');
-        console.log('Migration completed: level added');
+        console.log('[Database] Migration completed: level added');
     }
 
     if (!hasExperience) {
-        console.log('Running migration: Adding experience to users...');
+        console.log('[Database] Running migration: Adding experience to users...');
         db.exec('ALTER TABLE users ADD COLUMN experience INTEGER DEFAULT 0');
-        console.log('Migration completed: experience added');
+        console.log('[Database] Migration completed: experience added');
     }
 
     if (!hasTotalExperience) {
-        console.log('Running migration: Adding total_experience to users...');
+        console.log('[Database] Running migration: Adding total_experience to users...');
         db.exec('ALTER TABLE users ADD COLUMN total_experience INTEGER DEFAULT 0');
-        console.log('Migration completed: total_experience added');
+        console.log('[Database] Migration completed: total_experience added');
     }
 
     // Migration: Add 'failed' column to user_quests if it doesn't exist
     const hasFailedColumn = questTableInfo.some(col => col.name === 'failed');
 
     if (!hasFailedColumn) {
-        console.log('Running migration: Adding failed column to user_quests...');
+        console.log('[Database] Running migration: Adding failed column to user_quests...');
         db.exec('ALTER TABLE user_quests ADD COLUMN failed INTEGER DEFAULT 0');
-        console.log('Migration completed: failed column added');
+        console.log('[Database] Migration completed: failed column added');
     }
 
     // Migration: Update default currency from 100 to 0 for new users only
     const hasCurrency = userTableInfo.find(col => col.name === 'currency');
     if (hasCurrency && hasCurrency.dflt_value === '100') {
-        console.log('Note: Default currency is now 0 for new users (existing users unaffected)');
+        console.log('[Database] Note: Default currency is now 0 for new users (existing users unaffected)');
     }
 
     // Migration: Add PVP columns to users table
@@ -359,18 +359,18 @@ function initializeDatabase() {
     pvpColumns.forEach(column => {
         const hasColumn = userTableInfo.some(col => col.name === column.name);
         if (!hasColumn) {
-            console.log(`Running migration: Adding ${column.name} to users...`);
+            console.log(`[Database] Running migration: Adding ${column.name} to users...`);
             db.exec(`ALTER TABLE users ADD COLUMN ${column.name} ${column.type}`);
-            console.log(`Migration completed: ${column.name} added`);
+            console.log(`[Database] Migration completed: ${column.name} added`);
         }
     });
 
     travelColumns.forEach(column => {
         const hasColumn = userTableInfo.some(col => col.name === column.name);
         if (!hasColumn) {
-            console.log(`Running migration: Adding ${column.name} to users...`);
+            console.log(`[Database] Running migration: Adding ${column.name} to users...`);
             db.exec(`ALTER TABLE users ADD COLUMN ${column.name} ${column.type}`);
-            console.log(`Migration completed: ${column.name} added`);
+            console.log(`[Database] Migration completed: ${column.name} added`);
         }
     });
 
@@ -385,27 +385,27 @@ function initializeDatabase() {
     itemColumns.forEach(column => {
         const hasColumn = itemTableInfo.some(col => col.name === column.name);
         if (!hasColumn) {
-            console.log(`Running migration: Adding ${column.name} to items...`);
+            console.log(`[Database] Running migration: Adding ${column.name} to items...`);
             db.exec(`ALTER TABLE items ADD COLUMN ${column.name} ${column.type}`);
-            console.log(`Migration completed: ${column.name} added`);
+            console.log(`[Database] Migration completed: ${column.name} added`);
         }
     });
 
     // Migration: Add equipped column to user_items
     const hasEquipped = userItemTableInfo.some(col => col.name === 'equipped');
     if (!hasEquipped) {
-        console.log('Running migration: Adding equipped to user_items...');
+        console.log('[Database] Running migration: Adding equipped to user_items...');
         db.exec('ALTER TABLE user_items ADD COLUMN equipped INTEGER DEFAULT 0');
-        console.log('Migration completed: equipped added');
+        console.log('[Database] Migration completed: equipped added');
     }
 
     // Migration: Add avatar_url to staff table
     const staffTableInfo = db.prepare("PRAGMA table_info(staff)").all();
     const hasAvatarUrl = staffTableInfo.some(col => col.name === 'avatar_url');
     if (!hasAvatarUrl) {
-        console.log('Running migration: Adding avatar_url to staff...');
+        console.log('[Database] Running migration: Adding avatar_url to staff...');
         db.exec('ALTER TABLE staff ADD COLUMN avatar_url TEXT');
-        console.log('Migration completed: avatar_url added');
+        console.log('[Database] Migration completed: avatar_url added');
     }
 
     // Migration: Add announcement tracking to bosses table
@@ -414,15 +414,15 @@ function initializeDatabase() {
     const hasAnnouncementChannelId = bossTableInfo.some(col => col.name === 'announcement_channel_id');
 
     if (!hasAnnouncementMessageId) {
-        console.log('Running migration: Adding announcement_message_id to bosses...');
+        console.log('[Database] Running migration: Adding announcement_message_id to bosses...');
         db.exec('ALTER TABLE bosses ADD COLUMN announcement_message_id TEXT');
-        console.log('Migration completed: announcement_message_id added');
+        console.log('[Database] Migration completed: announcement_message_id added');
     }
 
     if (!hasAnnouncementChannelId) {
-        console.log('Running migration: Adding announcement_channel_id to bosses...');
+        console.log('[Database] Running migration: Adding announcement_channel_id to bosses...');
         db.exec('ALTER TABLE bosses ADD COLUMN announcement_channel_id TEXT');
-        console.log('Migration completed: announcement_channel_id added');
+        console.log('[Database] Migration completed: announcement_channel_id added');
     }
 
     // Migration: Add equipment slots to users table
@@ -437,9 +437,9 @@ function initializeDatabase() {
     equipmentColumns.forEach(column => {
         const hasColumn = userTableInfo.some(col => col.name === column.name);
         if (!hasColumn) {
-            console.log(`Running migration: Adding ${column.name} to users...`);
+            console.log(`[Database] Running migration: Adding ${column.name} to users...`);
             db.exec(`ALTER TABLE users ADD COLUMN ${column.name} ${column.type}`);
-            console.log(`Migration completed: ${column.name} added`);
+            console.log(`[Database] Migration completed: ${column.name} added`);
         }
     });
 
@@ -455,9 +455,9 @@ function initializeDatabase() {
     pvpStatsColumns.forEach(column => {
         const hasColumn = userTableInfo.some(col => col.name === column.name);
         if (!hasColumn) {
-            console.log(`Running migration: Adding ${column.name} to users...`);
+            console.log(`[Database] Running migration: Adding ${column.name} to users...`);
             db.exec(`ALTER TABLE users ADD COLUMN ${column.name} ${column.type}`);
-            console.log(`Migration completed: ${column.name} added`);
+            console.log(`[Database] Migration completed: ${column.name} added`);
         }
     });
 
@@ -465,18 +465,18 @@ function initializeDatabase() {
     const websiteSettingsTableInfo = db.prepare("PRAGMA table_info(website_settings)").all();
     const hasMaintenanceMode = websiteSettingsTableInfo.some(col => col.name === 'maintenance_mode');
     if (!hasMaintenanceMode) {
-        console.log('Running migration: Adding maintenance_mode to website_settings...');
+        console.log('[Database] Running migration: Adding maintenance_mode to website_settings...');
         db.exec('ALTER TABLE website_settings ADD COLUMN maintenance_mode INTEGER DEFAULT 0');
-        console.log('Migration completed: maintenance_mode added');
+        console.log('[Database] Migration completed: maintenance_mode added');
     }
 
     // Migration: Phase 1 - Daily Login Rewards System
-    console.log('Checking Phase 1 migrations...');
+    console.log('[Database] Checking Phase 1 migrations...');
 
     // Create login_rewards table
     const loginRewardsTableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='login_rewards'").get();
     if (!loginRewardsTableExists) {
-        console.log('Running migration: Creating login_rewards table...');
+        console.log('[Database] Running migration: Creating login_rewards table...');
         db.exec(`
             CREATE TABLE login_rewards (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -503,13 +503,13 @@ function initializeDatabase() {
             (7, 500, 25, 'Day 7: Weekly streak bonus!')
         `);
 
-        console.log('Migration completed: login_rewards table created and seeded');
+        console.log('[Database] Migration completed: login_rewards table created and seeded');
     }
 
     // Create user_login_streak table
     const loginStreakTableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='user_login_streak'").get();
     if (!loginStreakTableExists) {
-        console.log('Running migration: Creating user_login_streak table...');
+        console.log('[Database] Running migration: Creating user_login_streak table...');
         db.exec(`
             CREATE TABLE user_login_streak (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -525,65 +525,65 @@ function initializeDatabase() {
                 UNIQUE(user_id)
             )
         `);
-        console.log('Migration completed: user_login_streak table created');
+        console.log('[Database] Migration completed: user_login_streak table created');
     }
 
     // Add last_login_date column to users
     const userTableInfoPhase1 = db.prepare("PRAGMA table_info(users)").all();
     if (!userTableInfoPhase1.some(col => col.name === 'last_login_date')) {
-        console.log('Running migration: Adding last_login_date to users...');
+        console.log('[Database] Running migration: Adding last_login_date to users...');
         db.exec('ALTER TABLE users ADD COLUMN last_login_date TEXT');
-        console.log('Migration completed: last_login_date added');
+        console.log('[Database] Migration completed: last_login_date added');
     }
 
     // Add login_streak column to users
     if (!userTableInfoPhase1.some(col => col.name === 'login_streak')) {
-        console.log('Running migration: Adding login_streak to users...');
+        console.log('[Database] Running migration: Adding login_streak to users...');
         db.exec('ALTER TABLE users ADD COLUMN login_streak INTEGER DEFAULT 0');
-        console.log('Migration completed: login_streak added');
+        console.log('[Database] Migration completed: login_streak added');
     }
 
     // Add profile_banner column to users
     if (!userTableInfoPhase1.some(col => col.name === 'profile_banner')) {
-        console.log('Running migration: Adding profile_banner to users...');
+        console.log('[Database] Running migration: Adding profile_banner to users...');
         db.exec('ALTER TABLE users ADD COLUMN profile_banner TEXT');
-        console.log('Migration completed: profile_banner added');
+        console.log('[Database] Migration completed: profile_banner added');
     }
 
     // Add profile_bio column to users
     if (!userTableInfoPhase1.some(col => col.name === 'profile_bio')) {
-        console.log('Running migration: Adding profile_bio to users...');
+        console.log('[Database] Running migration: Adding profile_bio to users...');
         db.exec('ALTER TABLE users ADD COLUMN profile_bio TEXT');
-        console.log('Migration completed: profile_bio added');
+        console.log('[Database] Migration completed: profile_bio added');
     }
 
     // Add avatar_hash column to users
     if (!userTableInfoPhase1.some(col => col.name === 'avatar_hash')) {
-        console.log('Running migration: Adding avatar_hash to users...');
+        console.log('[Database] Running migration: Adding avatar_hash to users...');
         db.exec('ALTER TABLE users ADD COLUMN avatar_hash TEXT');
-        console.log('Migration completed: avatar_hash added');
+        console.log('[Database] Migration completed: avatar_hash added');
     }
 
     // Add vanity_url column to users
     if (!userTableInfoPhase1.some(col => col.name === 'vanity_url')) {
-        console.log('Running migration: Adding vanity_url to users...');
+        console.log('[Database] Running migration: Adding vanity_url to users...');
         db.exec('ALTER TABLE users ADD COLUMN vanity_url TEXT');
-        console.log('Migration completed: vanity_url added');
+        console.log('[Database] Migration completed: vanity_url added');
 
         // Create unique index for vanity_url
-        console.log('Creating unique index for vanity_url...');
+        console.log('[Database] Creating unique index for vanity_url...');
         db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_vanity_url ON users(vanity_url) WHERE vanity_url IS NOT NULL');
-        console.log('Unique index created for vanity_url');
+        console.log('[Database] Unique index created for vanity_url');
     }
 
     // Add verified column to users
     if (!userTableInfoPhase1.some(col => col.name === 'verified')) {
-        console.log('Running migration: Adding verified to users...');
+        console.log('[Database] Running migration: Adding verified to users...');
         db.exec('ALTER TABLE users ADD COLUMN verified INTEGER DEFAULT 0');
-        console.log('Migration completed: verified added');
+        console.log('[Database] Migration completed: verified added');
     }
 
-    console.log('Phase 1 migrations completed successfully');
+    console.log('[Database] Phase 1 migrations completed successfully');
 
     // ============================================
     // PHASE 2 MIGRATIONS - ACHIEVEMENT SYSTEM
@@ -593,7 +593,7 @@ function initializeDatabase() {
     const achievementsTableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='achievements'").get();
 
     if (!achievementsTableExists) {
-        console.log('Running migration: Creating achievements table...');
+        console.log('[Database] Running migration: Creating achievements table...');
         db.exec(`
             CREATE TABLE achievements (
                 id TEXT PRIMARY KEY,
@@ -612,14 +612,14 @@ function initializeDatabase() {
             CREATE INDEX idx_achievements_category ON achievements(category);
             CREATE INDEX idx_achievements_rarity ON achievements(rarity);
         `);
-        console.log('✓ achievements table created');
+        console.log('[Database] ✓ achievements table created');
     }
 
     // Migration: Create user_achievements table
     const userAchievementsTableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='user_achievements'").get();
 
     if (!userAchievementsTableExists) {
-        console.log('Running migration: Creating user_achievements table...');
+        console.log('[Database] Running migration: Creating user_achievements table...');
         db.exec(`
             CREATE TABLE user_achievements (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -637,13 +637,13 @@ function initializeDatabase() {
             CREATE INDEX idx_user_achievements_user ON user_achievements(user_id);
             CREATE INDEX idx_user_achievements_unlocked ON user_achievements(user_id, unlocked);
         `);
-        console.log('✓ user_achievements table created');
+        console.log('[Database] ✓ user_achievements table created');
     }
 
     // Seed achievements
     const achievementCount = db.prepare('SELECT COUNT(*) as count FROM achievements').get();
     if (achievementCount.count === 0) {
-        console.log('Seeding achievements...');
+        console.log('[Database] Seeding achievements...');
         const { achievements } = require('./achievements');
         const insertAchievement = db.prepare(`
             INSERT INTO achievements (id, name, description, category, icon, points, rarity, criteria_type, criteria_value, hidden)
@@ -664,16 +664,16 @@ function initializeDatabase() {
                 achievement.hidden
             );
         }
-        console.log(`✓ Seeded ${achievements.length} achievements`);
+        console.log(`[Database] ✓ Seeded ${achievements.length} achievements`);
     }
 
-    console.log('Phase 2 migrations completed successfully');
+    console.log('[Database] Phase 2 migrations completed successfully');
 
     // Migration: Create solitary_confinement table
     const confinementTableExists = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='solitary_confinement'").get();
 
     if (!confinementTableExists) {
-        console.log('Running migration: Creating solitary_confinement table...');
+        console.log('[Database] Running migration: Creating solitary_confinement table...');
         db.exec(`
             CREATE TABLE solitary_confinement (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -690,7 +690,7 @@ function initializeDatabase() {
             CREATE INDEX idx_confinement_user_server ON solitary_confinement(user_id, server_id, active);
             CREATE INDEX idx_confinement_expires ON solitary_confinement(expires_at, active);
         `);
-        console.log('✓ solitary_confinement table created');
+        console.log('[Database] ✓ solitary_confinement table created');
     }
 
     // Guild/Clan System Tables
@@ -781,10 +781,10 @@ function initializeDatabase() {
             CREATE INDEX IF NOT EXISTS idx_guild_announcements_guild_id ON guild_announcements(guild_id);
             CREATE INDEX IF NOT EXISTS idx_guild_announcements_created_at ON guild_announcements(created_at);
         `);
-        console.log('✓ guild tables created');
+        console.log('[Database] ✓ guild tables created');
     }
 
-    console.log('Database initialized successfully');
+    console.log('[Database] Initialized successfully');
 
     // Seed items if this is first run
     const { seedItems } = require('./seedItems');

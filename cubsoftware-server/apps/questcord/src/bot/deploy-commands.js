@@ -52,8 +52,8 @@ async function deployCommands() {
             throw new Error(`Duplicate command names: ${uniqueDuplicates.join(', ')}`);
         }
 
-        console.log(`Started refreshing ${commands.length} application (/) commands.`);
-        console.log('Command names:', commandNames.join(', '));
+        console.log(`[Commands] Refreshing ${commands.length} slash commands...`);
+        console.log('[Commands] Names:', commandNames.join(', '));
 
         const rest = new REST().setToken(process.env.DISCORD_TOKEN);
 
@@ -63,7 +63,7 @@ async function deployCommands() {
             { body: commands },
         );
 
-        console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+        console.log(`[Commands] Successfully reloaded ${data.length} slash commands`);
         return data.length;
     } catch (error) {
         console.error('Error deploying commands:', error);

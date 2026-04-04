@@ -24,7 +24,7 @@ class DatabaseUtils {
 
         try {
             db.backup(backupPath);
-            console.log(`Database backed up to: ${backupPath}`);
+            console.log(`[Database] Backed up to: ${backupPath}`);
 
             this.cleanOldBackups(backupDir, 7);
             return backupPath;
@@ -45,7 +45,7 @@ class DatabaseUtils {
 
             if (now - stats.mtime.getTime() > maxAge) {
                 fs.unlinkSync(filePath);
-                console.log(`Deleted old backup: ${file}`);
+                console.log(`[Database] Deleted old backup: ${file}`);
             }
         });
     }
@@ -67,7 +67,7 @@ class DatabaseUtils {
     static vacuum() {
         try {
             db.prepare('VACUUM').run();
-            console.log('Database vacuumed successfully');
+            console.log('[Database] Vacuumed successfully');
             return true;
         } catch (error) {
             console.error('Vacuum failed:', error);
@@ -79,7 +79,7 @@ class DatabaseUtils {
         try {
             db.prepare('PRAGMA optimize').run();
             db.prepare('ANALYZE').run();
-            console.log('Database optimized successfully');
+            console.log('[Database] Optimized successfully');
             return true;
         } catch (error) {
             console.error('Optimization failed:', error);
@@ -131,7 +131,7 @@ class MigrationManager {
             const executed = db.prepare('SELECT * FROM migrations WHERE name = ?').get(migrationName);
 
             if (!executed) {
-                console.log(`Running migration: ${migrationName}`);
+                console.log(`[Database] Running migration: ${migrationName}`);
                 const migration = require(path.join(this.migrationsDir, file));
 
                 try {
@@ -139,7 +139,7 @@ class MigrationManager {
                         migration.up(db);
                         db.prepare('INSERT INTO migrations (name) VALUES (?)').run(migrationName);
                     });
-                    console.log(`Migration ${migrationName} completed`);
+                    console.log(`[Database] Migration ${migrationName} completed`);
                 } catch (error) {
                     console.error(`Migration ${migrationName} failed:`, error);
                     throw error;

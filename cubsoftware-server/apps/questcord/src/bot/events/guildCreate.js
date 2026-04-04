@@ -4,7 +4,7 @@ const { debugLogger } = require('../../utils/debugLogger');
 module.exports = {
     name: 'guildCreate',
     async execute(guild) {
-        console.log(`Joined new server: ${guild.name} (${guild.id})`);
+        console.log(`[Guild] Joined: ${guild.name} (${guild.id}) | Now in ${guild.client.guilds.cache.size} servers`);
 
         ServerModel.create(guild.id, guild.name, guild.memberCount);
 

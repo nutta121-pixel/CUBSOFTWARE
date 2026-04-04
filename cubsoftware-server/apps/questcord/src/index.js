@@ -23,9 +23,9 @@ let terminal = null;
 
 async function main() {
     try {
-        console.log('Initializing QuestCord...');
+        console.log('[Init] Initializing QuestCord...');
 
-        console.log('Setting up database...');
+        console.log('[Database] Setting up database...');
         initializeDatabase();
 
         const migrationManager = new MigrationManager();
@@ -33,11 +33,11 @@ async function main() {
 
         DatabaseMaintenance.start();
 
-        console.log('Deploying slash commands...');
+        console.log('[Commands] Deploying slash commands...');
         const { deployCommands } = require('./bot/deploy-commands');
         await deployCommands();
 
-        console.log('Starting Discord bot...');
+        console.log('[Bot] Starting Discord bot...');
         const client = new BotClient();
 
         await client.login(process.env.DISCORD_TOKEN);
@@ -128,16 +128,16 @@ async function main() {
         BossManager.initialize(client);
         LeaderboardScheduler.initialize();
 
-        console.log('Starting web server...');
+        console.log('[Web] Starting web server...');
         try {
             await startWebServer(client);
-            console.log('[SUCCESS] Web server started successfully');
+            console.log('[Web] Web server started successfully');
         } catch (webError) {
             console.error('[ERROR] Web server failed to start:', webError);
             throw webError;
         }
 
-        console.log('QuestCord initialized successfully');
+        console.log('[Ready] QuestCord initialized successfully');
 
         // Signal PM2 that the app is ready
         if (process.send) {

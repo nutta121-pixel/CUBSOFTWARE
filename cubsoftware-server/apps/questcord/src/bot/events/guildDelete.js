@@ -4,7 +4,7 @@ const { debugLogger } = require('../../utils/debugLogger');
 module.exports = {
     name: 'guildDelete',
     async execute(guild) {
-        console.log(`Left server: ${guild.name} (${guild.id})`);
+        console.log(`[Guild] Left: ${guild.name} (${guild.id}) | Now in ${guild.client.guilds.cache.size} servers`);
 
         const totalServers = guild.client.guilds.cache.size;
         GlobalStatsModel.updateServerCount(totalServers);

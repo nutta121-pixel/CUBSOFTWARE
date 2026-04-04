@@ -261,6 +261,13 @@ client.once('ready', async () => {
     // Start presence rotation (every 30 seconds)
     updatePresence();
     setInterval(updatePresence, 30000);
+
+    // Log stats every 60 seconds
+    const logStats = () => {
+        const total = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
+        console.log(`[Stats] ${client.guilds.cache.size} servers, ${total} total members`);
+    };
+    setInterval(logStats, 60000);
 });
 
 // Handle slash commands
@@ -274,6 +281,8 @@ client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     const { commandName } = interaction;
+
+    console.log(`[Command] /${commandName} by ${interaction.user.username} in ${interaction.guild?.name || 'DM'}`);
 
     // Check if user has admin permissions (except for help)
     if (commandName !== 'help') {
@@ -1927,8 +1936,14 @@ async function handleAntiKick(interaction) {
     });
 }
 
+// Listen for bot joining a new guild
+client.on('guildCreate', (guild) => {
+    console.log(`[Guild] Joined: ${guild.name} (${guild.id}) | Now in ${client.guilds.cache.size} servers`);
+});
+
 // Listen for bot removal from guilds
 client.on('guildDelete', async (guild) => {
+    console.log(`[Guild] Left: ${guild.name} (${guild.id}) | Now in ${client.guilds.cache.size} servers`);
     console.log(`[Anti-Kick] Removed from guild: ${guild.name} (${guild.id})`);
     if (terminal) {
         terminal.log(`Removed from guild: ${guild.name} (${guild.id})`, 'warn');

@@ -362,6 +362,8 @@ module.exports = {
             return;
         }
 
+        console.log(`[Command] /${interaction.commandName} by ${interaction.user.username} in ${interaction.guild?.name || 'DM'}`);
+
         // Check for maintenance mode (except for website command which staff use to disable it)
         if (interaction.commandName !== 'website') {
             const { WebsiteSettingsModel } = require('../../database/models');

@@ -4632,12 +4632,22 @@
                 ? '<p style="color:var(--text-muted);">No suggestions yet.</p>'
                 : suggestions.slice(0, 20).map(s => {
                     const statusColors = { pending: '#f59e0b', approved: '#22c55e', denied: '#ef4444' };
-                    return `<div class="channel-item" style="margin-bottom:0.5rem;">
-                        <div class="channel-info"><div>
-                            <div class="channel-name" style="display:flex;align-items:center;gap:0.5rem;">${escapeHtml((s.content || '').substring(0, 60))}<span class="tag-pill" style="font-size:0.7rem;background:${statusColors[s.status] || statusColors.pending}22;border-color:${statusColors[s.status] || statusColors.pending}55;color:${statusColors[s.status] || statusColors.pending};">${s.status || 'pending'}</span></div>
-                            <div class="channel-owner">by ${escapeHtml(s.author_id || 'unknown')}</div>
-                        </div></div>
-                        ${s.status === 'pending' ? `<div style="display:flex;gap:0.35rem;"><button class="control-btn primary small" onclick="window.cpApproveSuggestion('${s.id}')">Approve</button><button class="control-btn danger small" onclick="window.cpDenySuggestion('${s.id}')">Deny</button></div>` : ''}
+                    const color = statusColors[s.status] || statusColors.pending;
+                    const idea = escapeHtml(s.idea || s.content || '');
+                    const author = s.anonymous ? 'Anonymous' : (s.author_id || 'unknown');
+                    return `<div class="channel-item" style="margin-bottom:0.5rem;flex-direction:column;align-items:flex-start;gap:0.4rem;padding:0.75rem;">
+                        <div style="display:flex;align-items:center;gap:0.5rem;width:100%;justify-content:space-between;">
+                            <div style="display:flex;align-items:center;gap:0.5rem;">
+                                <span style="font-weight:700;color:var(--text-muted);font-size:0.8rem;">#${s.id}</span>
+                                <span class="tag-pill" style="font-size:0.7rem;background:${color}22;border-color:${color}55;color:${color};">${s.status || 'pending'}</span>
+                                <span style="font-size:0.75rem;color:var(--text-muted);">by ${escapeHtml(author)}</span>
+                            </div>
+                            <div style="display:flex;gap:0.35rem;">
+                                ${s.status === 'pending' ? `<button class="control-btn primary small" onclick="window.cpApproveSuggestion('${s.id}')">Approve</button><button class="control-btn danger small" onclick="window.cpDenySuggestion('${s.id}')">Deny</button>` : ''}
+                                <button class="control-btn small" style="background:#ef444422;border-color:#ef444455;color:#ef4444;" onclick="window.cpDeleteSuggestion('${s.id}')">Delete</button>
+                            </div>
+                        </div>
+                        <div style="font-size:0.9rem;color:var(--text-primary);word-break:break-word;">${idea}</div>
                     </div>`;
                 }).join('');
         } catch (e) { console.error('Failed to load suggestions:', e); }
@@ -4675,6 +4685,20 @@
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'denied' })
             });
             showToast('Suggestion denied', 'success'); loadSuggestions();
+        } catch (e) { showToast('Failed', 'error'); }
+    };
+
+    window.cpDeleteSuggestion = async function(id) {
+        if (!confirm(`Delete suggestion #${id}? This will also remove the message from Discord.`)) return;
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/suggestions/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) {
+                showToast(`Suggestion #${id} deleted`, 'success');
+            } else {
+                showToast(data.error || 'Failed to delete', 'error');
+            }
+            loadSuggestions();
         } catch (e) { showToast('Failed', 'error'); }
     };
 

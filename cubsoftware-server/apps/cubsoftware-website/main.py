@@ -11634,6 +11634,7 @@ CUB_PROTECTOR_CUSTOM_COMMANDS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'custo
 CUB_PROTECTOR_STARBOARD_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'starboard.json')
 CUB_PROTECTOR_AFK_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'afk.json')
 CUB_PROTECTOR_SUGGESTIONS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'suggestions.json')
+CUB_PROTECTOR_BOT_QUEUE_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'bot_actions_queue.json')
 CUB_PROTECTOR_ANTI_RAID_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'anti_raid.json')
 CUB_PROTECTOR_WARNINGS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'warnings.json')
 CUB_PROTECTOR_ANNOUNCEMENTS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'announcements.json')
@@ -11706,6 +11707,17 @@ def save_cp_json(filepath, data):
             raise
     except Exception as e:
         app.logger.error(f'Failed to save {filepath}: {e}')
+
+def cp_enqueue_action(action):
+    """Append an action to the bot actions queue for the cub-protector bot to process."""
+    try:
+        queue = load_cp_json(CUB_PROTECTOR_BOT_QUEUE_FILE)
+        if 'actions' not in queue:
+            queue['actions'] = []
+        queue['actions'].append(action)
+        save_cp_json(CUB_PROTECTOR_BOT_QUEUE_FILE, queue)
+    except Exception as e:
+        app.logger.error(f'Failed to enqueue bot action: {e}')
 
 def check_cp_guild_access(guild_id):
     # Use cached shared guild IDs from session with a 5-minute TTL
@@ -14284,12 +14296,57 @@ def cub_protector_suggestion_update(guild_id, sug_id):
     if status not in ('approved', 'denied'):
         return jsonify({'error': 'Invalid status'}), 400
     data = load_cp_json(CUB_PROTECTOR_SUGGESTIONS_FILE)
-    suggestions = data.get('guilds', {}).get(guild_id, {}).get('suggestions', [])
+    guild_data = data.get('guilds', {}).get(guild_id, {})
+    suggestions = guild_data.get('suggestions', [])
+    try:
+        sug_id_int = int(sug_id)
+    except (ValueError, TypeError):
+        sug_id_int = None
+    matched = None
     for s in suggestions:
-        if s.get('id') == sug_id:
+        if str(s.get('id')) == str(sug_id) or s.get('id') == sug_id_int:
             s['status'] = status
+            matched = s
             break
     save_cp_json(CUB_PROTECTOR_SUGGESTIONS_FILE, data)
+    if matched:
+        cp_enqueue_action({
+            'type': f'{status}_suggestion',
+            'guild_id': guild_id,
+            'suggestion_id': matched.get('id'),
+            'message_id': matched.get('message_id'),
+            'channel_id': matched.get('channel_id'),
+            'approved_channel': guild_data.get('approved_channel'),
+            'denied_channel': guild_data.get('denied_channel'),
+            'idea': matched.get('idea', ''),
+            'anonymous': matched.get('anonymous', False),
+            'author_id': matched.get('author_id')
+        })
+    return jsonify({'success': True})
+
+@app.route('/api/cub-protector/guilds/<guild_id>/suggestions/<sug_id>', methods=['DELETE'])
+@cub_protector_auth_required
+def cub_protector_suggestion_delete(guild_id, sug_id):
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    data = load_cp_json(CUB_PROTECTOR_SUGGESTIONS_FILE)
+    guild_data = data.get('guilds', {}).get(guild_id, {})
+    suggestions = guild_data.get('suggestions', [])
+    try:
+        sug_id_int = int(sug_id)
+    except (ValueError, TypeError):
+        sug_id_int = None
+    deleted = next((s for s in suggestions if str(s.get('id')) == str(sug_id) or s.get('id') == sug_id_int), None)
+    if not deleted:
+        return jsonify({'error': 'Suggestion not found'}), 404
+    guild_data['suggestions'] = [s for s in suggestions if str(s.get('id')) != str(sug_id) and s.get('id') != sug_id_int]
+    save_cp_json(CUB_PROTECTOR_SUGGESTIONS_FILE, data)
+    cp_enqueue_action({
+        'type': 'delete_message',
+        'guild_id': guild_id,
+        'message_id': deleted.get('message_id'),
+        'channel_id': deleted.get('channel_id')
+    })
     return jsonify({'success': True})
 
 # ==================== CUB PROTECTOR - ANTI-RAID API ====================

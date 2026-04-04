@@ -153,6 +153,7 @@ const STARBOARD_FILE = path.join(DATA_DIR, 'starboard.json');
 const AFK_FILE = path.join(DATA_DIR, 'afk.json');
 const REMINDERS_FILE = path.join(DATA_DIR, 'reminders.json');
 const SUGGESTIONS_FILE = path.join(DATA_DIR, 'suggestions.json');
+const BOT_QUEUE_FILE = path.join(DATA_DIR, 'bot_actions_queue.json');
 const ECONOMY_FILE = path.join(DATA_DIR, 'economy.json');
 const ACHIEVEMENTS_FILE = path.join(DATA_DIR, 'achievements.json');
 const STATS_FILE = path.join(DATA_DIR, 'stats.json');
@@ -10936,6 +10937,75 @@ client.once('ready', async () => {
         const total = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
         console.log(`[Stats] ${client.guilds.cache.size} servers, ${total} total members`);
     }, 60000);
+
+    // Process dashboard bot action queue every 5 seconds
+    async function processBotQueue() {
+        let queue;
+        try { queue = loadJsonFile(BOT_QUEUE_FILE); } catch { return; }
+        const actions = queue.actions || [];
+        if (actions.length === 0) return;
+
+        const remaining = [];
+        for (const action of actions) {
+            // Route by ownership: custom bot only handles its guild; main bot skips custom bot guilds
+            const actionGuildId = String(action.guild_id || '');
+            if (CUSTOM_GUILD_ID) {
+                if (actionGuildId !== String(CUSTOM_GUILD_ID)) { remaining.push(action); continue; }
+            } else {
+                if (actionGuildId && guildHasCustomBot(actionGuildId)) { remaining.push(action); continue; }
+            }
+
+            try {
+                if (action.type === 'delete_message') {
+                    const ch = action.channel_id ? await client.channels.fetch(action.channel_id).catch(() => null) : null;
+                    if (ch && action.message_id) await ch.messages.delete(action.message_id).catch(() => {});
+
+                } else if (action.type === 'approved_suggestion' || action.type === 'denied_suggestion') {
+                    const approved = action.type === 'approved_suggestion';
+                    const statusLabel = approved ? '✅ Approved' : '❌ Denied';
+                    const statusColor = approved ? 0x22c55e : 0xef4444;
+                    const targetChannelId = approved ? action.approved_channel : action.denied_channel;
+
+                    // Edit original message embed
+                    const srcCh = action.channel_id ? await client.channels.fetch(action.channel_id).catch(() => null) : null;
+                    if (srcCh && action.message_id) {
+                        const msg = await srcCh.messages.fetch(action.message_id).catch(() => null);
+                        if (msg && msg.embeds.length > 0) {
+                            const oldEmbed = msg.embeds[0];
+                            const { EmbedBuilder } = require('discord.js');
+                            const updatedEmbed = EmbedBuilder.from(oldEmbed)
+                                .setColor(statusColor)
+                                .spliceFields(0, oldEmbed.fields.length, { name: 'Status', value: statusLabel, inline: true });
+                            await msg.edit({ embeds: [updatedEmbed] }).catch(() => {});
+                        }
+                    }
+
+                    // Post to approved/denied channel
+                    if (targetChannelId) {
+                        const targetCh = await client.channels.fetch(targetChannelId).catch(() => null);
+                        if (targetCh) {
+                            const notifEmbed = cubEmbed()
+                                .setColor(statusColor)
+                                .setTitle(`Suggestion #${action.suggestion_id} ${approved ? 'Approved' : 'Denied'}`)
+                                .setDescription(action.idea || '')
+                                .addFields({ name: 'Status', value: statusLabel, inline: true })
+                                .setTimestamp();
+                            if (!action.anonymous && action.author_id) notifEmbed.setFooter({ text: `Submitted by <@${action.author_id}>` });
+                            await targetCh.send({ embeds: [notifEmbed] }).catch(() => {});
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(`[Suggestions] Queue action failed (${action.type}):`, e.message);
+                remaining.push(action); // retry next cycle on error
+            }
+        }
+
+        queue.actions = remaining;
+        saveJsonFile(BOT_QUEUE_FILE, queue);
+    }
+    setInterval(processBotQueue, 5000);
+    processBotQueue(); // run once immediately on ready
 });
 
 // ============================================================

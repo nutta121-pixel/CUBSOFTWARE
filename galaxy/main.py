@@ -5,7 +5,6 @@ import asyncio
 import datetime 
 import os
 import json
-
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord.utils import get
@@ -29,14 +28,10 @@ def get_prefix(client, message):
         config = load_settings()
         return config.get(str(message.guild.id), {}).get("prefix", default_prefix)
     return default_prefix
-client = commands.Bot(command_prefix=get_prefix, owner_id =BOT_OWNER_ID, intents=discord.Intents.all())
+client = commands.Bot(command_prefix=get_prefix, owner_id =BOT_OWNER_ID, case_insensitive=True, intents=discord.Intents.all())
 print(f'bot owner is {BOT_OWNER_ID}')
 timestamp = datetime.datetime.now()
 stamp = timestamp.strftime(" %I:%M %p")
-
-
-
-
 #Buttons
 class chView(discord.ui.View):
     def __init__(self, Log_cache):
@@ -94,10 +89,6 @@ class MView(discord.ui.View):
             await interaction.response.defer()
             await interaction.followup.send(embed=reply, ephemeral=True)
             await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
-
-
-
-
 #EVENTS
 @client.event
 async def on_guild_join(guild):
@@ -108,15 +99,13 @@ async def on_guild_join(guild):
             "welcome_channel": None,
             "mod_role_id": None,
             "logs_enabled": None,
+            "user_role": None
         }
         save_prefixes(options)
         print("done")
 @client.event
 async def on_ready():
     print('startup complete')
-
-
-
 @client.event
 async def on_voice_state_update(member, before, after):
     log_channel = get(member.guild.channels, name="logs")
@@ -143,7 +132,7 @@ async def on_voice_state_update(member, before, after):
                     embed.add_field(name='Joined Channel', value=channel.name or 'Channel Not Found')
                     embed.set_footer(text=f'{stamp}')
                     await log_channel.send(embed=embed)
-                await member.voice.channel.connect()
+                #await member.voice.channel.connect()
             except Exception as e:
                 print(f"ERROR private channel creation {e}")
     elif after.channel is None and before.channel is not None:
@@ -151,34 +140,60 @@ async def on_voice_state_update(member, before, after):
             return
         else:
             if before.channel.name != "Create Private Channel":
-                print(f"{member.name} left {before.channel.name}")
                 embed = discord.Embed(title=f'User Left Channel:', color=discord.Color.blue())
                 embed.add_field(name='User:', value=member.name, inline=False)
                 embed.add_field(name='Left Channel', value=before.channel.name or 'Channel Not Found')
                 embed.set_footer(text=f'{stamp}')
                 await log_channel.send(embed=embed)
-                if len(before.channel.members) == 1:
-                    await member.guild.voice_client.disconnect()
-                    if "'s Private Channel" in before.channel.name:
-                        await asyncio.sleep(10)
-                        if len(before.channel.members) == 0:
-                            try:
-                                await before.channel.delete()
-                            except Exception as e:
-                                print(f"ERROR deleting channel {e}")
+                    #await member.guild.voice_client.disconnect()
+                if "'s Private Channel" in before.channel.name:
+                    if len(before.channel.members) == 0:
+                        try:
+                            await before.channel.delete()
+                        except Exception as e:
+                            print(f"ERROR deleting channel {e}")
             else:
                 return
-
-
-
-
-
-
-
-
+    elif after.channel is not None and before.channel is not None:
+        if member.bot:
+            return
+        else:
+            if before.channel.name != "Create Private Channel":
+                embed = discord.Embed(title=f'User Left Channel:', color=discord.Color.blue())
+                embed.add_field(name='User:', value=member.name, inline=False)
+                embed.add_field(name='Left Channel', value=before.channel.name or 'Channel Not Found')
+                embed.add_field(name='Joined Channel', value=after.channel.name or 'Channel Not Found')
+                embed.set_footer(text=f'{stamp}')
+                await log_channel.send(embed=embed)
+                    #await member.guild.voice_client.disconnect()
+                if "'s Private Channel" in before.channel.name:
+                    if len(before.channel.members) == 0:
+                        try:
+                            await before.channel.delete()
+                        except Exception as e:
+                            print(f"ERROR deleting channel {e}")
+            if after.channel.name == "Create Private Channel":
+                guild = member.guild
+                overwrites = {
+                    guild.default_role: discord.PermissionOverwrite(view_channel=False, connect=False),
+                    member: discord.PermissionOverwrite(view_channel=True, connect=True),
+                    guild.me: discord.PermissionOverwrite(view_channel=True, connect=True)
+                }
+                channel = await guild.create_voice_channel(
+                    name=f"{member.name}'s Private Channel",
+                    overwrites=overwrites,
+                    category=after.channel.category
+                )
+                await member.move_to(channel)
+                embed = discord.Embed(title=f'User Joined Channel:', color=discord.Color.blue())
+                embed.add_field(name='User:', value=member.name, inline=False)
+                embed.add_field(name='Joined Channel', value=channel.name or 'Channel Not Found')
+                embed.set_footer(text=f'{stamp}')
+                await log_channel.send(embed=embed)
+                #await member.voice.channel.connect()
+            else:
+                return
 #LOGGING STUFF#
-
-
 #Creation Logs
 @client.event
 async def on_audit_log_entry_create(entry):
@@ -232,9 +247,6 @@ async def on_audit_log_entry_create(entry):
         print('log channel made')
         client.dispatch("on_audit_log_entry_create", entry)
         pass
-
-
-
 #Deletion Logs
 @client.event
 async def on_guild_channel_delete(channel):
@@ -329,11 +341,59 @@ async def on_message_delete(message):
         print('log channel made')
         client.dispatch("message_delete", message)
         pass
-
-
-
-
 #COMMANDS
+
+
+
+@client.command()
+async def uinvite(ctx):
+    role = discord.utils.get(ctx.guild.roles, name="Member")
+    member = ctx.author
+    if role in member.roles:
+        invite = await ctx.channel.create_invite(
+            max_age=3600,
+            max_uses=1,
+            temporary=True,
+            unique=True
+        )
+        await ctx.reply(f"Done here is your temparary invite. {invite}\nIts only one use and is active for an hour.", ephemeral=True)
+    else:
+        ctx.reply(f"You require the member role to create an invite....talk to an admin about getting the role!", ephemeral=True)
+        
+
+
+
+
+
+
+
+
+@client.command()
+async def send(ctx, channel: discord.TextChannel, *, message):
+    if ctx.author == BOT_OWNER_ID:
+        await ctx.send("this command is bot owner only")
+    else:
+        embed = discord.Embed(title=f'Message By Admin', color=discord.Color.red())
+        embed.add_field(name='', value=message)
+        embed.set_footer(text=f'{stamp}')
+        await channel.send(embed=embed)
+@client.command()
+async def vinvite(ctx, member: discord.Member):
+    if ctx.author.voice:
+        channel = ctx.author.voice.channel
+        if "'s Private Channel" in channel.name:
+            await channel.set_permissions(member, connect=True, speak=True, view_channel=True)
+            await ctx.reply(f"Done! {member.name} can now see your private channel!!", ephemeral=True)
+            await asyncio.sleep(0.5)
+            await ctx.message.delete()
+        else:
+            await ctx.reply("You are not in a private call!", ephemeral=True)
+            await asyncio.sleep(0.5)
+            await ctx.message.delete()
+    else:
+        await ctx.reply('you must send this in a voice call', ephemeral=True)
+        await asyncio.sleep(0.5)
+        await ctx.message.delete()
 @client.command()
 async def summon(ctx):
     if ctx.author.voice:

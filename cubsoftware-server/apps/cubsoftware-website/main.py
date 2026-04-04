@@ -13020,8 +13020,11 @@ def cub_protector_mod_action(guild_id):
     if action == 'ban':
         delete_days = min(7, max(0, int(body.get('delete_days', 0))))
         # Generate appeal code (6 chars, mixed case + digits)
+        # Check if ban appeals are enabled for this guild
+        appeals_data = load_cp_json(CUB_PROTECTOR_BAN_APPEALS_FILE)
+        appeals_enabled = appeals_data.get('guilds', {}).get(guild_id, {}).get('settings', {}).get('enabled') is True
         appeal_chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-        appeal_code = 'CPAC-' + ''.join(random.choice(appeal_chars) for _ in range(6))
+        appeal_code = ('CPAC-' + ''.join(random.choice(appeal_chars) for _ in range(6))) if appeals_enabled else None
         # Tell the bot this ban is dashboard-managed so guildBanAdd skips double-processing
         try:
             _bot_port = os.environ.get('LOG_SERVER_PORT', 3847)
@@ -13030,22 +13033,24 @@ def cub_protector_mod_action(guild_id):
                 timeout=2)
         except Exception:
             pass
-        # DM user before banning with appeal code
+        # DM user before banning
         try:
-            # Create DM channel
+            guild_info = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}')
+            guild_name = guild_info.get('name', 'the server') if guild_info else 'the server'
             dm_channel = cub_protector_bot_request('POST', f'/users/@me/channels', json={'recipient_id': user_id})
             if dm_channel and 'id' in dm_channel:
-                cub_protector_bot_request('POST', f'/channels/{dm_channel["id"]}/messages', json={
-                    'embeds': [{
-                        'title': 'You have been banned',
-                        'description': f'**Reason:** {reason}',
-                        'color': 0xED4245,
-                        'fields': [
-                            {'name': 'Appeal Link', 'value': f'https://cubsoftware.site/ban-appeal/{guild_id}/{appeal_code}', 'inline': False},
-                        ],
-                        'footer': {'text': 'Click the link above to submit a ban appeal. You will need to log in with Discord.'},
-                    }]
-                })
+                embed = {
+                    'title': f'You have been banned from {guild_name}',
+                    'description': f'**Reason:** {reason}',
+                    'color': 0xED4245,
+                }
+                if appeal_code:
+                    embed['fields'] = [
+                        {'name': 'Appeal Code', 'value': f'`{appeal_code}`', 'inline': True},
+                        {'name': 'Appeal Link', 'value': f'https://cubsoftware.site/ban-appeal/{guild_id}/{appeal_code}', 'inline': False},
+                    ]
+                    embed['footer'] = {'text': 'Click the link above to submit a ban appeal. You will need to log in with Discord.'}
+                cub_protector_bot_request('POST', f'/channels/{dm_channel["id"]}/messages', json={'embeds': [embed]})
         except Exception:
             pass
         result = _guild_bot_request(guild_id, 'PUT', f'/guilds/{guild_id}/bans/{user_id}', json={

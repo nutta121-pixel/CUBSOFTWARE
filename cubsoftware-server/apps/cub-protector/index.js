@@ -309,27 +309,29 @@ async function processBanAction({ guild, targetUser, reason, moderatorId }) {
     } catch (e) {}
 
     let appealCode = null;
+    const banDmEmbed = cubEmbed()
+        .setColor(0xED4245)
+        .setTitle(`You have been banned from ${guild.name}`)
+        .setDescription(`**Reason:** ${reason}`)
+        .setTimestamp();
+
+    if (appealsEnabled) {
+        appealCode = generateAppealCode();
+        banDmEmbed.addFields(
+            { name: 'Appeal Code', value: `\`${appealCode}\``, inline: true },
+            { name: 'Appeal Link', value: `https://cubsoftware.site/ban-appeal/${guild.id}/${appealCode}`, inline: false },
+        );
+        banDmEmbed.setFooter({ text: 'Click the link above to submit a ban appeal. You will need to log in with Discord.' });
+    }
+
+    // Try to DM the user. For right-click bans the user is already gone from the server,
+    // so we try fetching them directly from the API if the object isn't fully populated.
     try {
-        if (appealsEnabled) {
-            appealCode = generateAppealCode();
-            const banDmEmbed = cubEmbed()
-                .setColor(0xED4245)
-                .setTitle(`You have been banned from ${guild.name}`)
-                .setDescription(`**Reason:** ${reason}`)
-                .addFields(
-                    { name: 'Appeal Link', value: `https://cubsoftware.site/ban-appeal/${guild.id}/${appealCode}`, inline: false },
-                )
-                .setFooter({ text: 'Click the link above to submit a ban appeal. You will need to log in with Discord.' })
-                .setTimestamp();
-            await targetUser.send({ embeds: [banDmEmbed] }).catch(() => {});
-        } else {
-            const banDmEmbed = cubEmbed()
-                .setColor(0xED4245)
-                .setTitle(`You have been banned from ${guild.name}`)
-                .setDescription(`**Reason:** ${reason}`)
-                .setTimestamp();
-            await targetUser.send({ embeds: [banDmEmbed] }).catch(() => {});
+        let user = targetUser;
+        if (!user.send) {
+            user = await client.users.fetch(targetUser.id).catch(() => null);
         }
+        if (user) await user.send({ embeds: [banDmEmbed] }).catch(() => {});
     } catch (e) {}
 
     const modData = loadModData();

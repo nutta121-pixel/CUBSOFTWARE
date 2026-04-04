@@ -1540,7 +1540,8 @@ const commands = [
     new SlashCommandBuilder()
         .setName('suggest')
         .setDescription('Submit a suggestion')
-        .addStringOption(opt => opt.setName('idea').setDescription('Your suggestion').setRequired(true)),
+        .addStringOption(opt => opt.setName('idea').setDescription('Your suggestion').setRequired(true))
+        .addBooleanOption(opt => opt.setName('anonymous').setDescription('Submit anonymously (hides your name)')),
 
     new SlashCommandBuilder()
         .setName('suggestion')
@@ -6601,6 +6602,7 @@ client.on('interactionCreate', async (interaction) => {
         const sData = loadSuggestionsData();
         if (!sData.guilds[guild.id]) sData.guilds[guild.id] = { channel_id: null, enabled: true, suggestions: [], next_id: 1 };
         const guildS = sData.guilds[guild.id];
+        if (!guildS.suggestions) guildS.suggestions = [];
 
         const channelId = guildS.channel_id || guildS.channel || null;
         if (guildS.enabled === false) return interaction.reply({ content: 'Suggestions are currently disabled.', ephemeral: true });
@@ -6609,8 +6611,14 @@ client.on('interactionCreate', async (interaction) => {
         const channel = await guild.channels.fetch(channelId).catch(() => null);
         if (!channel) return interaction.reply({ content: 'Suggestion channel not found — an admin may need to reconfigure it.', ephemeral: true });
 
-        const sugId = guildS.next_id++;
-        const anonymous = guildS.anonymous || false;
+        // Generate unique random 4-digit ID
+        let sugId;
+        const usedIds = new Set(guildS.suggestions.map(s => s.id));
+        do { sugId = Math.floor(Math.random() * 1000000); } while (usedIds.has(sugId));
+
+        // Anonymous: per-submission option overrides server default
+        const anonOption = interaction.options.getBoolean('anonymous');
+        const anonymous = anonOption !== null ? anonOption : (guildS.anonymous || false);
         const autoReact = guildS.auto_react !== false;
 
         const embed = cubEmbed()
@@ -6627,7 +6635,7 @@ client.on('interactionCreate', async (interaction) => {
             await msg.react('👎').catch(() => {});
         }
 
-        guildS.suggestions.push({ id: sugId, message_id: msg.id, channel_id: channelId, author_id: member.id, idea, status: 'pending' });
+        guildS.suggestions.push({ id: sugId, message_id: msg.id, channel_id: channelId, author_id: member.id, idea, status: 'pending', anonymous });
         saveSuggestionsData(sData);
 
         await interaction.reply({ content: `✅ Suggestion #${sugId} submitted!`, ephemeral: true });

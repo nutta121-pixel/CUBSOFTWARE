@@ -47,7 +47,7 @@ body {
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    z-index: 100;
+    z-index: 1001;
     transition: transform 0.3s ease, width 0.3s ease;
 }
 

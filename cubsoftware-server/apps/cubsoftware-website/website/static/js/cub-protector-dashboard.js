@@ -3822,20 +3822,26 @@
         if (title) html += `<div style="font-weight:700;font-size:1rem;margin-bottom:0.5rem;">${escapeHtml(title)}</div>`;
         if (desc) html += `<div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.75rem;white-space:pre-wrap;">${escapeHtml(desc)}</div>`;
 
-        // Fields
+        // Fields — only show fields with both name AND value (matches what gets sent)
         const fieldEls = document.querySelectorAll('.embed-field-row');
-        if (fieldEls.length > 0) {
+        const validFields = [];
+        fieldEls.forEach(row => {
+            const name = row.querySelector('.embed-field-name')?.value || '';
+            const value = row.querySelector('.embed-field-value')?.value || '';
+            const inline = row.querySelector('.embed-field-inline')?.checked;
+            // Mark incomplete rows visually
+            const incomplete = (name && !value) || (!name && value);
+            row.style.opacity = incomplete ? '0.5' : '';
+            row.title = incomplete ? 'Both name and value are required for a field to be sent' : '';
+            if (name && value) validFields.push({ name, value, inline });
+        });
+        if (validFields.length > 0) {
             html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0.75rem;">';
-            fieldEls.forEach(row => {
-                const name = row.querySelector('.embed-field-name')?.value || '';
-                const value = row.querySelector('.embed-field-value')?.value || '';
-                const inline = row.querySelector('.embed-field-inline')?.checked;
-                if (name || value) {
-                    html += `<div style="grid-column:${inline ? 'span 1' : '1 / -1'};">
-                        <div style="font-weight:600;font-size:0.8rem;">${escapeHtml(name)}</div>
-                        <div style="font-size:0.8rem;color:var(--text-muted);">${escapeHtml(value)}</div>
-                    </div>`;
-                }
+            validFields.forEach(f => {
+                html += `<div style="grid-column:${f.inline ? 'span 1' : '1 / -1'};">
+                    <div style="font-weight:600;font-size:0.8rem;">${escapeHtml(f.name)}</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">${escapeHtml(f.value)}</div>
+                </div>`;
             });
             html += '</div>';
         }

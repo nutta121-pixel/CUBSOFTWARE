@@ -36,7 +36,7 @@ if [ -f "$ENV_FILE" ]; then
 fi
 
 BOT_TOKEN="${CUB_PROTECTOR_TOKEN:-}"
-CHANNEL_ID="${GIT_PUSH_CHANNEL_ID:-1284601338965004369}"
+CHANNEL_ID="${GIT_PUSH_CHANNEL_ID:-1466190584372003092}"
 
 # ── Discord send helper (uses bot token) ─────
 send_discord() {

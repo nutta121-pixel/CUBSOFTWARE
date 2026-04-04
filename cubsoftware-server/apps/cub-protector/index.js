@@ -300,7 +300,7 @@ function loadSlowmodeConfig() {
  * @param {string} opts.reason
  * @param {string} opts.moderatorId  - Discord user ID of the moderator ('unknown' if from audit log and can't be determined)
  */
-async function processBanAction({ guild, targetUser, reason, moderatorId }) {
+async function processBanAction({ guild, targetUser, reason, moderatorId, existingDmChannel = null }) {
     const banAppealsPath = path.join(__dirname, 'data', 'ban_appeals.json');
     let appealsEnabled = false;
     try {
@@ -324,14 +324,16 @@ async function processBanAction({ guild, targetUser, reason, moderatorId }) {
         banDmEmbed.setFooter({ text: 'Click the link above to submit a ban appeal. You will need to log in with Discord.' });
     }
 
-    // Try to DM the user. For right-click bans the user is already gone from the server,
-    // so we try fetching them directly from the API if the object isn't fully populated.
+    // Send DM. For right-click bans we receive a pre-created DM channel that was opened
+    // before the 1-second audit log wait (best chance of success before mutual server is gone).
     try {
-        let user = targetUser;
-        if (!user.send) {
-            user = await client.users.fetch(targetUser.id).catch(() => null);
-        }
-        if (user) await user.send({ embeds: [banDmEmbed] }).catch(() => {});
+        const channel = existingDmChannel
+            || await (async () => {
+                let user = targetUser;
+                if (!user.createDM) user = await client.users.fetch(targetUser.id).catch(() => null);
+                return user ? await user.createDM().catch(() => null) : null;
+            })();
+        if (channel) await channel.send({ embeds: [banDmEmbed] }).catch(() => {});
     } catch (e) {}
 
     const modData = loadModData();
@@ -3768,11 +3770,19 @@ client.on('guildBanAdd', async (ban) => {
     }
 
     // Native Discord ban (right-click → ban, or another bot)
-    // Fetch audit log to get reason and moderator
+    // Open the DM channel NOW — this is the earliest moment and gives the best chance of
+    // success before the mutual-server relationship is fully severed by Discord.
+    let preDmChannel = null;
+    try {
+        const user = await client.users.fetch(ban.user.id);
+        preDmChannel = await user.createDM();
+    } catch (e) {}
+
+    // Now wait for the audit log to populate so we can get the reason + moderator
     let reason = ban.reason || 'No reason provided';
     let moderatorId = 'unknown';
     try {
-        await new Promise(r => setTimeout(r, 1000)); // small delay for audit log to populate
+        await new Promise(r => setTimeout(r, 1500));
         const logs = await ban.guild.fetchAuditLogs({ type: AuditLogEvent.MemberBanAdd, limit: 5 });
         const entry = logs.entries.find(e => e.target?.id === ban.user.id);
         if (entry) {
@@ -3781,8 +3791,8 @@ client.on('guildBanAdd', async (ban) => {
         }
     } catch (e) {}
 
-    // Send DM + create mod case
-    await processBanAction({ guild: ban.guild, targetUser: ban.user, reason, moderatorId });
+    // Send DM (using the pre-created channel) + create mod case
+    await processBanAction({ guild: ban.guild, targetUser: ban.user, reason, moderatorId, existingDmChannel: preDmChannel });
 
     await sendLog(ban.guild, 'memberBan', cubEmbed()
         .setColor(0xED4245)
@@ -8211,7 +8221,7 @@ client.on('interactionCreate', async (interaction) => {
 
             // Delete channel after 10 seconds
             setTimeout(async () => {
-                await interaction.channel.delete().catch(() => {});
+                if (interaction.channel) await interaction.channel.delete().catch(() => {});
             }, 10000);
         } catch (e) {
             console.error('Modmail close error:', e);

@@ -777,7 +777,12 @@ def cub_login_discord_callback():
         # Compute protector guilds at login time — avoids storing raw_guilds in cookie
         protector_guilds = []
         try:
-            bot_guilds = cub_protector_bot_request('/users/@me/guilds?with_counts=true') or []
+            # Bot guild list is shared across all workers via file cache (5 min TTL)
+            bot_guilds = _file_cache_get('bot_guild_list', ttl=300)
+            if bot_guilds is None:
+                bot_guilds = cub_protector_bot_request('/users/@me/guilds?with_counts=true') or []
+                if bot_guilds:
+                    _file_cache_set('bot_guild_list', bot_guilds)
             custom_bots_data = _load_custom_bots()
             all_covered = {g['id'] for g in bot_guilds} | {
                 gid for gid, e in custom_bots_data.get('guilds', {}).items()
@@ -10748,9 +10753,9 @@ def save_cub_protector_data(data):
     with open(CUB_PROTECTOR_TEMP_VOICE_FILE, 'w') as f:
         json.dump(data, f, indent=2)
 
-# Simple cache for Discord API GET requests to avoid rate limits
+# ── Per-worker in-memory cache (fast, but not shared across workers) ──────────
 _discord_api_cache = {}  # key -> {'data': ..., 'expires': timestamp}
-DISCORD_CACHE_TTL = 300  # Cache GET responses for 5 minutes
+DISCORD_CACHE_TTL = 300  # 5 minutes default TTL
 
 def _get_cached(key):
     import time as _time
@@ -10759,15 +10764,99 @@ def _get_cached(key):
         return entry['data']
     return None
 
-def _set_cache(key, data):
+def _set_cache(key, data, ttl=None):
     import time as _time
-    _discord_api_cache[key] = {'data': data, 'expires': _time.time() + DISCORD_CACHE_TTL}
-    # Clean old entries periodically (keep cache small)
+    _discord_api_cache[key] = {'data': data, 'expires': _time.time() + (ttl or DISCORD_CACHE_TTL)}
+    # Clean old entries periodically
     if len(_discord_api_cache) > 200:
         now = _time.time()
         expired = [k for k, v in _discord_api_cache.items() if now >= v['expires']]
         for k in expired:
             del _discord_api_cache[k]
+
+# ── Shared file cache (survives across workers + restarts) ────────────────────
+# Used for endpoints that are expensive and rarely change (e.g. bot guild list).
+_FILE_CACHE_DIR = os.path.join(os.path.dirname(__file__), 'data', '_cache')
+
+def _file_cache_get(key, ttl):
+    """Return cached data if the file exists and is fresh enough, else None."""
+    import time as _time
+    safe_key = ''.join(c if c.isalnum() or c in '-_' else '_' for c in key)
+    path = os.path.join(_FILE_CACHE_DIR, f'{safe_key}.json')
+    try:
+        if os.path.exists(path) and _time.time() - os.path.getmtime(path) < ttl:
+            with open(path) as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return None
+
+def _file_cache_set(key, data):
+    """Write data to the shared file cache."""
+    safe_key = ''.join(c if c.isalnum() or c in '-_' else '_' for c in key)
+    os.makedirs(_FILE_CACHE_DIR, exist_ok=True)
+    path = os.path.join(_FILE_CACHE_DIR, f'{safe_key}.json')
+    try:
+        with open(path, 'w') as f:
+            json.dump(data, f)
+    except Exception:
+        pass
+
+def _file_cache_invalidate(key):
+    """Remove a file cache entry (call after writes that mutate the resource)."""
+    safe_key = ''.join(c if c.isalnum() or c in '-_' else '_' for c in key)
+    path = os.path.join(_FILE_CACHE_DIR, f'{safe_key}.json')
+    try:
+        if os.path.exists(path):
+            os.remove(path)
+    except Exception:
+        pass
+    # Also clear from in-memory cache (all workers can't be notified, but clear own)
+    keys_to_del = [k for k in _discord_api_cache if key in k]
+    for k in keys_to_del:
+        _discord_api_cache.pop(k, None)
+
+def _get_discord_user(user_id):
+    """Fetch a Discord user by ID, using shared file cache (30 min TTL).
+    User data changes infrequently — username, avatar — safe to cache longer."""
+    cache_key = f'discord_user_{user_id}'
+    data = _file_cache_get(cache_key, ttl=1800)  # 30 minutes
+    if data is not None:
+        return data
+    data = cub_protector_bot_request(f'/users/{user_id}')
+    if data:
+        _file_cache_set(cache_key, data)
+    return data
+
+def _resolve_users_parallel(user_ids):
+    """Resolve a list of Discord user IDs to {id, username} dicts in parallel.
+    Uses file cache — only hits Discord API for IDs not already cached."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    if not user_ids:
+        return []
+    results = {}
+    # Check cache first to minimise thread overhead
+    uncached = []
+    for uid in user_ids:
+        cached = _file_cache_get(f'discord_user_{uid}', ttl=1800)
+        if cached is not None:
+            results[uid] = cached
+        else:
+            uncached.append(uid)
+    # Fetch remaining in parallel (max 10 at once to stay well under rate limits)
+    if uncached:
+        with ThreadPoolExecutor(max_workers=min(10, len(uncached))) as ex:
+            future_to_uid = {ex.submit(_get_discord_user, uid): uid for uid in uncached}
+            for future in as_completed(future_to_uid):
+                uid = future_to_uid[future]
+                try:
+                    results[uid] = future.result()
+                except Exception:
+                    results[uid] = None
+    return [
+        {'id': uid, 'username': (results.get(uid) or {}).get('username') or uid}
+        for uid in user_ids
+    ]
 
 def cub_protector_bot_request(endpoint_or_method, endpoint_or_none=None, method='GET', json_data=None, json=None, params=None, bypass_cache=False, token=None):
     """Make a request to Discord API using the CUB PROTECTOR bot token (with rate limit retry + caching for GETs).
@@ -10798,19 +10887,29 @@ def cub_protector_bot_request(endpoint_or_method, endpoint_or_none=None, method=
     # Check cache for GET requests (unless bypass_cache is set)
     # Include a short token fingerprint so different bots don't share cache entries
     cache_key = None
+    # Endpoints that are expensive and safe to cache longer across workers
+    _CROSS_WORKER_ENDPOINTS = ('/users/@me/guilds', '/guilds/')
+    _cross_worker = any(actual_endpoint.startswith(p) for p in _CROSS_WORKER_ENDPOINTS)
     if actual_method == 'GET' and not bypass_cache:
         param_str = str(sorted(params.items())) if params else ''
         token_fp = token[-8:] if token else 'none'
         cache_key = f'{actual_endpoint}:{param_str}:{token_fp}'
+        # Check in-memory cache first (fastest)
         cached = _get_cached(cache_key)
         if cached is not None:
             return cached
+        # For cross-worker endpoints, also check the shared file cache
+        if _cross_worker:
+            file_cached = _file_cache_get(cache_key, ttl=DISCORD_CACHE_TTL)
+            if file_cached is not None:
+                _set_cache(cache_key, file_cached)  # Warm local cache too
+                return file_cached
     url = f'https://discord.com/api/v10{actual_endpoint}'
     headers = {
         'Authorization': f'Bot {token}',
         'Content-Type': 'application/json'
     }
-    for attempt in range(3):
+    for attempt in range(5):
         try:
             if actual_method == 'GET':
                 resp = requests.get(url, headers=headers, params=params, timeout=10)
@@ -10829,16 +10928,23 @@ def cub_protector_bot_request(endpoint_or_method, endpoint_or_none=None, method=
                     result = resp.json()
                 except Exception:
                     result = {}
-                # Cache GET responses
                 if cache_key:
                     _set_cache(cache_key, result)
+                    if _cross_worker:
+                        _file_cache_set(cache_key, result)
                 return result
             elif resp.status_code == 204:
                 return {}
             elif resp.status_code == 429:
-                retry_after = resp.json().get('retry_after', 1)
-                app.logger.warning(f'CUB PROTECTOR rate limited, retrying in {retry_after}s (attempt {attempt + 1})')
-                _time.sleep(min(retry_after + 0.1, 5))
+                try:
+                    rate_data = resp.json()
+                    retry_after = rate_data.get('retry_after', 1)
+                except Exception:
+                    retry_after = 1
+                # Exponential backoff: wait at least retry_after, doubling each attempt
+                wait = min(retry_after + (0.5 * (2 ** attempt)), 30)
+                app.logger.warning(f'CUB PROTECTOR rate limited, retrying in {wait:.1f}s (attempt {attempt + 1})')
+                _time.sleep(wait)
                 continue
             else:
                 app.logger.error(f'CUB PROTECTOR API error {resp.status_code}: {resp.text[:200]}')
@@ -10846,7 +10952,7 @@ def cub_protector_bot_request(endpoint_or_method, endpoint_or_none=None, method=
         except Exception as e:
             app.logger.error(f'CUB PROTECTOR API request failed: {e}')
             return None
-    app.logger.error(f'CUB PROTECTOR API rate limited after 3 retries: {actual_endpoint}')
+    app.logger.error(f'CUB PROTECTOR API rate limited after 5 retries: {actual_endpoint}')
     return None
 
 def cub_protector_auth_required(f):
@@ -10992,8 +11098,12 @@ def cub_protector_overview():
     bot_user = cub_protector_bot_request('/users/@me')
     bot_status = 'Online' if bot_user else 'Offline'
 
-    # Get all bot guilds with member counts in one cached API call
-    bot_guilds = cub_protector_bot_request('/users/@me/guilds?with_counts=true') or []
+    # Bot guild list — shared file cache so all workers reuse the same result
+    bot_guilds = _file_cache_get('bot_guild_list', ttl=300)
+    if bot_guilds is None:
+        bot_guilds = cub_protector_bot_request('/users/@me/guilds?with_counts=true') or []
+        if bot_guilds:
+            _file_cache_set('bot_guild_list', bot_guilds)
     total_servers = len(bot_guilds)
     total_members = sum(g.get('approximate_member_count', 0) for g in bot_guilds if isinstance(g, dict))
 
@@ -11097,6 +11207,8 @@ def cub_protector_create_hub(guild_id):
         return jsonify({'error': 'Failed to create hub channel on Discord'}), 500
 
     hub_channel_id = channel_data['id']
+    # Invalidate channel list cache for this guild since we just created a channel
+    _file_cache_invalidate(f'/guilds/{guild_id}/channels')
 
     # Save to temp_voice.json
     try:
@@ -11158,6 +11270,7 @@ def cub_protector_delete_hub(guild_id, hub_id):
     # Remove hub from data
     del tv_data['guilds'][guild_id]['hubs'][hub_id]
     save_cub_protector_data(tv_data)
+    _file_cache_invalidate(f'/guilds/{guild_id}/channels')
 
     return jsonify({'success': True})
 
@@ -11226,15 +11339,7 @@ def cub_protector_get_voice_mods(guild_id):
     for role_id in mods.get('roles', []):
         roles_info.append({'id': role_id, 'name': role_map.get(role_id, role_id)})
 
-    # Resolve usernames from bot API
-    users_info = []
-    for user_id in mods.get('users', []):
-        user_data = cub_protector_bot_request(f'/users/{user_id}')
-        if user_data:
-            users_info.append({'id': user_id, 'username': user_data.get('username', user_id)})
-        else:
-            users_info.append({'id': user_id, 'username': user_id})
-
+    users_info = _resolve_users_parallel(mods.get('users', []))
     return jsonify({'voice_moderators': {'roles': roles_info, 'users': users_info}})
 
 @app.route('/api/cub-protector/guilds/<guild_id>/voice-mods/roles', methods=['POST'])
@@ -11339,15 +11444,7 @@ def cub_protector_get_bot_masters(guild_id):
     bot_masters_data = load_bot_masters()
     master_ids = bot_masters_data.get(guild_id, [])
 
-    # Resolve usernames from bot API
-    masters_info = []
-    for user_id in master_ids:
-        user_data = cub_protector_bot_request(f'/users/{user_id}')
-        if user_data:
-            masters_info.append({'id': user_id, 'username': user_data.get('username', user_id)})
-        else:
-            masters_info.append({'id': user_id, 'username': user_id})
-
+    masters_info = _resolve_users_parallel(master_ids)
     return jsonify({'bot_masters': masters_info})
 
 @app.route('/api/cub-protector/guilds/<guild_id>/bot-masters', methods=['POST'])
@@ -11433,16 +11530,10 @@ def cub_protector_active_channels(guild_id):
         channel_info = _guild_bot_request(guild_id, f'/channels/{ch_id}')
         channel_name = channel_info.get('name', 'Unknown') if channel_info else 'Unknown'
 
-        # Resolve permitted user IDs to names where possible
+        # Resolve permitted user IDs to names in parallel
         permitted_ids = ch.get('permitted_users', [])
-        permitted_users = []
-        for uid in permitted_ids:
-            user_info = cub_protector_bot_request(f'/users/{uid}')
-            if user_info:
-                uname = user_info.get('global_name') or user_info.get('username') or uid
-                permitted_users.append({'id': uid, 'name': uname})
-            else:
-                permitted_users.append({'id': uid, 'name': uid})
+        resolved = _resolve_users_parallel(permitted_ids)
+        permitted_users = [{'id': u['id'], 'name': u['username']} for u in resolved]
 
         channels.append({
             'id': ch_id,
@@ -12697,17 +12788,21 @@ def cub_protector_end_giveaway(guild_id, message_id):
             'content': announce
         })
 
-        # DM winners if enabled
+        # DM winners if enabled — open all DM channels in parallel, then send
         if giveaway.get('dm_winners'):
-            for winner_id in winners:
+            from concurrent.futures import ThreadPoolExecutor
+            prize = giveaway['prize']
+            def _dm_winner(winner_id):
                 try:
-                    dm_channel = cub_protector_bot_request(f'/users/@me/channels', method='POST', json_data={'recipient_id': winner_id})
-                    if dm_channel and dm_channel.get('id'):
-                        cub_protector_bot_request(f'/channels/{dm_channel["id"]}/messages', method='POST', json_data={
-                            'content': f'\U0001f389 You won **{giveaway["prize"]}** in a giveaway! Check the giveaway channel for details.'
+                    dm = cub_protector_bot_request('/users/@me/channels', method='POST', json_data={'recipient_id': winner_id})
+                    if dm and dm.get('id'):
+                        cub_protector_bot_request(f'/channels/{dm["id"]}/messages', method='POST', json_data={
+                            'content': f'\U0001f389 You won **{prize}** in a giveaway! Check the giveaway channel for details.'
                         })
                 except Exception:
                     pass
+            with ThreadPoolExecutor(max_workers=min(10, len(winners))) as ex:
+                list(ex.map(_dm_winner, winners))
 
     return jsonify({'success': True, 'winners': winners})
 

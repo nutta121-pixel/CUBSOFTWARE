@@ -3077,6 +3077,21 @@ client.on('messageCreate', async (message) => {
         }
     }
 
+    // --- Suggestion Channel — delete regular messages (only /suggest allowed) ---
+    {
+        const sData = loadSuggestionsData();
+        const guildS = sData.guilds?.[guildId];
+        if (guildS?.enabled !== false) {
+            const sugChannelId = guildS?.channel_id || guildS?.channel || null;
+            if (sugChannelId && message.channel.id === sugChannelId && !message.author.bot) {
+                await message.delete().catch(() => {});
+                const warn = await message.channel.send(`<@${message.author.id}> Use the </suggest:0> command to submit a suggestion — regular messages are not allowed here.`).catch(() => null);
+                if (warn) setTimeout(() => warn.delete().catch(() => {}), 6000);
+                return;
+            }
+        }
+    }
+
     // --- Counting Channel ---
     {
         const cntData = loadCountingData();
@@ -6584,71 +6599,91 @@ client.on('interactionCreate', async (interaction) => {
     else if (commandName === 'suggest') {
         const idea = interaction.options.getString('idea');
         const sData = loadSuggestionsData();
-        if (!sData.guilds[guild.id]) sData.guilds[guild.id] = { channel_id: null, suggestions: [], next_id: 1 };
+        if (!sData.guilds[guild.id]) sData.guilds[guild.id] = { channel_id: null, enabled: true, suggestions: [], next_id: 1 };
         const guildS = sData.guilds[guild.id];
 
-        if (!guildS.channel_id) return interaction.reply({ content: 'Suggestion channel not set up. Ask an admin to use `/suggestion setup`.', ephemeral: true });
+        const channelId = guildS.channel_id || guildS.channel || null;
+        if (guildS.enabled === false) return interaction.reply({ content: 'Suggestions are currently disabled.', ephemeral: true });
+        if (!channelId) return interaction.reply({ content: 'Suggestion channel not set up. Ask an admin to configure it on the dashboard or use `/suggestion setup`.', ephemeral: true });
 
-        const channel = await guild.channels.fetch(guildS.channel_id).catch(() => null);
-        if (!channel) return interaction.reply({ content: 'Suggestion channel not found.', ephemeral: true });
+        const channel = await guild.channels.fetch(channelId).catch(() => null);
+        if (!channel) return interaction.reply({ content: 'Suggestion channel not found — an admin may need to reconfigure it.', ephemeral: true });
 
         const sugId = guildS.next_id++;
+        const anonymous = guildS.anonymous || false;
+        const autoReact = guildS.auto_react !== false;
+
         const embed = cubEmbed()
             .setColor(0x5865F2)
             .setTitle(`Suggestion #${sugId}`)
             .setDescription(idea)
-            .addFields({ name: 'Status', value: 'Pending', inline: true })
-            .setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() })
+            .addFields({ name: 'Status', value: '🕐 Pending', inline: true })
             .setTimestamp();
+        if (!anonymous) embed.setAuthor({ name: interaction.user.tag, iconURL: interaction.user.displayAvatarURL() });
 
         const msg = await channel.send({ embeds: [embed] });
-        await msg.react('👍').catch(() => {});
-        await msg.react('👎').catch(() => {});
+        if (autoReact) {
+            await msg.react('👍').catch(() => {});
+            await msg.react('👎').catch(() => {});
+        }
 
-        guildS.suggestions.push({ id: sugId, message_id: msg.id, author_id: member.id, idea, status: 'pending' });
+        guildS.suggestions.push({ id: sugId, message_id: msg.id, channel_id: channelId, author_id: member.id, idea, status: 'pending' });
         saveSuggestionsData(sData);
 
-        await interaction.reply({ content: `Suggestion #${sugId} submitted!`, ephemeral: true });
+        await interaction.reply({ content: `✅ Suggestion #${sugId} submitted!`, ephemeral: true });
     }
 
     else if (commandName === 'suggestion') {
         const sub = interaction.options.getSubcommand();
         const sData = loadSuggestionsData();
-        if (!sData.guilds[guild.id]) sData.guilds[guild.id] = { channel_id: null, suggestions: [], next_id: 1 };
+        if (!sData.guilds[guild.id]) sData.guilds[guild.id] = { channel_id: null, enabled: true, suggestions: [], next_id: 1 };
         const guildS = sData.guilds[guild.id];
 
         if (sub === 'setup') {
-            guildS.channel_id = interaction.options.getChannel('channel').id;
+            const ch = interaction.options.getChannel('channel');
+            guildS.channel_id = ch.id;
+            guildS.channel = ch.id;
+            guildS.enabled = true;
             saveSuggestionsData(sData);
-            await interaction.reply({ content: `Suggestion channel set to <#${guildS.channel_id}>.`, ephemeral: true });
+            await interaction.reply({ content: `✅ Suggestion channel set to <#${ch.id}>.`, ephemeral: true });
         } else if (sub === 'approve' || sub === 'deny') {
             const sugId = parseInt(interaction.options.getString('id'));
             const response = interaction.options.getString('response');
             const sug = guildS.suggestions.find(s => s.id === sugId);
             if (!sug) return interaction.reply({ content: 'Suggestion not found.', ephemeral: true });
 
-            sug.status = sub === 'approve' ? 'approved' : 'denied';
-            sug.response = response;
+            const approved = sub === 'approve';
+            sug.status = approved ? 'approved' : 'denied';
+            sug.response = response || null;
             saveSuggestionsData(sData);
 
-            // Update message
-            if (guildS.channel_id) {
-                const channel = await guild.channels.fetch(guildS.channel_id).catch(() => null);
-                if (channel) {
-                    const msg = await channel.messages.fetch(sug.message_id).catch(() => null);
-                    if (msg) {
-                        const embed = EmbedBuilder.from(msg.embeds[0])
-                            .setColor(sub === 'approve' ? 0x57F287 : 0xED4245)
-                            .setFields(
-                                { name: 'Status', value: sub === 'approve' ? 'Approved' : 'Denied', inline: true },
-                                ...(response ? [{ name: 'Response', value: response, inline: false }] : []),
-                            );
-                        await msg.edit({ embeds: [embed] }).catch(() => {});
-                    }
+            // Build updated embed
+            const srcChannelId = sug.channel_id || guildS.channel_id || guildS.channel;
+            const srcChannel = srcChannelId ? await guild.channels.fetch(srcChannelId).catch(() => null) : null;
+            let updatedEmbed = null;
+            if (srcChannel) {
+                const msg = await srcChannel.messages.fetch(sug.message_id).catch(() => null);
+                if (msg && msg.embeds[0]) {
+                    updatedEmbed = EmbedBuilder.from(msg.embeds[0])
+                        .setColor(approved ? 0x57F287 : 0xED4245)
+                        .setFields(
+                            { name: 'Status', value: approved ? '✅ Approved' : '❌ Denied', inline: true },
+                            ...(response ? [{ name: 'Response', value: response, inline: false }] : []),
+                        );
+                    await msg.edit({ embeds: [updatedEmbed] }).catch(() => {});
                 }
             }
 
-            await interaction.reply({ content: `Suggestion #${sugId} ${sub === 'approve' ? 'approved' : 'denied'}.`, ephemeral: true });
+            // Forward to approved/denied channel if configured
+            const targetChannelId = approved
+                ? (guildS.approved_channel || null)
+                : (guildS.denied_channel || null);
+            if (targetChannelId && updatedEmbed) {
+                const targetChannel = await guild.channels.fetch(targetChannelId).catch(() => null);
+                if (targetChannel) await targetChannel.send({ embeds: [updatedEmbed] }).catch(() => {});
+            }
+
+            await interaction.reply({ content: `✅ Suggestion #${sugId} ${approved ? 'approved' : 'denied'}.`, ephemeral: true });
         }
     }
 

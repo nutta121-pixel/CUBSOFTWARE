@@ -14268,6 +14268,9 @@ def cub_protector_suggestions_patch(guild_id):
     for k in ['enabled', 'channel', 'approved_channel', 'denied_channel', 'anonymous', 'auto_react']:
         if k in req:
             guild_data[k] = req[k]
+    # Keep channel_id in sync so the bot can read it directly
+    if 'channel' in req:
+        guild_data['channel_id'] = req['channel'] or None
     save_cp_json(CUB_PROTECTOR_SUGGESTIONS_FILE, data)
     return jsonify({'success': True})
 

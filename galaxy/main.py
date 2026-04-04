@@ -31,7 +31,8 @@ def get_prefix(client, message):
 client = commands.Bot(command_prefix=get_prefix, owner_id =BOT_OWNER_ID, case_insensitive=True, intents=discord.Intents.all())
 print(f'bot owner is {BOT_OWNER_ID}')
 timestamp = datetime.datetime.now()
-stamp = timestamp.strftime(" %I:%M %p")
+stamp = timestamp.strftime("%I:%M %p")
+longstamp = timestamp.strftime("%d/%m/%y    %I:%M %p")
 #Buttons
 class chView(discord.ui.View):
     def __init__(self, Log_cache):
@@ -39,24 +40,25 @@ class chView(discord.ui.View):
         self.Log_cache = Log_cache
     @discord.ui.button(label="Undo!", style=discord.ButtonStyle.primary)
     async def undo_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        print(f'channel name:{self.Log_cache["name"]}\nchannel perms:{self.Log_cache["overwrites"]}')
-        button.disabled=True
+        button.disabled = True
+        button.style = discord.ButtonStyle.grey
         guild = interaction.guild
         channel = await guild.create_text_channel(name=self.Log_cache["name"], overwrites=self.Log_cache["overwrites"])
         await channel.edit(position=self.Log_cache["position"], category=self.Log_cache["category"],)
         await interaction.response.send_message(f"DONE , Channel : {self.Log_cache["name"]} Recreated", ephemeral=True, delete_after=10.0)
+        await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
 class RView(discord.ui.View):
     def __init__(self, Log_cache):
         super().__init__(timeout=600)
         self.Log_cache = Log_cache
     @discord.ui.button(label="Undo!", style=discord.ButtonStyle.primary)
     async def undo_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        print(f'Role name:{self.Log_cache["name"]}\nRole perms:{self.Log_cache["overwrites"]}\nPosition: {self.Log_cache["position"]}')
         button.disabled=True
         guild = interaction.guild
         role = await guild.create_role(name=self.Log_cache["name"], permissions=self.Log_cache["overwrites"])
         await role.edit(position=self.Log_cache["position"])
         await interaction.response.send_message(f"DONE , Role : '{self.Log_cache["name"]}' Recreated!", ephemeral=True, view=self, delete_after=10.0)
+        await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
 class MView(discord.ui.View):
     def __init__(self, Log_cache):
         super().__init__(timeout=600)
@@ -64,30 +66,30 @@ class MView(discord.ui.View):
     @discord.ui.button(label="Undo!", style=discord.ButtonStyle.primary)
     async def undo_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         fullstamp = self.Log_cache["time"].strftime("%I:%M %p - %d/%m/%y")
-        if self.Log_cache["message"].attachments == None:
+        if self.Log_cache["message"].content:
             button.disabled = True
             button.style = discord.ButtonStyle.grey
-            embed = discord.Embed(title=f'Deleted Message Restored', color=discord.Color.blue())
-            embed.add_field(name="Message by", value=self.Log_cache["name"], inline=False)
-            embed.add_field(name="Content", value=self.Log_cache["overwrites"],inline=False)
+            embed = discord.Embed(title=f'', color=discord.Color.blue())
+            embed.set_author(name=self.Log_cache["name"], icon_url=self.Log_cache["name"].display_avatar.url)
+            embed.add_field(name="Message Restored", value=f"{self.Log_cache["overwrites"]}")
             embed.set_footer(text=f'Sent at: {fullstamp}')
             await self.Log_cache["position"].send(embed=embed)
             reply = discord.Embed(title='Done!!', color=discord.Color.blue())
             reply.set_footer(text=f'Message From: {self.Log_cache["name"]}\nResent Sucessfully\n{stamp}')
             await interaction.response.defer()
-            await interaction.followup.send(embed=reply, ephemeral=True)
+            await interaction.followup.send(embed=reply, ephemeral=True, delete_after=10.0)
             await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
         else:
             button.disabled = True
             button.style = discord.ButtonStyle.grey
-            embed = discord.Embed(title=f'Deleted Image Restored', color=discord.Color.blue())
-            embed.add_field(name="Message by", value=self.Log_cache["name"], inline=False)
+            embed = discord.Embed(title=f'', color=discord.Color.blue())
+            embed.set_author(name=self.Log_cache["name"], icon_url=self.Log_cache["name"].display_avatar.url)
             embed.set_image(url=self.Log_cache["overwrites"].proxy_url)
             await self.Log_cache["position"].send(embed=embed)
             reply = discord.Embed(title='Done!!', color=discord.Color.blue())
             reply.set_footer(text=f'Message From: {self.Log_cache["name"]}\nResent Sucessfully\n{stamp}')
             await interaction.response.defer()
-            await interaction.followup.send(embed=reply, ephemeral=True)
+            await interaction.followup.send(embed=reply, ephemeral=True, delete_after=10.0)
             await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
 #EVENTS
 @client.event
@@ -127,11 +129,11 @@ async def on_voice_state_update(member, before, after):
                         category=after.channel.category
                     )
                     await member.move_to(channel)
-                    embed = discord.Embed(title=f'User Joined Channel:', color=discord.Color.blue())
-                    embed.add_field(name='User:', value=member.name, inline=False)
-                    embed.add_field(name='Joined Channel', value=channel.name or 'Channel Not Found')
-                    embed.set_footer(text=f'{stamp}')
-                    await log_channel.send(embed=embed)
+                embed = discord.Embed(title=f'', color=discord.Color.blue())
+                embed.set_author(name=member.name, icon_url=member.display_avatar.url)
+                embed.add_field(name='User Join Channel', value=f"{after.channel.name}" or 'Channel Not Found')
+                embed.set_footer(text=f'{longstamp}')
+                await log_channel.send(embed=embed)
                 #await member.voice.channel.connect()
             except Exception as e:
                 print(f"ERROR private channel creation {e}")
@@ -140,10 +142,10 @@ async def on_voice_state_update(member, before, after):
             return
         else:
             if before.channel.name != "Create Private Channel":
-                embed = discord.Embed(title=f'User Left Channel:', color=discord.Color.blue())
-                embed.add_field(name='User:', value=member.name, inline=False)
-                embed.add_field(name='Left Channel', value=before.channel.name or 'Channel Not Found')
-                embed.set_footer(text=f'{stamp}')
+                embed = discord.Embed(title=f'', color=discord.Color.blue())
+                embed.set_author(name=member.name, icon_url=member.display_avatar.url)
+                embed.add_field(name='User Left Channel', value=f"{before.channel.name}" or 'Channel Not Found')
+                embed.set_footer(text=f'{longstamp}')
                 await log_channel.send(embed=embed)
                     #await member.guild.voice_client.disconnect()
                 if "'s Private Channel" in before.channel.name:
@@ -159,11 +161,10 @@ async def on_voice_state_update(member, before, after):
             return
         else:
             if before.channel.name != "Create Private Channel":
-                embed = discord.Embed(title=f'User Left Channel:', color=discord.Color.blue())
-                embed.add_field(name='User:', value=member.name, inline=False)
-                embed.add_field(name='Left Channel', value=before.channel.name or 'Channel Not Found')
-                embed.add_field(name='Joined Channel', value=after.channel.name or 'Channel Not Found')
-                embed.set_footer(text=f'{stamp}')
+                embed = discord.Embed(title=f'', color=discord.Color.blue())
+                embed.set_author(name=member.name, icon_url=member.display_avatar.url)
+                embed.add_field(name='User Changed Channel', value=f"{before.channel.name} -> {after.channel.name}" or 'Channel Not Found')
+                embed.set_footer(text=f'{longstamp}')
                 await log_channel.send(embed=embed)
                     #await member.guild.voice_client.disconnect()
                 if "'s Private Channel" in before.channel.name:
@@ -185,10 +186,10 @@ async def on_voice_state_update(member, before, after):
                     category=after.channel.category
                 )
                 await member.move_to(channel)
-                embed = discord.Embed(title=f'User Joined Channel:', color=discord.Color.blue())
-                embed.add_field(name='User:', value=member.name, inline=False)
-                embed.add_field(name='Joined Channel', value=channel.name or 'Channel Not Found')
-                embed.set_footer(text=f'{stamp}')
+                embed = discord.Embed(title=f'', color=discord.Color.blue())
+                embed.set_author(name=member.name, icon_url=member.display_avatar.url)
+                embed.add_field(name='User Join Channel', value=f"{after.channel.name}" or 'Channel Not Found')
+                embed.set_footer(text=f'{longstamp}')
                 await log_channel.send(embed=embed)
                 #await member.voice.channel.connect()
             else:
@@ -202,15 +203,17 @@ async def on_audit_log_entry_create(entry):
         return
     if log_channel:
         if entry.action == discord.AuditLogAction.channel_create:
-            embed = discord.Embed(title=f'Channel Created: {entry.target}', color=discord.Color.blue())
-            embed.add_field(name='Created by', value=entry.user.mention, inline=False)
+            embed = discord.Embed(title=f'', color=discord.Color.green())
+            embed.set_author(name=entry.user.name, icon_url=entry.user.display_avatar.url)
+            embed.add_field(name='Channel Created', value=entry.target)
             embed.add_field(name='Reason', value=entry.reason or 'No Reason Given')
             embed.set_footer(text=f'Action ID: {entry.id} * {stamp}')
             await log_channel.send(embed=embed)
             return
         if entry.action == discord.AuditLogAction.role_create:
-            embed = discord.Embed(title=f'Role Created: {entry.target}', color=discord.Color.blue())
-            embed.add_field(name='Created by', value=entry.user.mention, inline=False)
+            embed = discord.Embed(title=f'Role Created: {entry.target}', color=discord.Color.green())
+            embed.set_author(name=entry.user.name, icon_url=entry.user.display_avatar.url)
+            embed.add_field(name='Role Created', value=entry.target)
             embed.add_field(name='Reason', value=entry.reason or 'No Reason Given')
             embed.set_footer(text=f'Action ID: {entry.id} * {stamp}')
             await log_channel.send(embed=embed)
@@ -219,19 +222,19 @@ async def on_audit_log_entry_create(entry):
             if entry.changes.before.roles > entry.changes.after.roles:
                 removed_roles = [role for role in entry.changes.before.roles if role not in entry.changes.after.roles]
                 role_mentions = [role.mention for role in removed_roles]
-                embed = discord.Embed(title=f'Role Removed From {entry.target.name}', color=discord.Color.green())
-                embed.add_field(name='Removed by', value=entry.user.mention, inline=False)
-                embed.add_field(name='Role Removed', value="".join(role_mentions), inline=False)
+                embed = discord.Embed(title=f'', color=discord.Color.orange())
+                embed.set_author(name=entry.user.name, icon_url=entry.user.display_avatar.url)
+                embed.add_field(name='Role Removed', value="".join(role_mentions))
                 embed.add_field(name='Reason', value=entry.reason or 'No Reason Given')
-                embed.set_footer(text=f'Action ID: {entry.id} * {stamp}' )
+                embed.set_footer(text=f'Action ID: {entry.id} * {stamp}')
                 await log_channel.send(embed=embed)
                 return
             if entry.changes.after.roles > entry.changes.before.roles:
                 added_roles = [role for role in entry.changes.after.roles if role not in entry.changes.before.roles]
                 role_mentions = [role.mention for role in added_roles]
-                embed = discord.Embed(title=f'Role Added To {entry.target.name}', color=discord.Color.green())
-                embed.add_field(name='Added by', value=entry.user.mention, inline=False)
-                embed.add_field(name='Role Added', value="".join(role_mentions), inline=False)
+                embed = discord.Embed(title=f'', color=discord.Color.orange())
+                embed.set_author(name=entry.user.name, icon_url=entry.user.display_avatar.url)
+                embed.add_field(name='Role Added', value="".join(role_mentions))
                 embed.add_field(name='Reason', value=entry.reason or 'No Reason Given')
                 embed.set_footer(text=f'Action ID: {entry.id} * {stamp}')
                 await log_channel.send(embed=embed)
@@ -244,7 +247,6 @@ async def on_audit_log_entry_create(entry):
     else:
         await entry.guild.create_text_channel(f'logs')
         time.sleep(0.5)
-        print('log channel made')
         client.dispatch("on_audit_log_entry_create", entry)
         pass
 #Deletion Logs
@@ -262,12 +264,11 @@ async def on_guild_channel_delete(channel):
             if entry.user == client.user:
                 return
             else:
-                embed = discord.Embed(title=f'Channel Deleted: {channel.name}', color=discord.Color.red())
-                embed.add_field(name='Deleted by', value=entry.user.mention, inline=False)
-                embed.add_field(name='Reason', value=entry.reason or 'No Reason Given')
+                embed = discord.Embed(title=f'', color=discord.Color.red())
+                embed.set_author(name=entry.user.name, icon_url=entry.user.display_avatar.url)
+                embed.add_field(name='Channel Deleted', value=f"{channel.name}" or 'Channel Not Found')
                 embed.set_footer(text=f'Action ID: {entry.id} * {stamp}')
-                log = get(entry.guild.channels, name='logs')
-                await log.send(embed=embed, view=chView(Log_cache))
+                await log_channel.send(embed=embed, view=chView(Log_cache))
     else:
         await channel.guild.create_text_channel(f'logs')
         time.sleep(0.5)
@@ -287,12 +288,11 @@ async def on_guild_role_delete(role):
             if entry.user == client.user:
                 return
             else:
-                embed = discord.Embed(title=f'Role Deleted: {role.name}', color=discord.Color.red())
-                embed.add_field(name='Deleted by', value=entry.user.mention, inline=False)
-                embed.add_field(name='Reason', value=entry.reason or 'No Reason Given')
+                embed = discord.Embed(title=f'', color=discord.Color.red())
+                embed.set_author(name=entry.user.name, icon_url=entry.user.display_avatar.url)
+                embed.add_field(name='Role Deleted', value=f"{role.name}" or 'Role Not Found')
                 embed.set_footer(text=f'Action ID: {entry.id} * {stamp}')
-                log = get(entry.guild.channels, name='logs')
-                await log.send(embed=embed, view=RView(Log_cache))
+                await log_channel.send(embed=embed, view=RView(Log_cache))
     else:
         await role.guild.create_text_channel(f'logs')
         time.sleep(0.5)
@@ -301,28 +301,28 @@ async def on_guild_role_delete(role):
         pass
 @client.event
 async def on_message_delete(message):
-    log_channel = get(message.guild.channels, name='logs')
-    if log_channel:
-        if message.author == client.user:
-                return
-        else: 
+    if message.author == client.user:
+        return
+    else:
+        log_channel = get(message.guild.channels, name='logs')
+        if log_channel:
             if message.content:
                 Log_cache = {
                 "name": message.author,
                 "overwrites": message.content,
                 "position": message.channel,
-                "time": message.created_at
+                "time": message.created_at,
+                "message": message
                 }
                 async for entry in message.guild.audit_logs(limit=1, action=discord.AuditLogAction.message_delete):
-                    embed = discord.Embed(title=f'Message Deleted', color=discord.Color.red())
-                    embed.add_field(name='Deleted by', value=entry.user.mention, inline=False)
-                    embed.add_field(name='In Channel', value=message.channel.mention, inline=False)
-                    embed.add_field(name='Message Content', value=message.content or 'Unable To Pull Message Content')
-                    embed.set_footer(text=f'Action ID: {entry.id}   * {stamp}')
-                    log = get(entry.guild.channels, name='logs')
-                    await log.send(embed=embed, view=MView(Log_cache))
+                    embed = discord.Embed(title=f'', color=discord.Color.red())
+                    embed.set_author(name=entry.user.name, icon_url=entry.user.display_avatar.url)
+                    embed.add_field(name='Message Deleted', value=f"**In channel**: {message.channel.mention}\n{message.content}" or 'Unable to recover message!!')
+                    embed.set_footer(text=f'Action ID: {entry.id} * {stamp}')
+                    await log_channel.send(embed=embed, view=MView(Log_cache))
+                    return
             if message.attachments:
-                for attachment in message.attachments:
+                    for attachment in message.attachments:
                         Log_cache = {
                         "name": message.author,
                         "overwrites": attachment,
@@ -335,16 +335,13 @@ async def on_message_delete(message):
                             embed.set_image(url=attachment.proxy_url)
                             embed.add_field(name="Attachment URL, may expire", value=attachment.proxy_url, inline=False)
                             await log_channel.send(embed=embed, view=MView(Log_cache))
-    else:
-        await message.guild.create_text_channel(f'logs')
-        time.sleep(0.5)
-        print('log channel made')
-        client.dispatch("message_delete", message)
-        pass
+        else:
+            await message.guild.create_text_channel(f'logs')
+            time.sleep(0.5)
+            print('log channel made')
+            client.dispatch("message_delete", message)
+            pass
 #COMMANDS
-
-
-
 @client.command()
 async def uinvite(ctx):
     role = discord.utils.get(ctx.guild.roles, name="Member")
@@ -359,15 +356,6 @@ async def uinvite(ctx):
         await ctx.reply(f"Done here is your temparary invite. {invite}\nIts only one use and is active for an hour.", ephemeral=True)
     else:
         ctx.reply(f"You require the member role to create an invite....talk to an admin about getting the role!", ephemeral=True)
-        
-
-
-
-
-
-
-
-
 @client.command()
 async def send(ctx, channel: discord.TextChannel, *, message):
     if ctx.author == BOT_OWNER_ID:
@@ -378,20 +366,20 @@ async def send(ctx, channel: discord.TextChannel, *, message):
         embed.set_footer(text=f'{stamp}')
         await channel.send(embed=embed)
 @client.command()
-async def vinvite(ctx, member: discord.Member):
+async def vinvite(ctx, member:discord.Member, interaction:discord.Integration):
     if ctx.author.voice:
         channel = ctx.author.voice.channel
         if "'s Private Channel" in channel.name:
             await channel.set_permissions(member, connect=True, speak=True, view_channel=True)
-            await ctx.reply(f"Done! {member.name} can now see your private channel!!", ephemeral=True)
+            await interaction.respnse.send_message(f"Done! {member.name} can now see your private channel!!", ephemeral=True)
             await asyncio.sleep(0.5)
             await ctx.message.delete()
         else:
-            await ctx.reply("You are not in a private call!", ephemeral=True)
+            await interaction.respnse.send_message("You are not in a private call!", ephemeral=True)
             await asyncio.sleep(0.5)
             await ctx.message.delete()
     else:
-        await ctx.reply('you must send this in a voice call', ephemeral=True)
+        await interaction.respnse.send_message('you must send this in a voice call', ephemeral=True)
         await asyncio.sleep(0.5)
         await ctx.message.delete()
 @client.command()

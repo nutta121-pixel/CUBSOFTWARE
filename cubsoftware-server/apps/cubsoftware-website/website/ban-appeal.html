@@ -400,7 +400,26 @@
         <div class="appeal-card" id="step-1">
             <div class="step-label">Step 1 of 3 — Verify Your Identity</div>
             <div class="login-section">
+                {% if prefill_guild_id and prefill_code %}
+                <p>Sign in with Discord to continue your ban appeal.</p>
+                <a class="submit-btn" style="display:inline-block;text-decoration:none;margin-top:0.5rem;"
+                   href="/login?next=/ban-appeal/{{ prefill_guild_id }}/{{ prefill_code }}">
+                    Login with Discord
+                </a>
+                {% else %}
                 <p>To submit a ban appeal, you must be logged in with Discord so we can verify your identity. Please use the <strong>Account</strong> menu in the site navigation to sign in, then return to this page.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- WRONG ACCOUNT / VERIFY ERROR -->
+        <div class="appeal-card hidden" id="step-error">
+            <div class="success-section">
+                <div class="success-icon" style="background:rgba(237,66,69,0.12);border-color:rgba(237,66,69,0.3);color:#ED4245;">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                </div>
+                <h2 id="step-error-title" style="color:#ED4245;">Link Error</h2>
+                <p id="step-error-msg"></p>
             </div>
         </div>
 
@@ -420,12 +439,12 @@
             </div>
 
             <div class="info-box">
-                <p>Enter the 6-character appeal code that was sent to you in your ban DM. The code is case-sensitive.</p>
+                <p>Enter the appeal code that was sent to you in your ban DM (format: CPAC-XXXXXX).</p>
             </div>
 
             <div class="form-group">
                 <label>Appeal Code</label>
-                <input type="text" id="appeal-code" class="code-input" maxlength="6" placeholder="aBc123" autocomplete="off">
+                <input type="text" id="appeal-code" class="code-input" maxlength="11" placeholder="CPAC-aBc123" autocomplete="off">
             </div>
 
             <button class="submit-btn" onclick="verifyCode()">Verify Code</button>
@@ -495,8 +514,11 @@
     <script>
         let appealData = null;
 
-        // Check if user is already logged in (passed from server)
         const appealUser = {{ appeal_user | tojson | safe }};
+        const prefillCode = {{ prefill_code | tojson | safe }};
+        const autoVerified = {{ auto_verified | tojson | safe }};
+        const verifiedData = {{ verified_data | tojson | safe }};
+        const verifyError = {{ verify_error | tojson | safe }};
 
         function showToast(msg, type = '') {
             const t = document.getElementById('toast');
@@ -531,8 +553,75 @@
             if (el) el.classList.remove('hidden');
         }
 
-        // Init: check if already authed
-        if (appealUser && appealUser.id) {
+        function showStepError(title, msg) {
+            document.querySelectorAll('.appeal-card').forEach(c => c.classList.add('hidden'));
+            document.getElementById('step-error-title').textContent = title;
+            document.getElementById('step-error-msg').textContent = msg;
+            document.getElementById('step-error').classList.remove('hidden');
+        }
+
+        function populateFormFromData(data) {
+            appealData = data;
+            document.getElementById('ban-server').textContent = data.guild_name || 'Unknown Server';
+            document.getElementById('ban-reason').textContent = data.reason || 'No reason provided';
+            document.getElementById('ban-date').textContent = data.ban_date || 'Unknown';
+            const qContainer = document.getElementById('appeal-questions');
+            qContainer.innerHTML = '';
+            if (data.questions && data.questions.length > 0) {
+                data.questions.forEach((q, i) => {
+                    const div = document.createElement('div');
+                    div.className = 'form-group';
+                    div.innerHTML = `<label>${q}</label><textarea id="appeal-q-${i}" placeholder="Your answer..."></textarea>`;
+                    qContainer.appendChild(div);
+                });
+            }
+        }
+
+        // ── Init ──────────────────────────────────────────────────────────────
+        if (verifyError === 'wrong_account') {
+            showStepError('Wrong Account', 'This ban appeal link was not generated for your Discord account. Please log in with the correct account.');
+        } else if (verifyError) {
+            showStepError('Cannot Continue', verifyError);
+        } else if (autoVerified === 'status') {
+            // Already submitted — show status view inline
+            const icons = {
+                pending:  '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FEE75C" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+                approved: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#57F287" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+                declined: '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ED4245" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+            };
+            const titles = { pending: 'Appeal Pending', approved: 'Appeal Approved', declined: 'Appeal Declined' };
+            const messages = {
+                pending:  'Your appeal is currently under review by the server staff. Check back later.',
+                approved: 'Your ban appeal has been approved! You have been unbanned and can rejoin the server.',
+                declined: 'Your ban appeal was declined by the server staff.'
+            };
+            const s = verifiedData.status || 'pending';
+            document.getElementById('status-icon').innerHTML = icons[s] || icons.pending;
+            document.getElementById('status-title').textContent = titles[s] || 'Appeal Status';
+            document.getElementById('status-server').textContent = verifiedData.guild_name || '';
+            document.getElementById('status-message').textContent = messages[s] || '';
+            const noteEl = document.getElementById('status-note');
+            if (verifiedData.review_note) {
+                document.getElementById('status-note-text').textContent = verifiedData.review_note;
+                noteEl.style.display = 'block';
+            } else {
+                noteEl.style.display = 'none';
+            }
+            const inviteBtn = document.getElementById('status-invite-btn');
+            if (s === 'approved' && verifiedData.invite_link) {
+                inviteBtn.href = verifiedData.invite_link;
+                inviteBtn.style.display = 'inline-block';
+            } else {
+                inviteBtn.style.display = 'none';
+            }
+            document.querySelectorAll('.appeal-card').forEach(c => c.classList.add('hidden'));
+            document.getElementById('step-status').classList.remove('hidden');
+        } else if (autoVerified === true) {
+            // URL-based: logged in + verified server-side → skip straight to form
+            populateFormFromData(verifiedData);
+            goToStep(3);
+        } else if (appealUser && appealUser.id) {
+            // Normal flow: logged in, show code entry
             document.getElementById('user-avatar').src = appealUser.avatar_url;
             document.getElementById('user-name').textContent = appealUser.username;
             document.getElementById('user-display-id').textContent = 'ID: ' + appealUser.id;
@@ -540,9 +629,9 @@
         }
 
         async function verifyCode() {
-            const code = document.getElementById('appeal-code').value.trim();
-            if (code.length !== 6) {
-                showError('Please enter a valid 6-character appeal code.');
+            const code = document.getElementById('appeal-code').value.trim().toUpperCase();
+            if (code.length !== 11 || !code.startsWith('CPAC-')) {
+                showError('Please enter a valid appeal code (format: CPAC-XXXXXX).');
                 return;
             }
 
@@ -594,23 +683,7 @@
                     document.getElementById('step-status').classList.remove('hidden');
 
                 } else if (data.success) {
-                    appealData = data;
-                    document.getElementById('ban-server').textContent = data.guild_name || 'Unknown Server';
-                    document.getElementById('ban-reason').textContent = data.reason || 'No reason provided';
-                    document.getElementById('ban-date').textContent = data.ban_date || 'Unknown';
-
-                    // Render custom questions below the default appeal message field
-                    const qContainer = document.getElementById('appeal-questions');
-                    qContainer.innerHTML = '';
-                    if (data.questions && data.questions.length > 0) {
-                        data.questions.forEach((q, i) => {
-                            const div = document.createElement('div');
-                            div.className = 'form-group';
-                            div.innerHTML = `<label>${q}</label><textarea id="appeal-q-${i}" placeholder="Your answer..."></textarea>`;
-                            qContainer.appendChild(div);
-                        });
-                    }
-
+                    populateFormFromData(data);
                     goToStep(3);
                 } else {
                     showError(data.error || 'Invalid appeal code.');
@@ -644,14 +717,12 @@
             btn.textContent = 'Submitting...';
 
             try {
+                const codeInput = document.getElementById('appeal-code');
+                const code = (codeInput && codeInput.value.trim()) || prefillCode || '';
                 const res = await fetch('/ban-appeal/submit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        code: document.getElementById('appeal-code').value.trim(),
-                        message,
-                        answers
-                    })
+                    body: JSON.stringify({ code, message, answers })
                 });
                 const data = await res.json();
 

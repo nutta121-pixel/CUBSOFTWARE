@@ -13021,7 +13021,15 @@ def cub_protector_mod_action(guild_id):
         delete_days = min(7, max(0, int(body.get('delete_days', 0))))
         # Generate appeal code (6 chars, mixed case + digits)
         appeal_chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-        appeal_code = ''.join(random.choice(appeal_chars) for _ in range(6))
+        appeal_code = 'CPAC-' + ''.join(random.choice(appeal_chars) for _ in range(6))
+        # Tell the bot this ban is dashboard-managed so guildBanAdd skips double-processing
+        try:
+            _bot_port = os.environ.get('LOG_SERVER_PORT', 3847)
+            requests.post(f'http://127.0.0.1:{_bot_port}/ban-notify',
+                json={'apiKey': os.environ.get('BOT_API_KEY', ''), 'guildId': guild_id, 'userId': user_id},
+                timeout=2)
+        except Exception:
+            pass
         # DM user before banning with appeal code
         try:
             # Create DM channel
@@ -13033,10 +13041,9 @@ def cub_protector_mod_action(guild_id):
                         'description': f'**Reason:** {reason}',
                         'color': 0xED4245,
                         'fields': [
-                            {'name': 'Appeal Code', 'value': f'`{appeal_code}`', 'inline': True},
-                            {'name': 'Appeal URL', 'value': 'https://cubsoftware.site/ban-appeal', 'inline': False},
+                            {'name': 'Appeal Link', 'value': f'https://cubsoftware.site/ban-appeal/{guild_id}/{appeal_code}', 'inline': False},
                         ],
-                        'footer': {'text': 'Use the code above on the appeal page to submit a ban appeal'},
+                        'footer': {'text': 'Click the link above to submit a ban appeal. You will need to log in with Discord.'},
                     }]
                 })
         except Exception:
@@ -16454,12 +16461,51 @@ def api_status():
 
 BAN_APPEAL_REDIRECT_URI = os.environ.get('BAN_APPEAL_REDIRECT_URI', 'https://cubsoftware.site/ban-appeal/auth/callback')
 
+def _ban_appeal_render_defaults():
+    return dict(prefill_guild_id='', prefill_code='', auto_verified=False, verified_data={}, verify_error='')
+
 @app.route('/ban-appeal')
 @app.route('/ban-appeal/')
 def ban_appeal_page():
     """Ban Appeal Page - users submit ban appeals here"""
     appeal_user = session.get('ban_appeal_user')
-    return render_template('ban-appeal.html', appeal_user=appeal_user or {})
+    return render_template('ban-appeal.html', appeal_user=appeal_user or {}, **_ban_appeal_render_defaults())
+
+@app.route('/ban-appeal/<guild_id>/<appeal_code>')
+def ban_appeal_url_route(guild_id, appeal_code):
+    """Ban appeal via direct URL link from DM — auto-verifies after login"""
+    if not guild_id.isdigit() or not appeal_code:
+        return redirect('/ban-appeal')
+
+    appeal_user = session.get('ban_appeal_user')
+    auto_verified = False
+    verified_data = {}
+    verify_error = ''
+
+    if appeal_user:
+        result = _ban_appeal_check_code(appeal_code, appeal_user['id'])
+        session_data = result.pop('_session_data', None)
+        if session_data:
+            session['ban_appeal_verified'] = session_data
+        if result.get('wrong_account'):
+            verify_error = 'wrong_account'
+        elif result.get('error'):
+            verify_error = result['error']
+        elif result.get('status_check'):
+            auto_verified = 'status'
+            verified_data = result
+        elif result.get('success'):
+            auto_verified = True
+            verified_data = result
+
+    return render_template('ban-appeal.html',
+        appeal_user=appeal_user or {},
+        prefill_guild_id=guild_id,
+        prefill_code=appeal_code,
+        auto_verified=auto_verified,
+        verified_data=verified_data,
+        verify_error=verify_error
+    )
 
 @app.route('/ban-appeal/auth/discord')
 def ban_appeal_auth():
@@ -16474,50 +16520,34 @@ def ban_appeal_callback():
 BAN_APPEAL_TEST_CODE = 'CUBAPI'
 BAN_APPEAL_TEST_CHANNEL_ID = '1473606792264155136'
 
-@app.route('/ban-appeal/verify-code', methods=['POST'])
-def ban_appeal_verify_code():
-    """Verify an appeal code matches the logged-in user"""
-    appeal_user = session.get('ban_appeal_user')
-    if not appeal_user:
-        return jsonify({'error': 'Not authenticated'}), 401
-
-    body = request.get_json(silent=True) or {}
-    code = body.get('code', '').strip()
-
-    # Test mode: special developer code bypasses all checks
+def _ban_appeal_check_code(code, user_id):
+    """
+    Core ban appeal code verification. Returns a plain dict:
+      - {'error': str, 'wrong_account': True}  — code found but belongs to different user
+      - {'error': str}                          — validation or config error
+      - {'status_check': True, ...}             — already submitted, caller shows status view
+      - {'success': True, ..., '_session_data': dict} — ready to submit appeal
+    """
     if code == BAN_APPEAL_TEST_CODE:
-        session['ban_appeal_verified'] = {
-            'guild_id': '1284593395188367502',
-            'case_id': 'TEST-001',
-            'code': code,
-            'is_test': True
-        }
-        return jsonify({
+        return {
             'success': True,
             'guild_name': 'CUB SOFTWARE (Test Mode)',
             'reason': 'This is a test ban — no real ban exists.',
             'ban_date': 'January 01, 2025',
-            'questions': [
-                'Why should you be unbanned?',
-                'What will you do differently?'
-            ]
-        })
+            'questions': ['Why should you be unbanned?', 'What will you do differently?'],
+            '_session_data': {'guild_id': '1284593395188367502', 'case_id': 'TEST-001', 'code': code, 'is_test': True}
+        }
 
-    if not code or len(code) != 6:
-        return jsonify({'error': 'Invalid appeal code format'}), 400
+    if not code or not (len(code) == 11 and code.upper().startswith('CPAC-')):
+        return {'error': 'Invalid appeal code format'}
 
-    user_id = appeal_user['id']
-
-    # Search all guilds in moderation data for this appeal code
     mod_data = load_cp_json(CUB_PROTECTOR_MODERATION_FILE)
     for guild_id, guild_data in mod_data.get('guilds', {}).items():
         for case in guild_data.get('cases', []):
             if case.get('appeal_code') == code and case.get('type') == 'ban':
-                # Verify the code belongs to this user
                 if case.get('target_id') != user_id:
-                    return jsonify({'error': 'This appeal code does not belong to your account.'}), 403
+                    return {'error': 'This appeal code does not belong to your account.', 'wrong_account': True}
 
-                # Check if already appealed — if so, return status instead of error
                 appeals_data = load_cp_json(CUB_PROTECTOR_BAN_APPEALS_FILE)
                 guild_appeals = appeals_data.get('guilds', {}).get(guild_id, {})
                 existing = [a for a in guild_appeals.get('items', []) if a.get('appeal_code') == code]
@@ -16528,84 +16558,96 @@ def ban_appeal_verify_code():
                     guild_name = guild_info.get('name', 'Unknown Server') if guild_info else 'Unknown Server'
                     invite_link = None
                     if status == 'approved':
-                        # Try stored invite first
                         invite_link = latest.get('invite_link')
                         if not invite_link:
-                            # Generate a fresh 1-use, 7-day invite
                             guild_channels = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}/channels')
                             invite_channel_id = None
                             if guild_channels:
                                 for ch in guild_channels:
-                                    if ch.get('type') == 0:  # text channel
+                                    if ch.get('type') == 0:
                                         invite_channel_id = ch['id']
                                         break
                             if invite_channel_id:
-                                invite = _guild_bot_request(guild_id, 'POST', f'/channels/{invite_channel_id}/invites', json={
-                                    'max_age': 604800, 'max_uses': 1, 'unique': True
-                                })
+                                invite = _guild_bot_request(guild_id, 'POST', f'/channels/{invite_channel_id}/invites',
+                                                            json={'max_age': 604800, 'max_uses': 1, 'unique': True})
                                 if invite and 'code' in invite:
                                     invite_link = f"https://discord.gg/{invite['code']}"
                                     latest['invite_link'] = invite_link
                                     save_cp_json(CUB_PROTECTOR_BAN_APPEALS_FILE, appeals_data)
-                    return jsonify({
+                    return {
                         'status_check': True,
                         'status': status,
                         'guild_name': guild_name,
                         'submitted_at': latest.get('submitted_at'),
                         'review_note': latest.get('review_note') if status == 'declined' else None,
                         'invite_link': invite_link
-                    })
+                    }
 
-                # Check appeal settings
                 appeal_settings = guild_appeals.get('settings', {})
                 if appeal_settings.get('enabled') is False:
-                    return jsonify({'error': 'This server does not accept ban appeals.'}), 403
+                    return {'error': 'This server does not accept ban appeals.'}
 
-                # Check max appeals per user
                 max_per_user = appeal_settings.get('max_per_user', 1)
                 user_appeals = [a for a in guild_appeals.get('items', []) if a.get('user_id') == user_id]
                 if max_per_user > 0 and len(user_appeals) >= max_per_user:
-                    return jsonify({'error': f'You have reached the maximum number of appeals ({max_per_user}) for this server.'}), 400
+                    return {'error': f'You have reached the maximum number of appeals ({max_per_user}) for this server.'}
 
-                # Check min days
                 min_days = appeal_settings.get('min_days', 0)
                 if min_days > 0:
                     ban_timestamp = case.get('timestamp', 0)
                     days_since = (datetime.utcnow().timestamp() - ban_timestamp) / 86400
                     if days_since < min_days:
                         remaining = int(min_days - days_since) + 1
-                        return jsonify({'error': f'You must wait {remaining} more day(s) before appealing.'}), 400
+                        return {'error': f'You must wait {remaining} more day(s) before appealing.'}
 
-                # Get guild name
                 guild_info = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}')
                 guild_name = guild_info.get('name', 'Unknown Server') if guild_info else 'Unknown Server'
 
-                # Get custom questions (fall back to default if none configured)
                 questions = appeal_settings.get('questions', [])
                 if not questions:
                     questions = ['Why should you be unbanned?']
 
-                # Format ban date
                 ban_timestamp = case.get('timestamp', 0)
                 ban_dt = datetime.fromtimestamp(ban_timestamp, tz=timezone.utc)
                 ban_date = ban_dt.strftime('%B %d, %Y')
 
-                # Store in session for submit step
-                session['ban_appeal_verified'] = {
-                    'guild_id': guild_id,
-                    'case_id': case.get('case_id'),
-                    'code': code
-                }
-
-                return jsonify({
+                return {
                     'success': True,
                     'guild_name': guild_name,
                     'reason': case.get('reason', 'No reason provided'),
                     'ban_date': ban_date,
-                    'questions': questions
-                })
+                    'questions': questions,
+                    '_session_data': {'guild_id': guild_id, 'case_id': case.get('case_id'), 'code': code}
+                }
 
-    return jsonify({'error': 'Invalid appeal code. Please check and try again.'}), 404
+    return {'error': 'Invalid appeal code. Please check and try again.'}
+
+@app.route('/ban-appeal/verify-code', methods=['POST'])
+def ban_appeal_verify_code():
+    """Verify an appeal code matches the logged-in user"""
+    appeal_user = session.get('ban_appeal_user')
+    if not appeal_user:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    body = request.get_json(silent=True) or {}
+    code = body.get('code', '').strip()
+
+    result = _ban_appeal_check_code(code, appeal_user['id'])
+    session_data = result.pop('_session_data', None)
+    if session_data:
+        session['ban_appeal_verified'] = session_data
+
+    if result.get('wrong_account'):
+        return jsonify({'error': result.get('error')}), 403
+    if result.get('error'):
+        err = result['error']
+        if err == 'Invalid appeal code format':
+            return jsonify(result), 400
+        if 'does not accept' in err or 'reached the maximum' in err:
+            return jsonify(result), 403
+        return jsonify(result), 404
+
+    return jsonify(result)
 
 @app.route('/ban-appeal/submit', methods=['POST'])
 def ban_appeal_submit():

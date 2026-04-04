@@ -59,6 +59,9 @@ const CB_CACHE_TTL = 5000; // refresh every 5 seconds — fast enough to react t
 
 // Auto-slowmode: in-memory state per channel + config cache
 const autoSlowmodeState = new Map(); // 'guildId:channelId' → { timestamps: [], activeUntil: 0, timer: null }
+
+// Tracks bans the bot itself issued (slash command / dashboard) so guildBanAdd skips double-processing
+const botManagedBans = new Set(); // 'guildId:userId'
 let _slowmodeCfgCache = null;
 let _slowmodeCfgCacheTime = 0;
 const SLOWMODE_CFG_TTL = 5000;
@@ -285,6 +288,56 @@ function loadSlowmodeConfig() {
     _slowmodeCfgCache = loadJsonFile(SLOWMODE_FILE, { guilds: {} });
     _slowmodeCfgCacheTime = now;
     return _slowmodeCfgCache;
+}
+
+/**
+ * Sends a ban DM (with appeal link if enabled), creates a mod case, and saves it.
+ * Used by both the /ban slash command and the guildBanAdd event handler.
+ *
+ * @param {object} opts
+ * @param {Guild}  opts.guild
+ * @param {User}   opts.targetUser
+ * @param {string} opts.reason
+ * @param {string} opts.moderatorId  - Discord user ID of the moderator ('unknown' if from audit log and can't be determined)
+ */
+async function processBanAction({ guild, targetUser, reason, moderatorId }) {
+    const banAppealsPath = path.join(__dirname, 'data', 'ban_appeals.json');
+    let appealsEnabled = false;
+    try {
+        const appealsData = JSON.parse(fs.readFileSync(banAppealsPath, 'utf-8'));
+        appealsEnabled = appealsData.guilds?.[guild.id]?.settings?.enabled === true;
+    } catch (e) {}
+
+    let appealCode = null;
+    try {
+        if (appealsEnabled) {
+            appealCode = generateAppealCode();
+            const banDmEmbed = cubEmbed()
+                .setColor(0xED4245)
+                .setTitle(`You have been banned from ${guild.name}`)
+                .setDescription(`**Reason:** ${reason}`)
+                .addFields(
+                    { name: 'Appeal Link', value: `https://cubsoftware.site/ban-appeal/${guild.id}/${appealCode}`, inline: false },
+                )
+                .setFooter({ text: 'Click the link above to submit a ban appeal. You will need to log in with Discord.' })
+                .setTimestamp();
+            await targetUser.send({ embeds: [banDmEmbed] }).catch(() => {});
+        } else {
+            const banDmEmbed = cubEmbed()
+                .setColor(0xED4245)
+                .setTitle(`You have been banned from ${guild.name}`)
+                .setDescription(`**Reason:** ${reason}`)
+                .setTimestamp();
+            await targetUser.send({ embeds: [banDmEmbed] }).catch(() => {});
+        }
+    } catch (e) {}
+
+    const modData = loadModData();
+    const guildMod = getModGuild(modData, guild.id);
+    const modCase = createModCase(guildMod, 'ban', moderatorId, targetUser.id, reason);
+    if (appealCode) modCase.appeal_code = appealCode;
+    saveModData(modData);
+    return modCase;
 }
 
 // Auto-Mod
@@ -998,7 +1051,7 @@ function createModCase(guildData, type, modId, targetId, reason) {
 
 function generateAppealCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let code = '';
+    let code = 'CPAC-';
     for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
     return code;
 }
@@ -2437,6 +2490,17 @@ function startLogServer() {
         res.json({ success: true, userId, overlays: (crOverlayConns.get(userId) || []).filter(ws => ws.readyState === WebSocket.OPEN).length });
     });
 
+    // Called by the website dashboard before it fires a ban via REST so guildBanAdd knows to skip it
+    logApp.post('/ban-notify', (req, res) => {
+        const { apiKey, guildId, userId } = req.body;
+        if (apiKey !== API_KEY) return res.status(401).json({ error: 'Invalid API key' });
+        if (!guildId || !userId) return res.status(400).json({ error: 'guildId and userId required' });
+        botManagedBans.add(`${guildId}:${userId}`);
+        // Auto-expire after 10 seconds in case the ban fails
+        setTimeout(() => botManagedBans.delete(`${guildId}:${userId}`), 10000);
+        res.json({ success: true });
+    });
+
     logApp.listen(LOG_SERVER_PORT, '127.0.0.1', () => console.log(`[CubSoftware] Log server on port ${LOG_SERVER_PORT}`));
 }
 
@@ -3683,12 +3747,48 @@ client.on('guildMemberRemove', async (member) => {
 client.on('guildBanAdd', async (ban) => {
     if (CUSTOM_GUILD_ID && ban.guild.id !== CUSTOM_GUILD_ID) return;
     if (guildHasCustomBot(ban.guild.id)) return;
+
+    const banKey = `${ban.guild.id}:${ban.user.id}`;
+
+    // If this ban was issued by our own bot command/dashboard, skip — already processed there
+    if (botManagedBans.has(banKey)) {
+        botManagedBans.delete(banKey);
+        // Still send the log embed
+        await sendLog(ban.guild, 'memberBan', cubEmbed()
+            .setColor(0xED4245)
+            .setTitle('Member Banned')
+            .addFields(
+                { name: 'User', value: `<@${ban.user.id}> (${ban.user.tag})`, inline: true },
+                { name: 'Reason', value: ban.reason || 'No reason', inline: true },
+            )
+            .setTimestamp());
+        return;
+    }
+
+    // Native Discord ban (right-click → ban, or another bot)
+    // Fetch audit log to get reason and moderator
+    let reason = ban.reason || 'No reason provided';
+    let moderatorId = 'unknown';
+    try {
+        await new Promise(r => setTimeout(r, 1000)); // small delay for audit log to populate
+        const logs = await ban.guild.fetchAuditLogs({ type: AuditLogEvent.MemberBanAdd, limit: 5 });
+        const entry = logs.entries.find(e => e.target?.id === ban.user.id);
+        if (entry) {
+            if (entry.reason) reason = entry.reason;
+            if (entry.executor) moderatorId = entry.executor.id;
+        }
+    } catch (e) {}
+
+    // Send DM + create mod case
+    await processBanAction({ guild: ban.guild, targetUser: ban.user, reason, moderatorId });
+
     await sendLog(ban.guild, 'memberBan', cubEmbed()
         .setColor(0xED4245)
         .setTitle('Member Banned')
         .addFields(
             { name: 'User', value: `<@${ban.user.id}> (${ban.user.tag})`, inline: true },
-            { name: 'Reason', value: ban.reason || 'No reason', inline: true },
+            { name: 'Moderator', value: moderatorId !== 'unknown' ? `<@${moderatorId}>` : 'Unknown', inline: true },
+            { name: 'Reason', value: reason, inline: false },
         )
         .setTimestamp());
 });
@@ -5037,47 +5137,11 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.deferReply();
 
         try {
-            // Check if ban appeals are enabled for this guild
-            const banAppealsPath = path.join(__dirname, 'data', 'ban_appeals.json');
-            let appealsEnabled = false;
-            try {
-                const appealsData = JSON.parse(fs.readFileSync(banAppealsPath, 'utf-8'));
-                appealsEnabled = appealsData.guilds?.[guild.id]?.settings?.enabled === true;
-            } catch (e) {}
+            // DM user + create mod case (must happen before ban — can't DM after)
+            const modCase = await processBanAction({ guild, targetUser, reason, moderatorId: member.id });
 
-            // DM user with ban info BEFORE banning (can't DM after ban)
-            let appealCode = null;
-            try {
-                if (appealsEnabled) {
-                    appealCode = generateAppealCode();
-                    const banDmEmbed = cubEmbed()
-                        .setColor(0xED4245)
-                        .setTitle(`You have been banned from ${guild.name}`)
-                        .setDescription(`**Reason:** ${reason}`)
-                        .addFields(
-                            { name: 'Appeal Code', value: `\`${appealCode}\``, inline: true },
-                            { name: 'Appeal URL', value: `https://cubsoftware.site/ban-appeal`, inline: false },
-                        )
-                        .setFooter({ text: 'Use the code above on the appeal page to submit a ban appeal' })
-                        .setTimestamp();
-                    await targetUser.send({ embeds: [banDmEmbed] }).catch(() => {});
-                } else {
-                    // No appeal system — just notify of the ban
-                    const banDmEmbed = cubEmbed()
-                        .setColor(0xED4245)
-                        .setTitle(`You have been banned from ${guild.name}`)
-                        .setDescription(`**Reason:** ${reason}`)
-                        .setTimestamp();
-                    await targetUser.send({ embeds: [banDmEmbed] }).catch(() => {});
-                }
-            } catch (e) {}
-
+            botManagedBans.add(`${guild.id}:${targetUser.id}`);
             await guild.members.ban(targetUser.id, { deleteMessageSeconds: deleteDays * 86400, reason: `${reason} | Banned by ${member.user.tag}` });
-
-            const modData = loadModData();
-            const guildMod = getModGuild(modData, guild.id);
-            const modCase = createModCase(guildMod, 'ban', member.id, targetUser.id, reason);
-            if (appealCode) modCase.appeal_code = appealCode;
 
             // Handle temp ban
             if (durationStr) {
@@ -5085,13 +5149,16 @@ client.on('interactionCreate', async (interaction) => {
                 if (durationMs) {
                     modCase.duration = durationMs;
                     modCase.expires_at = Math.floor((Date.now() + durationMs) / 1000);
+                    const modData = loadModData();
+                    const gm = getModGuild(modData, guild.id);
+                    const c = gm.cases.find(x => x.case_id === modCase.case_id);
+                    if (c) { c.duration = modCase.duration; c.expires_at = modCase.expires_at; }
+                    saveModData(modData);
                     setTimeout(async () => {
                         await guild.members.unban(targetUser.id, 'Temp ban expired').catch(() => {});
                     }, durationMs);
                 }
             }
-
-            saveModData(modData);
 
             const embed = cubEmbed()
                 .setColor(0xED4245)

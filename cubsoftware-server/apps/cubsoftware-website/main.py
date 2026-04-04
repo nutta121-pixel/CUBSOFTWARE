@@ -15542,7 +15542,10 @@ def cp_counting_get(guild_id):
         return jsonify({'error': 'Access denied'}), 403
     data = load_cp_json(CUB_PROTECTOR_COUNTING_FILE)
     guild_data = data.get('guilds', {}).get(guild_id, {
-        'channel_id': None, 'enabled': False, 'current_count': 0, 'last_user_id': None, 'high_score': 0
+        'channel_id': None, 'enabled': False, 'current_count': 0, 'last_user_id': None, 'high_score': 0,
+        'mode': 'strict', 'delete_non_numbers': False, 'allow_consecutive': False,
+        'milestone_interval': 0, 'goal': 0, 'goal_reset': False, 'fail_log_channel_id': None,
+        'cooldown_seconds': 0, 'show_reaction': True, 'count_by': 1, 'allow_math': False
     })
     return jsonify({'config': guild_data})
 
@@ -15555,7 +15558,7 @@ def cp_counting_patch(guild_id):
     if 'guilds' not in data:
         data['guilds'] = {}
     if guild_id not in data['guilds']:
-        data['guilds'][guild_id] = {'channel_id': None, 'enabled': False, 'current_count': 0, 'last_user_id': None, 'high_score': 0}
+        data['guilds'][guild_id] = {'channel_id': None, 'enabled': False, 'current_count': 0, 'last_user_id': None, 'high_score': 0, 'mode': 'strict', 'delete_non_numbers': False, 'allow_consecutive': False, 'milestone_interval': 0, 'goal': 0, 'goal_reset': False, 'fail_log_channel_id': None, 'cooldown_seconds': 0, 'show_reaction': True, 'count_by': 1, 'allow_math': False}
     g = data['guilds'][guild_id]
     body = request.get_json() or {}
     if 'channel_id' in body:
@@ -15563,6 +15566,28 @@ def cp_counting_patch(guild_id):
         g['enabled'] = bool(body['channel_id'])
     if 'enabled' in body:
         g['enabled'] = bool(body['enabled'])
+    if 'mode' in body and body['mode'] in ('strict', 'silent'):
+        g['mode'] = body['mode']
+    if 'delete_non_numbers' in body:
+        g['delete_non_numbers'] = bool(body['delete_non_numbers'])
+    if 'allow_consecutive' in body:
+        g['allow_consecutive'] = bool(body['allow_consecutive'])
+    if 'show_reaction' in body:
+        g['show_reaction'] = bool(body['show_reaction'])
+    if 'allow_math' in body:
+        g['allow_math'] = bool(body['allow_math'])
+    if 'fail_log_channel_id' in body:
+        g['fail_log_channel_id'] = body['fail_log_channel_id'] or None
+    if 'goal_reset' in body:
+        g['goal_reset'] = bool(body['goal_reset'])
+    if 'count_by' in body:
+        g['count_by'] = max(1, int(body['count_by'] or 1))
+    if 'cooldown_seconds' in body:
+        g['cooldown_seconds'] = max(0, int(body['cooldown_seconds'] or 0))
+    if 'milestone_interval' in body:
+        g['milestone_interval'] = max(0, int(body['milestone_interval'] or 0))
+    if 'goal' in body:
+        g['goal'] = max(0, int(body['goal'] or 0))
     if body.get('reset'):
         g['current_count'] = 0
         g['last_user_id'] = None

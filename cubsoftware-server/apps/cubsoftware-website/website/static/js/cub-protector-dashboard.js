@@ -7513,10 +7513,24 @@
             document.getElementById('counting-enabled').checked = config.enabled || false;
             document.getElementById('counting-current').textContent = config.current_count ?? 0;
             document.getElementById('counting-highscore').textContent = config.high_score ?? 0;
-            const sel = document.getElementById('counting-channel');
-            sel.innerHTML = '<option value="">-- Select Channel --</option>' + channels.map(c =>
+            document.getElementById('counting-mode').value = config.mode || 'strict';
+            document.getElementById('counting-delete-non-numbers').checked = config.delete_non_numbers || false;
+            document.getElementById('counting-allow-consecutive').checked = config.allow_consecutive || false;
+            document.getElementById('counting-show-reaction').checked = config.show_reaction !== false;
+            document.getElementById('counting-allow-math').checked = config.allow_math || false;
+            document.getElementById('counting-count-by').value = config.count_by || 1;
+            document.getElementById('counting-cooldown').value = config.cooldown_seconds || 0;
+            document.getElementById('counting-milestone').value = config.milestone_interval || 0;
+            document.getElementById('counting-goal').value = config.goal || 0;
+            document.getElementById('counting-goal-reset').checked = config.goal_reset || false;
+            const channelOpts = '<option value="">-- Select Channel --</option>' + channels.map(c =>
                 `<option value="${c.id}" ${c.id === config.channel_id ? 'selected' : ''}>#${escapeHtml(c.name)}</option>`
             ).join('');
+            document.getElementById('counting-channel').innerHTML = channelOpts;
+            const failLogOpts = '<option value="">-- None --</option>' + channels.map(c =>
+                `<option value="${c.id}" ${c.id === config.fail_log_channel_id ? 'selected' : ''}>#${escapeHtml(c.name)}</option>`
+            ).join('');
+            document.getElementById('counting-fail-log-channel').innerHTML = failLogOpts;
         } catch (e) { console.error('Failed to load counting config:', e); }
     }
 
@@ -7525,6 +7539,17 @@
             const payload = {
                 enabled: document.getElementById('counting-enabled').checked,
                 channel_id: document.getElementById('counting-channel').value || null,
+                fail_log_channel_id: document.getElementById('counting-fail-log-channel').value || null,
+                mode: document.getElementById('counting-mode').value,
+                delete_non_numbers: document.getElementById('counting-delete-non-numbers').checked,
+                allow_consecutive: document.getElementById('counting-allow-consecutive').checked,
+                show_reaction: document.getElementById('counting-show-reaction').checked,
+                allow_math: document.getElementById('counting-allow-math').checked,
+                count_by: Math.max(1, parseInt(document.getElementById('counting-count-by').value) || 1),
+                cooldown_seconds: Math.max(0, parseInt(document.getElementById('counting-cooldown').value) || 0),
+                milestone_interval: Math.max(0, parseInt(document.getElementById('counting-milestone').value) || 0),
+                goal: Math.max(0, parseInt(document.getElementById('counting-goal').value) || 0),
+                goal_reset: document.getElementById('counting-goal-reset').checked,
             };
             await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/counting`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),

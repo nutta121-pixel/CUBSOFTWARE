@@ -467,10 +467,22 @@ function loadCountingData() { return loadJsonFile(COUNTING_FILE); }
 function saveCountingData(data) { saveJsonFile(COUNTING_FILE, data); }
 function getCountingGuild(data, guildId) {
     if (!data.guilds[guildId]) {
-        data.guilds[guildId] = { channel_id: null, enabled: false, current_count: 0, last_user_id: null, high_score: 0 };
+        data.guilds[guildId] = { channel_id: null, enabled: false, current_count: 0, last_user_id: null, high_score: 0, mode: 'strict', delete_non_numbers: false, allow_consecutive: false, milestone_interval: 0, goal: 0, goal_reset: false, fail_log_channel_id: null, cooldown_seconds: 0, show_reaction: true, count_by: 1, allow_math: false };
     }
     return data.guilds[guildId];
 }
+// Safe math evaluator — only allows digits, operators, parens, spaces, decimals
+function safeMathEval(expr) {
+    const cleaned = expr.trim();
+    if (!cleaned || cleaned.length > 60 || !/^[\d\s+\-*/.()]+$/.test(cleaned)) return NaN;
+    try {
+        const result = new Function(`'use strict'; return (${cleaned})`)();
+        if (typeof result !== 'number' || !isFinite(result)) return NaN;
+        return Math.abs(result - Math.round(result)) < 1e-9 ? Math.round(result) : NaN;
+    } catch { return NaN; }
+}
+// Per-guild cooldown tracking (in-memory, resets on restart which is fine for short cooldowns)
+const _cntCooldowns = new Map(); // guildId -> Map(userId -> timestamp ms)
 
 // Quotes
 function loadQuotesData() { return loadJsonFile(QUOTES_FILE); }
@@ -3070,29 +3082,127 @@ client.on('messageCreate', async (message) => {
         const cntData = loadCountingData();
         const cntGuild = getCountingGuild(cntData, guildId);
         if (cntGuild.enabled && cntGuild.channel_id === message.channel.id) {
-            const expected = (cntGuild.current_count || 0) + 1;
-            const num = parseInt(message.content.trim());
-            if (isNaN(num) || num !== expected) {
-                const prevCount = cntGuild.current_count;
-                cntGuild.current_count = 0;
-                cntGuild.last_user_id = null;
-                saveCountingData(cntData);
-                await message.react('❌').catch(() => {});
-                await message.channel.send(`❌ <@${message.author.id}> ruined it at **${prevCount}**! The count resets to 0. Next number: **1**`).catch(() => {});
-            } else if (cntGuild.last_user_id === message.author.id) {
-                const prevCount = cntGuild.current_count;
-                cntGuild.current_count = 0;
-                cntGuild.last_user_id = null;
-                saveCountingData(cntData);
-                await message.react('❌').catch(() => {});
-                await message.channel.send(`❌ <@${message.author.id}> you can't count twice in a row! Count resets to 0 from **${prevCount}**. Next number: **1**`).catch(() => {});
-            } else {
-                cntGuild.current_count = num;
-                cntGuild.last_user_id = message.author.id;
-                if (num > (cntGuild.high_score || 0)) cntGuild.high_score = num;
-                saveCountingData(cntData);
-                await message.react('✅').catch(() => {});
+            const mode              = cntGuild.mode || 'strict';
+            const deleteNonNumbers  = cntGuild.delete_non_numbers || false;
+            const allowConsecutive  = cntGuild.allow_consecutive || false;
+            const milestoneInterval = cntGuild.milestone_interval || 0;
+            const goal              = cntGuild.goal || 0;
+            const goalReset         = cntGuild.goal_reset || false;
+            const failLogChannelId  = cntGuild.fail_log_channel_id || null;
+            const cooldownSeconds   = cntGuild.cooldown_seconds || 0;
+            const showReaction      = cntGuild.show_reaction !== false;
+            const countBy           = cntGuild.count_by || 1;
+            const allowMath         = cntGuild.allow_math || false;
+            const countByStart      = countBy; // first valid number after a reset
+            const expected          = (cntGuild.current_count || 0) + countBy;
+            const content           = message.content.trim();
+
+            // Parse number: plain integer or (if allowMath) a math expression
+            let num = NaN;
+            const plainNum = Number(content);
+            if (Number.isInteger(plainNum) && String(plainNum) === content) {
+                num = plainNum;
+            } else if (allowMath) {
+                num = safeMathEval(content);
             }
+            const isNumber = Number.isInteger(num);
+
+            // Helper — send to fail log channel if configured
+            async function logFail(desc) {
+                if (!failLogChannelId) return;
+                const logCh = message.guild.channels.cache.get(failLogChannelId);
+                if (!logCh) return;
+                await logCh.send(`❌ **${message.author.username}** ${desc} — was at **${cntGuild.current_count}**, next was **${expected}**`).catch(() => {});
+            }
+
+            // Helper — apply a wrong-input action (reset+announce or silent delete)
+            async function handleWrong(failDesc, strictMsg) {
+                await logFail(failDesc);
+                if (mode === 'strict') {
+                    const prev = cntGuild.current_count;
+                    cntGuild.current_count = 0;
+                    cntGuild.last_user_id = null;
+                    saveCountingData(cntData);
+                    await message.react('❌').catch(() => {});
+                    await message.channel.send(strictMsg.replace('{prev}', prev).replace('{next}', countByStart)).catch(() => {});
+                } else {
+                    await message.delete().catch(() => {});
+                }
+            }
+
+            // Non-number message
+            if (!isNumber) {
+                if (deleteNonNumbers) {
+                    await message.delete().catch(() => {});
+                } else {
+                    await handleWrong(
+                        `sent a non-number ("${content.slice(0, 20)}")`,
+                        `❌ <@${message.author.id}> ruined it at **{prev}**! The count resets to 0. Next number: **{next}**`
+                    );
+                }
+                return;
+            }
+
+            // Cooldown check (never resets the count — just blocks the message)
+            if (cooldownSeconds > 0) {
+                if (!_cntCooldowns.has(guildId)) _cntCooldowns.set(guildId, new Map());
+                const gCd = _cntCooldowns.get(guildId);
+                const elapsed = (Date.now() - (gCd.get(message.author.id) || 0)) / 1000;
+                if (elapsed < cooldownSeconds) {
+                    const remaining = Math.ceil(cooldownSeconds - elapsed);
+                    await message.delete().catch(() => {});
+                    const warn = await message.channel.send(`⏱️ <@${message.author.id}> wait **${remaining}s** before counting again!`).catch(() => null);
+                    if (warn) setTimeout(() => warn.delete().catch(() => {}), 4000);
+                    return;
+                }
+            }
+
+            // Consecutive-user check
+            if (!allowConsecutive && cntGuild.last_user_id === message.author.id) {
+                await handleWrong(
+                    `counted twice in a row`,
+                    `❌ <@${message.author.id}> you can't count twice in a row! Count resets to 0 from **{prev}**. Next number: **{next}**`
+                );
+                return;
+            }
+
+            // Wrong number check
+            if (num !== expected) {
+                await handleWrong(
+                    `sent ${num} instead of ${expected}`,
+                    `❌ <@${message.author.id}> ruined it at **{prev}**! The count resets to 0. Next number: **{next}**`
+                );
+                return;
+            }
+
+            // ✅ Correct number — update state
+            cntGuild.current_count = num;
+            cntGuild.last_user_id = message.author.id;
+            if (num > (cntGuild.high_score || 0)) cntGuild.high_score = num;
+            if (cooldownSeconds > 0) {
+                if (!_cntCooldowns.has(guildId)) _cntCooldowns.set(guildId, new Map());
+                _cntCooldowns.get(guildId).set(message.author.id, Date.now());
+            }
+            saveCountingData(cntData);
+            if (showReaction) await message.react('✅').catch(() => {});
+
+            // Goal reached?
+            if (goal > 0 && num >= goal) {
+                await message.channel.send(`🏆 **GOAL REACHED!** You counted to **${goal}**! 🎉`).catch(() => {});
+                if (goalReset) {
+                    cntGuild.current_count = 0;
+                    cntGuild.last_user_id = null;
+                    saveCountingData(cntData);
+                    await message.channel.send(`The count has been reset — start again from **${countByStart}**!`).catch(() => {});
+                }
+                return;
+            }
+
+            // Milestone?
+            if (milestoneInterval > 0 && num % milestoneInterval === 0) {
+                await message.channel.send(`🎉 **${num}!** Keep it up!`).catch(() => {});
+            }
+
             return;
         }
     }

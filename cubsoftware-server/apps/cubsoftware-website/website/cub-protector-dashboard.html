@@ -3474,15 +3474,80 @@
 
                 <div class="settings-card">
                     <h3 style="margin-bottom:1rem;">🔢 Counting Channel</h3>
+
+                    <!-- Basic -->
                     <div class="settings-row">
-                        <div class="settings-info"><h4>Enable Counting</h4><p>Sequential counting game — wrong numbers reset the count</p></div>
+                        <div class="settings-info"><h4>Enable Counting</h4><p>Sequential counting game in a dedicated channel</p></div>
                         <label class="toggle"><input type="checkbox" id="counting-enabled" onchange="window.cpSaveCounting()"><span class="toggle-slider"></span></label>
                     </div>
-                    <div class="form-group" style="margin-top:1rem;"><label>Counting Channel</label>
-                        <select id="counting-channel" class="form-select" onchange="window.cpSaveCounting()"><option value="">-- Select Channel --</option></select>
+                    <div class="form-row" style="margin-top:1rem;">
+                        <div class="form-group"><label>Counting Channel</label>
+                            <select id="counting-channel" class="form-select" onchange="window.cpSaveCounting()"><option value="">-- Select Channel --</option></select>
+                        </div>
+                        <div class="form-group"><label>Fail Log Channel <small style="color:var(--text-muted);">(optional)</small></label>
+                            <select id="counting-fail-log-channel" class="form-select" onchange="window.cpSaveCounting()"><option value="">-- None --</option></select>
+                            <small style="color:var(--text-muted);">Log wrong counts here without polluting the counting channel.</small>
+                        </div>
                     </div>
-                    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;">Current count: <strong id="counting-current">—</strong> &nbsp;|&nbsp; High score: <strong id="counting-highscore">—</strong>
-                        &nbsp;<button class="control-btn danger small" onclick="window.cpResetCount()" style="margin-left:0.5rem;">Reset</button></p>
+
+                    <!-- Mode -->
+                    <div class="form-group" style="margin-top:0.5rem;"><label>Wrong Number Mode</label>
+                        <select id="counting-mode" class="form-select" onchange="window.cpSaveCounting()">
+                            <option value="strict">Strict — React ❌, announce, and reset to 0</option>
+                            <option value="silent">Silent — Delete the wrong message and continue</option>
+                        </select>
+                        <small style="color:var(--text-muted);">Applies to wrong numbers, math errors, and (if enabled below) consecutive counts.</small>
+                    </div>
+
+                    <!-- Toggles -->
+                    <div class="settings-row" style="margin-top:1rem;">
+                        <div class="settings-info"><h4>Delete Non-Numbers</h4><p>Silently delete any message that isn't a number or math expression — does not affect the count</p></div>
+                        <label class="toggle"><input type="checkbox" id="counting-delete-non-numbers" onchange="window.cpSaveCounting()"><span class="toggle-slider"></span></label>
+                    </div>
+                    <div class="settings-row" style="margin-top:0.75rem;">
+                        <div class="settings-info"><h4>Allow Consecutive Counts</h4><p>Let the same user count multiple times in a row</p></div>
+                        <label class="toggle"><input type="checkbox" id="counting-allow-consecutive" onchange="window.cpSaveCounting()"><span class="toggle-slider"></span></label>
+                    </div>
+                    <div class="settings-row" style="margin-top:0.75rem;">
+                        <div class="settings-info"><h4>Show ✅ Reaction</h4><p>React with ✅ on every correct count — turn off to reduce clutter on busy channels</p></div>
+                        <label class="toggle"><input type="checkbox" id="counting-show-reaction" onchange="window.cpSaveCounting()"><span class="toggle-slider"></span></label>
+                    </div>
+                    <div class="settings-row" style="margin-top:0.75rem;">
+                        <div class="settings-info"><h4>Allow Math Expressions</h4><p>Accept expressions like <code>20+80</code> or <code>10*10</code> as a valid count — must evaluate to the correct integer</p></div>
+                        <label class="toggle"><input type="checkbox" id="counting-allow-math" onchange="window.cpSaveCounting()"><span class="toggle-slider"></span></label>
+                    </div>
+
+                    <!-- Numbers -->
+                    <div class="form-row" style="margin-top:1rem;">
+                        <div class="form-group"><label>Count By</label>
+                            <input type="number" id="counting-count-by" class="form-input" min="1" max="1000" value="1" onchange="window.cpSaveCounting()" placeholder="1">
+                            <small style="color:var(--text-muted);">Step size — e.g. 2 = count in even numbers (2, 4, 6…)</small>
+                        </div>
+                        <div class="form-group"><label>Cooldown (seconds)</label>
+                            <input type="number" id="counting-cooldown" class="form-input" min="0" max="3600" value="0" onchange="window.cpSaveCounting()" placeholder="0 = off">
+                            <small style="color:var(--text-muted);">Minimum seconds between counts per user. 0 = no cooldown.</small>
+                        </div>
+                    </div>
+
+                    <!-- Goal & Milestones -->
+                    <div class="form-row" style="margin-top:0.5rem;">
+                        <div class="form-group"><label>Milestone Every</label>
+                            <input type="number" id="counting-milestone" class="form-input" min="0" max="100000" value="0" onchange="window.cpSaveCounting()" placeholder="0 = off">
+                            <small style="color:var(--text-muted);">Celebrate every N counts (e.g. 100 = celebrate at 100, 200, 300…). 0 = off.</small>
+                        </div>
+                        <div class="form-group"><label>Count Goal</label>
+                            <input type="number" id="counting-goal" class="form-input" min="0" max="1000000" value="0" onchange="window.cpSaveCounting()" placeholder="0 = off">
+                            <small style="color:var(--text-muted);">Target number to reach. Bot celebrates when hit. 0 = no goal.</small>
+                        </div>
+                    </div>
+                    <div class="settings-row" style="margin-top:0.75rem;">
+                        <div class="settings-info"><h4>Reset on Goal</h4><p>Automatically reset the count back to 0 when the goal is reached</p></div>
+                        <label class="toggle"><input type="checkbox" id="counting-goal-reset" onchange="window.cpSaveCounting()"><span class="toggle-slider"></span></label>
+                    </div>
+
+                    <!-- Stats -->
+                    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:1rem;">Current count: <strong id="counting-current">—</strong> &nbsp;|&nbsp; High score: <strong id="counting-highscore">—</strong>
+                        &nbsp;<button class="control-btn danger small" onclick="window.cpResetCount()" style="margin-left:0.5rem;">Reset Count</button></p>
                 </div>
 
 

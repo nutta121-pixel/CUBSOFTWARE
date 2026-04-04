@@ -91,7 +91,7 @@ async function updateStaffRoles(client, broadcastCallback) {
             broadcastCallback(allStaff);
         }
 
-        safeLog('Staff roles updated successfully');
+        safeLog('[Roles] Staff roles updated successfully');
         return allStaff;
     } catch (error) {
         safeError('Error updating staff roles:', error);

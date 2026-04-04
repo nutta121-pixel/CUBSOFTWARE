@@ -1,4 +1,7 @@
 require('dotenv').config();
+
+// Cyan [Tag] labels in PM2 log output
+{ const _l = console.log.bind(console); console.log = (...a) => { if (typeof a[0] === 'string') a[0] = a[0].replace(/\[([A-Za-z][A-Za-z0-9 _-]*)\]/g, '\x1b[36m[$1]\x1b[0m'); _l(...a); }; }
 const { BotClient } = require('./bot/index');
 const { initializeDatabase } = require('./database/schema');
 const { DatabaseMaintenance } = require('./database/maintenance');

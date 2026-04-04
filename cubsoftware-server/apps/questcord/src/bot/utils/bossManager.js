@@ -258,7 +258,7 @@ class BossManager {
                 .setTimestamp();
 
             await message.edit({ embeds: [embed] });
-            console.log(`Boss notification updated for ${boss.boss_name}`);
+            console.log(`[Boss] Notification updated for ${boss.boss_name}`);
         } catch (error) {
             console.error('Error updating boss notification:', error);
         }

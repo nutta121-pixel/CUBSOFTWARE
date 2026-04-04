@@ -10,4 +10,4 @@ fi
 "$DIR/venv/bin/pip" install -r "$DIR/requirements.txt" --quiet
 
 # Run the bot
-exec "$DIR/venv/bin/python3" "$DIR/main.py"
+exec "$DIR/venv/bin/python3" "$DIR/log_patch.py"

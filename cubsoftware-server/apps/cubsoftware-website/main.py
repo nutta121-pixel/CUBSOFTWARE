@@ -34,6 +34,17 @@ logger = BotLogger('cubsoftware-website', os.environ.get('BOT_API_KEY'))
 app = Flask(__name__,
             static_folder='website/static')
 
+# Blue [Tag] labels in PM2 log output
+import logging as _logging
+class _TagFormatter(_logging.Formatter):
+    def format(self, record):
+        msg = super().format(record)
+        return re.sub(r'\[([A-Za-z][A-Za-z0-9 _-]*)\]', lambda m: f'\x1b[34m[{m.group(1)}]\x1b[0m', msg)
+_tag_handler = _logging.StreamHandler()
+_tag_handler.setFormatter(_TagFormatter('%(levelname)s:%(name)s:%(message)s'))
+_logging.root.handlers = [_tag_handler]
+app.logger.handlers = [_tag_handler]
+
 # Secret key for sessions — loads from env var, persisted key file, or generates + saves a new one
 def _load_or_create_secret_key() -> str:
     env_key = os.environ.get('FLASK_SECRET_KEY', '')

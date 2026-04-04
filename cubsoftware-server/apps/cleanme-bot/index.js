@@ -1,4 +1,7 @@
 const { Client, GatewayIntentBits, PermissionFlagsBits, ChannelType, Collection, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, REST, Routes, SlashCommandBuilder, ActivityType } = require('discord.js');
+
+// Yellow [Tag] labels in PM2 log output
+{ const _l = console.log.bind(console); console.log = (...a) => { if (typeof a[0] === 'string') a[0] = a[0].replace(/\[([A-Za-z][A-Za-z0-9 _-]*)\]/g, '\x1b[33m[$1]\x1b[0m'); _l(...a); }; }
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
@@ -70,14 +73,14 @@ async function deployCommands() {
     const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
 
     try {
-        console.log(`Deploying ${commands.length} slash commands globally...`);
+        console.log(`[Commands] Deploying ${commands.length} slash commands globally...`);
 
         const data = await rest.put(
             Routes.applicationCommands(process.env.CLIENT_ID),
             { body: commands },
         );
 
-        console.log(`Successfully deployed ${data.length} slash commands!`);
+        console.log(`[Commands] Deployed ${data.length} slash commands`);
     } catch (error) {
         console.error('Error deploying commands:', error);
     }
@@ -171,8 +174,9 @@ client.on('messageCreate', async (message) => {
 });
 
 client.once('ready', async () => {
-    console.log(`CleanMe Bot is online! Logged in as ${client.user.tag}`);
-    console.log(`Serving ${client.guilds.cache.size} servers`);
+    const totalMembers = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
+    console.log(`[Ready] CleanMe Bot online as ${client.user.tag}`);
+    console.log(`[Stats] ${client.guilds.cache.size} servers, ${totalMembers} total members`);
 
     // Initialize terminal
     terminal = new DiscordTerminal(client, {

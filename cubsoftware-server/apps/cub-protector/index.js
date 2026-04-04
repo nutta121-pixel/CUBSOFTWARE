@@ -1,5 +1,8 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AuditLogEvent, AttachmentBuilder, ActivityType } = require('discord.js');
 
+// Green [Tag] labels in PM2 log output
+{ const _l = console.log.bind(console); console.log = (...a) => { if (typeof a[0] === 'string') a[0] = a[0].replace(/\[([A-Za-z][A-Za-z0-9 _-]*)\]/g, '\x1b[32m[$1]\x1b[0m'); _l(...a); }; }
+
 // Helper: creates an EmbedBuilder pre-loaded with CUB SOFTWARE branding footer
 function cubEmbed() {
     return new EmbedBuilder().setFooter({ text: 'Developed by https://cubsoftware.site' });
@@ -1867,14 +1870,14 @@ async function registerCommands() {
             // Main bot: clear global commands and register per-guild instead.
             // Guild-specific commands take priority over globals immediately; the global
             // deletion propagates within ~1 hour.
-            console.log('Clearing global commands and registering per-guild...');
+            console.log('[Commands] Clearing global commands and registering per-guild...');
             await rest.put(Routes.applicationCommands(CLIENT_ID), { body: [] });
             const guilds = [...client.guilds.cache.values()];
-            console.log(`Syncing commands for ${guilds.length} guild(s)...`);
+            console.log(`[Commands] Syncing commands for ${guilds.length} guild(s)...`);
             for (const guild of guilds) {
                 await syncGuildCommands(guild.id);
             }
-            console.log('Per-guild command registration complete.');
+            console.log('[Commands] Per-guild command registration complete.');
         }
     } catch (error) {
         console.error('Failed to register commands:', error);
@@ -4306,7 +4309,6 @@ client.on('messageReactionAdd', async (reaction, user) => {
     if (user.bot) return;
     if (reaction.partial) await reaction.fetch().catch(() => {});
     if (reaction.message.partial) await reaction.message.fetch().catch(() => {});
-    console.log(`[SR0] emoji:${reaction.emoji.name} guildId:${reaction.message.guildId} guild:${reaction.message.guild?.id} partial:${reaction.message.partial}`);
     if (!reaction.message.guildId) return;
     if (CUSTOM_GUILD_ID && reaction.message.guildId !== CUSTOM_GUILD_ID) return;
     const _srGuild = reaction.message.guild ?? await client.guilds.fetch(reaction.message.guildId).catch(() => null);
@@ -4319,12 +4321,10 @@ client.on('messageReactionAdd', async (reaction, user) => {
         try {
             const rmData = loadRoleMenusData();
             const sr = rmData.guilds?.[srGuildId]?.self_roles;
-            console.log(`[SR] emoji:${reaction.emoji.name} msg:${reaction.message.id} enabled:${sr?.enabled} cats:${sr?.categories?.length}`);
             if (sr?.enabled) {
                 const matchCat = (sr.categories || []).find(c =>
                     c.style === 'reaction' && String(c.message_id) === String(reaction.message.id)
                 );
-                console.log(`[SR] matchCat:${matchCat?.name} roleEntry:${matchCat?.roles?.find(r=>_selfRoleEmojiMatch(r.emoji,reaction.emoji))?.role_id}`);
                 if (matchCat) {
                     const roleEntry = matchCat.roles.find(r => _selfRoleEmojiMatch(r.emoji, reaction.emoji));
                     if (roleEntry) {
@@ -10135,7 +10135,7 @@ async function updateCounters() {
 }
 
 client.once('ready', async () => {
-    console.log(`CUB PROTECTOR logged in as ${client.user.tag}`);
+    console.log(`[Ready] CUB PROTECTOR logged in as ${client.user.tag}`);
 
     // Register commands
     await registerCommands();
@@ -10763,7 +10763,9 @@ client.once('ready', async () => {
     }
     scheduleMidnightCleanup();
 
-    console.log('CUB PROTECTOR is ready!');
+    const _totalMembers = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
+    console.log(`[Stats] ${client.guilds.cache.size} servers, ${_totalMembers} total members`);
+    console.log('[Ready] CUB PROTECTOR is ready!');
 });
 
 // ============================================================

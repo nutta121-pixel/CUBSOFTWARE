@@ -88,7 +88,7 @@ async function updateGuildStats(client) {
             totalQuestsCompleted: stats.total_quests_completed
         });
 
-        console.log(`Stats updated: ${guilds.size} servers, ${totalMembers} total members`);
+        console.log(`[Stats] ${guilds.size} servers, ${totalMembers} total members`);
     } catch (error) {
         console.error('Error updating guild stats:', error);
     }

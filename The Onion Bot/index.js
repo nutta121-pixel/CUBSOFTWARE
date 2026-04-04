@@ -1,4 +1,7 @@
 const { Client, GatewayIntentBits, Collection, REST, Routes } = require('discord.js');
+
+// Magenta [Tag] labels in PM2 log output
+{ const _l = console.log.bind(console); console.log = (...a) => { if (typeof a[0] === 'string') a[0] = a[0].replace(/\[([A-Za-z][A-Za-z0-9 _-]*)\]/g, '\x1b[35m[$1]\x1b[0m'); _l(...a); }; }
 const fs = require('fs');
 const path = require('path');
 const config = require('./config');

@@ -2805,16 +2805,17 @@ client.on('messageCreate', async (message) => {
                     const threshold = chConfig.auto_threshold || 10;
                     if (state.timestamps.length >= threshold) {
                         state.timestamps = [];
-                        const applyDuration = chConfig.auto_duration || 30;
-                        state.activeUntil = now + applyDuration * 1000;
+                        const slowmodeRate = chConfig.auto_duration || 30;
+                        const offAfter = (chConfig.auto_off_after || 60) * 1000;
+                        state.activeUntil = now + offAfter;
                         if (state.timer) clearTimeout(state.timer);
-                        message.channel.setRateLimitPerUser(applyDuration, 'Auto-slowmode: spam detected').catch(() => {});
+                        message.channel.setRateLimitPerUser(slowmodeRate, 'Auto-slowmode: spam detected').catch(() => {});
                         state.timer = setTimeout(async () => {
                             state.activeUntil = 0;
                             state.timer = null;
                             const ch = await client.channels.fetch(channelId).catch(() => null);
                             if (ch) ch.setRateLimitPerUser(0, 'Auto-slowmode: duration ended').catch(() => {});
-                        }, applyDuration * 1000);
+                        }, offAfter);
                     }
                 }
             }

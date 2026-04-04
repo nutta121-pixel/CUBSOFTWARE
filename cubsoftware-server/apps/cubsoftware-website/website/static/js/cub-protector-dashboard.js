@@ -5390,6 +5390,17 @@
         ).join('');
     }
 
+    const SLOWMODE_OFF_AFTER_OPTIONS = [
+        {v:30,l:'30 seconds'},{v:60,l:'1 minute'},{v:120,l:'2 minutes'},
+        {v:300,l:'5 minutes'},{v:600,l:'10 minutes'},{v:900,l:'15 minutes'},
+        {v:1800,l:'30 minutes'},{v:3600,l:'1 hour'}
+    ];
+    function _smOffAfterSelect(selected) {
+        return SLOWMODE_OFF_AFTER_OPTIONS.map(o =>
+            `<option value="${o.v}"${o.v === selected ? ' selected' : ''}>${o.l}</option>`
+        ).join('');
+    }
+
     async function loadSlowmode() {
         try {
             const [res, roles] = await Promise.all([
@@ -5446,8 +5457,14 @@
                         <input type="number" class="form-input sm-auto-threshold" value="${data?.auto_threshold ?? 10}" min="2" max="100">
                     </div>
                     <div class="form-group">
-                        <label>Auto-Slowmode Duration (seconds)</label>
-                        <input type="number" class="form-input sm-auto-duration" value="${data?.auto_duration ?? 30}" min="5" max="21600">
+                        <label>Slowmode Rate (seconds between messages)</label>
+                        <input type="number" class="form-input sm-auto-duration" value="${data?.auto_duration ?? 30}" min="1" max="21600">
+                    </div>
+                </div>
+                <div class="form-row" style="margin-top:1rem;">
+                    <div class="form-group">
+                        <label>Keep Slowmode On For</label>
+                        <select class="form-select sm-auto-off-after">${_smOffAfterSelect(data?.auto_off_after ?? 60)}</select>
                     </div>
                 </div>
                 <div class="form-group" style="margin-top:1rem;">
@@ -5529,6 +5546,7 @@
                     auto_enabled: card.querySelector('.sm-auto-enabled')?.checked || false,
                     auto_threshold: Number(card.querySelector('.sm-auto-threshold')?.value || 10),
                     auto_duration: Number(card.querySelector('.sm-auto-duration')?.value || 30),
+                    auto_off_after: Number(card.querySelector('.sm-auto-off-after')?.value || 60),
                     exempt_roles: exemptRoles
                 });
             });

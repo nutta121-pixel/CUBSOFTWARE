@@ -2138,48 +2138,10 @@
             <!-- Slowmode Section -->
             <section class="content-section" id="slowmodeSection" data-section="slowmode">
                 <div class="section-header">
-                    <div class="section-title"><h1>Slowmode Manager</h1><p>Manage channel slowmode remotely</p></div>
+                    <div class="section-title"><h1>Slowmode Manager</h1><p>Configure slowmode per channel, with optional auto-spam detection</p></div>
+                    <button class="control-btn primary small" onclick="addSlowmodeChannel()">+ Add Channel</button>
                 </div>
-                <div class="settings-card">
-                    <div class="form-row">
-                        <div class="form-group"><label>Target Channel</label>
-                            <select id="slowmode-channel" class="form-select"><option value="">-- Select --</option></select>
-                        </div>
-                        <div class="form-group"><label>Slowmode Duration</label>
-                            <select id="slowmode-duration" class="form-select">
-                                <option value="0">Off</option>
-                                <option value="5">5 seconds</option>
-                                <option value="10">10 seconds</option>
-                                <option value="15">15 seconds</option>
-                                <option value="30">30 seconds</option>
-                                <option value="60">1 minute</option>
-                                <option value="120">2 minutes</option>
-                                <option value="300">5 minutes</option>
-                                <option value="600">10 minutes</option>
-                                <option value="900">15 minutes</option>
-                                <option value="1800">30 minutes</option>
-                                <option value="3600">1 hour</option>
-                                <option value="7200">2 hours</option>
-                                <option value="21600">6 hours</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="settings-row" style="margin-top:1rem;">
-                        <div class="settings-info"><h4>Auto-Slowmode on Spam</h4><p>Automatically enable slowmode when spam is detected</p></div>
-                        <label class="toggle"><input type="checkbox" id="slowmode-auto-enabled"><span class="toggle-slider"></span></label>
-                    </div>
-                    <div class="form-row" style="margin-top:1rem;">
-                        <div class="form-group"><label>Auto-Slowmode Threshold (messages/10s)</label>
-                            <input type="number" id="slowmode-auto-threshold" class="form-input" value="10" min="2" max="100">
-                        </div>
-                        <div class="form-group"><label>Auto-Slowmode Duration (seconds)</label>
-                            <input type="number" id="slowmode-auto-duration" class="form-input" value="30" min="5" max="21600">
-                        </div>
-                    </div>
-                    <div class="form-group" style="margin-top:1rem;"><label>Exempt Roles</label>
-                        <div id="slowmode-exempt-roles" class="multi-check-list"></div>
-                    </div>
-                </div>
+                <div id="slowmode-channels-list"></div>
             </section>
 
             <!-- Lockdown Section -->

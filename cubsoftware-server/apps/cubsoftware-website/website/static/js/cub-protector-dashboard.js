@@ -3822,25 +3822,23 @@
         if (title) html += `<div style="font-weight:700;font-size:1rem;margin-bottom:0.5rem;">${escapeHtml(title)}</div>`;
         if (desc) html += `<div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:0.75rem;white-space:pre-wrap;">${escapeHtml(desc)}</div>`;
 
-        // Fields — only show fields with both name AND value (matches what gets sent)
+        // Fields — show any field with at least a name (value defaults to zero-width space when empty)
         const fieldEls = document.querySelectorAll('.embed-field-row');
         const validFields = [];
         fieldEls.forEach(row => {
+            row.style.opacity = '';
+            row.title = '';
             const name = row.querySelector('.embed-field-name')?.value || '';
             const value = row.querySelector('.embed-field-value')?.value || '';
             const inline = row.querySelector('.embed-field-inline')?.checked;
-            // Mark incomplete rows visually
-            const incomplete = (name && !value) || (!name && value);
-            row.style.opacity = incomplete ? '0.5' : '';
-            row.title = incomplete ? 'Both name and value are required for a field to be sent' : '';
-            if (name && value) validFields.push({ name, value, inline });
+            if (name) validFields.push({ name, value, inline });
         });
         if (validFields.length > 0) {
             html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0.75rem;">';
             validFields.forEach(f => {
                 html += `<div style="grid-column:${f.inline ? 'span 1' : '1 / -1'};">
                     <div style="font-weight:600;font-size:0.8rem;">${escapeHtml(f.name)}</div>
-                    <div style="font-size:0.8rem;color:var(--text-muted);">${escapeHtml(f.value)}</div>
+                    ${f.value ? `<div style="font-size:0.8rem;color:var(--text-muted);">${escapeHtml(f.value)}</div>` : ''}
                 </div>`;
             });
             html += '</div>';
@@ -3889,7 +3887,7 @@
             const name = row.querySelector('.embed-field-name')?.value;
             const value = row.querySelector('.embed-field-value')?.value;
             const inline = row.querySelector('.embed-field-inline')?.checked || false;
-            if (name && value) embed.fields.push({ name, value, inline });
+            if (name) embed.fields.push({ name, value: value || '\u200b', inline });
         });
 
         try {
@@ -5379,49 +5377,168 @@
     }
 
     // ==================== SLOWMODE ====================
+    const SLOWMODE_DURATION_OPTIONS = [
+        {v:0,l:'Off'},{v:5,l:'5 seconds'},{v:10,l:'10 seconds'},{v:15,l:'15 seconds'},
+        {v:30,l:'30 seconds'},{v:60,l:'1 minute'},{v:120,l:'2 minutes'},{v:300,l:'5 minutes'},
+        {v:600,l:'10 minutes'},{v:900,l:'15 minutes'},{v:1800,l:'30 minutes'},
+        {v:3600,l:'1 hour'},{v:7200,l:'2 hours'},{v:21600,l:'6 hours'}
+    ];
+
+    function _smDurationSelect(selected) {
+        return SLOWMODE_DURATION_OPTIONS.map(o =>
+            `<option value="${o.v}"${o.v === selected ? ' selected' : ''}>${o.l}</option>`
+        ).join('');
+    }
+
     async function loadSlowmode() {
         try {
-            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/slowmode`);
+            const [res, roles] = await Promise.all([
+                fetch(`/api/cub-protector/guilds/${selectedGuild.id}/slowmode`),
+                fetchGuildRoles()
+            ]);
             const data = await res.json();
-            const s = data.settings || data;
-            populateChannelSelect('slowmode-channel', s.channel);
-            document.getElementById('slowmode-duration').value = s.duration || 5;
-            document.getElementById('slowmode-auto-enabled').checked = s.auto_enabled || false;
-            document.getElementById('slowmode-auto-threshold').value = s.auto_threshold || 10;
-            document.getElementById('slowmode-auto-duration').value = s.auto_duration || 30;
-            const roles = await fetchGuildRoles();
-            populateMultiSelect('slowmode-exempt-roles', (roles || []).filter(r => r.name !== '@everyone'), s.exempt_roles || []);
+            const channels = data.channels || [];
+            const container = document.getElementById('slowmode-channels-list');
+            container.innerHTML = '';
+            if (channels.length === 0) {
+                await addSlowmodeChannel(null, roles);
+            } else {
+                for (const ch of channels) {
+                    await addSlowmodeChannel(ch, roles);
+                }
+            }
         } catch (e) { showToast('Failed to load slowmode', 'error'); }
     }
-    window.cpSaveSlowmode = async function() {
+
+    window.addSlowmodeChannel = async function(data = null, roles = null) {
+        if (!roles) roles = await fetchGuildRoles();
+        const container = document.getElementById('slowmode-channels-list');
+        const card = document.createElement('div');
+        card.className = 'settings-card slowmode-channel-card';
+        card.style.marginBottom = '1rem';
+        const autoEnabled = data?.auto_enabled || false;
+        card.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h4 style="margin:0;font-size:1rem;">Channel Configuration</h4>
+                <button class="control-btn small btn-danger" onclick="removeSlowmodeChannel(this)">Remove</button>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Target Channel</label>
+                    <select class="form-select sm-channel"><option value="">-- Select Channel --</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Manual Slowmode Duration</label>
+                    <select class="form-select sm-duration">${_smDurationSelect(data?.duration || 0)}</select>
+                </div>
+            </div>
+            <div style="margin-top:.75rem;">
+                <button class="control-btn secondary small" onclick="applyManualSlowmode(this)">Apply Slowmode Now</button>
+            </div>
+            <div class="settings-row" style="margin-top:1.25rem;">
+                <div class="settings-info"><h4>Auto-Slowmode on Spam</h4><p>Bot automatically enables slowmode when spam is detected in this channel</p></div>
+                <label class="toggle"><input type="checkbox" class="sm-auto-enabled" onchange="toggleSmAutoSettings(this)"${autoEnabled ? ' checked' : ''}><span class="toggle-slider"></span></label>
+            </div>
+            <div class="sm-auto-settings"${autoEnabled ? '' : ' style="display:none"'}>
+                <div class="form-row" style="margin-top:1rem;">
+                    <div class="form-group">
+                        <label>Spam Threshold (messages / 10s)</label>
+                        <input type="number" class="form-input sm-auto-threshold" value="${data?.auto_threshold ?? 10}" min="2" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Auto-Slowmode Duration (seconds)</label>
+                        <input type="number" class="form-input sm-auto-duration" value="${data?.auto_duration ?? 30}" min="5" max="21600">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-top:1rem;">
+                    <label>Exempt Roles <span style="font-size:.8em;opacity:.6">(these roles won't count toward the threshold)</span></label>
+                    <div class="multi-check-list sm-exempt-roles"></div>
+                </div>
+            </div>
+            <div style="margin-top:1rem;">
+                <button class="control-btn primary" onclick="saveSlowmodeChannel(this)">Save</button>
+            </div>`;
+
+        // Populate channel select
+        const chSelect = card.querySelector('.sm-channel');
+        const allChannels = await fetchGuildChannels();
+        (allChannels || []).filter(c => c.type === 0 || c.type === 5).forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = `# ${c.name}`;
+            if (c.id === data?.channel) opt.selected = true;
+            chSelect.appendChild(opt);
+        });
+
+        // Populate exempt roles
+        const rolesList = (roles || []).filter(r => r.name !== '@everyone');
+        const exemptContainer = card.querySelector('.sm-exempt-roles');
+        rolesList.forEach(role => {
+            const checked = (data?.exempt_roles || []).includes(role.id);
+            const item = document.createElement('label');
+            item.className = 'multi-check-item';
+            item.innerHTML = `<input type="checkbox" value="${role.id}"${checked ? ' checked' : ''}><span class="role-dot" style="background:${role.color ? '#' + role.color.toString(16).padStart(6,'0') : '#99aab5'}"></span>${role.name}`;
+            exemptContainer.appendChild(item);
+        });
+
+        container.appendChild(card);
+    };
+
+    window.toggleSmAutoSettings = function(checkbox) {
+        const settings = checkbox.closest('.slowmode-channel-card').querySelector('.sm-auto-settings');
+        settings.style.display = checkbox.checked ? '' : 'none';
+    };
+
+    window.removeSlowmodeChannel = function(btn) {
+        btn.closest('.slowmode-channel-card').remove();
+        window.cpSaveSlowmode?.();
+    };
+
+    window.applyManualSlowmode = async function(btn) {
+        const card = btn.closest('.slowmode-channel-card');
+        const channelId = card.querySelector('.sm-channel').value;
+        const duration = Number(card.querySelector('.sm-duration').value);
+        if (!channelId) { showToast('Select a channel first', 'error'); return; }
         try {
-            const channelId = document.getElementById('slowmode-channel').value;
-            const duration = Number(document.getElementById('slowmode-duration').value);
-            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/slowmode`, {
-                method: 'PATCH', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    channel: channelId,
-                    duration: duration,
-                    auto_enabled: document.getElementById('slowmode-auto-enabled').checked,
-                    auto_threshold: Number(document.getElementById('slowmode-auto-threshold').value),
-                    auto_duration: Number(document.getElementById('slowmode-auto-duration').value),
-                    exempt_roles: getMultiSelectValues('slowmode-exempt-roles')
-                })
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/slowmode/apply`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ channel: channelId, duration })
             });
             const data = await res.json();
-            if (!data.success) { showToast(data.error || 'Failed to save', 'error'); return; }
-            // Apply slowmode to the channel via Discord API
-            if (channelId) {
-                const applyRes = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/slowmode/apply`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ channel: channelId, duration: duration })
+            if (data.success) showToast(`Slowmode ${duration > 0 ? 'set to ' + formatDuration(duration) : 'disabled'}!`, 'success');
+            else showToast(data.error || 'Failed to apply slowmode', 'error');
+        } catch (e) { showToast('Failed to apply slowmode', 'error'); }
+    };
+
+    window.saveSlowmodeChannel = async function() {
+        await window.cpSaveSlowmode?.();
+    };
+
+    window.cpSaveSlowmode = async function() {
+        try {
+            const cards = document.querySelectorAll('.slowmode-channel-card');
+            const channels = [];
+            cards.forEach(card => {
+                const channel = card.querySelector('.sm-channel')?.value;
+                if (!channel) return;
+                const exemptRoles = [];
+                card.querySelectorAll('.sm-exempt-roles input[type=checkbox]:checked').forEach(cb => exemptRoles.push(cb.value));
+                channels.push({
+                    channel,
+                    duration: Number(card.querySelector('.sm-duration')?.value || 0),
+                    auto_enabled: card.querySelector('.sm-auto-enabled')?.checked || false,
+                    auto_threshold: Number(card.querySelector('.sm-auto-threshold')?.value || 10),
+                    auto_duration: Number(card.querySelector('.sm-auto-duration')?.value || 30),
+                    exempt_roles: exemptRoles
                 });
-                const applyData = await applyRes.json();
-                if (applyData.success) showToast(`Slowmode ${duration > 0 ? 'set to ' + formatDuration(duration) : 'disabled'} on channel!`, 'success');
-                else showToast('Settings saved but failed to apply to channel', 'error');
-            } else {
-                showToast('Slowmode settings saved!', 'success');
-            }
+            });
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/slowmode`, {
+                method: 'PATCH', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ channels })
+            });
+            const data = await res.json();
+            if (data.success) showToast('Slowmode settings saved!', 'success');
+            else showToast(data.error || 'Failed to save', 'error');
         } catch (e) { showToast('Failed to save slowmode', 'error'); }
     };
 

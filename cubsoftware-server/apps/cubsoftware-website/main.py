@@ -607,14 +607,38 @@ def _cub_bridge_session():
 def _inject_cub_user():
     """Inject cub_user and nav whitelist flags into every template."""
     cub = session.get('cub_user')
-    nav_pm2 = bool(session.get('pm2_user'))
+
+    # Resolve the Discord ID to check against whitelists.
+    # Handles: Discord login, Twitch login with linked Discord, and legacy sessions.
+    discord_id = None
+    if cub:
+        if cub.get('provider') == 'discord':
+            discord_id = cub.get('id')
+        elif cub.get('provider') == 'twitch':
+            linked = cub.get('linked_account') or {}
+            if linked.get('provider') == 'discord':
+                discord_id = linked.get('id')
+    if not discord_id:
+        # Fallback for old/legacy sessions that have individual app keys but no cub_user
+        fallback = session.get('bot_dashboard_user') or session.get('pm2_user')
+        if fallback:
+            discord_id = fallback.get('id')
+
+    nav_pm2 = False
     nav_bot_dashboard = False
-    if session.get('bot_dashboard_user'):
+    if discord_id:
+        uid = str(discord_id)
         try:
-            wl = load_bot_dashboard_whitelist()
-            nav_bot_dashboard = session['bot_dashboard_user']['id'] in wl.get('allowed_users', [])
+            pm2_wl = load_pm2_whitelist()
+            nav_pm2 = uid in [str(x) for x in pm2_wl.get('allowed_users', [])]
         except Exception:
             pass
+        try:
+            bot_wl = load_bot_dashboard_whitelist()
+            nav_bot_dashboard = uid in [str(x) for x in bot_wl.get('allowed_users', [])]
+        except Exception:
+            pass
+
     nav_is_affiliate = False
     if cub:
         try:
@@ -11122,13 +11146,13 @@ def cub_protector_delete_hub(guild_id, hub_id):
         return jsonify({'error': 'Hub not found'}), 404
 
     # Delete the hub voice channel from Discord
-    cub_protector_bot_request(f'/channels/{hub_id}', method='DELETE')
+    _guild_bot_request(guild_id, f'/channels/{hub_id}', method='DELETE')
 
     # Delete all active temp channels belonging to this hub
     active = guild_data.get('active_channels', {})
     to_delete = [ch_id for ch_id, ch in active.items() if ch.get('hub_id') == hub_id]
     for ch_id in to_delete:
-        cub_protector_bot_request(f'/channels/{ch_id}', method='DELETE')
+        _guild_bot_request(guild_id, f'/channels/{ch_id}', method='DELETE')
         del tv_data['guilds'][guild_id]['active_channels'][ch_id]
 
     # Remove hub from data
@@ -11169,7 +11193,7 @@ def cub_protector_edit_hub(guild_id, hub_id):
     if 'hub_name' in req_data:
         hub['hub_name'] = req_data['hub_name']
         # Also rename the Discord channel
-        cub_protector_bot_request(f'/channels/{hub_id}', method='PATCH', json_data={'name': req_data['hub_name']})
+        _guild_bot_request(guild_id, f'/channels/{hub_id}', method='PATCH', json_data={'name': req_data['hub_name']})
     if 'name_template' in req_data:
         hub['name_template'] = req_data['name_template']
     if 'user_limit' in req_data:
@@ -11406,7 +11430,7 @@ def cub_protector_active_channels(guild_id):
     channels = []
     for ch_id, ch in active.items():
         # Try to get channel info from Discord for the current name
-        channel_info = cub_protector_bot_request(f'/channels/{ch_id}')
+        channel_info = _guild_bot_request(guild_id, f'/channels/{ch_id}')
         channel_name = channel_info.get('name', 'Unknown') if channel_info else 'Unknown'
 
         # Resolve permitted user IDs to names where possible
@@ -11458,7 +11482,7 @@ def cub_protector_unpermit_user(guild_id, channel_id, user_id):
     save_cub_protector_data(tv_data)
 
     # Remove the Discord permission overwrite
-    cub_protector_bot_request('DELETE', f'/channels/{channel_id}/permissions/{user_id}')
+    _guild_bot_request(guild_id, 'DELETE', f'/channels/{channel_id}/permissions/{user_id}')
 
     return jsonify({'success': True})
 
@@ -11804,7 +11828,7 @@ def cub_protector_welcome_test(guild_id):
         payload = {'content': '[TEST] Welcome message preview:', 'embeds': [embed]}
     else:
         payload = {'content': f'[TEST] {msg_text}'}
-    result = cub_protector_bot_request(f'/channels/{channel_id}/messages', method='POST', json_data=payload)
+    result = _guild_bot_request(guild_id, f'/channels/{channel_id}/messages', method='POST', json_data=payload)
     if result:
         return jsonify({'success': True})
     return jsonify({'error': 'Failed to send test message'}), 500
@@ -12096,7 +12120,7 @@ def cub_protector_create_ticket_panel(guild_id):
     action_row = {'type': 1, 'components': components_buttons}
 
     # Send message to channel via Discord API
-    msg_data = cub_protector_bot_request(f'/channels/{channel_id}/messages', method='POST', json_data={
+    msg_data = _guild_bot_request(guild_id, f'/channels/{channel_id}/messages', method='POST', json_data={
         'embeds': [embed],
         'components': [action_row]
     })
@@ -12206,7 +12230,7 @@ def cub_protector_edit_ticket_panel(guild_id, message_id):
     action_row = {'type': 1, 'components': components_buttons}
 
     # Update the message on Discord
-    result = cub_protector_bot_request(f'/channels/{panel["channel_id"]}/messages/{message_id}', method='PATCH', json_data={
+    result = _guild_bot_request(guild_id, f'/channels/{panel["channel_id"]}/messages/{message_id}', method='PATCH', json_data={
         'embeds': [embed],
         'components': [action_row]
     })
@@ -12248,7 +12272,7 @@ def cub_protector_delete_ticket_panel(guild_id, message_id):
         return jsonify({'error': 'Panel not found'}), 404
 
     # Delete the message from Discord
-    cub_protector_bot_request(f'/channels/{panel["channel_id"]}/messages/{message_id}', method='DELETE')
+    _guild_bot_request(guild_id, f'/channels/{panel["channel_id"]}/messages/{message_id}', method='DELETE')
 
     # Remove from data
     data['guilds'][guild_id]['panels'] = [p for p in panels if p.get('message_id') != message_id]
@@ -12404,7 +12428,7 @@ def cub_protector_create_giveaway(guild_id):
         else:
             msg_payload['content'] = f'<@&{ping_role}>'
 
-    msg_data = cub_protector_bot_request(f'/channels/{channel_id}/messages', method='POST', json_data=msg_payload)
+    msg_data = _guild_bot_request(guild_id, f'/channels/{channel_id}/messages', method='POST', json_data=msg_payload)
 
     if not msg_data:
         return jsonify({'error': 'Failed to send giveaway message to Discord'}), 500
@@ -12571,7 +12595,7 @@ def cub_protector_edit_giveaway(guild_id, message_id):
     giveaway['button_label'] = button_label
 
     # Update the message on Discord
-    result = cub_protector_bot_request(f'/channels/{giveaway["channel_id"]}/messages/{message_id}', method='PATCH', json_data={
+    result = _guild_bot_request(guild_id, f'/channels/{giveaway["channel_id"]}/messages/{message_id}', method='PATCH', json_data={
         'embeds': [embed],
         'components': [action_row]
     })
@@ -12602,7 +12626,7 @@ def cub_protector_delete_giveaway(guild_id, message_id):
         return jsonify({'error': 'Giveaway not found'}), 404
 
     # Try to delete the Discord message
-    cub_protector_bot_request(f'/channels/{giveaway["channel_id"]}/messages/{message_id}', method='DELETE')
+    _guild_bot_request(guild_id, f'/channels/{giveaway["channel_id"]}/messages/{message_id}', method='DELETE')
 
     # Remove from data
     filtered = [g for g in guild_giveaways if g.get('message_id') != message_id]
@@ -12656,7 +12680,7 @@ def cub_protector_end_giveaway(guild_id, message_id):
         'color': 0xED4245,
     }
 
-    cub_protector_bot_request(f'/channels/{giveaway["channel_id"]}/messages/{message_id}', method='PATCH', json_data={
+    _guild_bot_request(guild_id, f'/channels/{giveaway["channel_id"]}/messages/{message_id}', method='PATCH', json_data={
         'embeds': [ended_embed],
         'components': []
     })
@@ -12669,7 +12693,7 @@ def cub_protector_end_giveaway(guild_id, message_id):
             announce = winner_message.replace('{winners}', winner_mentions).replace('{prize}', giveaway['prize'])
         else:
             announce = f'\U0001f389 Congratulations {winner_mentions}! You won **{giveaway["prize"]}**!'
-        cub_protector_bot_request(f'/channels/{giveaway["channel_id"]}/messages', method='POST', json_data={
+        _guild_bot_request(guild_id, f'/channels/{giveaway["channel_id"]}/messages', method='POST', json_data={
             'content': announce
         })
 
@@ -12717,7 +12741,7 @@ def cub_protector_reroll_giveaway(guild_id, message_id):
         winners.append(pool.pop(idx))
 
     # Announce reroll
-    cub_protector_bot_request(f'/channels/{giveaway["channel_id"]}/messages', method='POST', json_data={
+    _guild_bot_request(guild_id, f'/channels/{giveaway["channel_id"]}/messages', method='POST', json_data={
         'content': f'\U0001f389 **Giveaway Rerolled!**\nNew winner(s): {", ".join(f"<@{w}>" for w in winners)}\nPrize: **{giveaway["prize"]}**'
     })
 
@@ -12931,8 +12955,8 @@ def cub_protector_custom_embeds_create(guild_id):
     if embed_data.get('fields'):
         fields = []
         for f in embed_data['fields'][:25]:
-            if f.get('name') and f.get('value'):
-                fields.append({'name': str(f['name'])[:256], 'value': str(f['value'])[:1024], 'inline': bool(f.get('inline', False))})
+            if f.get('name'):
+                fields.append({'name': str(f['name'])[:256], 'value': str(f.get('value') or '\u200b')[:1024], 'inline': bool(f.get('inline', False))})
         if fields:
             embed_payload['fields'] = fields
 
@@ -12941,7 +12965,7 @@ def cub_protector_custom_embeds_create(guild_id):
     if content:
         msg_payload['content'] = content
 
-    msg_data = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json=msg_payload)
+    msg_data = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json=msg_payload)
     if msg_data:
         import uuid
         data = load_cp_json(CUB_PROTECTOR_CUSTOM_EMBEDS_FILE)
@@ -12970,7 +12994,7 @@ def cub_protector_custom_embeds_delete(guild_id, embed_id):
     guild_data = data.get('guilds', {}).get(guild_id, {'embeds': []})
     embed_entry = next((e for e in guild_data.get('embeds', []) if e.get('id') == embed_id), None)
     if embed_entry and embed_entry.get('message_id') and embed_entry.get('channel_id'):
-        cub_protector_bot_request('DELETE', f'/channels/{embed_entry["channel_id"]}/messages/{embed_entry["message_id"]}')
+        _guild_bot_request(guild_id, 'DELETE', f'/channels/{embed_entry["channel_id"]}/messages/{embed_entry["message_id"]}')
     guild_data['embeds'] = [e for e in guild_data.get('embeds', []) if e.get('id') != embed_id]
     if 'guilds' not in data:
         data['guilds'] = {}
@@ -13383,8 +13407,7 @@ def cub_protector_live_alerts_test(guild_id, streamer_id):
     elif ping_role:
         payload['content'] = f'<@&{ping_role}>'
 
-    token = _get_guild_bot_token(guild_id)
-    result = cub_protector_bot_request('POST', f'/channels/{alert_channel}/messages', json=payload, token=token)
+    result = _guild_bot_request(guild_id, 'POST', f'/channels/{alert_channel}/messages', json=payload)
     if result is None:
         return jsonify({'error': 'Failed to send test alert. Make sure the alert channel is set and the bot has access.'}), 500
     return jsonify({'success': True})
@@ -14429,7 +14452,7 @@ def cub_protector_announcements_post(guild_id):
         payload['embeds'] = [embed]
         if mentions:
             payload['content'] = mentions.strip()
-    result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json=payload)
+    result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json=payload)
     if not result:
         return jsonify({'error': 'Failed to send message'}), 500
     # Save to history
@@ -14469,7 +14492,7 @@ def cub_protector_announcement_resend(guild_id, ann_id):
     channel_id = ann.get('channel_id')
     if not payload or not channel_id:
         return jsonify({'error': 'No message data'}), 400
-    result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json=payload)
+    result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json=payload)
     if result:
         return jsonify({'success': True})
     return jsonify({'error': 'Failed to resend'}), 500
@@ -14603,7 +14626,7 @@ def cub_protector_counters_delete(guild_id, counter_id):
         return jsonify({'error': 'Counter not found'}), 404
     if counter.get('channel_id'):
         try:
-            cub_protector_bot_request('DELETE', f'/channels/{counter["channel_id"]}')
+            _guild_bot_request(guild_id, 'DELETE', f'/channels/{counter["channel_id"]}')
         except Exception:
             pass
     data['guilds'][guild_id]['counters'] = [c for c in counters if c['id'] != counter_id]
@@ -14633,12 +14656,39 @@ def cub_protector_counters_update(guild_id, counter_id):
 @app.route('/api/cub-protector/guilds/<guild_id>/slowmode', methods=['GET'])
 @cub_protector_auth_required
 def cp_slowmode_get(guild_id):
-    return _cp_feature_get(guild_id, CUB_PROTECTOR_SLOWMODE_FILE)
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    data = load_cp_json(CUB_PROTECTOR_SLOWMODE_FILE)
+    guild_data = data.get('guilds', {}).get(guild_id, {})
+    channels = guild_data.get('channels', [])
+    # Backward compat: migrate legacy single-channel settings
+    if not channels:
+        s = guild_data.get('settings', {})
+        if s.get('channel'):
+            channels = [{
+                'channel': s.get('channel', ''),
+                'duration': s.get('duration', 0),
+                'auto_enabled': s.get('auto_enabled', False),
+                'auto_threshold': s.get('auto_threshold', 10),
+                'auto_duration': s.get('auto_duration', 30),
+                'exempt_roles': s.get('exempt_roles', []),
+            }]
+    return jsonify({'channels': channels})
 
 @app.route('/api/cub-protector/guilds/<guild_id>/slowmode', methods=['PATCH'])
 @cub_protector_auth_required
 def cp_slowmode_update(guild_id):
-    return _cp_feature_update(guild_id, CUB_PROTECTOR_SLOWMODE_FILE)
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    data = load_cp_json(CUB_PROTECTOR_SLOWMODE_FILE)
+    if 'guilds' not in data:
+        data['guilds'] = {}
+    if guild_id not in data['guilds']:
+        data['guilds'][guild_id] = {}
+    body = request.get_json()
+    data['guilds'][guild_id]['channels'] = body.get('channels', [])
+    save_cp_json(CUB_PROTECTOR_SLOWMODE_FILE, data)
+    return jsonify({'success': True})
 
 @app.route('/api/cub-protector/guilds/<guild_id>/slowmode/apply', methods=['POST'])
 @cub_protector_auth_required
@@ -14650,7 +14700,7 @@ def cp_slowmode_apply(guild_id):
     duration = body.get('duration', 0)
     if not channel_id:
         return jsonify({'error': 'No channel specified'}), 400
-    result = cub_protector_bot_request('PATCH', f'/channels/{channel_id}', json={'rate_limit_per_user': int(duration)})
+    result = _guild_bot_request(guild_id, 'PATCH', f'/channels/{channel_id}', json={'rate_limit_per_user': int(duration)})
     if result is not None:
         return jsonify({'success': True})
     return jsonify({'error': 'Failed to apply slowmode'}), 500
@@ -14695,12 +14745,12 @@ def cp_lockdown_activate(guild_id):
             'type': 0,  # role
             'deny': str(1 << 11),  # SendMessages
         }
-        result = cub_protector_bot_request('PUT', f'/channels/{ch_id}/permissions/{everyone_role_id}', json=overwrite_data)
+        result = _guild_bot_request(guild_id, 'PUT', f'/channels/{ch_id}/permissions/{everyone_role_id}', json=overwrite_data)
         if result is not None:
             locked.append(ch_id)
             # Send lockdown message if configured
             if message:
-                cub_protector_bot_request('POST', f'/channels/{ch_id}/messages', json={'content': message})
+                _guild_bot_request(guild_id, 'POST', f'/channels/{ch_id}/messages', json={'content': message})
         else:
             failed.append(ch_id)
     data['guilds'][guild_id]['settings']['active'] = True
@@ -14726,7 +14776,7 @@ def cp_lockdown_deactivate(guild_id):
     failed = []
     for ch_id in locked_channels:
         # Remove the SendMessages deny for @everyone
-        result = cub_protector_bot_request('DELETE', f'/channels/{ch_id}/permissions/{everyone_role_id}')
+        result = _guild_bot_request(guild_id, 'DELETE', f'/channels/{ch_id}/permissions/{everyone_role_id}')
         if result is not None:
             unlocked.append(ch_id)
         else:
@@ -14754,7 +14804,7 @@ def cp_purge_execute(guild_id):
     if not channel_id:
         return jsonify({'error': 'No channel specified'}), 400
     # Fetch messages from the channel
-    messages = cub_protector_bot_request('GET', f'/channels/{channel_id}/messages', params={'limit': min(count * 2, 100)})
+    messages = _guild_bot_request(guild_id, 'GET', f'/channels/{channel_id}/messages', params={'limit': min(count * 2, 100)})
     if not messages:
         return jsonify({'error': 'Failed to fetch messages'}), 500
     import time as _time
@@ -14785,10 +14835,10 @@ def cp_purge_execute(guild_id):
         return jsonify({'error': 'No messages found matching criteria'}), 400
     # Bulk delete (requires 2+ messages and < 14 days old)
     if len(filtered) == 1:
-        result = cub_protector_bot_request('DELETE', f'/channels/{channel_id}/messages/{filtered[0]}')
+        result = _guild_bot_request(guild_id, 'DELETE', f'/channels/{channel_id}/messages/{filtered[0]}')
         deleted_count = 1 if result is not None else 0
     else:
-        result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages/bulk-delete', json={'messages': filtered})
+        result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages/bulk-delete', json={'messages': filtered})
         deleted_count = len(filtered) if result is not None else 0
     if deleted_count > 0:
         return jsonify({'success': True, 'deleted': deleted_count})
@@ -14928,7 +14978,7 @@ def cp_verification_send_panel(guild_id):
             'emoji': {'name': '\u2705'}
         }]
     }
-    result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json={
+    result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json={
         'embeds': [embed],
         'components': [component]
     })
@@ -15002,7 +15052,7 @@ def cp_modmail_send_panel(guild_id):
             'emoji': {'name': '\U0001f4e9'}
         }]
     }
-    result = cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json={
+    result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json={
         'embeds': [embed],
         'components': [component]
     })
@@ -15579,8 +15629,7 @@ def cp_self_roles_delete_category(guild_id, category_id):
             message_id = cat.get('message_id')
             channel_id = sr.get('channel_id')
             if message_id and channel_id:
-                token = _get_guild_bot_token(guild_id)
-                cub_protector_bot_request('DELETE', f'/channels/{channel_id}/messages/{message_id}', token=token)
+                _guild_bot_request(guild_id, 'DELETE', f'/channels/{channel_id}/messages/{message_id}')
             sr['categories'] = [c for c in sr.get('categories', []) if c.get('id') != category_id]
             save_cp_json(CUB_PROTECTOR_ROLE_MENUS_FILE, data)
     return jsonify({'success': True})
@@ -16469,7 +16518,7 @@ def ban_appeal_verify_code():
                                         invite_channel_id = ch['id']
                                         break
                             if invite_channel_id:
-                                invite = cub_protector_bot_request('POST', f'/channels/{invite_channel_id}/invites', json={
+                                invite = _guild_bot_request(guild_id, 'POST', f'/channels/{invite_channel_id}/invites', json={
                                     'max_age': 604800, 'max_uses': 1, 'unique': True
                                 })
                                 if invite and 'code' in invite:
@@ -16705,7 +16754,7 @@ def _ban_appeal_submit_inner():
         review_role = appeal_settings.get('review_role')
         content = f'<@&{review_role}>' if review_role else None
 
-        cub_protector_bot_request('POST', f'/channels/{channel_id}/messages', json={
+        _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json={
             'content': content,
             'embeds': [embed],
             'components': components

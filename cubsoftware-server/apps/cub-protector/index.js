@@ -57,6 +57,12 @@ let _cbGuildsCacheTime = 0;
 let _cbNamesCache = {}; // guildId → display name
 const CB_CACHE_TTL = 5000; // refresh every 5 seconds — fast enough to react to bot removal
 
+// Auto-slowmode: in-memory state per channel + config cache
+const autoSlowmodeState = new Map(); // 'guildId:channelId' → { timestamps: [], activeUntil: 0, timer: null }
+let _slowmodeCfgCache = null;
+let _slowmodeCfgCacheTime = 0;
+const SLOWMODE_CFG_TTL = 5000;
+
 function _refreshCbCache() {
     const now = Date.now();
     if (_cbGuildsCache && now - _cbGuildsCacheTime <= CB_CACHE_TTL) return;
@@ -167,6 +173,7 @@ const FEEDS_FILE = path.join(DATA_DIR, 'feeds.json');
 const DEBATE_FILE = path.join(DATA_DIR, 'debate.json');
 const GAMES_FILE = path.join(DATA_DIR, 'games.json');
 const MEDIA_CHANNELS_FILE = path.join(DATA_DIR, 'media_channels.json');
+const SLOWMODE_FILE = path.join(DATA_DIR, 'slowmode.json');
 const SUPPORT_SERVER_LINK = 'https://discord.gg/ngQXHUbnKg';
 const SUPPORT_USER_LINK = 'https://discord.com/users/523949187663585310';
 
@@ -270,6 +277,14 @@ function loadJsonFile(filePath, defaultData = { guilds: {} }) {
 function saveJsonFile(filePath, data) {
     try { fs.writeFileSync(filePath, JSON.stringify(data, null, 2)); }
     catch (e) { console.error(`Failed to save ${filePath}:`, e); }
+}
+
+function loadSlowmodeConfig() {
+    const now = Date.now();
+    if (_slowmodeCfgCache && now - _slowmodeCfgCacheTime < SLOWMODE_CFG_TTL) return _slowmodeCfgCache;
+    _slowmodeCfgCache = loadJsonFile(SLOWMODE_FILE, { guilds: {} });
+    _slowmodeCfgCacheTime = now;
+    return _slowmodeCfgCache;
 }
 
 // Auto-Mod
@@ -2763,6 +2778,48 @@ client.on('messageCreate', async (message) => {
     if (CUSTOM_GUILD_ID && message.guildId !== CUSTOM_GUILD_ID) return;
     if (guildHasCustomBot(message.guildId)) return;
     if (message.author.bot) return;
+
+    // ---- Auto-slowmode on spam detection ----
+    if (message.guild) {
+        const guildId = message.guild.id;
+        const channelId = message.channel.id;
+        const smData = loadSlowmodeConfig();
+        const guildChannels = smData.guilds?.[guildId]?.channels || [];
+        const chConfig = guildChannels.find(c => c.channel === channelId && c.auto_enabled);
+        if (chConfig) {
+            const key = `${guildId}:${channelId}`;
+            const now = Date.now();
+            if (!autoSlowmodeState.has(key)) {
+                autoSlowmodeState.set(key, { timestamps: [], activeUntil: 0, timer: null });
+            }
+            const state = autoSlowmodeState.get(key);
+            if (state.activeUntil <= now) {
+                // Check if sender has an exempt role
+                const exemptRoles = chConfig.exempt_roles || [];
+                const memberRoles = message.member?.roles?.cache;
+                const isExempt = exemptRoles.length > 0 && memberRoles && exemptRoles.some(rid => memberRoles.has(rid));
+                if (!isExempt) {
+                    state.timestamps.push(now);
+                    // Keep only timestamps within the 10s window
+                    state.timestamps = state.timestamps.filter(t => now - t <= 10000);
+                    const threshold = chConfig.auto_threshold || 10;
+                    if (state.timestamps.length >= threshold) {
+                        state.timestamps = [];
+                        const applyDuration = chConfig.auto_duration || 30;
+                        state.activeUntil = now + applyDuration * 1000;
+                        if (state.timer) clearTimeout(state.timer);
+                        message.channel.setRateLimitPerUser(applyDuration, 'Auto-slowmode: spam detected').catch(() => {});
+                        state.timer = setTimeout(async () => {
+                            state.activeUntil = 0;
+                            state.timer = null;
+                            const ch = await client.channels.fetch(channelId).catch(() => null);
+                            if (ch) ch.setRateLimitPerUser(0, 'Auto-slowmode: duration ended').catch(() => {});
+                        }, applyDuration * 1000);
+                    }
+                }
+            }
+        }
+    }
 
     // Debate mode: delete messages from non-debaters
     if (message.guild && activeDebates.has(message.channel.id)) {

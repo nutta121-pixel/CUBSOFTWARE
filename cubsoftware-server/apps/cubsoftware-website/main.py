@@ -14798,48 +14798,70 @@ def cp_purge_execute(guild_id):
         return jsonify({'error': 'Access denied'}), 403
     body = request.get_json()
     channel_id = body.get('channel')
-    count = min(int(body.get('count', 10)), 100)
+    count = min(int(body.get('count', 10)), 1000)
     filter_type = body.get('filter', '')
     user_id = body.get('user_id', '')
+    text_filter = body.get('text', '')
     if not channel_id:
         return jsonify({'error': 'No channel specified'}), 400
-    # Fetch messages from the channel
-    messages = _guild_bot_request(guild_id, 'GET', f'/channels/{channel_id}/messages', params={'limit': min(count * 2, 100)})
-    if not messages:
-        return jsonify({'error': 'Failed to fetch messages'}), 500
     import time as _time
-    two_weeks_ago = (_time.time() - 14 * 86400) * 1000  # Discord snowflake epoch adjustment
     discord_epoch = 1420070400000
-    filtered = []
-    for msg in messages:
-        # Filter out messages older than 14 days
-        msg_ts = ((int(msg['id']) >> 22) + discord_epoch) / 1000
-        if msg_ts < (_time.time() - 14 * 86400):
-            continue
-        # Apply user filter
-        if user_id and msg.get('author', {}).get('id') != user_id:
-            continue
-        # Apply type filter
-        if filter_type == 'bots' and not msg.get('author', {}).get('bot', False):
-            continue
-        elif filter_type == 'links' and not any(s in msg.get('content', '') for s in ['http://', 'https://']):
-            continue
-        elif filter_type == 'images' and not msg.get('attachments'):
-            continue
-        elif filter_type == 'text' and (msg.get('attachments') or msg.get('embeds')):
-            continue
-        filtered.append(msg['id'])
-        if len(filtered) >= count:
+    cutoff = _time.time() - 14 * 86400  # 14 day bulk-delete limit
+
+    # Collect qualifying messages — paginate in batches of 100 until we have enough
+    collected = []
+    last_id = None
+    while len(collected) < count:
+        fetch_params = {'limit': 100}
+        if last_id:
+            fetch_params['before'] = last_id
+        # bypass_cache so repeated purges always fetch fresh message IDs
+        messages = _guild_bot_request(guild_id, 'GET', f'/channels/{channel_id}/messages',
+                                      params=fetch_params, bypass_cache=True)
+        if not messages:
             break
-    if not filtered:
+        for msg in messages:
+            last_id = msg['id']
+            msg_ts = ((int(msg['id']) >> 22) + discord_epoch) / 1000
+            if msg_ts < cutoff:
+                # Messages are newest-first; once we hit one older than 14 days all the rest will be too
+                messages = []
+                break
+            if user_id and msg.get('author', {}).get('id') != user_id:
+                continue
+            if filter_type == 'bots' and not msg.get('author', {}).get('bot', False):
+                continue
+            elif filter_type == 'links' and not any(s in msg.get('content', '') for s in ['http://', 'https://']):
+                continue
+            elif filter_type == 'images' and not msg.get('attachments'):
+                continue
+            elif filter_type == 'text' and (msg.get('attachments') or msg.get('embeds')):
+                continue
+            elif filter_type == 'contains' and text_filter and text_filter.lower() not in msg.get('content', '').lower():
+                continue
+            collected.append(msg['id'])
+            if len(collected) >= count:
+                break
+        if len(messages) < 100:
+            break  # No more messages in channel
+
+    if not collected:
         return jsonify({'error': 'No messages found matching criteria'}), 400
-    # Bulk delete (requires 2+ messages and < 14 days old)
-    if len(filtered) == 1:
-        result = _guild_bot_request(guild_id, 'DELETE', f'/channels/{channel_id}/messages/{filtered[0]}')
-        deleted_count = 1 if result is not None else 0
-    else:
-        result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages/bulk-delete', json={'messages': filtered})
-        deleted_count = len(filtered) if result is not None else 0
+
+    # Delete in batches of 100 (Discord bulk-delete max)
+    deleted_count = 0
+    for i in range(0, len(collected), 100):
+        batch = collected[i:i + 100]
+        if len(batch) == 1:
+            result = _guild_bot_request(guild_id, 'DELETE', f'/channels/{channel_id}/messages/{batch[0]}')
+            if result is not None:
+                deleted_count += 1
+        else:
+            result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages/bulk-delete',
+                                        json={'messages': batch})
+            if result is not None:
+                deleted_count += len(batch)
+
     if deleted_count > 0:
         return jsonify({'success': True, 'deleted': deleted_count})
     return jsonify({'error': 'Failed to delete messages'}), 500

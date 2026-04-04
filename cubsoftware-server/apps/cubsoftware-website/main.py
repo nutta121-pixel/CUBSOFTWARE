@@ -15543,7 +15543,7 @@ def cp_counting_get(guild_id):
     data = load_cp_json(CUB_PROTECTOR_COUNTING_FILE)
     guild_data = data.get('guilds', {}).get(guild_id, {
         'channel_id': None, 'enabled': False, 'current_count': 0, 'last_user_id': None, 'high_score': 0,
-        'mode': 'strict', 'delete_non_numbers': False, 'allow_consecutive': False,
+        'mode': 'strict', 'delete_non_numbers': False, 'max_consecutive': 1,
         'milestone_interval': 0, 'goal': 0, 'goal_reset': False, 'fail_log_channel_id': None,
         'cooldown_seconds': 0, 'show_reaction': True, 'count_by': 1, 'allow_math': False
     })
@@ -15558,7 +15558,7 @@ def cp_counting_patch(guild_id):
     if 'guilds' not in data:
         data['guilds'] = {}
     if guild_id not in data['guilds']:
-        data['guilds'][guild_id] = {'channel_id': None, 'enabled': False, 'current_count': 0, 'last_user_id': None, 'high_score': 0, 'mode': 'strict', 'delete_non_numbers': False, 'allow_consecutive': False, 'milestone_interval': 0, 'goal': 0, 'goal_reset': False, 'fail_log_channel_id': None, 'cooldown_seconds': 0, 'show_reaction': True, 'count_by': 1, 'allow_math': False}
+        data['guilds'][guild_id] = {'channel_id': None, 'enabled': False, 'current_count': 0, 'last_user_id': None, 'last_user_streak': 0, 'high_score': 0, 'mode': 'strict', 'delete_non_numbers': False, 'max_consecutive': 1, 'milestone_interval': 0, 'goal': 0, 'goal_reset': False, 'fail_log_channel_id': None, 'cooldown_seconds': 0, 'show_reaction': True, 'count_by': 1, 'allow_math': False}
     g = data['guilds'][guild_id]
     body = request.get_json() or {}
     if 'channel_id' in body:
@@ -15570,8 +15570,8 @@ def cp_counting_patch(guild_id):
         g['mode'] = body['mode']
     if 'delete_non_numbers' in body:
         g['delete_non_numbers'] = bool(body['delete_non_numbers'])
-    if 'allow_consecutive' in body:
-        g['allow_consecutive'] = bool(body['allow_consecutive'])
+    if 'max_consecutive' in body:
+        g['max_consecutive'] = max(0, int(body['max_consecutive'] or 0))
     if 'show_reaction' in body:
         g['show_reaction'] = bool(body['show_reaction'])
     if 'allow_math' in body:

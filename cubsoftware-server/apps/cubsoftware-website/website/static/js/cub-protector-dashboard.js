@@ -7515,7 +7515,7 @@
             document.getElementById('counting-highscore').textContent = config.high_score ?? 0;
             document.getElementById('counting-mode').value = config.mode || 'strict';
             document.getElementById('counting-delete-non-numbers').checked = config.delete_non_numbers || false;
-            document.getElementById('counting-allow-consecutive').checked = config.allow_consecutive || false;
+            document.getElementById('counting-max-consecutive').value = config.max_consecutive ?? 1;
             document.getElementById('counting-show-reaction').checked = config.show_reaction !== false;
             document.getElementById('counting-allow-math').checked = config.allow_math || false;
             document.getElementById('counting-count-by').value = config.count_by || 1;
@@ -7542,7 +7542,7 @@
                 fail_log_channel_id: document.getElementById('counting-fail-log-channel').value || null,
                 mode: document.getElementById('counting-mode').value,
                 delete_non_numbers: document.getElementById('counting-delete-non-numbers').checked,
-                allow_consecutive: document.getElementById('counting-allow-consecutive').checked,
+                max_consecutive: Math.max(0, parseInt(document.getElementById('counting-max-consecutive').value) || 0),
                 show_reaction: document.getElementById('counting-show-reaction').checked,
                 allow_math: document.getElementById('counting-allow-math').checked,
                 count_by: Math.max(1, parseInt(document.getElementById('counting-count-by').value) || 1),

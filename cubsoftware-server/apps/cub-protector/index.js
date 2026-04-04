@@ -467,7 +467,7 @@ function loadCountingData() { return loadJsonFile(COUNTING_FILE); }
 function saveCountingData(data) { saveJsonFile(COUNTING_FILE, data); }
 function getCountingGuild(data, guildId) {
     if (!data.guilds[guildId]) {
-        data.guilds[guildId] = { channel_id: null, enabled: false, current_count: 0, last_user_id: null, high_score: 0, mode: 'strict', delete_non_numbers: false, allow_consecutive: false, milestone_interval: 0, goal: 0, goal_reset: false, fail_log_channel_id: null, cooldown_seconds: 0, show_reaction: true, count_by: 1, allow_math: false };
+        data.guilds[guildId] = { channel_id: null, enabled: false, current_count: 0, last_user_id: null, last_user_streak: 0, high_score: 0, mode: 'strict', delete_non_numbers: false, max_consecutive: 1, milestone_interval: 0, goal: 0, goal_reset: false, fail_log_channel_id: null, cooldown_seconds: 0, show_reaction: true, count_by: 1, allow_math: false };
     }
     return data.guilds[guildId];
 }
@@ -3084,7 +3084,7 @@ client.on('messageCreate', async (message) => {
         if (cntGuild.enabled && cntGuild.channel_id === message.channel.id) {
             const mode              = cntGuild.mode || 'strict';
             const deleteNonNumbers  = cntGuild.delete_non_numbers || false;
-            const allowConsecutive  = cntGuild.allow_consecutive || false;
+            const maxConsecutive    = cntGuild.max_consecutive ?? 1; // 0 = unlimited, 1 = no consecutive
             const milestoneInterval = cntGuild.milestone_interval || 0;
             const goal              = cntGuild.goal || 0;
             const goalReset         = cntGuild.goal_reset || false;
@@ -3158,12 +3158,18 @@ client.on('messageCreate', async (message) => {
             }
 
             // Consecutive-user check
-            if (!allowConsecutive && cntGuild.last_user_id === message.author.id) {
-                await handleWrong(
-                    `counted twice in a row`,
-                    `❌ <@${message.author.id}> you can't count twice in a row! Count resets to 0 from **{prev}**. Next number: **{next}**`
-                );
-                return;
+            if (maxConsecutive > 0 && cntGuild.last_user_id === message.author.id) {
+                const streak = cntGuild.last_user_streak || 0;
+                if (streak >= maxConsecutive) {
+                    const limitMsg = maxConsecutive === 1
+                        ? `you can't count twice in a row`
+                        : `you've counted **${maxConsecutive}** times in a row — someone else must go next`;
+                    await handleWrong(
+                        `exceeded consecutive count limit (${streak}/${maxConsecutive})`,
+                        `❌ <@${message.author.id}> ${limitMsg}! Count resets to 0 from **{prev}**. Next number: **{next}**`
+                    );
+                    return;
+                }
             }
 
             // Wrong number check
@@ -3177,6 +3183,9 @@ client.on('messageCreate', async (message) => {
 
             // ✅ Correct number — update state
             cntGuild.current_count = num;
+            cntGuild.last_user_streak = cntGuild.last_user_id === message.author.id
+                ? (cntGuild.last_user_streak || 0) + 1
+                : 1;
             cntGuild.last_user_id = message.author.id;
             if (num > (cntGuild.high_score || 0)) cntGuild.high_score = num;
             if (cooldownSeconds > 0) {

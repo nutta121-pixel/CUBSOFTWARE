@@ -250,7 +250,7 @@
                     <span class="nav-section-title">Community</span>
                     <a href="#community" class="nav-item" data-section="community">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        <span>Fun Channels</span>
+                        <span>Counting Channel</span>
                     </a>
                     <a href="#suggestions" class="nav-item" data-section="suggestions">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -3470,7 +3470,7 @@
             <!-- Counting Channel Section -->
             <!-- Community (Counting + Quotes + Confessions) -->
             <section class="content-section" id="communitySection" data-section="community">
-                <div class="section-header"><div class="section-title"><h1>Community</h1><p>Counting game, quote board, and anonymous confessions</p></div></div>
+                <div class="section-header"><div class="section-title"><h1>Counting Channel</h1><p>Sequential counting game with configurable rules</p></div></div>
 
                 <div class="settings-card">
                     <h3 style="margin-bottom:1rem;">🔢 Counting Channel</h3>
@@ -3504,9 +3504,9 @@
                         <div class="settings-info"><h4>Delete Non-Numbers</h4><p>Silently delete any message that isn't a number or math expression — does not affect the count</p></div>
                         <label class="toggle"><input type="checkbox" id="counting-delete-non-numbers" onchange="window.cpSaveCounting()"><span class="toggle-slider"></span></label>
                     </div>
-                    <div class="settings-row" style="margin-top:0.75rem;">
-                        <div class="settings-info"><h4>Allow Consecutive Counts</h4><p>Let the same user count multiple times in a row</p></div>
-                        <label class="toggle"><input type="checkbox" id="counting-allow-consecutive" onchange="window.cpSaveCounting()"><span class="toggle-slider"></span></label>
+                    <div class="form-group" style="margin-top:0.75rem;"><label>Max Consecutive Counts Per User</label>
+                        <input type="number" id="counting-max-consecutive" class="form-input" min="0" max="1000" value="1" onchange="window.cpSaveCounting()" placeholder="1">
+                        <small style="color:var(--text-muted);">How many times the same user can count in a row before someone else must go. <strong>0</strong> = unlimited, <strong>1</strong> = no consecutive (default).</small>
                     </div>
                     <div class="settings-row" style="margin-top:0.75rem;">
                         <div class="settings-info"><h4>Show ✅ Reaction</h4><p>React with ✅ on every correct count — turn off to reduce clutter on busy channels</p></div>
@@ -3551,22 +3551,6 @@
                 </div>
 
 
-                <div class="settings-card" style="margin-top:1rem;">
-                    <h3 style="margin-bottom:1rem;">🔒 Confession Channel</h3>
-                    <div class="settings-row">
-                        <div class="settings-info"><h4>Enable Confessions</h4><p>Anonymous confession submissions</p></div>
-                        <label class="toggle"><input type="checkbox" id="confessions-enabled" onchange="window.cpSaveConfessions()"><span class="toggle-slider"></span></label>
-                    </div>
-                    <div class="form-row" style="margin-top:1rem;">
-                        <div class="form-group"><label>Confession Channel</label>
-                            <select id="confessions-channel" class="form-select" onchange="window.cpSaveConfessions()"><option value="">-- Select Channel --</option></select>
-                        </div>
-                        <div class="form-group"><label>Mod Log Channel <small style="color:var(--text-muted);">(staff only)</small></label>
-                            <select id="confessions-log-channel" class="form-select" onchange="window.cpSaveConfessions()"><option value="">-- None --</option></select>
-                        </div>
-                    </div>
-                    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;">Members use <code>/confess</code> in Discord. Always anonymous in the public channel.</p>
-                </div>
             </section>
 
             <!-- Self Roles Section -->

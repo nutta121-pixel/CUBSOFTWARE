@@ -14,6 +14,7 @@ import subprocess
 import requests
 import urllib.parse
 import re
+import math
 import random
 import atexit
 import signal
@@ -16697,7 +16698,7 @@ def _ban_appeal_check_code(code, user_id):
                     ban_timestamp = case.get('timestamp', 0)
                     days_since = (datetime.utcnow().timestamp() - ban_timestamp) / 86400
                     if days_since < min_days:
-                        remaining = int(min_days - days_since) + 1
+                        remaining = math.ceil(min_days - days_since)
                         return {'error': f'You must wait {remaining} more day(s) before appealing.'}
 
                 guild_info = _guild_bot_request(guild_id, 'GET', f'/guilds/{guild_id}')

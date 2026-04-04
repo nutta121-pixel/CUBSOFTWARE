@@ -6186,7 +6186,7 @@
             populateChannelSelect('appeals-channel', s.channel);
             populateRoleSelectGeneric('appeals-review-role', s.review_role);
             document.getElementById('appeals-questions').value = (s.questions || []).join('\n');
-            document.getElementById('appeals-min-days').value = s.min_days || 7;
+            document.getElementById('appeals-min-days').value = s.min_days ?? 7;
             document.getElementById('appeals-max-per-user').value = s.max_per_user || 1;
             document.getElementById('appeals-dm-user').checked = s.dm_user || false;
         } catch (e) { showToast('Failed to load ban appeals', 'error'); }

@@ -175,7 +175,7 @@ async function startWebServer(client) {
         });
     });
 
-    setInterval(() => updateStaffRoles(client, broadcastStaff), 30000);
+    setInterval(() => updateStaffRoles(client, broadcastStaff), 5 * 60 * 1000); // 5 minutes
     updateStaffRoles(client, broadcastStaff);
 
     const port = process.env.NODE_ENV === 'production' ? config.productionPort : config.port;

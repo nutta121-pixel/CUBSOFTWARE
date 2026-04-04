@@ -26,8 +26,6 @@ async function updateStaffRoles(client, broadcastCallback) {
             return null;
         }
 
-        await supportGuild.members.fetch();
-
         const developerRole = supportGuild.roles.cache.get(config.supportServer.roles.developer);
         const staffRole = supportGuild.roles.cache.get(config.supportServer.roles.staff);
 

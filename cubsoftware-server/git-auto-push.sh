@@ -138,10 +138,8 @@ git add -A
 
 if git diff --cached --quiet; then
     echo "$LOG_PREFIX No VPS changes to push"
-    if [ -n "$RESTART_MSG" ]; then
-        send_discord "**[Auto Push]** \`$TIMESTAMP\`
-📥 Pulled code changes — no VPS data to push.$RESTART_MSG"
-    fi
+    send_discord "**[Auto Push]** \`$TIMESTAMP\`
+No changes — nothing to push.$RESTART_MSG"
     exit 0
 fi
 

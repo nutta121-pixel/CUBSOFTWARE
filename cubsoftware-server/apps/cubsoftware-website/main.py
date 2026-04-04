@@ -16696,7 +16696,7 @@ def _ban_appeal_check_code(code, user_id):
                 min_days = appeal_settings.get('min_days', 0)
                 if min_days > 0:
                     ban_timestamp = case.get('timestamp', 0)
-                    days_since = (datetime.utcnow().timestamp() - ban_timestamp) / 86400
+                    days_since = (time.time() - ban_timestamp) / 86400
                     if days_since < min_days:
                         remaining = math.ceil(min_days - days_since)
                         return {'error': f'You must wait {remaining} more day(s) before appealing.'}

@@ -80,12 +80,12 @@ send_embed() {
                 description: $description,
                 color: $color,
                 fields: $fields,
-                footer: {text: "CUB SOFTWARE"},
+                footer: {text: "Developed by https://cubsoftware.site"},
                 timestamp: $ts
             }]}')
     else
         # Fallback: basic manual JSON (no special chars in fields)
-        payload="{\"embeds\":[{\"title\":\"$title\",\"description\":\"$description\",\"color\":$color,\"footer\":{\"text\":\"CUB SOFTWARE\"},\"timestamp\":\"$ISO_TIMESTAMP\"}]}"
+        payload="{\"embeds\":[{\"title\":\"$title\",\"description\":\"$description\",\"color\":$color,\"footer\":{\"text\":\"Developed by https://cubsoftware.site\"},\"timestamp\":\"$ISO_TIMESTAMP\"}]}"
     fi
 
     curl -s -X POST "https://discord.com/api/v10/channels/$CHANNEL_ID/messages" \

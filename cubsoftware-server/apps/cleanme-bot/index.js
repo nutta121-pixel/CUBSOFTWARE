@@ -160,8 +160,10 @@ client.on('messageCreate', async (message) => {
 
 client.once('ready', async () => {
     const totalMembers = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
+    const totalChannels = client.guilds.cache.reduce((a, g) => a + g.channels.cache.size, 0);
+    const totalRoles = client.guilds.cache.reduce((a, g) => a + g.roles.cache.size, 0);
     console.log(`[Ready] CleanMe Bot online as ${client.user.tag}`);
-    console.log(`[Stats] ${client.guilds.cache.size} servers, ${totalMembers} total members`);
+    console.log(`[Ready] ${client.guilds.cache.size} servers | ${totalMembers} members | ${totalChannels} channels | ${totalRoles} roles | WS ping: ${client.ws.ping}ms`);
 
     // Initialize terminal
     terminal = new DiscordTerminal(client, {
@@ -247,12 +249,7 @@ client.once('ready', async () => {
     updatePresence();
     setInterval(updatePresence, 30000);
 
-    // Startup diagnostics
-    const totalMembers = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
-    const totalChannels = client.guilds.cache.reduce((a, g) => a + g.channels.cache.size, 0);
-    const totalRoles = client.guilds.cache.reduce((a, g) => a + g.roles.cache.size, 0);
-    console.log(`[Ready] ${client.guilds.cache.size} servers | ${totalMembers} members | ${totalChannels} channels | ${totalRoles} roles`);
-    console.log(`[Ready] Commands registered: ${commands.length} | WS ping: ${client.ws.ping}ms`);
+    console.log(`[Ready] Commands registered: ${commands.length}`);
 
     // Log stats every 60 seconds
     const logStats = () => {

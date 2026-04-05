@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Warning | QuestCord</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 580px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .warn-icon {
+            font-size: 72px;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #faa61a;
+            margin-bottom: 0.4rem;
+        }
+
+        .subtitle {
+            color: #b9bbbe;
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .card.warn-border {
+            border-color: rgba(250,166,26,0.35);
+            background: rgba(250,166,26,0.05);
+        }
+
+        .card.danger-border {
+            border-color: rgba(237,66,69,0.35);
+            background: rgba(237,66,69,0.05);
+        }
+
+        .card-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #72767d;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.75rem;
+        }
+
+        .path-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            color: #faa61a;
+            word-break: break-all;
+        }
+
+        .info-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #b9bbbe;
+        }
+
+        .message {
+            font-size: 0.9rem;
+            color: #b9bbbe;
+            line-height: 1.6;
+        }
+
+        .message strong { color: #fff; }
+
+        /* Attempts bar */
+        .attempts-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin: 0.75rem 0 0.5rem;
+        }
+
+        .attempt-dot {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .attempt-dot.used { background: #ed4245; }
+        .attempt-dot.remaining { background: rgba(255,255,255,0.15); }
+
+        .attempts-text {
+            font-size: 0.88rem;
+            color: #b9bbbe;
+            margin-top: 0.4rem;
+        }
+
+        .attempts-text strong {
+            color: <%= remaining === 1 ? '#ed4245' : '#faa61a' %>;
+        }
+
+        .ip-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #fff;
+        }
+
+        .back-btn {
+            display: block;
+            width: 100%;
+            padding: 0.85rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            color: #b9bbbe;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-align: center;
+            transition: border-color 0.2s, color 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .back-btn:hover {
+            border-color: rgba(88,101,242,0.5);
+            color: #fff;
+        }
+
+        @media (max-width: 500px) {
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="warn-icon">⚠️</span>
+            <h1>Security Warning</h1>
+            <p class="subtitle">You have attempted to access a restricted or sensitive path.</p>
+        </div>
+
+        <div class="card warn-border">
+            <div class="card-label">Path Attempted</div>
+            <div class="path-value"><%= probedPath %></div>
+        </div>
+
+        <div class="card">
+            <div class="card-label">What Happened</div>
+            <p class="message">
+                The path <strong><%= probedPath %></strong> is a known sensitive location that is actively monitored.
+                <strong>There is no sensitive data here.</strong> This access attempt has been logged and flagged.
+            </p>
+        </div>
+
+        <div class="card <%= remaining === 1 ? 'danger-border' : 'warn-border' %>">
+            <div class="card-label">Automatic Ban Warning — Attempt <%= hits %> of <%= threshold %></div>
+            <div class="attempts-bar">
+                <% for (let i = 0; i < threshold; i++) { %>
+                <div class="attempt-dot <%= i < hits ? 'used' : 'remaining' %>"></div>
+                <% } %>
+            </div>
+            <p class="attempts-text">
+                <% if (remaining === 1) { %>
+                    <strong>Final warning.</strong> One more probe and your IP will be automatically banned for 30 days.
+                <% } else { %>
+                    <strong><%= remaining %> more probe<%= remaining !== 1 ? 's' : '' %></strong> and your IP will be automatically banned for 30 days.
+                <% } %>
+            </p>
+        </div>
+
+        <% if (ip) { %>
+        <div class="card">
+            <div class="card-label">Your IP Address</div>
+            <div class="ip-value"><%= ip %></div>
+        </div>
+        <% } %>
+
+        <a href="/" class="back-btn">Return to QuestCord</a>
+    </div>
+</body>
+</html>

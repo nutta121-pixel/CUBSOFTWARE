@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Ban Appeal | QuestCord</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 560px;
+            width: 100%;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #72767d;
+            text-decoration: none;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #b9bbbe; }
+
+        .header {
+            text-align: center;
+            margin-bottom: 1.75rem;
+        }
+
+        .header-icon { font-size: 56px; display: block; margin-bottom: 0.75rem; }
+        h1 { font-size: 1.8rem; color: #fff; margin-bottom: 0.35rem; }
+        .subtitle { color: #b9bbbe; font-size: 0.92rem; line-height: 1.5; }
+
+        .ip-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(237,66,69,0.08);
+            border: 1px solid rgba(237,66,69,0.25);
+            border-radius: 10px;
+            padding: 0.875rem 1rem;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            color: #ed4245;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group { margin-bottom: 1.1rem; }
+        .form-group:last-child { margin-bottom: 0; }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.4rem;
+        }
+
+        label span { color: #72767d; font-weight: 400; }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.7rem 0.875rem;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: rgba(88,101,242,0.6);
+            box-shadow: 0 0 0 3px rgba(88,101,242,0.1);
+        }
+
+        input[readonly] {
+            opacity: 0.55;
+            cursor: not-allowed;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        textarea { min-height: 100px; resize: vertical; }
+
+        .char-count { text-align: right; font-size: 0.72rem; color: #72767d; margin-top: 0.25rem; }
+        .char-count.warn { color: #faa61a; }
+        .char-count.over { color: #ed4245; }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.875rem;
+            background: #5865f2;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: #4752c4;
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .error-box {
+            background: rgba(237,66,69,0.1);
+            border: 1px solid rgba(237,66,69,0.3);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: #ed4245;
+            font-size: 0.88rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-view {
+            display: none;
+            text-align: center;
+            padding: 2rem 1rem;
+        }
+
+        .success-icon { font-size: 60px; display: block; margin-bottom: 1rem; }
+        .success-title { font-size: 1.5rem; color: #57f287; margin-bottom: 0.5rem; }
+        .success-msg { color: #b9bbbe; font-size: 0.92rem; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Back to QuestCord</a>
+
+        <div class="header">
+            <span class="header-icon">📋</span>
+            <h1>IP Ban Appeal</h1>
+            <p class="subtitle">If your IP was banned by mistake, fill in the form below.<br>Appeals are reviewed manually.</p>
+        </div>
+
+        <% if (ip) { %>
+        <div class="ip-badge">
+            🚫 Banned IP: <%= ip %>
+        </div>
+        <% } %>
+
+        <div id="form-view">
+            <div id="error-box" class="error-box"></div>
+
+            <div class="card">
+                <div class="form-group">
+                    <label>Banned IP Address</label>
+                    <input type="text" id="field-ip" value="<%= ip || '' %>" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Your Name or Discord Username <span>(optional)</span></label>
+                    <input type="text" id="field-name" placeholder="e.g. Username#0000" maxlength="100">
+                </div>
+                <div class="form-group">
+                    <label>Contact <span>(Discord / Email — optional, so we can respond)</span></label>
+                    <input type="text" id="field-contact" placeholder="e.g. user#0000 or you@example.com" maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label>Why do you think you were banned?</label>
+                    <textarea id="field-reason" placeholder="Describe what you were doing..." maxlength="1000" oninput="updateCount(this,'count-reason',1000)"></textarea>
+                    <div class="char-count" id="count-reason">0 / 1000</div>
+                </div>
+                <div class="form-group">
+                    <label>Why should your ban be lifted?</label>
+                    <textarea id="field-appeal" placeholder="Explain why this ban was a mistake..." maxlength="1500" oninput="updateCount(this,'count-appeal',1500)"></textarea>
+                    <div class="char-count" id="count-appeal">0 / 1500</div>
+                </div>
+                <button class="submit-btn" id="submit-btn" onclick="submitAppeal()">Submit Appeal</button>
+            </div>
+        </div>
+
+        <div id="success-view" class="success-view">
+            <span class="success-icon">✅</span>
+            <div class="success-title">Appeal Submitted</div>
+            <p class="success-msg">
+                Your appeal has been sent to our team for review.<br>
+                If your ban is lifted, it will take effect within a few hours.<br><br>
+                <strong>IP:</strong> <%= ip || 'N/A' %>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function updateCount(el, id, max) {
+            const len = el.value.length;
+            const el2 = document.getElementById(id);
+            el2.textContent = len + ' / ' + max;
+            el2.className = 'char-count' + (len >= max ? ' over' : len > max * 0.9 ? ' warn' : '');
+        }
+
+        function showError(msg) {
+            const box = document.getElementById('error-box');
+            box.textContent = msg;
+            box.style.display = 'block';
+            box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        async function submitAppeal() {
+            const ip      = document.getElementById('field-ip').value.trim();
+            const name    = document.getElementById('field-name').value.trim();
+            const contact = document.getElementById('field-contact').value.trim();
+            const reason  = document.getElementById('field-reason').value.trim();
+            const appeal  = document.getElementById('field-appeal').value.trim();
+
+            if (!reason) { showError('Please describe why you think you were banned.'); return; }
+            if (!appeal) { showError('Please explain why your ban should be lifted.'); return; }
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+            document.getElementById('error-box').style.display = 'none';
+
+            try {
+                const res = await fetch('/api/ip-ban-appeal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip, name, contact, reason, appeal })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    document.getElementById('form-view').style.display = 'none';
+                    document.getElementById('success-view').style.display = 'block';
+                } else {
+                    showError(data.error || 'Something went wrong. Please try again.');
+                    btn.disabled = false;
+                    btn.textContent = 'Submit Appeal';
+                }
+            } catch (e) {
+                showError('Failed to submit. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Submit Appeal';
+            }
+        }
+    </script>
+</body>
+</html>

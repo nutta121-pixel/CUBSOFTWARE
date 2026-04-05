@@ -10696,6 +10696,9 @@ client.once('clientReady', async () => {
 
         for (const [gId, guildConfig] of Object.entries(alertData.guilds || {})) {
             if (!guildConfig.enabled || !guildConfig.alert_channel) continue;
+            // Custom bot: only handle its own guild. Main bot: skip guilds with a custom bot.
+            if (CUSTOM_GUILD_ID && gId !== CUSTOM_GUILD_ID) continue;
+            if (!CUSTOM_GUILD_ID && guildHasCustomBot(gId)) continue;
             for (const streamer of (guildConfig.streamers || [])) {
                 if (!streamer.enabled) continue;
                 try {

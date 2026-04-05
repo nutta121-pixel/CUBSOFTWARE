@@ -410,5 +410,11 @@ router.get(['/profile', '/login', '/'], (req, res) => {
     }
 });
 
+// IP ban appeal page — accessible even while banned
+router.get('/ip-ban-appeal', (req, res) => {
+    const ip = req.query.ip || req.clientIP || '';
+    res.render('ip_ban_appeal', { ip });
+});
+
 module.exports = router;
 

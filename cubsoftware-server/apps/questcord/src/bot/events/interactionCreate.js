@@ -362,6 +362,7 @@ module.exports = {
             return;
         }
 
+        const _cmdStart = Date.now();
         console.log(`[Command] /${interaction.commandName} by ${interaction.user.username} in ${interaction.guild?.name || 'DM'}`);
 
         // Check for maintenance mode (except for website command which staff use to disable it)
@@ -440,8 +441,10 @@ module.exports = {
             }
 
             await command.execute(interaction);
+            const _cmdMs = Date.now() - _cmdStart;
+            if (_cmdMs > 2000) console.log(`[Slow] /${interaction.commandName} took ${_cmdMs}ms in ${interaction.guild?.name || 'DM'}`);
         } catch (error) {
-            console.error(`Error executing command ${interaction.commandName}:`, error);
+            console.error(`[Error] /${interaction.commandName} threw: ${error.message}`);
 
             // Log to debug channel
             await debugLogger.error('COMMAND', error, {

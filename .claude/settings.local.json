@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(grep -E \"\\\\.\\(html|js\\)$\")",
-      "Bash(grep -v \"^.*//.*$\")"
+      "Bash(grep -v \"^.*//.*$\")",
+      "Bash(grep -n \"^}\\); // end interactionCreate\\\\|^}\\); *$\\\\|client\\\\.on.*interactionCreate\" \"G:/GitHub Projects/CUBSOFTWARE/cubsoftware-server/apps/cub-protector/index.js\")"
     ]
   }
 }

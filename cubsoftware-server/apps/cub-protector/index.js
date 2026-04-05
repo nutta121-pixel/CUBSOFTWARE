@@ -44,6 +44,7 @@ try {
 // ============================================================
 const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
+const BOT_START_TIME = Date.now();
 // Custom bot mode: when running as a user's own bot, only handle this guild
 const CUSTOM_GUILD_ID = process.env.CUSTOM_GUILD_ID || null;
 // Dev guild for instant guild-specific command registration (alongside global)
@@ -3134,6 +3135,7 @@ client.on('messageCreate', async (message) => {
 
             // Helper — apply a wrong-input action (reset+announce or silent delete)
             async function handleWrong(failDesc, strictMsg) {
+                console.log(`[Counting] Streak broken in "${message.guild.name}" by ${message.author.tag}: ${failDesc}`);
                 await logFail(failDesc);
                 if (mode === 'strict') {
                     const prev = cntGuild.current_count;
@@ -3214,6 +3216,7 @@ client.on('messageCreate', async (message) => {
 
             // Goal reached?
             if (goal > 0 && num >= goal) {
+                console.log(`[Counting] Goal ${goal} reached in "${message.guild.name}" by ${message.author.tag}`);
                 await message.channel.send(`🏆 **GOAL REACHED!** You counted to **${goal}**! 🎉`).catch(() => {});
                 if (goalReset) {
                     cntGuild.current_count = 0;
@@ -3226,6 +3229,7 @@ client.on('messageCreate', async (message) => {
 
             // Milestone?
             if (milestoneInterval > 0 && num % milestoneInterval === 0) {
+                console.log(`[Counting] Milestone ${num} reached in "${message.guild.name}"`);
                 await message.channel.send(`🎉 **${num}!** Keep it up!`).catch(() => {});
             }
 
@@ -4565,6 +4569,7 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     const { commandName, member, guild } = interaction;
+    const _cmdStart = Date.now();
 
     console.log(`[Command] /${commandName} by ${interaction.user.username} in ${guild?.name || 'DM'}`);
 
@@ -5326,8 +5331,10 @@ client.on('interactionCreate', async (interaction) => {
                 embed.addFields({ name: 'Messages Deleted', value: `${deleteDays} day(s)`, inline: true });
             }
 
+            console.log(`[Moderation] Ban: ${targetUser.tag} by ${member.user.tag} in "${guild.name}" — ${reason}${durationStr ? ` (${durationStr})` : ''}`);
             await interaction.editReply({ embeds: [embed] });
         } catch (e) {
+            console.error(`[Error] Ban failed for ${targetUser?.tag} in "${guild.name}": ${e.message}`);
             await interaction.editReply({ content: `Failed to ban: ${e.message}` });
         }
     }
@@ -5398,8 +5405,10 @@ client.on('interactionCreate', async (interaction) => {
                 )
                 .setTimestamp();
 
+            console.log(`[Moderation] Kick: ${targetUser.tag} by ${member.user.tag} in "${guild.name}" — ${reason}`);
             await interaction.editReply({ embeds: [embed] });
         } catch (e) {
+            console.error(`[Error] Kick failed for ${targetUser?.tag} in "${guild.name}": ${e.message}`);
             await interaction.editReply({ content: `Failed to kick: ${e.message}` });
         }
     }
@@ -5451,8 +5460,10 @@ client.on('interactionCreate', async (interaction) => {
                 )
                 .setTimestamp();
 
+            console.log(`[Moderation] Mute: ${targetUser.tag} by ${member.user.tag} in "${guild.name}" for ${formatDuration(durationMs)} — ${reason}`);
             await interaction.editReply({ embeds: [embed] });
         } catch (e) {
+            console.error(`[Error] Mute failed for ${targetUser?.tag} in "${guild.name}": ${e.message}`);
             await interaction.editReply({ content: `Failed to mute: ${e.message}` });
         }
     }
@@ -6498,6 +6509,7 @@ client.on('interactionCreate', async (interaction) => {
             const timer = setTimeout(() => endGiveaway(guild.id, msg.id), durationMs);
             giveawayTimers.set(msg.id, timer);
 
+            console.log(`[Giveaway] Started "${prize}" in "${guild.name}" — ${winners} winner(s), ends in ${durationStr} by ${member.user.tag}`);
             await interaction.reply({ content: `Giveaway started in <#${channel.id}>!`, ephemeral: true });
         } else if (sub === 'end') {
             const messageId = interaction.options.getString('message_id');
@@ -6639,6 +6651,7 @@ client.on('interactionCreate', async (interaction) => {
         guildS.suggestions.push({ id: sugId, message_id: msg.id, channel_id: channelId, author_id: member.id, idea, status: 'pending', anonymous });
         saveSuggestionsData(sData);
 
+        console.log(`[Suggestion] #${sugId} submitted by ${interaction.user.tag} in "${guild.name}"${anonymous ? ' (anonymous)' : ''}`);
         await interaction.reply({ content: `✅ Suggestion #${sugId} submitted!`, ephemeral: true });
     }
 
@@ -6692,6 +6705,7 @@ client.on('interactionCreate', async (interaction) => {
                 if (targetChannel) await targetChannel.send({ embeds: [updatedEmbed] }).catch(() => {});
             }
 
+            console.log(`[Suggestion] #${sugId} ${approved ? 'approved' : 'denied'} by ${member.user.tag} in "${guild.name}"`);
             await interaction.reply({ content: `✅ Suggestion #${sugId} ${approved ? 'approved' : 'denied'}.`, ephemeral: true });
         }
     }
@@ -6724,6 +6738,7 @@ client.on('interactionCreate', async (interaction) => {
         for (let i = 0; i < options.length; i++) {
             await msg.react(numberEmojis[i]).catch(() => {});
         }
+        console.log(`[Poll] Created by ${member.user.tag} in "${guild.name}": "${question}" (${options.length} options${durationStr ? `, ends in ${durationStr}` : ''})`);
     }
 
     // ==================== FUN COMMANDS ====================
@@ -7089,6 +7104,7 @@ client.on('interactionCreate', async (interaction) => {
         user.last_daily = now;
         saveEconomyData(eData);
 
+        console.log(`[Economy] Daily claimed by ${member.user.tag} in "${guild.name}" — +${guildE.daily_amount} ${guildE.currency_name} (balance: ${user.balance})`);
         await interaction.reply({ content: `${guildE.currency_emoji} You claimed **${guildE.daily_amount} ${guildE.currency_name}**! Balance: **${user.balance} ${guildE.currency_name}**` });
     }
 
@@ -7469,6 +7485,9 @@ client.on('interactionCreate', async (interaction) => {
             return saveDisabledFeatures(disabled.filter(f => f !== name)) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0x22c55e).setTitle('Feature Enabled').setDescription(`**${name}** has been enabled.`).addFields({ name: 'Status', value: '🟢 Enabled', inline: true }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
         }
     }
+
+    const _cmdMs = Date.now() - _cmdStart;
+    if (_cmdMs > 2000) console.log(`[Slow] /${commandName} took ${_cmdMs}ms in ${guild?.name || 'DM'}`);
 });
 
 // ============================================================
@@ -7922,6 +7941,7 @@ client.on('interactionCreate', async (interaction) => {
         }
 
         await ticketChannel.send(ticketMsg);
+        console.log(`[Ticket] #${ticketId} opened by ${interaction.user.tag} in "${interaction.guild.name}" (type: ${ticketType})`);
         await interaction.editReply({ content: `Ticket created: <#${ticketChannel.id}>` });
 
         // Log ticket creation
@@ -8040,6 +8060,7 @@ client.on('interactionCreate', async (interaction) => {
 
         delete guildT.tickets[interaction.channel.id];
         saveTicketsData(tData);
+        console.log(`[Ticket] #${ticketInfo?.id} closed by ${interaction.user.tag} in "${interaction.guild.name}"`);
 
         // Log ticket close
         if (guildT.log_channel) {
@@ -10144,6 +10165,12 @@ async function endGiveaway(guildId, messageId) {
         await msg.edit({ embeds: [embed], components: [] }).catch(() => {});
     }
 
+    const _gwGuildName = guild?.name || guildId;
+    if (winners.length > 0) {
+        console.log(`[Giveaway] Ended "${giveaway.prize}" in "${_gwGuildName}" — winners: ${winners.join(', ')} (${giveaway.entries.length} entries)`);
+    } else {
+        console.log(`[Giveaway] Ended "${giveaway.prize}" in "${_gwGuildName}" — no entries`);
+    }
     if (winners.length > 0) {
         // Custom winner message or default
         const winnerMentions = winners.map(w => `<@${w}>`).join(', ');
@@ -10929,14 +10956,26 @@ client.once('ready', async () => {
     scheduleMidnightCleanup();
 
     const _totalMembers = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
-    console.log(`[Stats] ${client.guilds.cache.size} servers, ${_totalMembers} total members`);
+    const _totalChannels = client.guilds.cache.reduce((a, g) => a + g.channels.cache.size, 0);
+    const _totalRoles = client.guilds.cache.reduce((a, g) => a + g.roles.cache.size, 0);
     console.log('[Ready] CUB PROTECTOR is ready!');
+    console.log(`[Ready] ${client.guilds.cache.size} servers | ${_totalMembers} members | ${_totalChannels} channels | ${_totalRoles} roles | WS ping: ${client.ws.ping}ms`);
 
     // Log stats every 60 seconds
     setInterval(() => {
         const total = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
-        console.log(`[Stats] ${client.guilds.cache.size} servers, ${total} total members`);
+        const channels = client.guilds.cache.reduce((a, g) => a + g.channels.cache.size, 0);
+        const uptimeSec = Math.floor((Date.now() - BOT_START_TIME) / 1000);
+        const h = Math.floor(uptimeSec / 3600), m = Math.floor((uptimeSec % 3600) / 60), s = uptimeSec % 60;
+        const mem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+        console.log(`[Stats] ${client.guilds.cache.size} servers | ${total} members | ${channels} channels | ping: ${client.ws.ping}ms | mem: ${mem}MB | uptime: ${h}h${m}m${s}s`);
     }, 60000);
+
+    // Discord.js internal events
+    client.on('warn', (msg) => console.log(`[Warn] ${msg}`));
+    client.rest.on('rateLimited', (info) => {
+        console.log(`[RateLimit] ${info.method} ${info.route} | retry after ${info.retryAfter}ms`);
+    });
 
     // Process dashboard bot action queue every 5 seconds
     async function processBotQueue() {
@@ -10956,6 +10995,7 @@ client.once('ready', async () => {
             }
 
             try {
+                console.log(`[Queue] Processing action: ${action.type}${action.suggestion_id ? ` #${action.suggestion_id}` : ''}`);
                 if (action.type === 'delete_message') {
                     const ch = action.channel_id ? await client.channels.fetch(action.channel_id).catch(() => null) : null;
                     if (ch && action.message_id) await ch.messages.delete(action.message_id).catch(() => {});

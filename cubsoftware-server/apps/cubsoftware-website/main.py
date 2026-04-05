@@ -67,6 +67,60 @@ def _load_or_create_secret_key() -> str:
 
 app.secret_key = _load_or_create_secret_key()
 
+# ============================================================
+# In-memory observability (no external calls)
+# ============================================================
+import threading
+import shutil
+
+_WEB_START_TIME = time.time()
+_seen_ips = set()
+_failed_logins = {}        # ip → count
+_endpoint_times = {}       # path → [ms, ...]
+_req_count_min = [0]
+_active_sessions = {}      # session_id → start_time
+_req_lock = threading.Lock()
+
+def _web_log(tag, msg):
+    print(f'[{tag}] {msg}', flush=True)
+
+def _format_uptime():
+    sec = int(time.time() - _WEB_START_TIME)
+    h, rem = divmod(sec, 3600)
+    m, s = divmod(rem, 60)
+    return f'{h}h{m}m{s}s'
+
+def _get_mem_mb():
+    try:
+        import psutil
+        return round(psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024, 1)
+    except Exception:
+        return 0
+
+def _get_disk_free_gb():
+    try:
+        total, used, free = shutil.disk_usage('/')
+        return round(free / (1024 ** 3), 1)
+    except Exception:
+        return 0
+
+def _log_stats_periodically():
+    while True:
+        time.sleep(60)
+        try:
+            mem = _get_mem_mb()
+            disk = _get_disk_free_gb()
+            with _req_lock:
+                rpm = _req_count_min[0]
+                _req_count_min[0] = 0
+            sessions = len(_active_sessions)
+            _web_log('Stats', f'mem: {mem}MB | disk free: {disk}GB | {rpm} req/min | active sessions: {sessions} | uptime: {_format_uptime()}')
+        except Exception:
+            pass
+
+threading.Thread(target=_log_stats_periodically, daemon=True).start()
+
+
 # Dev mode — set DEV_MODE=1 in environment to enable auth bypass on localhost
 IS_DEV = os.environ.get('DEV_MODE', '') == '1'
 if IS_DEV:
@@ -83,6 +137,73 @@ if IS_DEV:
 
 # Cache-busting: version string changes on each server restart
 STATIC_VERSION = str(int(time.time()))
+
+@app.before_request
+def _before_request_logging():
+    request._start_time = time.time()
+    ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+    request._client_ip = ip
+    with _req_lock:
+        _req_count_min[0] += 1
+
+    # New IP
+    if ip and ip not in _seen_ips:
+        _seen_ips.add(ip)
+        ua = (request.headers.get('User-Agent') or 'none')[:80]
+        _web_log('IP', f'New IP: {ip} | {request.method} {request.path} | UA: {ua}')
+
+    # No user-agent (likely scanner/bot)
+    if not request.headers.get('User-Agent'):
+        _web_log('Security', f'No UA from {ip}: {request.method} {request.path}')
+
+    # Large body
+    content_length = request.content_length or 0
+    if content_length > 100000:
+        _web_log('Security', f'Large body {content_length} bytes from {ip}: {request.method} {request.path}')
+
+@app.after_request
+def _after_request_logging(response):
+    try:
+        ip = getattr(request, '_client_ip', request.remote_addr or '')
+        start = getattr(request, '_start_time', time.time())
+        ms = int((time.time() - start) * 1000)
+        path = request.path
+        status = response.status_code
+        is_static = path.startswith('/static/') or path.startswith('/images/')
+        is_api = path.startswith('/api/')
+
+        if not is_static:
+            tag = 'API' if is_api else 'Request'
+            _web_log(tag, f'{request.method} {path} → {status} ({ms}ms) from {ip}')
+
+        if ms > 1000 and not is_static:
+            _web_log('Slow', f'{request.method} {path} took {ms}ms (status: {status})')
+
+        # Track per-endpoint average
+        key = f'{request.method} {path}'
+        if not is_static:
+            if key not in _endpoint_times:
+                _endpoint_times[key] = []
+            _endpoint_times[key].append(ms)
+            if len(_endpoint_times[key]) > 100:
+                _endpoint_times[key] = _endpoint_times[key][-100:]
+
+        # Security: 403 abuse tracking
+        if status == 403:
+            _failed_logins[ip] = _failed_logins.get(ip, 0) + 1
+            count = _failed_logins[ip]
+            _web_log('Security', f'403 from {ip}: {request.method} {path} (total: {count})')
+            if count >= 5:
+                _web_log('Security', f'Repeated 403s from {ip} — {count} attempts')
+
+        # 4xx/5xx errors
+        if status >= 400 and not is_static:
+            user_id = session.get('user', {}).get('id', 'anon') if 'user' in session else 'anon'
+            _web_log('Error', f'HTTP {status} from {ip} (user:{user_id}): {request.method} {path}')
+
+    except Exception:
+        pass
+    return response
 
 @app.after_request
 def add_cache_headers(response):
@@ -837,6 +958,8 @@ def cub_login_discord_callback():
         session.permanent = True
         session['cub_user'] = cub_user
         session['cub_protector_user_guilds'] = protector_guilds
+        ip = getattr(request, '_client_ip', request.remote_addr or '')
+        _web_log('Auth', f'Login: {discord_user_data["username"]} (ID:{u["id"]}) from {ip} | {len(admin_guilds)} admin guilds')
         token = _cub_create_remember_token(cub_user)
         resp = redirect(next_url or '/')
         resp.set_cookie(CUB_REMEMBER_COOKIE, token,
@@ -11705,6 +11828,14 @@ def save_cp_json(filepath, data):
             except OSError:
                 pass
             raise
+        filename = os.path.basename(filepath)
+        section = filename.replace('.json', '')
+        try:
+            ip = getattr(request, '_client_ip', '') if request else ''
+            user_id = session.get('cub_protector_user', {}).get('id', 'system') if session else 'system'
+        except Exception:
+            ip, user_id = '', 'system'
+        _web_log('Save', f'cub-protector/{section} saved by user:{user_id} from {ip}')
     except Exception as e:
         app.logger.error(f'Failed to save {filepath}: {e}')
 
@@ -11715,7 +11846,18 @@ def cp_enqueue_action(action):
         if 'actions' not in queue:
             queue['actions'] = []
         queue['actions'].append(action)
-        save_cp_json(CUB_PROTECTOR_BOT_QUEUE_FILE, queue)
+        # Save directly without triggering the [Save] log for queue file
+        dir_ = os.path.dirname(CUB_PROTECTOR_BOT_QUEUE_FILE)
+        tmp_fd, tmp_path = tempfile.mkstemp(dir=dir_, suffix='.tmp')
+        try:
+            with os.fdopen(tmp_fd, 'w') as f:
+                json.dump(queue, f, indent=2)
+            os.replace(tmp_path, CUB_PROTECTOR_BOT_QUEUE_FILE)
+        except Exception:
+            try: os.unlink(tmp_path)
+            except OSError: pass
+            raise
+        _web_log('Queue', f'Enqueued action: {action.get("type")}' + (f' #{action.get("suggestion_id")}' if action.get("suggestion_id") else ''))
     except Exception as e:
         app.logger.error(f'Failed to enqueue bot action: {e}')
 

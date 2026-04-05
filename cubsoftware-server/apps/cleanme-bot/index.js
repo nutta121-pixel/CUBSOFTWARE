@@ -14,6 +14,7 @@ const terminalConfig = {
 };
 
 let terminal = null;
+const BOT_START_TIME = Date.now();
 
 // Define slash commands
 const commands = [
@@ -63,9 +64,6 @@ const commands = [
         .setName('cleanchannels')
         .setDescription('Delete all channels and categories from your server'),
 
-    new SlashCommandBuilder()
-        .setName('antikick')
-        .setDescription('Toggle anti-kick protection - bot will rejoin if accidentally kicked'),
 ].map(command => command.toJSON());
 
 // Deploy commands function
@@ -89,7 +87,6 @@ async function deployCommands() {
 // Data storage path
 const DATA_DIR = path.join(__dirname, 'data');
 const SAVES_FILE = path.join(DATA_DIR, 'server-saves.json');
-const ANTIKICK_FILE = path.join(DATA_DIR, 'antikick.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -106,18 +103,6 @@ function loadSaves() {
 
 function saveSaves(data) {
     fs.writeFileSync(SAVES_FILE, JSON.stringify(data, null, 2));
-}
-
-// Anti-kick data
-function loadAntiKick() {
-    if (fs.existsSync(ANTIKICK_FILE)) {
-        return JSON.parse(fs.readFileSync(ANTIKICK_FILE, 'utf8'));
-    }
-    return {};
-}
-
-function saveAntiKick(data) {
-    fs.writeFileSync(ANTIKICK_FILE, JSON.stringify(data, null, 2));
 }
 
 // Create client
@@ -262,12 +247,32 @@ client.once('ready', async () => {
     updatePresence();
     setInterval(updatePresence, 30000);
 
+    // Startup diagnostics
+    const totalMembers = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
+    const totalChannels = client.guilds.cache.reduce((a, g) => a + g.channels.cache.size, 0);
+    const totalRoles = client.guilds.cache.reduce((a, g) => a + g.roles.cache.size, 0);
+    console.log(`[Ready] ${client.guilds.cache.size} servers | ${totalMembers} members | ${totalChannels} channels | ${totalRoles} roles`);
+    console.log(`[Ready] Commands registered: ${commands.length} | WS ping: ${client.ws.ping}ms`);
+
     // Log stats every 60 seconds
     const logStats = () => {
         const total = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
-        console.log(`[Stats] ${client.guilds.cache.size} servers, ${total} total members`);
+        const channels = client.guilds.cache.reduce((a, g) => a + g.channels.cache.size, 0);
+        const uptimeSec = Math.floor((Date.now() - BOT_START_TIME) / 1000);
+        const h = Math.floor(uptimeSec / 3600), m = Math.floor((uptimeSec % 3600) / 60), s = uptimeSec % 60;
+        const mem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+        console.log(`[Stats] ${client.guilds.cache.size} servers | ${total} members | ${channels} channels | ping: ${client.ws.ping}ms | mem: ${mem}MB | uptime: ${h}h${m}m${s}s`);
     };
     setInterval(logStats, 60000);
+
+    // Discord.js internal events
+    client.on('rateLimit', (info) => {
+        console.log(`[RateLimit] Route: ${info.route} | Timeout: ${info.timeout}ms | Global: ${info.global}`);
+    });
+    client.on('warn', (msg) => console.log(`[Warn] ${msg}`));
+    client.rest.on('rateLimited', (info) => {
+        console.log(`[RateLimit] ${info.method} ${info.route} | retry after ${info.retryAfter}ms`);
+    });
 });
 
 // Handle slash commands
@@ -282,11 +287,12 @@ client.on('interactionCreate', async (interaction) => {
 
     const { commandName } = interaction;
 
+    const _cmdStart = Date.now();
     console.log(`[Command] /${commandName} by ${interaction.user.username} in ${interaction.guild?.name || 'DM'}`);
 
     // Check if user has admin permissions (except for help)
     if (commandName !== 'help') {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        if (!interaction.member || !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
             return interaction.reply({
                 content: '❌ You need Administrator permissions to use this command.',
                 ephemeral: true
@@ -294,6 +300,7 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 
+    try {
     switch (commandName) {
         case 'help':
             await handleHelp(interaction);
@@ -322,9 +329,14 @@ client.on('interactionCreate', async (interaction) => {
         case 'cleanchannels':
             await handleCleanChannels(interaction);
             break;
-        case 'antikick':
-            await handleAntiKick(interaction);
-            break;
+    }
+    const _cmdMs = Date.now() - _cmdStart;
+    if (_cmdMs > 2000) console.log(`[Slow] /${commandName} took ${_cmdMs}ms in ${interaction.guild?.name || 'DM'}`);
+    } catch (err) {
+        console.error(`[Error] /${commandName} threw: ${err.message}`);
+        if (!interaction.replied && !interaction.deferred) {
+            interaction.reply({ content: '❌ An error occurred.', ephemeral: true }).catch(() => {});
+        }
     }
 });
 
@@ -375,11 +387,6 @@ async function handleHelp(interaction) {
                 value: 'Delete all channels and categories from your server.',
                 inline: false
             },
-            {
-                name: '🛡️ /antikick',
-                value: 'Toggle anti-kick protection. If the bot is accidentally kicked, the owner gets a DM with links to rejoin and re-add the bot. (Owner only)',
-                inline: false
-            }
         )
         .addFields({
             name: '⚠️ Important Notes',
@@ -506,6 +513,7 @@ async function performSave(interaction, isOverride = false) {
         // Save to file
         saves[guild.id] = serverData;
         saveSaves(saves);
+        console.log(`[Save] ${isOverride ? 'Override' : 'New'} save for "${guild.name}" (${guild.id}) — ${serverData.roles.length} roles, ${serverData.channels.length} channels, ${serverData.categories.length} categories by ${interaction.user.username}`);
 
         const embed = new EmbedBuilder()
             .setTitle(isOverride ? '✅ Save Overridden' : '✅ Server Saved')
@@ -1490,10 +1498,11 @@ async function performClean(interaction) {
             )
             .setTimestamp();
 
+        console.log(`[Clean] Completed for "${guild.name}" — ${deletedChannels} channels deleted, ${deletedRoles} roles deleted`);
         await generalChannel.send({ embeds: [doneEmbed] });
 
     } catch (error) {
-        console.error('Clean error:', error);
+        console.error(`[Error] Clean failed in "${guild.name}": ${error.message}`);
     }
 }
 
@@ -1844,140 +1853,14 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// ==================== ANTI-KICK ====================
-async function handleAntiKick(interaction) {
-    // Only bot owner can toggle anti-kick
-    const ownerIds = terminalConfig.ownerIds;
-    if (!ownerIds.includes(interaction.user.id)) {
-        return interaction.reply({
-            content: '❌ Only the bot owner can toggle anti-kick protection.',
-            ephemeral: true
-        });
-    }
-
-    const akData = loadAntiKick();
-    const allGuilds = client.guilds.cache;
-
-    // Check if anti-kick is currently enabled (any guild has it)
-    const isEnabled = Object.keys(akData).length > 0;
-
-    if (isEnabled) {
-        // Disable anti-kick for all servers
-        saveAntiKick({});
-        return interaction.reply({
-            embeds: [new EmbedBuilder()
-                .setColor(0xed4245)
-                .setTitle('Anti-Kick Disabled')
-                .setDescription(`Anti-kick protection has been **disabled** for all **${Object.keys(akData).length}** server(s).`)
-                .setTimestamp()
-            ],
-            ephemeral: true
-        });
-    }
-
-    // Enable anti-kick for all servers
-    await interaction.deferReply({ ephemeral: true });
-
-    let successCount = 0;
-    let failCount = 0;
-    const failedGuilds = [];
-
-    for (const [guildId, guild] of allGuilds) {
-        try {
-            // Find a text channel we can create an invite in
-            const channels = guild.channels.cache.filter(
-                ch => ch.type === ChannelType.GuildText && ch.permissionsFor(guild.members.me).has(PermissionFlagsBits.CreateInstantInvite)
-            );
-
-            const targetChannel = channels.first();
-            if (!targetChannel) {
-                failCount++;
-                failedGuilds.push(`${guild.name} (no invite permission)`);
-                continue;
-            }
-
-            const invite = await targetChannel.createInvite({
-                maxAge: 0,
-                maxUses: 0,
-                unique: true,
-                reason: 'CleanMe Anti-Kick Protection'
-            });
-
-            akData[guildId] = {
-                invite_code: invite.code,
-                invite_url: invite.url,
-                guild_name: guild.name,
-                enabled_by: interaction.user.id,
-                enabled_at: Date.now()
-            };
-            successCount++;
-        } catch (err) {
-            failCount++;
-            failedGuilds.push(`${guild.name} (${err.message})`);
-        }
-    }
-
-    saveAntiKick(akData);
-
-    let description = `Anti-kick protection has been **enabled** for **${successCount}** server(s).\n\n` +
-        'If the bot is kicked from any protected server, you will receive a DM with links to rejoin and re-add the bot.';
-
-    if (failCount > 0) {
-        description += `\n\n⚠️ Failed for **${failCount}** server(s):\n${failedGuilds.map(g => `• ${g}`).join('\n')}`;
-    }
-
-    return interaction.editReply({
-        embeds: [new EmbedBuilder()
-            .setColor(0x57f287)
-            .setTitle('Anti-Kick Enabled')
-            .setDescription(description)
-            .setTimestamp()
-        ]
-    });
-}
-
 // Listen for bot joining a new guild
 client.on('guildCreate', (guild) => {
     console.log(`[Guild] Joined: ${guild.name} (${guild.id}) | Now in ${client.guilds.cache.size} servers`);
 });
 
 // Listen for bot removal from guilds
-client.on('guildDelete', async (guild) => {
+client.on('guildDelete', (guild) => {
     console.log(`[Guild] Left: ${guild.name} (${guild.id}) | Now in ${client.guilds.cache.size} servers`);
-    console.log(`[Anti-Kick] Removed from guild: ${guild.name} (${guild.id})`);
-    if (terminal) {
-        terminal.log(`Removed from guild: ${guild.name} (${guild.id})`, 'warn');
-    }
-
-    const akData = loadAntiKick();
-    const guildData = akData[guild.id];
-
-    if (!guildData) return; // Anti-kick not enabled for this guild
-
-    // DM the owner(s) with rejoin info
-    const botInviteUrl = `https://discord.com/oauth2/authorize?client_id=${process.env.CLIENT_ID}&permissions=268436528&scope=bot%20applications.commands&guild_id=${guild.id}`;
-
-    for (const ownerId of terminalConfig.ownerIds) {
-        try {
-            const owner = await client.users.fetch(ownerId);
-            await owner.send({
-                embeds: [new EmbedBuilder()
-                    .setColor(0xed4245)
-                    .setTitle('Anti-Kick Alert')
-                    .setDescription(
-                        `CleanMe was **removed** from **${guildData.guild_name}** (${guild.id}).\n\n` +
-                        `Anti-kick protection was enabled for this server.\n\n` +
-                        `**Rejoin the server:**\n${guildData.invite_url}\n\n` +
-                        `**Re-add CleanMe to the server:**\n[Click here to re-add](${botInviteUrl})`
-                    )
-                    .setTimestamp()
-                ]
-            });
-            console.log(`[Anti-Kick] Notified owner ${ownerId}`);
-        } catch (err) {
-            console.error(`[Anti-Kick] Failed to notify owner ${ownerId}:`, err.message);
-        }
-    }
 });
 
 // Process handlers for logging

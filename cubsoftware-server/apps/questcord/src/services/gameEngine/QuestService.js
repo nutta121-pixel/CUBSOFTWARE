@@ -189,6 +189,7 @@ class QuestService extends BaseService {
                 source
             });
 
+            console.log(`[Quest] Accepted: "${quest.quest_name}" (ID:${questId}) by user ${userId} (source: ${source})`);
             this.log('acceptQuest', { userId, questId, questName: quest.quest_name, source });
 
             return this.success({
@@ -271,6 +272,7 @@ class QuestService extends BaseService {
                 source
             });
 
+            console.log(`[Quest] Completed: "${quest.quest_name}" (ID:${questId}) by user ${userId} — +${finalCurrency} currency, +${finalGems} gems (source: ${source})`);
             this.log('completeQuest', { userId, questId, rewards: { finalCurrency, finalGems, guildBonus: guildBonusInfo.bonus }, source });
 
             return this.success({

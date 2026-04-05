@@ -16,6 +16,18 @@ const EventBus = require('../services/EventBus');
 let io = null;
 let discordClient = null;
 
+// In-memory tracking (no external calls)
+const _seenIPs = new Set();
+const _failedLogins = new Map();  // ip → count
+let _reqPerMin = 0;
+let _wsMessagesPerMin = 0;
+let _peakWsClients = 0;
+setInterval(() => {
+    if (_reqPerMin > 0) console.log(`[Traffic] ${_reqPerMin} requests/min | WS broadcasts: ${_wsMessagesPerMin}/min | peak WS clients: ${_peakWsClients}`);
+    _reqPerMin = 0;
+    _wsMessagesPerMin = 0;
+}, 60000);
+
 async function startWebServer(client) {
     discordClient = client;
 
@@ -61,11 +73,16 @@ async function startWebServer(client) {
     // Register EventBus WebSocket broadcaster
     EventBus.registerWebSocketBroadcaster((data) => {
         if (!io) return;
+        let sent = 0;
         io.clients.forEach(client => {
             if (client.readyState === WebSocket.OPEN) {
                 client.send(JSON.stringify(data));
+                sent++;
             }
         });
+        _wsMessagesPerMin++;
+        if (io.clients.size > _peakWsClients) _peakWsClients = io.clients.size;
+        console.log(`[WS] Broadcast type:${data.type} → ${sent}/${io.clients.size} clients`);
     });
 
     // Register EventBus Discord client
@@ -83,9 +100,60 @@ async function startWebServer(client) {
                    req.path.startsWith('/js/') ||
                    req.path.startsWith('/images/') ||
                    req.path.startsWith('/fonts/');
+        },
+        handler: (req, res) => {
+            const ip = getClientIP(req);
+            console.log(`[RateLimit] Blocked ${ip} on ${req.method} ${req.path} | UA: ${(req.headers['user-agent'] || 'none').substring(0, 60)}`);
+            res.status(429).json({ error: 'Too many requests' });
         }
     });
     app.use(limiter);
+
+    // Request logging + IP tracking + slow request detection
+    app.use((req, res, next) => {
+        const ip = getClientIP(req);
+        const start = Date.now();
+        _reqPerMin++;
+
+        // New IP detection
+        if (!_seenIPs.has(ip)) {
+            _seenIPs.add(ip);
+            const ua = (req.headers['user-agent'] || 'none').substring(0, 80);
+            console.log(`[IP] New IP: ${ip} | ${req.method} ${req.path} | UA: ${ua}`);
+        }
+
+        // Large request body warning
+        const contentLength = parseInt(req.headers['content-length'] || '0');
+        if (contentLength > 50000) {
+            console.log(`[Security] Large request body: ${contentLength} bytes from ${ip} on ${req.method} ${req.path}`);
+        }
+
+        res.on('finish', () => {
+            const ms = Date.now() - start;
+            const isApi = req.path.startsWith('/api/v1/');
+            const isStatic = req.path.startsWith('/css/') || req.path.startsWith('/js/') || req.path.startsWith('/images/') || req.path.startsWith('/fonts/') || req.path.startsWith('/assets/');
+
+            if (!isStatic) {
+                if (isApi) {
+                    console.log(`[API] ${req.method} ${req.path} → ${res.statusCode} (${ms}ms) from ${ip}`);
+                } else {
+                    console.log(`[Request] ${req.method} ${req.path} → ${res.statusCode} (${ms}ms) from ${ip}`);
+                }
+            }
+
+            if (ms > 1000 && !isStatic) {
+                console.log(`[Slow] ${req.method} ${req.path} took ${ms}ms (status: ${res.statusCode})`);
+            }
+
+            if (res.statusCode === 403) {
+                console.log(`[Security] 403 from ${ip}: ${req.method} ${req.path}`);
+                const prev = _failedLogins.get(ip) || 0;
+                _failedLogins.set(ip, prev + 1);
+                if (prev + 1 >= 3) console.log(`[Security] Repeated 403s from ${ip} (${prev + 1} times)`);
+            }
+        });
+        next();
+    });
 
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, 'views'));

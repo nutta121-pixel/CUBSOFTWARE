@@ -3,6 +3,8 @@ const { ServerModel, GlobalStatsModel, UserModel } = require('../../database/mod
 const { broadcastStats } = require('../../web/server');
 const { debugLogger } = require('../../utils/debugLogger');
 
+const BOT_START_TIME = Date.now();
+
 // List of commands to cycle through in rich presence
 const commands = [
     '/quests - View available quests',
@@ -27,7 +29,16 @@ module.exports = {
     name: 'clientReady',
     once: true,
     async execute(client) {
+        const _totalMembers = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
+        const _totalChannels = client.guilds.cache.reduce((a, g) => a + g.channels.cache.size, 0);
         console.log(`[Ready] Logged in as ${client.user.tag}`);
+        console.log(`[Ready] ${client.guilds.cache.size} servers | ${_totalMembers} members | ${_totalChannels} channels | WS ping: ${client.ws.ping}ms`);
+
+        // Discord.js internal events
+        client.on('warn', (msg) => console.log(`[Warn] ${msg}`));
+        client.rest.on('rateLimited', (info) => {
+            console.log(`[RateLimit] ${info.method} ${info.route} | retry after ${info.retryAfter}ms`);
+        });
 
         // Initialize debug logger
         debugLogger.setClient(client);
@@ -88,7 +99,11 @@ async function updateGuildStats(client) {
             totalQuestsCompleted: stats.total_quests_completed
         });
 
-        console.log(`[Stats] ${guilds.size} servers, ${totalMembers} total members`);
+        const uptimeSec = Math.floor((Date.now() - BOT_START_TIME) / 1000);
+        const h = Math.floor(uptimeSec / 3600), m = Math.floor((uptimeSec % 3600) / 60), s = uptimeSec % 60;
+        const mem = Math.round(process.memoryUsage().heapUsed / 1024 / 1024);
+        const channels = client.guilds.cache.reduce((a, g) => a + g.channels.cache.size, 0);
+        console.log(`[Stats] ${guilds.size} servers | ${totalMembers} members | ${channels} channels | ping: ${client.ws.ping}ms | mem: ${mem}MB | uptime: ${h}h${m}m${s}s`);
     } catch (error) {
         console.error('Error updating guild stats:', error);
     }

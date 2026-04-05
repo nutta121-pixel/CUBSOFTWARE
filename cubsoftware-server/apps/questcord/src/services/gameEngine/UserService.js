@@ -228,6 +228,7 @@ class UserService extends BaseService {
 
                 leveledUp = true;
 
+                console.log(`[XP] ${updatedUser.username || discordId} leveled up: ${updatedUser.level} → ${newLevel} (source: ${source})`);
                 this.log('levelUp', { discordId, oldLevel: updatedUser.level, newLevel, source });
             }
 

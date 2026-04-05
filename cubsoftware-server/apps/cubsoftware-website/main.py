@@ -337,13 +337,14 @@ def _before_request_logging():
             ban_days=_BAN_TTL_DAYS, probes=ban_info.get('probes', []),
         ), 403)
 
-    # Auto-ban: detect sensitive path probes
+    # Auto-ban: detect sensitive path probes or WebDAV method scanners
     path_lower = request.path.lower()
     is_scanner_probe = (
         any(path_lower.startswith(p) for p in _SCANNER_PATH_PREFIXES) or
         any(s in path_lower for s in _SCANNER_PATH_CONTAINS) or
         any(path_lower.endswith(ext) for ext in _SCANNER_EXTENSIONS) or
-        request.path in _SCANNER_EXACT
+        request.path in _SCANNER_EXACT or
+        request.method in ('PROPFIND', 'MKCOL', 'COPY', 'MOVE', 'LOCK', 'UNLOCK', 'SEARCH', 'TRACE')
     )
     if is_scanner_probe:
         ua = request.headers.get('User-Agent', '')

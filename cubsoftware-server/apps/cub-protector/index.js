@@ -118,7 +118,11 @@ function applyBotPresence() {
         const raw = fs.readFileSync(CUSTOM_BOTS_FILE, 'utf8');
         const cbData = JSON.parse(raw);
         const entry = cbData.guilds?.[CUSTOM_GUILD_ID];
-        if (!entry?.presence) return;
+        if (!entry?.presence?.activity_text) {
+            client.user.setPresence({ status: 'online', activities: [{ name: 'Developed by CUBSOFTWARE', type: ActivityType.Watching }] });
+            console.log(`[Presence] No presence set — defaulting to: Watching Developed by CUBSOFTWARE`);
+            return;
+        }
         const { status, activity_type, activity_text } = entry.presence;
         const typeMap = {
             'playing': ActivityType.Playing,
@@ -134,6 +138,7 @@ function applyBotPresence() {
                 : [],
         };
         client.user.setPresence(presencePayload);
+        if (activity_text) console.log(`[Presence] Updated to: ${activity_type || 'playing'} ${activity_text}`);
     } catch (e) {
         // File may not exist on the main bot instance — silently ignore
     }
@@ -10920,11 +10925,18 @@ client.once('ready', async () => {
             { activities: [{ name: 'Developed by CUBSOFTWARE', type: 3 }], status: 'online' }, // Watching ...
             { activities: [{ name: 'https://cubsoftware.site', type: 3 }], status: 'online' }, // Watching ...
         ];
+        const typeNames = { 0: 'Playing', 1: 'Streaming', 2: 'Listening to', 3: 'Watching', 5: 'Competing in' };
+        function logPresence(p) {
+            const act = p.activities?.[0];
+            if (act) console.log(`[Presence] Updated to: ${typeNames[act.type] || 'Playing'} ${act.name}`);
+        }
         let presIdx = 0;
         client.user.setPresence(presences[0]);
+        logPresence(presences[0]);
         setInterval(() => {
             presIdx = (presIdx + 1) % presences.length;
             client.user.setPresence(presences[presIdx]);
+            logPresence(presences[presIdx]);
         }, 20000);
     }
 

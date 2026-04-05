@@ -237,7 +237,16 @@ def _get_mem_mb():
         import psutil
         return round(psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024, 1)
     except Exception:
-        return 0
+        pass
+    try:
+        # Fallback: read VmRSS from /proc/self/status (Linux, no packages needed)
+        with open('/proc/self/status') as f:
+            for line in f:
+                if line.startswith('VmRSS:'):
+                    return round(int(line.split()[1]) / 1024, 1)
+    except Exception:
+        pass
+    return 0
 
 def _get_disk_free_gb():
     try:

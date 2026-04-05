@@ -10331,7 +10331,7 @@ async function updateCounters() {
     }
 }
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
     console.log(`[Ready] CUB PROTECTOR logged in as ${client.user.tag}`);
 
     // Register commands

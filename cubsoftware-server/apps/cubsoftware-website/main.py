@@ -141,7 +141,12 @@ STATIC_VERSION = str(int(time.time()))
 @app.before_request
 def _before_request_logging():
     request._start_time = time.time()
-    ip = request.headers.get('X-Forwarded-For', request.remote_addr or '').split(',')[0].strip()
+    ip = (
+        request.headers.get('CF-Connecting-IP') or
+        request.headers.get('X-Real-IP') or
+        (request.headers.get('X-Forwarded-For') or '').split(',')[0].strip() or
+        request.remote_addr or ''
+    ).strip()
     request._client_ip = ip
     with _req_lock:
         _req_count_min[0] += 1
@@ -564,7 +569,7 @@ def _cub_create_remember_token(user_data):
     safe_user = {k: v for k, v in user_data.items() if k not in _exclude}
     data[token] = {
         'user': safe_user,
-        'expires': (datetime.utcnow() + timedelta(days=CUB_REMEMBER_DAYS)).isoformat()
+        'expires': (datetime.now(timezone.utc) + timedelta(days=CUB_REMEMBER_DAYS)).isoformat()
     }
     _cub_save_remembered(data)
     return token
@@ -575,7 +580,7 @@ def _cub_validate_remember_token(token):
     if not entry:
         return None
     try:
-        if datetime.utcnow() > datetime.fromisoformat(entry['expires']):
+        if datetime.now(timezone.utc) > datetime.fromisoformat(entry['expires']):
             del data[token]
             _cub_save_remembered(data)
             return None
@@ -612,7 +617,7 @@ def _get_linked_account(provider, user_id):
 def _link_accounts(prov_a, id_a, user_a, prov_b, id_b, user_b):
     """Link two accounts bidirectionally."""
     data = _load_linked_accounts()
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     data[f'{prov_a}:{id_a}'] = {
         'linked_provider': prov_b, 'linked_id': id_b,
         'linked_username': user_b.get('username', ''),
@@ -5619,7 +5624,7 @@ def admin_remove_ip_ban():
     return jsonify({'success': False, 'message': f'IP {ip} was not banned'})
 
 # ==================== API STATUS ENDPOINT ====================
-_server_start_time = datetime.utcnow()
+_server_start_time = datetime.now(timezone.utc)
 _endpoint_health = {}  # {endpoint_name: {'last_status': 200, 'last_called': timestamp, 'last_error': None}}
 
 @app.after_request
@@ -5642,7 +5647,7 @@ def admin_api_status():
     """List all API endpoints with status and server uptime"""
     import time as _time
     now = _time.time()
-    uptime_seconds = int((datetime.utcnow() - _server_start_time).total_seconds())
+    uptime_seconds = int((datetime.now(timezone.utc) - _server_start_time).total_seconds())
 
     # Discover all routes
     endpoints = []
@@ -7077,7 +7082,7 @@ def bot_dashboard_timeout_member(bot_id, guild_id, member_id):
 
     # Calculate timeout end time
     if duration_minutes > 0:
-        timeout_until = (datetime.utcnow() + timedelta(minutes=duration_minutes)).isoformat() + 'Z'
+        timeout_until = (datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)).isoformat() + 'Z'
     else:
         timeout_until = None  # Remove timeout
 
@@ -8405,7 +8410,7 @@ def bot_dashboard_create_template():
         'name': name,
         'content': content,
         'embed': embed,
-        'created_at': datetime.utcnow().isoformat()
+        'created_at': datetime.now(timezone.utc).isoformat()
     }
 
     templates['templates'].append(template)
@@ -13121,7 +13126,7 @@ def cub_protector_scheduled_messages_create(guild_id):
         'cron_minute': int(body.get('cron_minute', 0)),
         'next_run': body.get('next_run', ''),
         'enabled': bool(body.get('enabled', True)),
-        'created_at': datetime.utcnow().isoformat()
+        'created_at': datetime.now(timezone.utc).isoformat()
     }
     data['guilds'][guild_id]['messages'].append(msg)
     save_cp_json(CUB_PROTECTOR_SCHEDULED_MESSAGES_FILE, data)
@@ -13244,7 +13249,7 @@ def cub_protector_custom_embeds_create(guild_id):
             'channel_id': channel_id,
             'embed': embed_data,
             'content': content,
-            'created_at': datetime.utcnow().isoformat()
+            'created_at': datetime.now(timezone.utc).isoformat()
         })
         save_cp_json(CUB_PROTECTOR_CUSTOM_EMBEDS_FILE, data)
         return jsonify({'success': True, 'message_id': msg_data.get('id')})
@@ -13331,7 +13336,7 @@ def cub_protector_mod_action(guild_id):
             guild_data['cases'].append({
                 'case_id': case_id, 'type': 'ban', 'moderator_id': 'dashboard',
                 'target_id': user_id, 'reason': reason,
-                'timestamp': int(datetime.utcnow().timestamp()),
+                'timestamp': int(datetime.now(timezone.utc).timestamp()),
                 'appeal_code': appeal_code
             })
             guild_data['next_case_id'] = case_id + 1
@@ -13350,7 +13355,7 @@ def cub_protector_mod_action(guild_id):
             guild_data['cases'].append({
                 'case_id': case_id, 'type': 'kick', 'moderator_id': 'dashboard',
                 'target_id': user_id, 'reason': reason,
-                'timestamp': int(datetime.utcnow().timestamp())
+                'timestamp': int(datetime.now(timezone.utc).timestamp())
             })
             guild_data['next_case_id'] = case_id + 1
             save_cp_json(CUB_PROTECTOR_MODERATION_FILE, data)
@@ -13362,7 +13367,7 @@ def cub_protector_mod_action(guild_id):
             duration = min(2419200, max(60, int(body.get('duration', 3600))))  # 1min - 28 days, in seconds
         except (ValueError, TypeError):
             duration = 3600
-        expires_at = datetime.utcnow() + timedelta(seconds=duration)
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=duration)
         result = _guild_bot_request(guild_id, 'PATCH', f'/guilds/{guild_id}/members/{user_id}', json={
             'communication_disabled_until': expires_at.isoformat() + 'Z'
         })
@@ -13375,7 +13380,7 @@ def cub_protector_mod_action(guild_id):
             guild_data['cases'].append({
                 'case_id': case_id, 'type': 'mute', 'moderator_id': 'dashboard',
                 'target_id': user_id, 'reason': reason, 'duration': duration * 1000,
-                'timestamp': int(datetime.utcnow().timestamp()),
+                'timestamp': int(datetime.now(timezone.utc).timestamp()),
                 'expires_at': int(expires_at.timestamp())
             })
             guild_data['next_case_id'] = case_id + 1
@@ -13396,12 +13401,12 @@ def cub_protector_mod_action(guild_id):
             guild_data['cases'].append({
                 'case_id': case_id, 'type': 'unmute', 'moderator_id': 'dashboard',
                 'target_id': user_id, 'reason': reason,
-                'timestamp': int(datetime.utcnow().timestamp())
+                'timestamp': int(datetime.now(timezone.utc).timestamp())
             })
             guild_data['next_case_id'] = case_id + 1
             # Mark all active mutes for this user as expired
             for case in guild_data['cases']:
-                if case.get('type') == 'mute' and case.get('target_id') == user_id and case.get('expires_at') and case['expires_at'] > int(datetime.utcnow().timestamp()):
+                if case.get('type') == 'mute' and case.get('target_id') == user_id and case.get('expires_at') and case['expires_at'] > int(datetime.now(timezone.utc).timestamp()):
                     case['unmuted'] = True
             save_cp_json(CUB_PROTECTOR_MODERATION_FILE, data)
             return jsonify({'success': True})
@@ -13418,7 +13423,7 @@ def cub_protector_mod_action(guild_id):
             guild_data['cases'].append({
                 'case_id': case_id, 'type': 'unban', 'moderator_id': 'dashboard',
                 'target_id': user_id, 'reason': reason,
-                'timestamp': int(datetime.utcnow().timestamp())
+                'timestamp': int(datetime.now(timezone.utc).timestamp())
             })
             guild_data['next_case_id'] = case_id + 1
             save_cp_json(CUB_PROTECTOR_MODERATION_FILE, data)
@@ -13672,7 +13677,7 @@ def cub_protector_live_alerts_test(guild_id, streamer_id):
             {'name': 'Viewers', 'value': str(test_viewers), 'inline': True},
         ],
         'footer': {'text': '\u26a0\ufe0f This is a test alert \u2014 not a real live notification'},
-        'timestamp': _dt.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+        'timestamp': _dt.datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
     }
 
     payload = {'embeds': [embed]}
@@ -14009,7 +14014,7 @@ def cub_protector_backups_create(guild_id):
     backup = {
         'id': str(uuid.uuid4())[:8],
         'name': request.get_json(silent=True).get('name', 'Backup') if request.get_json(silent=True) else 'Backup',
-        'created_at': datetime.utcnow().isoformat(),
+        'created_at': datetime.now(timezone.utc).isoformat(),
         'guild_name': guild_data.get('name', ''),
         'guild_icon': guild_data.get('icon', ''),
         'member_count': guild_data.get('approximate_member_count', 0),
@@ -14773,7 +14778,7 @@ def cub_protector_announcements_post(guild_id):
             embed['thumbnail'] = {'url': req['thumbnail']}
         if req.get('image'):
             embed['image'] = {'url': req['image']}
-        embed['timestamp'] = __import__('datetime').datetime.utcnow().isoformat()
+        embed['timestamp'] = __import__('datetime').datetime.now(timezone.utc).isoformat()
         payload['embeds'] = [embed]
         if mentions:
             payload['content'] = mentions.strip()
@@ -17050,7 +17055,7 @@ def _ban_appeal_submit_inner():
                 {'name': 'Appeal Message', 'value': message[:1024], 'inline': False},
             ],
             'footer': {'text': f'TEST Appeal ID: {appeal_id} • CUB-API test code used'},
-            'timestamp': datetime.utcnow().isoformat() + 'Z'
+            'timestamp': datetime.now(timezone.utc).isoformat() + 'Z'
         }
         if answers_text:
             embed['fields'].append({'name': 'Additional Answers', 'value': answers_text[:1024], 'inline': False})
@@ -17081,7 +17086,7 @@ def _ban_appeal_submit_inner():
         'message': message,
         'answers': answers,
         'status': 'pending',
-        'submitted_at': int(datetime.utcnow().timestamp()),
+        'submitted_at': int(datetime.now(timezone.utc).timestamp()),
         'reviewed_at': None,
         'reviewed_by': None,
         'review_note': None
@@ -17132,7 +17137,7 @@ def _ban_appeal_submit_inner():
                 {'name': 'Appeal Message', 'value': message[:1024], 'inline': False},
             ],
             'footer': {'text': f'Appeal ID: {appeal_id}'},
-            'timestamp': datetime.utcnow().isoformat() + 'Z'
+            'timestamp': datetime.now(timezone.utc).isoformat() + 'Z'
         }
 
         if answers_text:
@@ -17207,7 +17212,7 @@ def cp_appeal_review(guild_id, appeal_id):
 
     # Update appeal status
     appeal['status'] = 'approved' if action == 'approve' else 'declined'
-    appeal['reviewed_at'] = int(datetime.utcnow().timestamp())
+    appeal['reviewed_at'] = int(datetime.now(timezone.utc).timestamp())
     appeal['reviewed_by'] = reviewer.get('id', 'unknown')
     appeal['review_note'] = note
     save_cp_json(CUB_PROTECTOR_BAN_APPEALS_FILE, appeals_data)
@@ -17428,7 +17433,7 @@ def affiliate_apply():
                     {'name': 'Promotion plan', 'value': promotion_plan[:500] if promotion_plan else '—', 'inline': False},
                 ],
                 'footer': {'text': f'Application ID: {app_data["id"]} • cubsoftware.site/affiliate/apply'},
-                'timestamp': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+                'timestamp': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
             }
             requests.post(
                 f'https://discord.com/api/channels/{AFFILIATE_APPLY_CHANNEL_ID}/messages',

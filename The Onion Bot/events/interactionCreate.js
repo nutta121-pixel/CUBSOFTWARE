@@ -1,23 +1,25 @@
 module.exports = {
     name: 'interactionCreate',
     async execute(interaction) {
-        console.log(`[INTERACTION] Type: ${interaction.type}, Command: ${interaction.commandName || 'N/A'}, User: ${interaction.user.tag}`);
-
         // Handle slash commands
         if (interaction.isChatInputCommand()) {
             const command = interaction.client.commands.get(interaction.commandName);
+            const _start = Date.now();
+
+            console.log(`[Command] /${interaction.commandName} by ${interaction.user.username} in ${interaction.guild?.name || 'DM'}`);
 
             if (!command) {
-                console.error(`[ERROR] No command matching ${interaction.commandName} was found.`);
+                console.error(`[Error] No command matching /${interaction.commandName}`);
                 return;
             }
 
             try {
                 await command.execute(interaction);
+                const ms = Date.now() - _start;
+                if (ms > 2000) console.log(`[Slow] /${interaction.commandName} took ${ms}ms in ${interaction.guild?.name || 'DM'}`);
             } catch (error) {
-                console.error(`[ERROR] Error executing ${interaction.commandName}:`, error);
+                console.error(`[Error] /${interaction.commandName} threw: ${error.message}`);
                 const errorMessage = { content: 'There was an error while executing this command!', ephemeral: true };
-
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp(errorMessage);
                 } else {
@@ -27,22 +29,19 @@ module.exports = {
         }
         // Handle context menu commands (user commands)
         else if (interaction.isUserContextMenuCommand()) {
-            console.log(`[CONTEXT MENU] Command: ${interaction.commandName}, Target: ${interaction.targetUser.tag}`);
             const command = interaction.client.commands.get(interaction.commandName);
+            console.log(`[Command] Context menu "${interaction.commandName}" by ${interaction.user.username} on ${interaction.targetUser?.tag || 'unknown'}`);
 
             if (!command) {
-                console.error(`[ERROR] No context menu command matching ${interaction.commandName} was found.`);
-                console.error(`[ERROR] Available commands:`, Array.from(interaction.client.commands.keys()));
+                console.error(`[Error] No context menu command matching "${interaction.commandName}"`);
                 return;
             }
 
-            console.log(`[CONTEXT MENU] Executing command: ${interaction.commandName}`);
             try {
                 await command.execute(interaction);
             } catch (error) {
-                console.error(`[ERROR] Error executing context menu ${interaction.commandName}:`, error);
+                console.error(`[Error] Context menu "${interaction.commandName}" threw: ${error.message}`);
                 const errorMessage = { content: 'There was an error while executing this command!', ephemeral: true };
-
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp(errorMessage);
                 } else {
@@ -52,6 +51,7 @@ module.exports = {
         }
         // Handle button interactions
         else if (interaction.isButton()) {
+            console.log(`[Button] ${interaction.customId} by ${interaction.user.username} in ${interaction.guild?.name || 'DM'}`);
             // Determine which command should handle this button based on customId
             let commandName;
             if (interaction.customId.startsWith('mute_')) {
@@ -68,7 +68,7 @@ module.exports = {
                 try {
                     await command.handleButton(interaction);
                 } catch (error) {
-                    console.error(`[ERROR] Error handling button interaction:`, error);
+                    console.error(`[Error] Button "${interaction.customId}" threw: ${error.message}`);
                     const errorMessage = { content: 'There was an error while processing this interaction!', ephemeral: true };
 
                     if (interaction.replied || interaction.deferred) {
@@ -95,7 +95,7 @@ module.exports = {
                 try {
                     await command.handleChannelSelect(interaction);
                 } catch (error) {
-                    console.error(`[ERROR] Error handling channel select interaction:`, error);
+                    console.error(`[Error] Channel select "${interaction.customId}" threw: ${error.message}`);
                     const errorMessage = { content: 'There was an error while processing this interaction!', ephemeral: true };
 
                     if (interaction.replied || interaction.deferred) {
@@ -122,7 +122,7 @@ module.exports = {
                 try {
                     await command.handleStringSelect(interaction);
                 } catch (error) {
-                    console.error(`[ERROR] Error handling string select interaction:`, error);
+                    console.error(`[Error] String select "${interaction.customId}" threw: ${error.message}`);
                     const errorMessage = { content: 'There was an error while processing this interaction!', ephemeral: true };
 
                     if (interaction.replied || interaction.deferred) {

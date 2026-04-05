@@ -196,8 +196,12 @@ def _after_request_logging(response):
             if count >= 5:
                 _web_log('Security', f'Repeated 403s from {ip} — {count} attempts')
 
-        # 4xx/5xx errors
-        if status >= 400 and not is_static:
+        # Rate limit responses
+        if status == 429 and not is_static:
+            _web_log('RateLimit', f'429 returned to {ip}: {request.method} {path}')
+
+        # 4xx/5xx errors (excluding 429 which is logged above)
+        if status >= 400 and status != 429 and not is_static:
             user_id = session.get('user', {}).get('id', 'anon') if 'user' in session else 'anon'
             _web_log('Error', f'HTTP {status} from {ip} (user:{user_id}): {request.method} {path}')
 

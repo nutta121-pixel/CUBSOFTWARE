@@ -68,6 +68,7 @@ router.get('/api/insult', (req, res) => {
             if (timeSinceLastRequest < RATE_LIMIT_WINDOW) {
                 // Too many requests
                 const waitTime = Math.ceil((RATE_LIMIT_WINDOW - timeSinceLastRequest) / 1000);
+                console.log(`[RateLimit] Insult endpoint blocked ${clientIp} | wait: ${waitTime}s`);
                 return res.status(429).json({
                     insult: `Slow down! Wait ${waitTime} seconds before requesting another insult.`
                 });

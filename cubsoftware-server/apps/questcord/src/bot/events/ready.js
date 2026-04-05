@@ -37,7 +37,8 @@ module.exports = {
         // Discord.js internal events
         client.on('warn', (msg) => console.log(`[Warn] ${msg}`));
         client.rest.on('rateLimited', (info) => {
-            console.log(`[RateLimit] ${info.method} ${info.route} | retry after ${info.retryAfter}ms`);
+            const global = info.global ? ' [GLOBAL]' : '';
+            console.log(`[RateLimit]${global} ${info.method} ${info.route} | retry: ${info.retryAfter}ms | limit: ${info.limit}`);
         });
 
         // Initialize debug logger

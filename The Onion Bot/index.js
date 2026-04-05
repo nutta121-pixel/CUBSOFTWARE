@@ -63,9 +63,9 @@ if (fs.existsSync(commandsPath)) {
 
         if ('data' in command && 'execute' in command) {
             client.commands.set(command.data.name, command);
-            console.log(`[INFO] Loaded command: ${command.data.name}`);
+            console.log(`[Commands] Loaded: ${command.data.name}`);
         } else {
-            console.log(`[WARNING] The command at ${filePath} is missing required "data" or "execute" property.`);
+            console.log(`[Commands] Skipped ${filePath} — missing "data" or "execute"`);
         }
     }
 }
@@ -84,7 +84,7 @@ if (fs.existsSync(eventsPath)) {
         } else {
             client.on(event.name, (...args) => event.execute(...args));
         }
-        console.log(`[INFO] Loaded event: ${event.name}`);
+        console.log(`[Events] Loaded: ${event.name}`);
     }
 }
 
@@ -115,9 +115,7 @@ client.tempConfinementData = new Map();
 })();
 
 // Initialize terminal after client is ready
-client.once('ready', () => {
-    console.log(`[INFO] ${client.user.tag} is online!`);
-
+client.once('clientReady', () => {
     terminal = new DiscordTerminal(client, {
         prefix: '>',
         ownerIds: terminalConfig.ownerIds,
@@ -130,6 +128,14 @@ client.once('ready', () => {
         systemCommands: false,
     });
     terminal.init();
+});
+
+// Guild join/leave tracking
+client.on('guildCreate', (guild) => {
+    console.log(`[Guild] Joined: ${guild.name} (${guild.id}) | ${guild.memberCount} members | Total: ${client.guilds.cache.size} servers`);
+});
+client.on('guildDelete', (guild) => {
+    console.log(`[Guild] Left: ${guild.name} (${guild.id}) | Total: ${client.guilds.cache.size} servers`);
 });
 
 // Handle graceful shutdown

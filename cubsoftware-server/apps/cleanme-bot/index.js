@@ -263,12 +263,10 @@ client.once('ready', async () => {
     setInterval(logStats, 60000);
 
     // Discord.js internal events
-    client.on('rateLimit', (info) => {
-        console.log(`[RateLimit] Route: ${info.route} | Timeout: ${info.timeout}ms | Global: ${info.global}`);
-    });
     client.on('warn', (msg) => console.log(`[Warn] ${msg}`));
     client.rest.on('rateLimited', (info) => {
-        console.log(`[RateLimit] ${info.method} ${info.route} | retry after ${info.retryAfter}ms`);
+        const global = info.global ? ' [GLOBAL]' : '';
+        console.log(`[RateLimit]${global} ${info.method} ${info.route} | retry: ${info.retryAfter}ms | limit: ${info.limit}`);
     });
 });
 
@@ -804,7 +802,7 @@ async function safeApiCall(fn, maxRetries = 5, baseDelay = 1000, onRateLimit = n
             }
             if (error.httpStatus === 429 || error.code === 'RateLimitError' || error.status === 429) {
                 const retryAfter = error.retryAfter || (baseDelay * Math.pow(2, attempt));
-                console.log(`Rate limited, waiting ${retryAfter}ms before retry ${attempt + 1}/${maxRetries}`);
+                console.log(`[RateLimit] Hit on attempt ${attempt + 1}/${maxRetries} — waiting ${retryAfter}ms`);
                 if (onRateLimit) {
                     try { await onRateLimit(retryAfter); } catch (e) { /* ignore */ }
                 }

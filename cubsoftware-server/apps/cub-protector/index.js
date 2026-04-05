@@ -795,32 +795,53 @@ const SELF_ROLE_PRESETS = {
 };
 
 async function postSelfRolesCategory(guild, channel, category) {
+    const colorHex = category.embed_color ? parseInt(String(category.embed_color).replace('#', ''), 16) : 0x5865F2;
+    const style = category.style || 'select';
+
     const embed = new EmbedBuilder()
-        .setColor(0x5865F2)
-        .setTitle(category.emoji ? `${category.emoji} ${category.name}` : category.name)
-        .setDescription(category.description || 'Select a role below!')
-        .setFooter({ text: 'Selecting a role you already have will remove it' });
-    const options = category.roles.slice(0, 25).map(r => {
-        const opt = { label: r.label, value: r.role_id };
-        if (r.emoji) opt.emoji = r.emoji;
-        return opt;
-    });
-    if (options.length === 0) return null;
-    const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`self_role_select_${category.id}`)
-        .setPlaceholder(`Choose from ${category.name}...`)
-        .setMinValues(0)
-        .setMaxValues(Math.min(options.length, 25))
-        .addOptions(options);
-    const row = new ActionRowBuilder().addComponents(selectMenu);
+        .setColor(colorHex)
+        .setTitle(category.emoji ? `${category.emoji} ${category.name}` : category.name);
+
+    let payload;
+    if (style === 'reaction') {
+        const lines = category.roles.slice(0, 25).map(r => `${r.emoji || '▫️'} = **${r.label || r.role_id}**`);
+        embed.setDescription((category.description || 'React to this message to get your roles!') + '\n\n' + lines.join('\n'));
+        payload = { embeds: [embed], components: [] };
+    } else {
+        embed.setDescription(category.description || 'Select a role below!');
+        embed.setFooter({ text: 'Selecting a role you already have will remove it' });
+        const options = category.roles.slice(0, 25).map(r => {
+            const opt = { label: r.label, value: r.role_id };
+            if (r.emoji) opt.emoji = r.emoji;
+            if (r.description) opt.description = r.description.substring(0, 50);
+            return opt;
+        });
+        if (options.length === 0) return null;
+        const maxV = Math.min(category.max_select > 0 ? category.max_select : options.length, options.length);
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(`self_role_select_${category.id}`)
+            .setPlaceholder(`Choose from ${category.name}...`)
+            .setMinValues(0)
+            .setMaxValues(Math.max(1, maxV))
+            .addOptions(options);
+        payload = { embeds: [embed], components: [new ActionRowBuilder().addComponents(selectMenu)] };
+    }
+
     if (category.message_id) {
         const existing = await channel.messages.fetch(category.message_id).catch(() => null);
-        if (existing) {
-            const edited = await existing.edit({ embeds: [embed], components: [row] }).catch(() => null);
-            return edited || null;
+        if (existing) return await existing.edit(payload).catch(() => null);
+    }
+
+    const msg = await channel.send(payload).catch(() => null);
+    if (msg && style === 'reaction') {
+        for (const r of category.roles.slice(0, 25)) {
+            if (!r.emoji) continue;
+            const m = r.emoji.match(/^<a?:(\w+):(\d+)>$/);
+            const emojiResolvable = m ? `${m[1]}:${m[2]}` : r.emoji.trim();
+            await msg.react(emojiResolvable).catch(() => {});
         }
     }
-    return await channel.send({ embeds: [embed], components: [row] }).catch(() => null);
+    return msg;
 }
 
 // Starboard

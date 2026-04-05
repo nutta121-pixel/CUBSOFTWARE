@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>IP Ban Appeal - CUB SOFTWARE</title>
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .appeal-container {
+            max-width: 560px;
+            width: 100%;
+        }
+
+        .appeal-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .appeal-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.25rem;
+            background: rgba(88, 101, 242, 0.1);
+            border: 2px solid rgba(88, 101, 242, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .appeal-icon svg {
+            width: 38px;
+            height: 38px;
+            color: #7289da;
+        }
+
+        .appeal-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 0.4rem;
+        }
+
+        .appeal-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card.info-card {
+            border-color: rgba(88, 101, 242, 0.25);
+            background: rgba(88, 101, 242, 0.05);
+        }
+
+        .info-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.4rem;
+        }
+
+        .info-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            color: #ef4444;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-light);
+            margin-bottom: 0.45rem;
+        }
+
+        .form-group label span {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: rgba(88, 101, 242, 0.6);
+            box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        .form-group input[readonly] {
+            opacity: 0.6;
+            cursor: not-allowed;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.3rem;
+        }
+
+        .char-count.warn { color: #f59e0b; }
+        .char-count.over { color: #ef4444; }
+
+        .submit-btn {
+            width: 100%;
+            padding: 0.9rem;
+            background: #5865f2;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background: #4752c4;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(88, 101, 242, 0.35);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Success state */
+        .success-view {
+            display: none;
+            text-align: center;
+            padding: 1rem 0;
+        }
+
+        .success-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 1.25rem;
+            background: rgba(87, 242, 135, 0.1);
+            border: 2px solid rgba(87, 242, 135, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #57f287;
+        }
+
+        .success-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-msg {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .error-box {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: #ef4444;
+            font-size: 0.88rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover { color: var(--text-light); }
+
+        @media (max-width: 500px) {
+            .appeal-title { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="appeal-container">
+
+        <a href="/banned" class="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back
+        </a>
+
+        <!-- Header -->
+        <div class="appeal-header">
+            <div class="appeal-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                </svg>
+            </div>
+            <h1 class="appeal-title">IP Ban Appeal</h1>
+            <p class="appeal-subtitle">
+                If you believe your IP was banned by mistake, fill in the form below.<br>
+                Appeals are reviewed manually and you will be contacted via Discord if approved.
+            </p>
+        </div>
+
+        <!-- Main form card -->
+        <div id="form-view">
+            {% if ip %}
+            <div class="card info-card" style="margin-bottom:1rem;">
+                <div class="info-label">Banned IP Address</div>
+                <div class="info-value">{{ ip }}</div>
+            </div>
+            {% endif %}
+
+            <div id="error-box" class="error-box"></div>
+
+            <div class="card">
+                <div class="form-group">
+                    <label>Banned IP Address</label>
+                    <input type="text" id="field-ip" value="{{ ip or '' }}" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label>Your Name or Discord Username <span>(optional)</span></label>
+                    <input type="text" id="field-name" placeholder="e.g. ThortonEllmers or @username" maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label>Contact (Discord / Email) <span>(optional — so we can respond)</span></label>
+                    <input type="text" id="field-contact" placeholder="e.g. user#0000 or you@example.com" maxlength="200">
+                </div>
+
+                <div class="form-group">
+                    <label>Why do you think you were banned?</label>
+                    <textarea id="field-reason" placeholder="Describe what you were doing when your IP got banned..." maxlength="1000" oninput="updateCount(this, 'count-reason', 1000)"></textarea>
+                    <div class="char-count" id="count-reason">0 / 1000</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Why should your ban be lifted?</label>
+                    <textarea id="field-appeal" placeholder="Explain why you believe this ban was a mistake and why you should be unbanned..." maxlength="1500" oninput="updateCount(this, 'count-appeal', 1500)"></textarea>
+                    <div class="char-count" id="count-appeal">0 / 1500</div>
+                </div>
+
+                <button class="submit-btn" id="submit-btn" onclick="submitAppeal()">Submit Appeal</button>
+            </div>
+        </div>
+
+        <!-- Success view -->
+        <div id="success-view" class="card success-view">
+            <div class="success-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+            <div class="success-title">Appeal Submitted</div>
+            <p class="success-msg">
+                Your appeal has been sent to our team for review.<br>
+                If your ban is lifted, the change will take effect within a few hours (or on the next server restart).<br><br>
+                <strong>IP:</strong> {{ ip or 'N/A' }}
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        function updateCount(el, countId, max) {
+            const len = el.value.length;
+            const el2 = document.getElementById(countId);
+            el2.textContent = len + ' / ' + max;
+            el2.className = 'char-count' + (len > max * 0.9 ? (len >= max ? ' over' : ' warn') : '');
+        }
+
+        function showError(msg) {
+            const box = document.getElementById('error-box');
+            box.textContent = msg;
+            box.style.display = 'block';
+            box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        async function submitAppeal() {
+            const ip      = document.getElementById('field-ip').value.trim();
+            const name    = document.getElementById('field-name').value.trim();
+            const contact = document.getElementById('field-contact').value.trim();
+            const reason  = document.getElementById('field-reason').value.trim();
+            const appeal  = document.getElementById('field-appeal').value.trim();
+
+            if (!reason) { showError('Please describe why you think you were banned.'); return; }
+            if (!appeal) { showError('Please explain why your ban should be lifted.'); return; }
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting...';
+            document.getElementById('error-box').style.display = 'none';
+
+            try {
+                const res = await fetch('/api/ip-ban-appeal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip, name, contact, reason, appeal })
+                });
+                const data = await res.json();
+
+                if (data.ok) {
+                    document.getElementById('form-view').style.display = 'none';
+                    const sv = document.getElementById('success-view');
+                    sv.style.display = 'block';
+                    sv.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    showError(data.error || 'Something went wrong. Please try again.');
+                    btn.disabled = false;
+                    btn.textContent = 'Submit Appeal';
+                }
+            } catch (e) {
+                showError('Failed to submit. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Submit Appeal';
+            }
+        }
+    </script>
+</body>
+</html>

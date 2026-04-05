@@ -10997,7 +10997,11 @@ client.once('ready', async () => {
 
             try {
                 console.log(`[Queue] Processing action: ${action.type}${action.suggestion_id ? ` #${action.suggestion_id}` : ''}`);
-                if (action.type === 'delete_message') {
+                if (action.type === 'send_embed') {
+                    const ch = action.channel_id ? await client.channels.fetch(action.channel_id).catch(() => null) : null;
+                    if (ch && action.embed) await ch.send({ embeds: [action.embed] }).catch(() => {});
+
+                } else if (action.type === 'delete_message') {
                     const ch = action.channel_id ? await client.channels.fetch(action.channel_id).catch(() => null) : null;
                     if (ch && action.message_id) await ch.messages.delete(action.message_id).catch(() => {});
 

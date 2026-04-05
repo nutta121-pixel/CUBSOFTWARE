@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f59e0b">
+    <title>Warning - CUB SOFTWARE</title>
+
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: radial-gradient(ellipse at top, rgba(245,158,11,0.07) 0%, transparent 60%);
+        }
+
+        .warning-container {
+            max-width: 580px;
+            width: 100%;
+        }
+
+        .warning-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .warning-icon {
+            width: 88px;
+            height: 88px;
+            margin: 0 auto 1.5rem;
+            background: rgba(245, 158, 11, 0.1);
+            border: 2px solid rgba(245, 158, 11, 0.35);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .warning-icon svg {
+            width: 44px;
+            height: 44px;
+            color: #f59e0b;
+        }
+
+        .warning-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            color: #f59e0b;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.04em;
+        }
+
+        .warning-subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .info-card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-card.warning-border {
+            border-color: rgba(245, 158, 11, 0.35);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .info-card.danger-border {
+            border-color: rgba(239, 68, 68, 0.35);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            color: var(--text-light);
+            word-break: break-all;
+        }
+
+        .path-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            color: #f59e0b;
+            word-break: break-all;
+        }
+
+        .attempts-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .attempt-dot {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .attempt-dot.used {
+            background: #ef4444;
+        }
+
+        .attempt-dot.remaining {
+            background: var(--border-color);
+        }
+
+        .attempts-text {
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .attempts-text strong {
+            color: {% if remaining == 1 %}#ef4444{% else %}#f59e0b{% endif %};
+        }
+
+        .warning-message {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .warning-message strong {
+            color: var(--text-light);
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 0.75rem 2rem;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+            text-align: center;
+            width: 100%;
+        }
+
+        .back-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        @media (max-width: 500px) {
+            .warning-title { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="warning-container">
+        <div class="warning-header">
+            <div class="warning-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+            </div>
+            <h1 class="warning-title">Security Warning</h1>
+            <p class="warning-subtitle">You have attempted to access a restricted or sensitive path.</p>
+        </div>
+
+        <div class="info-card warning-border">
+            <div class="info-label">Path Attempted</div>
+            <div class="path-value">{{ probed_path }}</div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-label">What Happened</div>
+            <p class="warning-message">
+                The path you requested — <strong>{{ probed_path }}</strong> — is a known sensitive location
+                that is actively monitored. <strong>There is no sensitive data here.</strong>
+                This access attempt has been logged and flagged.
+            </p>
+        </div>
+
+        <div class="info-card {% if remaining == 1 %}danger-border{% else %}warning-border{% endif %}">
+            <div class="info-label">Automatic Ban Warning — Attempt {{ hits }} of {{ threshold }}</div>
+            <div class="attempts-bar">
+                {% for i in range(threshold) %}
+                <div class="attempt-dot {% if i < hits %}used{% else %}remaining{% endif %}"></div>
+                {% endfor %}
+            </div>
+            <p class="attempts-text">
+                {% if remaining == 1 %}
+                    <strong>Final warning.</strong> One more probe and your IP will be automatically banned for 30 days.
+                {% else %}
+                    <strong>{{ remaining }} more probe{{ 's' if remaining != 1 else '' }}</strong> and your IP will be automatically banned for 30 days.
+                {% endif %}
+            </p>
+        </div>
+
+        {% if ip %}
+        <div class="info-card">
+            <div class="info-label">Your IP Address</div>
+            <div class="info-value">{{ ip }}</div>
+        </div>
+        {% endif %}
+
+        <a href="/" class="back-btn">Return to CUB SOFTWARE</a>
+    </div>
+</body>
+</html>

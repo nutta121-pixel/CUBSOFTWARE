@@ -81,6 +81,148 @@ _req_count_min = [0]
 _active_sessions = {}      # session_id → start_time
 _req_lock = threading.Lock()
 
+# Scanner auto-ban: track sensitive path probes and auto-ban after threshold
+_scanner_hits = {}         # ip → {'count': N, 'paths': [...], 'ua': str}
+_auto_banned_ips = set()   # IPs banned this session
+_ban_details = {}          # ip → ban_info dict (in-memory cache, avoids file I/O per request)
+_SCANNER_THRESHOLD = 3     # probes before auto-ban
+_BAN_TTL_DAYS = 30
+
+_BAN_FILE = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'scanner_bans.json'))
+
+# Paths/patterns that only automated scanners request
+_SCANNER_PATH_PREFIXES = (
+    '/.env', '/.git', '/.ht', '/.ds_store', '/.aws', '/.ssh',
+    '/wp-', '/wordpress', '/drupal', '/joomla', '/typo3',
+    '/laravel', '/symfony', '/yii', '/cake',
+)
+_SCANNER_PATH_CONTAINS = (
+    'docker-compose', 'wp-login', 'wp-admin', 'wp-includes', 'wp-content',
+    'xmlrpc', 'phpmyadmin', '/pma/', 'adminer', 'web.config',
+    '/administrator/', '/admin/login', '/user/login',
+    'shell.php', 'webshell', 'c99', 'r57', 'b374k',
+    'phpinfo', '/info.php', '/test.php', 'setup.php', 'install.php',
+    'terraform.tfvars', '.tfstate', 'secrets.yml', 'database.yml', 'aws.yml',
+    '/.well-known/security', 'passwd', '/etc/shadow',
+    'config/database', 'app/config', 'application/config',
+)
+_SCANNER_EXTENSIONS = ('.php', '.asp', '.aspx', '.cgi', '.cfm', '.pl', '.jsp', '.jspx')
+_SCANNER_EXACT = frozenset([
+    '/config.json', '/app.config.json', '/settings.json', '/appsettings.json',
+    '/server.js', '/index.php', '/config.php', '/database.php',
+    '/Thumbs.db', '/.htpasswd', '/admin.php', '/login.php',
+    '/backup.sql', '/dump.sql', '/database.sql',
+    '/id_rsa', '/id_rsa.pub', '/authorized_keys',
+    '/composer.json', '/composer.lock', '/package.json',
+    '/Makefile', '/Dockerfile', '/Procfile',
+    '/CHANGELOG.txt', '/README.md', '/LICENSE',
+    '/robots.txt.bak', '/sitemap.xml.bak',
+    '/web.config', '/applicationHost.config',
+])
+
+def _load_scanner_bans():
+    try:
+        if os.path.exists(_BAN_FILE):
+            with open(_BAN_FILE, 'r') as f:
+                data = json.load(f)
+            now = datetime.now(timezone.utc)
+            expired = [ip for ip, info in data.items()
+                       if datetime.fromisoformat(info['expires_at']) < now]
+            for ip in expired:
+                del data[ip]
+            return data
+    except Exception:
+        pass
+    return {}
+
+def _save_scanner_ban(ip, info):
+    try:
+        os.makedirs(os.path.dirname(_BAN_FILE), exist_ok=True)
+        data = _load_scanner_bans()
+        data[ip] = info
+        with open(_BAN_FILE, 'w') as f:
+            json.dump(data, f, indent=2)
+    except Exception:
+        pass
+
+_SECURITY_CHANNEL_ID = '1466190584372003092'   # bot events / security channel
+_APPEALS_CHANNEL_ID  = '1473606792264155136'   # IP ban appeals channel
+
+def _send_scanner_ban_embed(ip, probes, user_agent, banned_at, expires_at):
+    try:
+        # IP geolocation via ip-api.com (free, no key needed)
+        geo = {}
+        try:
+            r = requests.get(
+                f'http://ip-api.com/json/{ip}?fields=status,country,countryCode,regionName,city,isp,org,as,mobile,proxy,hosting',
+                timeout=5
+            )
+            if r.status_code == 200:
+                geo = r.json()
+        except Exception:
+            pass
+
+        country = geo.get('country', 'Unknown')
+        country_code = geo.get('countryCode', '')
+        region = geo.get('regionName', '')
+        city = geo.get('city', '')
+        isp = geo.get('isp', '')
+        org = geo.get('org', '')
+        asn = geo.get('as', '')
+        is_proxy = geo.get('proxy', False)
+        is_hosting = geo.get('hosting', False)
+        is_mobile = geo.get('mobile', False)
+
+        location_parts = [p for p in [city, region, country] if p]
+        location = ', '.join(location_parts) or 'Unknown'
+        if country_code:
+            location += f' :flag_{country_code.lower()}:'
+
+        flags = []
+        if is_proxy: flags.append('Proxy/VPN')
+        if is_hosting: flags.append('Hosting/Cloud')
+        if is_mobile: flags.append('Mobile')
+        flags_str = ', '.join(flags) if flags else 'None detected'
+
+        probes_text = '\n'.join(f'`{p}`' for p in probes[:20])
+        if len(probes) > 20:
+            probes_text += f'\n*... and {len(probes) - 20} more*'
+
+        banned_ts  = int(datetime.fromisoformat(banned_at).timestamp())
+        expires_ts = int(datetime.fromisoformat(expires_at).timestamp())
+
+        embed = {
+            'title': '🚫 Scanner IP Auto-Banned',
+            'description': f'An IP was automatically banned after **{len(probes)}** sensitive path probe(s).',
+            'color': 0xFF2222,
+            'fields': [
+                {'name': '🌐 IP Address',     'value': f'`{ip}`',               'inline': True},
+                {'name': '📍 Location',        'value': location,                'inline': True},
+                {'name': '🏢 ISP',             'value': isp or 'Unknown',        'inline': True},
+                {'name': '🏗️ Organisation',    'value': org or 'Unknown',        'inline': True},
+                {'name': '🔢 ASN',             'value': asn or 'Unknown',        'inline': True},
+                {'name': '⚠️ IP Flags',        'value': flags_str,               'inline': True},
+                {'name': f'🕵️ Probed Paths ({len(probes)})', 'value': probes_text or '`/`', 'inline': False},
+                {'name': '🖥️ User Agent',      'value': f'`{(user_agent or "None")[:120]}`', 'inline': False},
+                {'name': '⏰ Banned At',       'value': f'<t:{banned_ts}:F>',   'inline': True},
+                {'name': '📅 Expires',         'value': f'<t:{expires_ts}:R>',  'inline': True},
+                {'name': '📋 Ban Duration',    'value': f'{_BAN_TTL_DAYS} days','inline': True},
+            ],
+            'footer': {'text': 'CUB SOFTWARE Security Monitor • cubsoftware.site'},
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+        }
+
+        cp_enqueue_action({'type': 'send_embed', 'channel_id': _SECURITY_CHANNEL_ID, 'embed': embed})
+    except Exception as e:
+        _web_log('Security', f'Failed to enqueue ban embed for {ip}: {e}')
+
+# Load persistent bans on startup
+_startup_bans = _load_scanner_bans()
+_auto_banned_ips.update(_startup_bans.keys())
+_ban_details.update(_startup_bans)
+if _startup_bans:
+    print(f'[Security] Loaded {len(_startup_bans)} persistent scanner bans', flush=True)
+
 def _web_log(tag, msg):
     print(f'[{tag}] {msg}', flush=True)
 
@@ -165,6 +307,74 @@ def _before_request_logging():
     content_length = request.content_length or 0
     if content_length > 100000:
         _web_log('Security', f'Large body {content_length} bytes from {ip}: {request.method} {request.path}')
+
+    # Whitelist: appeal routes must always be accessible, even for banned IPs
+    if request.path in ('/ip-ban-appeal', '/api/ip-ban-appeal'):
+        return None
+
+    # Auto-ban: block already-banned scanner IPs immediately
+    if ip in _auto_banned_ips:
+        _web_log('Security', f'Blocked banned scanner {ip} → {request.method} {request.path}')
+        ban_info = _ban_details.get(ip, {})
+        banned_at = ban_info.get('banned_at', '')
+        expires_at = ban_info.get('expires_at', '')
+        try:
+            banned_ts = int(datetime.fromisoformat(banned_at).timestamp()) if banned_at else 0
+            expires_ts = int(datetime.fromisoformat(expires_at).timestamp()) if expires_at else 0
+        except Exception:
+            banned_ts = expires_ts = 0
+        return make_response(render_template('banned.html',
+            ip=ip, banned_ts=banned_ts, expires_ts=expires_ts,
+            ban_days=_BAN_TTL_DAYS, probes=ban_info.get('probes', []),
+        ), 403)
+
+    # Auto-ban: detect sensitive path probes
+    path_lower = request.path.lower()
+    is_scanner_probe = (
+        any(path_lower.startswith(p) for p in _SCANNER_PATH_PREFIXES) or
+        any(s in path_lower for s in _SCANNER_PATH_CONTAINS) or
+        any(path_lower.endswith(ext) for ext in _SCANNER_EXTENSIONS) or
+        request.path in _SCANNER_EXACT
+    )
+    if is_scanner_probe:
+        ua = request.headers.get('User-Agent', '')
+        with _req_lock:
+            if ip not in _scanner_hits:
+                _scanner_hits[ip] = {'count': 0, 'paths': [], 'ua': ua}
+            _scanner_hits[ip]['count'] += 1
+            _scanner_hits[ip]['paths'].append(request.path)
+            hits = _scanner_hits[ip]['count']
+        remaining = _SCANNER_THRESHOLD - hits
+        _web_log('Security', f'Scanner probe #{hits} from {ip}: {request.path} ({remaining} left before ban)')
+        if hits >= _SCANNER_THRESHOLD:
+            _auto_banned_ips.add(ip)
+            banned_at = datetime.now(timezone.utc).isoformat()
+            expires_at = (datetime.now(timezone.utc) + timedelta(days=_BAN_TTL_DAYS)).isoformat()
+            probes = _scanner_hits[ip]['paths']
+            ban_info = {'banned_at': banned_at, 'expires_at': expires_at, 'probes': probes, 'ua': ua}
+            _ban_details[ip] = ban_info
+            _save_scanner_ban(ip, ban_info)
+            _web_log('Security', f'Auto-banned scanner {ip} after {hits} probes — expires {expires_at}')
+            threading.Thread(
+                target=_send_scanner_ban_embed,
+                args=(ip, probes, ua, banned_at, expires_at),
+                daemon=True
+            ).start()
+            banned_ts = int(datetime.fromisoformat(banned_at).timestamp())
+            expires_ts = int(datetime.fromisoformat(expires_at).timestamp())
+            return make_response(render_template('banned.html',
+                ip=ip, banned_ts=banned_ts, expires_ts=expires_ts,
+                ban_days=_BAN_TTL_DAYS, probes=probes,
+            ), 403)
+        else:
+            # Warning page — show before ban threshold is reached
+            return make_response(render_template('scanner_warning.html',
+                ip=ip,
+                probed_path=request.path,
+                hits=hits,
+                threshold=_SCANNER_THRESHOLD,
+                remaining=remaining,
+            ), 403)
 
 @app.after_request
 def _after_request_logging(response):
@@ -16811,6 +17021,52 @@ BAN_APPEAL_REDIRECT_URI = os.environ.get('BAN_APPEAL_REDIRECT_URI', 'https://cub
 
 def _ban_appeal_render_defaults():
     return dict(prefill_guild_id='', prefill_code='', auto_verified=False, verified_data={}, verify_error='')
+
+@app.route('/ip-ban-appeal')
+def ip_ban_appeal_page():
+    ip = request.args.get('ip', request.headers.get('CF-Connecting-IP') or
+                          request.headers.get('X-Real-IP') or
+                          (request.headers.get('X-Forwarded-For') or '').split(',')[0].strip() or
+                          request.remote_addr or '')
+    return render_template('ip_ban_appeal.html', ip=ip.strip())
+
+@app.route('/api/ip-ban-appeal', methods=['POST'])
+def ip_ban_appeal_submit():
+    data = request.get_json(silent=True) or {}
+    ip      = (data.get('ip') or '').strip()[:64]
+    name    = (data.get('name') or '').strip()[:100]
+    contact = (data.get('contact') or '').strip()[:200]
+    reason  = (data.get('reason') or '').strip()[:1000]
+    appeal  = (data.get('appeal') or '').strip()[:1500]
+
+    if not reason or not appeal:
+        return jsonify({'ok': False, 'error': 'Missing required fields.'}), 400
+
+    submitter_ip = getattr(request, '_client_ip', request.remote_addr or '')
+
+    embed = {
+        'title': '📋 IP Ban Appeal',
+        'description': 'A user has submitted an appeal for an automated IP ban.',
+        'color': 0x5865F2,
+        'fields': [
+            {'name': '🌐 Banned IP',   'value': f'`{ip or "Not provided"}`', 'inline': True},
+            {'name': '📡 Submitter IP','value': f'`{submitter_ip}`',         'inline': True},
+            {'name': '👤 Name',        'value': name or '*Not provided*',    'inline': True},
+            {'name': '📬 Contact',     'value': contact or '*Not provided*', 'inline': False},
+            {'name': '❓ Why Banned',  'value': reason[:1000],               'inline': False},
+            {'name': '📝 Appeal',      'value': appeal[:1500],               'inline': False},
+        ],
+        'footer': {'text': 'CUB SOFTWARE • IP Ban Appeal'},
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+    }
+
+    try:
+        cp_enqueue_action({'type': 'send_embed', 'channel_id': _APPEALS_CHANNEL_ID, 'embed': embed})
+        _web_log('Security', f'IP ban appeal submitted for {ip} by {submitter_ip}')
+        return jsonify({'ok': True})
+    except Exception as e:
+        _web_log('Security', f'Failed to enqueue appeal embed: {e}')
+        return jsonify({'ok': False, 'error': 'Failed to submit appeal.'}), 500
 
 @app.route('/ban-appeal')
 @app.route('/ban-appeal/')

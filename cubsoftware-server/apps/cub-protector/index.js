@@ -10799,6 +10799,58 @@ client.once('clientReady', async () => {
         setInterval(applyBotPresence, 30 * 1000);
     }
 
+    // ── Restore self-roles panels on startup ──────────────────────────────────
+    // Ensures panels still work after a bot restart without needing /self-roles post.
+    // Edits existing messages (updates components in place) or re-posts if deleted.
+    async function restoreSelfRolesPanels() {
+        const rmData = loadRoleMenusData();
+        let restored = 0, reposted = 0, skipped = 0;
+
+        for (const [gId, guildData] of Object.entries(rmData.guilds || {})) {
+            const sr = guildData.self_roles;
+            if (!sr?.enabled || !sr.channel_id || !sr.categories?.length) continue;
+
+            // Main bot: skip guilds that have a custom bot
+            if (!CUSTOM_GUILD_ID && guildHasCustomBot(gId)) continue;
+            // Custom bot: only handle its own guild
+            if (CUSTOM_GUILD_ID && gId !== CUSTOM_GUILD_ID) continue;
+
+            const guild = client.guilds.cache.get(gId);
+            if (!guild) { skipped++; continue; }
+
+            const channel = await guild.channels.fetch(sr.channel_id).catch(() => null);
+            if (!channel) { skipped++; continue; }
+
+            let changed = false;
+            for (const category of sr.categories) {
+                if (!category.roles?.length) continue;
+                try {
+                    const msg = await postSelfRolesCategory(guild, channel, category);
+                    if (msg) {
+                        if (msg.id !== category.message_id) {
+                            // Message was re-posted (old one was deleted while offline)
+                            category.message_id = msg.id;
+                            changed = true;
+                            reposted++;
+                        } else {
+                            restored++;
+                        }
+                    }
+                    // Rate limit: Discord allows ~5 message edits/s per channel
+                    await new Promise(r => setTimeout(r, 500));
+                } catch (e) {
+                    console.error(`[SelfRoles] Failed to restore category "${category.name}" in guild ${gId}:`, e.message);
+                }
+            }
+            if (changed) saveRoleMenusData(rmData);
+        }
+
+        if (restored + reposted > 0) {
+            console.log(`[SelfRoles] Restored ${restored} panel(s), re-posted ${reposted} deleted panel(s)${skipped ? `, skipped ${skipped} unreachable guilds` : ''}`);
+        }
+    }
+    restoreSelfRolesPanels();
+
     // Counter channels — update on boot then every 5 minutes
     // (Discord rate-limits channel renames to 2 per 10 min per channel)
     updateCounters();

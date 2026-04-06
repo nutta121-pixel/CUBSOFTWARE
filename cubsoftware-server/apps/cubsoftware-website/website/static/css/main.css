@@ -4,15 +4,10 @@
     box-sizing: border-box;
 }
 
+/* main.css local overrides — shared.css defines the base vars */
 :root {
-    --primary-color: #00ff88;
-    --bg-dark: #0f0f0f;
-    --bg-card: #1a1a1a;
-    --bg-card-hover: #222;
-    --border-color: #2a2a2a;
-    --text-primary: #ffffff;
-    --text-secondary: #b0b0b0;
-    --text-muted: #666;
+    --bg-card: rgba(255, 255, 255, 0.04);
+    --bg-card-hover: rgba(255, 255, 255, 0.07);
 }
 
 body {
@@ -47,15 +42,16 @@ body {
 }
 
 .app-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
-    padding: 40px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 36px 32px;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
     position: relative;
     overflow: hidden;
     width: 300px;
-    height: 500px;
+    height: auto;
+    min-height: 440px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -69,17 +65,17 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary-color), #00b8ff);
+    height: 3px;
+    background: linear-gradient(90deg, #5865f2, #7c3aed);
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
 .app-card:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--primary-color);
-    transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(0, 255, 136, 0.1);
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(88, 101, 242, 0.4);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 40px rgba(88, 101, 242, 0.15);
 }
 
 .app-card:hover::before {
@@ -159,31 +155,36 @@ body {
 .app-button {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 28px;
-    background: var(--primary-color);
-    color: #000;
+    gap: 8px;
+    padding: 13px 26px;
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
+    color: #ffffff;
     border: none;
     border-radius: 12px;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 600;
+    font-family: 'Poppins', sans-serif;
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
     cursor: pointer;
+    box-shadow: 0 3px 14px rgba(88, 101, 242, 0.35);
 }
 
 .app-button:hover {
-    background: #00dd77;
-    transform: translateX(5px);
-    box-shadow: 0 10px 30px rgba(0, 255, 136, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(88, 101, 242, 0.5);
+    color: #ffffff;
 }
 
 .app-button svg {
-    transition: transform 0.3s ease;
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
 }
 
 .app-button:hover svg {
-    transform: translateX(5px);
+    transform: translateX(3px);
 }
 
 /* Coming Soon Card */

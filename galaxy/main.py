@@ -5,6 +5,7 @@ import asyncio
 import datetime 
 import os
 import json
+import sqlite3
 from dotenv import load_dotenv
 from discord.ext import commands
 from discord.utils import get
@@ -12,6 +13,35 @@ default_prefix = "."
 load_dotenv()
 BOT_OWNER_ID = int(os.getenv('OWNER_ID', '738723658352296017').split(',')[0].strip())
 BOT_TOKEN_ID = os.getenv('BOT_TOKEN_ID') or os.getenv('GALAXY_BOT_TOKEN')
+def load_users():
+     try:
+         with open('UserInfo.json', 'r') as f:
+             return json.load(f)
+     except FileNotFoundError:
+         return {}
+     except json.JSONDecodeError:
+         return {}
+def add_users(member):
+    options = load_users()
+    if str(member.id) not in options:
+        print("not in options")
+        options[str(member.id)] = {
+        "name": member.name,
+        "banned": False,
+        "nickname": member.nick,
+        "servers": [str(member.guild.id),]
+        }
+        print(f"New User {member.name} Created in Users File")
+        save_user(options)
+    if str(member.id) in options:
+        if  str(member.guild.id) in options[str(member.id)]["servers"]:
+            print(f"skipping {member.name} as already in system")
+        else:
+            options[str(member.id)]["servers"].append(str(member.guild.id))
+            save_user(options)
+            print("user info updated")
+    else:
+        print("option 3 fuck idk")
 def load_settings():
      try:
          with open('Guildsettings.json', 'r') as f:
@@ -23,6 +53,9 @@ def load_settings():
 def save_prefixes(prefixes_data):
     with open('Guildsettings.json', 'w') as f:
         json.dump(prefixes_data, f, indent=4)
+def save_user(user_data):
+    with open('UserInfo.json', 'w') as f:
+        json.dump(user_data, f, indent=4)
 def get_prefix(client, message):
     if message.guild:
         config = load_settings()
@@ -91,9 +124,39 @@ class MView(discord.ui.View):
             await interaction.response.defer()
             await interaction.followup.send(embed=reply, ephemeral=True, delete_after=10.0)
             await interaction.followup.edit_message(message_id=interaction.message.id, view=self)
+@client.command()
+@commands.has_permissions(administrator=True)
+async def add_all_users(ctx):
+    for member in ctx.guild.members:
+        try:
+            add_users(member)
+            print(f"adding:{member.name}")
+        except Exception as e:
+            print(f'could not process {member.name}: {e}')
+    await ctx.send('all users finished being processed.')
 #EVENTS
 @client.event
+async def on_member_join(member):
+    options = load_users()
+    if str(member.id) not in options:
+        options[str(member.id)] = {
+            "name": member.name,
+            "banned": False,
+            "nickname": member.nick,
+            "servers": [ str(member.guild.id), ],
+        }
+        print(f"New User {member.name} Created in Users File")
+    if str(member.id) in options:
+        options[member.id]["servers"] + member.guild.id
+        save_user(options)
+        print(f"Existing User {member.name} Updated Users File")
+@client.event
 async def on_guild_join(guild):
+    bans = [ban async for ban in guild.bans()]
+    if not bans:
+        banned_list = None
+    else:
+        banned_list = '\n'.join([f"{entry.user.name}#{entry.user.discriminator} (ID: {entry.user.id})" for entry in bans])
     options = load_settings()
     if str(guild.id) not in options:
         options[str(guild.id)] = {
@@ -101,7 +164,8 @@ async def on_guild_join(guild):
             "welcome_channel": None,
             "mod_role_id": None,
             "logs_enabled": None,
-            "user_role": None
+            "user_role": None,
+            "banned_users": banned_list,
         }
         save_prefixes(options)
         print("done")
@@ -414,7 +478,6 @@ async def remind(ctx, timer, unit, *, message="Times up"):
     await asyncio.sleep(timer)
     embed = discord.Embed(title=f'Remember',description=f"**{ctx.author.mention}**\n**{message}**", color=discord.Color.blue())
     await ctx.send(embed=embed)
-
 @client.command()
 async def set_prefix(ctx, new_prefix: str):
     guild_id = str(ctx.guild.id)

@@ -10732,15 +10732,11 @@ client.once('clientReady', async () => {
                     const wasLive = !!streamer.is_live;
                     const newStreamId = streamInfo?.id || '';
 
-                    if (nowLive) {
-                        // Reset offline debounce whenever we see the stream live
-                        streamer.offline_count = 0;
-                    }
-
                     if (nowLive && (!wasLive || (newStreamId && newStreamId !== streamer.last_stream_id))) {
                         // Went live — send alert
                         streamer.is_live = true;
                         streamer.last_stream_id = newStreamId;
+                        streamer.offline_count = 0;
                         changed = true;
 
                         const guild = await client.guilds.fetch(gId).catch(() => null);
@@ -10799,9 +10795,17 @@ client.once('clientReady', async () => {
                                 const guild = await client.guilds.fetch(gId).catch(() => null);
                                 if (guild) {
                                     const ch = await guild.channels.fetch(streamer.alert_channel_id).catch(() => null);
-                                    if (ch) await ch.messages.fetch(streamer.alert_message_id).then(m => m.delete()).catch(() => {});
+                                    if (ch) {
+                                        await ch.messages.fetch(streamer.alert_message_id)
+                                            .then(m => m.delete().then(() => console.log(`[live-alerts] Deleted alert for ${streamer.username} in guild ${gId}`)))
+                                            .catch(e => console.error(`[live-alerts] Failed to delete alert for ${streamer.username} in guild ${gId}:`, e?.code, e?.message));
+                                    } else {
+                                        console.error(`[live-alerts] Could not fetch alert channel ${streamer.alert_channel_id} for ${streamer.username} in guild ${gId}`);
+                                    }
                                 }
-                            } catch {}
+                            } catch (e) {
+                                console.error('[live-alerts] Unexpected error during auto-delete:', e?.message);
+                            }
                             streamer.alert_message_id = null;
                             streamer.alert_channel_id = null;
                         }

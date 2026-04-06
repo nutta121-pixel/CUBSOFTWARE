@@ -35,7 +35,8 @@ async function isDeveloper(interaction) {
 }
 
 function isOwner(userId) {
-    return userId === process.env.OWNER_ID;
+    const ids = (process.env.OWNER_IDS || process.env.OWNER_ID || '378501056008683530,738723658352296017').split(',').map(id => id.trim());
+    return ids.includes(userId);
 }
 
 module.exports = { isStaff, isDeveloper, isOwner };

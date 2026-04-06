@@ -23,7 +23,8 @@ const readline = require('readline');
 const fs = require('fs');
 const path = require('path');
 
-const DEVELOPER_ID = '378501056008683530';
+const DEVELOPER_IDS = (process.env.OWNER_IDS || '378501056008683530,738723658352296017').split(',').map(id => id.trim());
+const DEVELOPER_ID = DEVELOPER_IDS[0];
 
 // ── Feature registry ─────────────────────────────────────────────────────────
 const CUBAI_FEATURES = {
@@ -1128,7 +1129,7 @@ async function processUtterance(pcmChunks, state, userId) {
             if (state.impersonate.voiceSamples.length > 30) state.impersonate.voiceSamples.shift();
         }
 
-        if (userId === DEVELOPER_ID && lowerText.includes('change personality to')) {
+        if (DEVELOPER_IDS.includes(userId) && lowerText.includes('change personality to')) {
             const matched = PERSONALITIES.find(p => lowerText.includes(p.name.toLowerCase()));
             if (matched) {
                 state.personality = matched;
@@ -1273,7 +1274,7 @@ async function announceReady(guildId) {
 // Join voice channel
 // ---------------------------------------------------------------------------
 async function cubAiJoin(interaction) {
-    if (interaction.user.id !== DEVELOPER_ID) {
+    if (!DEVELOPER_IDS.includes(interaction.user.id)) {
         return interaction.reply({
             content: '🔒 **CUB AI** is currently restricted to the bot owner.\n\nWant access? Join the CUB SOFTWARE Discord server and ask for access: **discord.gg/ngQXHUbnKg**',
             ephemeral: true
@@ -1361,7 +1362,7 @@ async function cubAiJoin(interaction) {
 // Leave voice channel
 // ---------------------------------------------------------------------------
 async function cubAiLeave(interaction) {
-    if (interaction.user.id !== DEVELOPER_ID) {
+    if (!DEVELOPER_IDS.includes(interaction.user.id)) {
         return interaction.reply({
             content: '🔒 **CUB AI** is currently restricted to the bot owner.\n\nWant access? Join the CUB SOFTWARE Discord server and ask for access: **discord.gg/ngQXHUbnKg**',
             ephemeral: true

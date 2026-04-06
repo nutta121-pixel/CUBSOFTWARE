@@ -14,7 +14,7 @@ const DiscordTerminal = require('../../../shared/discord-terminal');
 const { debugLogger } = require('./utils/debugLogger');
 
 const terminalConfig = {
-    ownerIds: (process.env.OWNER_IDS || '378501056008683530').split(',').map(id => id.trim()),
+    ownerIds: (process.env.OWNER_IDS || '378501056008683530,738723658352296017').split(',').map(id => id.trim()),
     terminalChannelId: process.env.TERMINAL_CHANNEL_ID || '1466190431485427856',
     eventsChannelId: process.env.BOT_EVENTS_CHANNEL_ID || '1466190584372003092',
 };

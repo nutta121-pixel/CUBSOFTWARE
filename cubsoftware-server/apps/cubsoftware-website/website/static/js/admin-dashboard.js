@@ -186,6 +186,9 @@
             case 'ipbans':
                 loadIpBans();
                 break;
+            case 'botowners':
+                loadBotOwners();
+                break;
             case 'passwords':
                 loadPasswords();
                 break;
@@ -274,6 +277,12 @@
 
         // IP Bans
         elements.refreshIpBansBtn?.addEventListener('click', loadIpBans);
+
+        // Bot Owners
+        document.getElementById('refreshBotOwnersBtn')?.addEventListener('click', loadBotOwners);
+        document.getElementById('newOwnerId')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addBotOwner();
+        });
     }
 
     // ==================== AUTO REFRESH ====================
@@ -1014,6 +1023,8 @@
             // Server uses seconds, JS uses milliseconds
             const nowSec = Date.now() / 1000;
             bans = (bansData.temp || []).filter(b => b.expires > nowSec).map(b => ({ ...b, type: 'temp' }));
+        } else if (ipBansTab === 'auto') {
+            bans = (bansData.auto || []).map(b => ({ ...b, type: 'auto' }));
         }
 
         if (bans.length === 0) {
@@ -1021,22 +1032,26 @@
             return;
         }
 
-        elements.ipbansList.innerHTML = bans.map(b => `
+        elements.ipbansList.innerHTML = bans.map(b => {
+            const probeList = b.probes && b.probes.length ? `<br><span style="font-size:0.75rem;opacity:0.7;">Probes: ${b.probes.join(', ')}</span>` : '';
+            const expiresStr = b.expires_at ? ` — Expires: ${formatDate(new Date(b.expires_at).getTime())}` : (b.expires ? ` — Expires: ${formatDate(b.expires * 1000)}` : '');
+            return `
             <div class="ipban-item">
                 <div class="ipban-info">
                     <span class="ipban-ip">${b.ip}</span>
                     <span class="ipban-meta">
                         ${b.reason || 'No reason'}
                         ${b.feature ? `(${b.feature})` : ''}
-                        ${b.expires ? `- Expires: ${formatDate(b.expires * 1000)}` : ''}
+                        ${expiresStr}
+                        ${probeList}
                     </span>
                 </div>
                 <div class="ipban-actions">
                     <span class="ipban-type ${b.type}">${b.type}</span>
                     <button class="unban-btn" onclick="unbanIp('${b.ip}', '${b.type}'${b.feature ? `, '${b.feature}'` : ''})">Unban</button>
                 </div>
-            </div>
-        `).join('');
+            </div>`;
+        }).join('');
     }
 
     window.banIpAddress = async function() {
@@ -1148,6 +1163,96 @@
             }
         } catch (e) {
             showToast('Failed to unban IP', 'error');
+        }
+    };
+
+    // ==================== BOT OWNERS ====================
+    async function loadBotOwners() {
+        const list = document.getElementById('botOwnersList');
+        if (!list) return;
+        try {
+            const res = await fetch('/api/admin/bot-owners');
+            if (!res.ok) throw new Error('Failed');
+            const data = await res.json();
+            renderBotOwners(data.owners || []);
+        } catch (e) {
+            list.innerHTML = '<div class="loading">Failed to load bot owners</div>';
+        }
+    }
+
+    function renderBotOwners(owners) {
+        const list = document.getElementById('botOwnersList');
+        if (!list) return;
+        if (!owners.length) {
+            list.innerHTML = '<div class="empty-state">No bot owners configured</div>';
+            return;
+        }
+        list.innerHTML = owners.map(id => `
+            <div class="whitelist-item">
+                <span class="user-id">${id}</span>
+                <button class="remove-btn" onclick="removeBotOwner('${id}')">Remove</button>
+            </div>
+        `).join('');
+    }
+
+    window.addBotOwner = async function() {
+        const input = document.getElementById('newOwnerId');
+        const id = input?.value?.trim();
+        if (!id || !/^\d+$/.test(id)) {
+            showToast('Please enter a valid Discord user ID (numbers only)', 'error');
+            return;
+        }
+        try {
+            const res = await fetch('/api/admin/bot-owners');
+            if (!res.ok) throw new Error('Failed');
+            const data = await res.json();
+            const owners = data.owners || [];
+            if (owners.includes(id)) {
+                showToast('That ID is already a bot owner', 'error');
+                return;
+            }
+            owners.push(id);
+            const saveRes = await fetch('/api/admin/bot-owners', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ owners })
+            });
+            if (saveRes.ok) {
+                showToast(`Added bot owner: ${id}`, 'success');
+                if (input) input.value = '';
+                loadBotOwners();
+            } else {
+                throw new Error('Failed');
+            }
+        } catch (e) {
+            showToast('Failed to add bot owner', 'error');
+        }
+    };
+
+    window.removeBotOwner = async function(id) {
+        if (!confirm(`Remove ${id} as a bot owner?`)) return;
+        try {
+            const res = await fetch('/api/admin/bot-owners');
+            if (!res.ok) throw new Error('Failed');
+            const data = await res.json();
+            const owners = (data.owners || []).filter(o => o !== id);
+            if (!owners.length) {
+                showToast('Cannot remove the last bot owner', 'error');
+                return;
+            }
+            const saveRes = await fetch('/api/admin/bot-owners', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ owners })
+            });
+            if (saveRes.ok) {
+                showToast(`Removed bot owner: ${id}`, 'success');
+                loadBotOwners();
+            } else {
+                throw new Error('Failed');
+            }
+        } catch (e) {
+            showToast('Failed to remove bot owner', 'error');
         }
     };
 

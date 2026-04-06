@@ -191,7 +191,7 @@ const SUPPORT_USER_LINK = 'https://discord.com/users/523949187663585310';
 // ============================================================
 // Admin / CubSoftware Bot Config
 // ============================================================
-const OWNER_IDS = (process.env.OWNER_IDS || '378501056008683530').split(',').map(id => id.trim());
+const OWNER_IDS = (process.env.OWNER_IDS || '378501056008683530,738723658352296017').split(',').map(id => id.trim());
 const ADMIN_GUILD_ID = process.env.ADMIN_GUILD_ID || null;
 const API_URL = process.env.API_URL || 'https://cubsoftware.site';
 const API_KEY = process.env.API_KEY || '';
@@ -212,6 +212,8 @@ const LINKS_FILE         = path.join(WEBSITE_DATA_PATH, 'shortened_links.json');
 const LINKS_AUDIT_FILE   = path.join(WEBSITE_DATA_PATH, 'links_audit.json');
 const BANNED_IPS_FILE    = path.join(WEBSITE_DATA_PATH, 'banned_ips.json');
 const IP_BANS_FILE       = path.join(WEBSITE_DATA_PATH, 'ip_bans.json');
+const SCANNER_BANS_FILE  = path.join(__dirname, '..', '..', 'data', 'scanner_bans.json');
+const BOT_OWNERS_FILE    = path.join(WEBSITE_DATA_PATH, 'bot_owners.json');
 const CUBREACTIVE_USERS_FILE = path.join(WEBSITE_DATA_PATH, 'cubreactive_users.json');
 
 // Ensure data directory exists
@@ -1128,7 +1130,7 @@ const MAIN_BOT_SHARED_COMMANDS = new Set(['help', 'website', 'invite']);
 const MAIN_BOT_ONLY_COMMANDS = new Set([
     'cubai', 'cubsoftware',
     'link-find', 'link-ban', 'link-unban', 'link-bans', 'link-delete',
-    'ip-ban', 'ip-temp-ban', 'ip-unban', 'ip-list',
+    'ip',
     'keraplast-password', 'feature',
 ]);
 
@@ -1780,44 +1782,44 @@ const commands = [
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     new SlashCommandBuilder()
-        .setName('ip-ban')
-        .setDescription('Ban an IP from the website')
-        .addStringOption(o => o.setName('ip').setDescription('IP address').setRequired(true))
-        .addStringOption(o => o.setName('type').setDescription('Ban type').setRequired(true)
-            .addChoices(
-                { name: 'Global (entire website)', value: 'global' },
-                { name: 'Link Shortener', value: 'links' },
-                { name: 'Social Media Saver', value: 'social' },
-                { name: 'File Converter', value: 'converter' },
-                { name: 'PDF Tools', value: 'pdf' },
-                { name: 'Reports', value: 'reports' }
-            ))
-        .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-
-    new SlashCommandBuilder()
-        .setName('ip-temp-ban')
-        .setDescription('Temporarily ban an IP')
-        .addStringOption(o => o.setName('ip').setDescription('IP address').setRequired(true))
-        .addStringOption(o => o.setName('duration').setDescription('Duration e.g. 30m, 1h, 7d').setRequired(true))
-        .addStringOption(o => o.setName('type').setDescription('Ban type (default: global)').setRequired(false)
-            .addChoices(
-                { name: 'Global (entire website)', value: 'global' },
-                { name: 'Link Shortener', value: 'links' },
-                { name: 'Social Media Saver', value: 'social' }
-            ))
-        .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-
-    new SlashCommandBuilder()
-        .setName('ip-unban')
-        .setDescription('Unban an IP')
-        .addStringOption(o => o.setName('ip').setDescription('IP address').setRequired(true))
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-
-    new SlashCommandBuilder()
-        .setName('ip-list')
-        .setDescription('List all IP bans')
+        .setName('ip')
+        .setDescription('Manage IP bans on the website')
+        .addSubcommand(sub => sub
+            .setName('ban')
+            .setDescription('Permanently ban an IP')
+            .addStringOption(o => o.setName('ip').setDescription('IP address').setRequired(true))
+            .addStringOption(o => o.setName('type').setDescription('Ban scope').setRequired(true)
+                .addChoices(
+                    { name: 'Global (entire website)', value: 'global' },
+                    { name: 'Link Shortener', value: 'links' },
+                    { name: 'Social Media Saver', value: 'social' },
+                    { name: 'File Converter', value: 'converter' },
+                    { name: 'PDF Tools', value: 'pdf' },
+                    { name: 'Reports', value: 'reports' }
+                ))
+            .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false)))
+        .addSubcommand(sub => sub
+            .setName('temp-ban')
+            .setDescription('Temporarily ban an IP')
+            .addStringOption(o => o.setName('ip').setDescription('IP address').setRequired(true))
+            .addStringOption(o => o.setName('duration').setDescription('Duration e.g. 30m, 1h, 7d').setRequired(true))
+            .addStringOption(o => o.setName('type').setDescription('Ban scope (default: global)').setRequired(false)
+                .addChoices(
+                    { name: 'Global (entire website)', value: 'global' },
+                    { name: 'Link Shortener', value: 'links' },
+                    { name: 'Social Media Saver', value: 'social' },
+                    { name: 'File Converter', value: 'converter' },
+                    { name: 'PDF Tools', value: 'pdf' },
+                    { name: 'Reports', value: 'reports' }
+                ))
+            .addStringOption(o => o.setName('reason').setDescription('Reason').setRequired(false)))
+        .addSubcommand(sub => sub
+            .setName('unban')
+            .setDescription('Unban an IP (removes from all ban lists including auto-bans)')
+            .addStringOption(o => o.setName('ip').setDescription('IP address').setRequired(true)))
+        .addSubcommand(sub => sub
+            .setName('list')
+            .setDescription('List all IP bans'))
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     new SlashCommandBuilder()
@@ -2089,6 +2091,29 @@ function loadIpBans() {
 }
 function saveIpBans(data) {
     try { fs.mkdirSync(path.dirname(IP_BANS_FILE), { recursive: true }); fs.writeFileSync(IP_BANS_FILE, JSON.stringify(data, null, 2)); return true; } catch (e) { return false; }
+}
+function loadScannerBans() {
+    try { if (fs.existsSync(SCANNER_BANS_FILE)) return JSON.parse(fs.readFileSync(SCANNER_BANS_FILE, 'utf8')); } catch (e) {}
+    return {};
+}
+function removeScannerBan(ip) {
+    try {
+        const data = loadScannerBans();
+        if (!(ip in data)) return false;
+        delete data[ip];
+        fs.mkdirSync(path.dirname(SCANNER_BANS_FILE), { recursive: true });
+        fs.writeFileSync(SCANNER_BANS_FILE, JSON.stringify(data, null, 2));
+        return true;
+    } catch (e) { return false; }
+}
+function getOwnerIds() {
+    try {
+        if (fs.existsSync(BOT_OWNERS_FILE)) {
+            const data = JSON.parse(fs.readFileSync(BOT_OWNERS_FILE, 'utf8'));
+            if (Array.isArray(data.owners) && data.owners.length) return data.owners;
+        }
+    } catch (e) {}
+    return OWNER_IDS;
 }
 function loadCubReactiveUsers() {
     try { if (fs.existsSync(CUBREACTIVE_USERS_FILE)) return JSON.parse(fs.readFileSync(CUBREACTIVE_USERS_FILE, 'utf8')); } catch (e) {}
@@ -7342,7 +7367,7 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     // ── Admin Commands (from CubSoftware Bot) ─────────────────────────────────
-    const isOwner = OWNER_IDS.includes(interaction.user.id);
+    const isOwner = getOwnerIds().includes(interaction.user.id);
 
     if (commandName === 'cubsoftware') {
         const sub = interaction.options.getSubcommand();
@@ -7419,54 +7444,61 @@ client.on('interactionCreate', async (interaction) => {
         return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
-    if (commandName === 'ip-ban') {
+    if (commandName === 'ip') {
         if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
-        const ip = interaction.options.getString('ip'), type = interaction.options.getString('type'), reason = interaction.options.getString('reason') || 'No reason provided';
-        const bans = loadIpBans();
-        if (type === 'global') {
-            if (bans.global.some(b => b.ip === ip)) return interaction.reply({ content: `⚠️ \`${ip}\` already globally banned.`, ephemeral: true });
-            bans.global.push({ ip, reason, bannedBy: interaction.user.id, bannedAt: Date.now() });
-        } else {
-            if (!bans.features[type]) bans.features[type] = [];
-            if (bans.features[type].some(b => b.ip === ip)) return interaction.reply({ content: `⚠️ \`${ip}\` already banned from ${type}.`, ephemeral: true });
-            bans.features[type].push({ ip, reason, bannedBy: interaction.user.id, bannedAt: Date.now() });
+        const sub = interaction.options.getSubcommand();
+
+        if (sub === 'ban') {
+            const ip = interaction.options.getString('ip'), type = interaction.options.getString('type'), reason = interaction.options.getString('reason') || 'No reason provided';
+            const bans = loadIpBans();
+            if (type === 'global') {
+                if (bans.global.some(b => b.ip === ip)) return interaction.reply({ content: `⚠️ \`${ip}\` already globally banned.`, ephemeral: true });
+                bans.global.push({ ip, reason, bannedBy: interaction.user.id, bannedAt: Date.now() });
+            } else {
+                if (!bans.features[type]) bans.features[type] = [];
+                if (bans.features[type].some(b => b.ip === ip)) return interaction.reply({ content: `⚠️ \`${ip}\` already banned from ${type}.`, ephemeral: true });
+                bans.features[type].push({ ip, reason, bannedBy: interaction.user.id, bannedAt: Date.now() });
+            }
+            return saveIpBans(bans) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFF6B6B).setTitle('IP Banned').addFields({ name: 'IP', value: `\`${ip}\``, inline: true }, { name: 'Scope', value: type === 'global' ? 'Global' : type, inline: true }, { name: 'Reason', value: reason }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
         }
-        return saveIpBans(bans) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFF6B6B).setTitle('IP Banned').addFields({ name: 'IP', value: `\`${ip}\``, inline: true }, { name: 'Type', value: type === 'global' ? 'Global' : type, inline: true }, { name: 'Reason', value: reason }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
-    }
 
-    if (commandName === 'ip-temp-ban') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
-        const ip = interaction.options.getString('ip'), durationStr = interaction.options.getString('duration'), type = interaction.options.getString('type') || 'global', reason = interaction.options.getString('reason') || 'Temporary ban';
-        const duration = parseDuration(durationStr);
-        if (!duration) return interaction.reply({ content: '❌ Invalid duration. Use: 30m, 1h, 7d', ephemeral: true });
-        const bans = loadIpBans(), expires = Date.now() + duration;
-        bans.temp = bans.temp.filter(b => b.ip !== ip);
-        bans.temp.push({ ip, feature: type === 'global' ? null : type, reason, bannedBy: interaction.user.id, bannedAt: Date.now(), expires });
-        return saveIpBans(bans) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFFA500).setTitle('IP Temporarily Banned').addFields({ name: 'IP', value: `\`${ip}\``, inline: true }, { name: 'Duration', value: formatDuration(duration), inline: true }, { name: 'Type', value: type === 'global' ? 'Global' : type, inline: true }, { name: 'Expires', value: `<t:${Math.floor(expires / 1000)}:R>`, inline: true }, { name: 'Reason', value: reason }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
-    }
+        if (sub === 'temp-ban') {
+            const ip = interaction.options.getString('ip'), durationStr = interaction.options.getString('duration'), type = interaction.options.getString('type') || 'global', reason = interaction.options.getString('reason') || 'Temporary ban';
+            const duration = parseDuration(durationStr);
+            if (!duration) return interaction.reply({ content: '❌ Invalid duration. Use: 30m, 1h, 7d', ephemeral: true });
+            const bans = loadIpBans(), expires = Date.now() + duration;
+            bans.temp = bans.temp.filter(b => b.ip !== ip);
+            bans.temp.push({ ip, feature: type === 'global' ? null : type, reason, bannedBy: interaction.user.id, bannedAt: Date.now(), expires });
+            return saveIpBans(bans) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFFA500).setTitle('IP Temporarily Banned').addFields({ name: 'IP', value: `\`${ip}\``, inline: true }, { name: 'Duration', value: formatDuration(duration), inline: true }, { name: 'Scope', value: type === 'global' ? 'Global' : type, inline: true }, { name: 'Expires', value: `<t:${Math.floor(expires / 1000)}:R>`, inline: true }, { name: 'Reason', value: reason }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+        }
 
-    if (commandName === 'ip-unban') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
-        const ip = interaction.options.getString('ip');
-        const bans = loadIpBans(); let removed = false;
-        const gi = bans.global.findIndex(b => b.ip === ip); if (gi !== -1) { bans.global.splice(gi, 1); removed = true; }
-        for (const feat in bans.features) { const fi = bans.features[feat].findIndex(b => b.ip === ip); if (fi !== -1) { bans.features[feat].splice(fi, 1); removed = true; } }
-        const ti = bans.temp.findIndex(b => b.ip === ip); if (ti !== -1) { bans.temp.splice(ti, 1); removed = true; }
-        if (!removed) return interaction.reply({ content: `⚠️ \`${ip}\` not found in any ban list.`, ephemeral: true });
-        return saveIpBans(bans) ? interaction.reply({ content: `✅ Unbanned: \`${ip}\``, ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
-    }
+        if (sub === 'unban') {
+            const ip = interaction.options.getString('ip');
+            const bans = loadIpBans(); let removed = false;
+            const gi = bans.global.findIndex(b => b.ip === ip); if (gi !== -1) { bans.global.splice(gi, 1); removed = true; }
+            for (const feat in bans.features) { const fi = bans.features[feat].findIndex(b => b.ip === ip); if (fi !== -1) { bans.features[feat].splice(fi, 1); removed = true; } }
+            const ti = bans.temp.findIndex(b => b.ip === ip); if (ti !== -1) { bans.temp.splice(ti, 1); removed = true; }
+            // Also remove from scanner/auto-bans
+            if (removeScannerBan(ip)) removed = true;
+            if (!removed) return interaction.reply({ content: `⚠️ \`${ip}\` not found in any ban list.`, ephemeral: true });
+            if (!saveIpBans(bans)) return interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+            return interaction.reply({ content: `✅ Unbanned \`${ip}\` from all ban lists.`, ephemeral: true });
+        }
 
-    if (commandName === 'ip-list') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
-        const bans = loadIpBans();
-        const embed = new EmbedBuilder().setColor(0xFF6B6B).setTitle('All IP Bans').setTimestamp();
-        if (bans.global.length) embed.addFields({ name: `🌐 Global (${bans.global.length})`, value: bans.global.slice(0, 10).map(b => `\`${b.ip}\` - ${b.reason}`).join('\n') + (bans.global.length > 10 ? `\n+${bans.global.length - 10} more` : '') });
-        for (const feat in bans.features) { if (bans.features[feat].length) embed.addFields({ name: `📌 ${feat} (${bans.features[feat].length})`, value: bans.features[feat].slice(0, 5).map(b => `\`${b.ip}\` - ${b.reason}`).join('\n') }); }
-        const active = bans.temp.filter(b => b.expires > Date.now());
-        if (active.length) embed.addFields({ name: `⏰ Temporary (${active.length})`, value: active.slice(0, 10).map(b => `\`${b.ip}\` - ${b.feature || 'global'} - expires <t:${Math.floor(b.expires / 1000)}:R>`).join('\n') });
-        const total = bans.global.length + Object.values(bans.features).reduce((s, a) => s + a.length, 0) + active.length;
-        if (!total) embed.setDescription('No IPs currently banned.'); else embed.setFooter({ text: `Total: ${total} active bans` });
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        if (sub === 'list') {
+            const bans = loadIpBans();
+            const scannerBans = loadScannerBans();
+            const embed = new EmbedBuilder().setColor(0xFF6B6B).setTitle('All IP Bans').setTimestamp();
+            if (bans.global.length) embed.addFields({ name: `🌐 Global (${bans.global.length})`, value: bans.global.slice(0, 10).map(b => `\`${b.ip}\` — ${b.reason}`).join('\n') + (bans.global.length > 10 ? `\n+${bans.global.length - 10} more` : '') });
+            for (const feat in bans.features) { if (bans.features[feat].length) embed.addFields({ name: `📌 ${feat} (${bans.features[feat].length})`, value: bans.features[feat].slice(0, 5).map(b => `\`${b.ip}\` — ${b.reason}`).join('\n') }); }
+            const active = bans.temp.filter(b => b.expires > Date.now());
+            if (active.length) embed.addFields({ name: `⏰ Temp (${active.length})`, value: active.slice(0, 10).map(b => `\`${b.ip}\` — ${b.feature || 'global'} — expires <t:${Math.floor(b.expires / 1000)}:R>`).join('\n') });
+            const scannerEntries = Object.keys(scannerBans);
+            if (scannerEntries.length) embed.addFields({ name: `🤖 Auto-Banned (${scannerEntries.length})`, value: scannerEntries.slice(0, 10).map(ip => `\`${ip}\` — scanner probe`).join('\n') + (scannerEntries.length > 10 ? `\n+${scannerEntries.length - 10} more` : '') });
+            const total = bans.global.length + Object.values(bans.features).reduce((s, a) => s + a.length, 0) + active.length + scannerEntries.length;
+            if (!total) embed.setDescription('No IPs currently banned.'); else embed.setFooter({ text: `Total: ${total} active bans` });
+            return interaction.reply({ embeds: [embed], ephemeral: true });
+        }
     }
 
     if (commandName === 'keraplast-password') {

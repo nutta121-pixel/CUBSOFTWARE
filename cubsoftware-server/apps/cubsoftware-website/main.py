@@ -145,6 +145,20 @@ def _save_scanner_ban(ip, info):
     except Exception:
         pass
 
+def _remove_scanner_ban(ip):
+    """Remove an auto-banned IP from persistent storage and in-memory caches."""
+    try:
+        os.makedirs(os.path.dirname(_BAN_FILE), exist_ok=True)
+        data = _load_scanner_bans()
+        data.pop(ip, None)
+        with open(_BAN_FILE, 'w') as f:
+            json.dump(data, f, indent=2)
+    except Exception:
+        pass
+    _auto_banned_ips.discard(ip)
+    _ban_details.pop(ip, None)
+    _scanner_hits.pop(ip, None)
+
 _SECURITY_CHANNEL_ID = '1466190584372003092'   # bot events / security channel
 _APPEALS_CHANNEL_ID  = '1473606792264155136'   # IP ban appeals channel
 
@@ -528,6 +542,47 @@ def bmac_supporters():
 
 # StreamerBot docs path — normpath removes the '..' so Werkzeug safe_join doesn't 500
 STREAMERBOT_DOCS_PATH = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'streamerbot-docs'))
+
+# ==================== BOT OWNERS ====================
+
+BOT_OWNERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'bot_owners.json')
+_DEFAULT_BOT_OWNERS = ['378501056008683530', '738723658352296017']
+
+def load_bot_owners():
+    if os.path.exists(BOT_OWNERS_FILE):
+        try:
+            with open(BOT_OWNERS_FILE, 'r') as f:
+                data = json.load(f)
+                return data.get('owners', _DEFAULT_BOT_OWNERS)
+        except Exception:
+            pass
+    return list(_DEFAULT_BOT_OWNERS)
+
+def save_bot_owners(owners):
+    try:
+        os.makedirs(os.path.dirname(BOT_OWNERS_FILE), exist_ok=True)
+        with open(BOT_OWNERS_FILE, 'w') as f:
+            json.dump({'owners': owners}, f, indent=2)
+    except Exception:
+        pass
+
+@app.route('/api/admin/bot-owners', methods=['GET'])
+@pm2_auth_required
+def admin_get_bot_owners():
+    return jsonify({'owners': load_bot_owners()})
+
+@app.route('/api/admin/bot-owners', methods=['POST'])
+@pm2_auth_required
+def admin_set_bot_owners():
+    data = request.get_json(silent=True) or {}
+    owners = data.get('owners', [])
+    if not isinstance(owners, list):
+        return jsonify({'error': 'owners must be a list'}), 400
+    owners = [str(o).strip() for o in owners if str(o).strip().isdigit()]
+    if not owners:
+        return jsonify({'error': 'At least one valid Discord user ID is required'}), 400
+    save_bot_owners(owners)
+    return jsonify({'success': True, 'owners': owners})
 
 # ==================== IP BAN SYSTEM ====================
 
@@ -5737,9 +5792,22 @@ def save_disabled_features(features):
 @app.route('/api/admin/ipbans', methods=['GET'])
 @pm2_auth_required
 def admin_get_ip_bans():
-    """Get all IP bans"""
+    """Get all IP bans including auto-bans"""
     clean_expired_temp_bans()
     bans = load_ip_bans()
+    # Include auto-banned IPs from scanner detection
+    auto_bans_raw = _load_scanner_bans()
+    auto_bans = []
+    for ip, info in auto_bans_raw.items():
+        auto_bans.append({
+            'ip': ip,
+            'reason': 'Automated scanner ban: probed ' + ', '.join(info.get('probes', [])),
+            'banned_at': info.get('banned_at', ''),
+            'expires_at': info.get('expires_at', ''),
+            'probes': info.get('probes', []),
+            'ua': info.get('ua', ''),
+        })
+    bans['auto'] = auto_bans
     return jsonify({'bans': bans})
 
 @app.route('/api/admin/ipbans/add', methods=['POST'])
@@ -5836,9 +5904,21 @@ def admin_remove_ip_ban():
         original_len = len(bans.get('temp', []))
         bans['temp'] = [b for b in bans.get('temp', []) if b['ip'] != ip]
         removed = len(bans['temp']) < original_len
+    elif ban_type == 'auto':
+        # Remove from scanner auto-bans (updates in-memory caches too)
+        if ip in _auto_banned_ips or ip in _ban_details:
+            _remove_scanner_ban(ip)
+            removed = True
+        else:
+            # Check the file in case memory is stale
+            auto_data = _load_scanner_bans()
+            if ip in auto_data:
+                _remove_scanner_ban(ip)
+                removed = True
 
     if removed:
-        save_ip_bans(bans)
+        if ban_type != 'auto':
+            save_ip_bans(bans)
         return jsonify({'success': True, 'message': f'IP {ip} unbanned'})
 
     return jsonify({'success': False, 'message': f'IP {ip} was not banned'})

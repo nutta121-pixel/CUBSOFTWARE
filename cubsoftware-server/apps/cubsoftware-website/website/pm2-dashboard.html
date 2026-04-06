@@ -110,6 +110,12 @@
 
                 <div class="nav-section">
                     <span class="nav-section-title">Security</span>
+                    <a href="#botowners" class="nav-item" data-section="botowners">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <span>Bot Owners</span>
+                    </a>
                     <a href="#whitelist" class="nav-item" data-section="whitelist">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -510,10 +516,44 @@
                             <button class="tab-btn active" data-tab="global">Global</button>
                             <button class="tab-btn" data-tab="feature">Feature</button>
                             <button class="tab-btn" data-tab="temp">Temporary</button>
+                            <button class="tab-btn" data-tab="auto">Auto-Banned</button>
                         </div>
                         <div class="ipbans-list" id="ipbansList">
                             <div class="loading">Loading IP bans...</div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bot Owners Section -->
+            <section class="content-section" id="botownersSection" data-section="botowners">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>Bot Owners</h1>
+                        <p>Discord user IDs with full bot owner access</p>
+                    </div>
+                    <div class="section-actions">
+                        <button id="refreshBotOwnersBtn" class="control-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="whitelist-container">
+                    <div class="whitelist-add-card">
+                        <h3>Add Owner</h3>
+                        <div class="whitelist-form">
+                            <input type="text" id="newOwnerId" placeholder="Discord User ID" class="input-field">
+                            <button class="control-btn primary" onclick="addBotOwner()">Add Owner</button>
+                        </div>
+                    </div>
+                    <div class="whitelist-users-card">
+                        <h3>Current Bot Owners</h3>
+                        <div class="whitelist-list" id="botOwnersList"><div class="loading">Loading...</div></div>
                     </div>
                 </div>
             </section>

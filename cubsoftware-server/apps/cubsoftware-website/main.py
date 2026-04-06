@@ -337,20 +337,28 @@ def _before_request_logging():
 
     # Auto-ban: block already-banned scanner IPs immediately
     if ip in _auto_banned_ips:
-        _web_log('Security', f'Blocked banned scanner {ip} → {request.method} {request.path}')
-        ban_info = _ban_details.get(ip, {})
-        banned_at = ban_info.get('banned_at', '')
-        expires_at = ban_info.get('expires_at', '')
-        try:
-            banned_ts = int(datetime.fromisoformat(banned_at).timestamp()) if banned_at else 0
-            expires_ts = int(datetime.fromisoformat(expires_at).timestamp()) if expires_at else 0
-        except Exception:
-            banned_ts = expires_ts = 0
-        return make_response(render_template('banned.html',
-            ip=ip, banned_ts=banned_ts, expires_ts=expires_ts,
-            ban_days=_BAN_TTL_DAYS, probes=ban_info.get('probes', []),
-        ), 403)
-
+        # Re-validate against persistent storage — allows external removals (bot /ip unban,
+        # admin dashboard) to take effect without a server restart
+        scanner_data = _load_scanner_bans()
+        if ip not in scanner_data:
+            _auto_banned_ips.discard(ip)
+            _ban_details.pop(ip, None)
+            _scanner_hits.pop(ip, None)
+            # Fall through — IP is no longer banned
+        else:
+            _web_log('Security', f'Blocked banned scanner {ip} → {request.method} {request.path}')
+            ban_info = _ban_details.get(ip) or scanner_data.get(ip, {})
+            banned_at = ban_info.get('banned_at', '')
+            expires_at = ban_info.get('expires_at', '')
+            try:
+                banned_ts = int(datetime.fromisoformat(banned_at).timestamp()) if banned_at else 0
+                expires_ts = int(datetime.fromisoformat(expires_at).timestamp()) if expires_at else 0
+            except Exception:
+                banned_ts = expires_ts = 0
+            return make_response(render_template('banned.html',
+                ip=ip, banned_ts=banned_ts, expires_ts=expires_ts,
+                ban_days=_BAN_TTL_DAYS, probes=ban_info.get('probes', []),
+            ), 403)
     # Auto-ban: detect sensitive path probes or WebDAV method scanners
     path_lower = request.path.lower()
     is_scanner_probe = (

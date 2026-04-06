@@ -139,16 +139,23 @@ async def add_all_users(ctx):
 async def on_member_join(member):
     options = load_users()
     if str(member.id) not in options:
+        print("not in options")
         options[str(member.id)] = {
-            "name": member.name,
-            "banned": False,
-            "nickname": member.nick,
-            "servers": [ str(member.guild.id), ],
+        "name": member.name,
+        "banned": False,
+        "nickname": member.nick,
+        "servers": [str(member.guild.id),]
         }
         print(f"New User {member.name} Created in Users File")
-    if str(member.id) in options:
-        options[member.id]["servers"] + member.guild.id
         save_user(options)
+    if str(member.id) in options:
+        if  str(member.guild.id) in options[str(member.id)]["servers"]:
+            print(f"skipping {member.name} as already in system")
+        else:
+            options[str(member.id)]["servers"].append(str(member.guild.id))
+            save_user(options)
+            print("user info updated")
+    else:
         print(f"Existing User {member.name} Updated Users File")
 @client.event
 async def on_guild_join(guild):

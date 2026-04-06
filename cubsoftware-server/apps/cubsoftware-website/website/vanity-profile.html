@@ -46,6 +46,13 @@
         .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #57F287; margin-right: 0.4rem; }
         .empty { text-align: center; padding: 3rem; color: #b0b3b8; }
         .loading { text-align: center; padding: 2rem; color: #b0b3b8; }
+
+        @media (max-width: 600px) {
+            .profile-wrap { padding: 1.5rem 1rem; }
+            .profile-header { flex-wrap: wrap; padding: 1.25rem; gap: 1rem; }
+            .profile-cta { margin-left: 0; width: 100%; }
+            .profile-cta .btn { width: 100%; text-align: center; }
+        }
     </style>
 </head>
 <body>

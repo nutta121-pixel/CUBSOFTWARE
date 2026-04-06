@@ -1180,6 +1180,8 @@
         }
     }
 
+    const PROTECTED_OWNER_ID = '378501056008683530';
+
     function renderBotOwners(owners) {
         const list = document.getElementById('botOwnersList');
         if (!list) return;
@@ -1187,12 +1189,22 @@
             list.innerHTML = '<div class="empty-state">No bot owners configured</div>';
             return;
         }
-        list.innerHTML = owners.map(id => `
-            <div class="whitelist-item">
-                <span class="user-id">${id}</span>
-                <button class="remove-btn" onclick="removeBotOwner('${id}')">Remove</button>
-            </div>
-        `).join('');
+        list.innerHTML = owners.map(id => {
+            const isProtected = id === PROTECTED_OWNER_ID;
+            const action = isProtected
+                ? `<span style="font-size:0.75rem;color:var(--text-muted);display:flex;align-items:center;gap:0.25rem;">
+                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                       Protected
+                   </span>`
+                : `<button class="whitelist-remove" onclick="removeBotOwner('${id}')" title="Remove owner">
+                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                   </button>`;
+            return `
+            <div class="whitelist-user">
+                <span class="whitelist-user-id">${id}${isProtected ? ' <span style="font-size:0.7rem;color:var(--primary);margin-left:0.5rem;">(primary)</span>' : ''}</span>
+                ${action}
+            </div>`;
+        }).join('');
     }
 
     window.addBotOwner = async function() {
@@ -1230,6 +1242,10 @@
     };
 
     window.removeBotOwner = async function(id) {
+        if (id === PROTECTED_OWNER_ID) {
+            showToast('This owner is protected and cannot be removed', 'error');
+            return;
+        }
         if (!confirm(`Remove ${id} as a bot owner?`)) return;
         try {
             const res = await fetch('/api/admin/bot-owners');

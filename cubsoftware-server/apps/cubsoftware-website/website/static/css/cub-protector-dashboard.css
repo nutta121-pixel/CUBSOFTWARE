@@ -1602,6 +1602,51 @@ input[type="color"] {
 @media (max-width: 480px) {
     .custom-bot-hero-main { flex-direction: column; align-items: flex-start; }
     .custom-bot-hero-actions { width: 100%; }
+
+    /* Stats grid: 4→2→1 */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    #statsSection .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Hub settings grid: 3→2→1 */
+    .hub-settings-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Module shortcuts: 4→3→2 */
+    .module-shortcuts {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Form rows: stack */
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    /* Add rows: stack */
+    .add-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* Settings card reduced padding */
+    .settings-card {
+        padding: 1rem;
+    }
+
+    /* Section title smaller */
+    .content-section .section-title {
+        font-size: 1rem;
+    }
+
+    /* Server picker user bar */
+    .server-picker-user-bar {
+        font-size: 0.82rem;
+    }
 }
 
 /* ==================== REMOVE STANDALONE SAVE BUTTONS ==================== */

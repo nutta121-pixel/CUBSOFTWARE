@@ -566,24 +566,6 @@ def save_bot_owners(owners):
     except Exception:
         pass
 
-@app.route('/api/admin/bot-owners', methods=['GET'])
-@pm2_auth_required
-def admin_get_bot_owners():
-    return jsonify({'owners': load_bot_owners()})
-
-@app.route('/api/admin/bot-owners', methods=['POST'])
-@pm2_auth_required
-def admin_set_bot_owners():
-    data = request.get_json(silent=True) or {}
-    owners = data.get('owners', [])
-    if not isinstance(owners, list):
-        return jsonify({'error': 'owners must be a list'}), 400
-    owners = [str(o).strip() for o in owners if str(o).strip().isdigit()]
-    if not owners:
-        return jsonify({'error': 'At least one valid Discord user ID is required'}), 400
-    save_bot_owners(owners)
-    return jsonify({'success': True, 'owners': owners})
-
 # ==================== IP BAN SYSTEM ====================
 
 IP_BANS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'ip_bans.json')
@@ -5787,6 +5769,25 @@ def save_disabled_features(features):
     os.makedirs(os.path.dirname(DISABLED_FEATURES_FILE), exist_ok=True)
     with open(DISABLED_FEATURES_FILE, 'w') as f:
         json.dump(features, f, indent=2)
+
+# Bot Owners Management
+@app.route('/api/admin/bot-owners', methods=['GET'])
+@pm2_auth_required
+def admin_get_bot_owners():
+    return jsonify({'owners': load_bot_owners()})
+
+@app.route('/api/admin/bot-owners', methods=['POST'])
+@pm2_auth_required
+def admin_set_bot_owners():
+    data = request.get_json(silent=True) or {}
+    owners = data.get('owners', [])
+    if not isinstance(owners, list):
+        return jsonify({'error': 'owners must be a list'}), 400
+    owners = [str(o).strip() for o in owners if str(o).strip().isdigit()]
+    if not owners:
+        return jsonify({'error': 'At least one valid Discord user ID is required'}), 400
+    save_bot_owners(owners)
+    return jsonify({'success': True, 'owners': owners})
 
 # Admin IP Bans Management
 @app.route('/api/admin/ipbans', methods=['GET'])

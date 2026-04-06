@@ -17,7 +17,9 @@
     <link rel="stylesheet" href="/static/css/admin-dashboard.css?v={{ v }}">
     <link rel="stylesheet" href="/static/css/cub-protector-dashboard.css?v={{ v }}">
     <style>
-        /* Sidebar fills from top — site header scrolls naturally */
+        /* Dashboard pages don't use the marketing nav header */
+        .site-header { display: none !important; }
+        /* Sidebar fills from top */
         .admin-sidebar { top: 0; }
         /* Coming soon nav items */
         .nav-item-disabled {

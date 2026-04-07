@@ -28,19 +28,21 @@
 
     /* ── Stars ────────────────────────────────────────────── */
     const TP = [3,4,5,6,10,12,15,25];
-    const stars = Array.from({length: MOBILE ? 160 : 340}, () => ({
-        x:srng(), y:srng(), r:srng()*1.6+0.2,
+    const stars = Array.from({length: MOBILE ? 220 : 500}, () => ({
+        x:srng(), y:srng(), r:srng()*2.2+0.4,
         tp:TP[0|srng()*TP.length], to:srng()*Math.PI*2,
-        base:srng()*0.35+0.20,
-        warm:srng()<0.08, cool:srng()<0.20, bright:srng()<0.04,
+        base:srng()*0.45+0.38,
+        warm:srng()<0.10, cool:srng()<0.22, bright:srng()<0.06,
     }));
 
     /* ── Nebulae ──────────────────────────────────────────── */
     const nebulae = [
-        {x:0.04,y:0.08,r:0.48,rgb:'88,101,242', period:150,phase:0.0},
-        {x:0.88,y:0.82,r:0.56,rgb:'124,58,237', period:100,phase:1.8},
-        {x:0.46,y:0.50,r:0.36,rgb:'180,55,120', period: 75,phase:3.2},
-        {x:0.70,y:0.14,r:0.38,rgb:'40,100,210', period: 50,phase:2.0},
+        {x:0.22,y:0.24,r:0.55,rgb:'88,101,242', period:150,phase:0.0},
+        {x:0.78,y:0.76,r:0.60,rgb:'124,58,237', period:100,phase:1.8},
+        {x:0.50,y:0.50,r:0.44,rgb:'180,55,120', period: 75,phase:3.2},
+        {x:0.72,y:0.18,r:0.44,rgb:'40,100,210', period: 50,phase:2.0},
+        {x:0.20,y:0.72,r:0.42,rgb:'60,140,255', period:150,phase:1.2},
+        {x:0.80,y:0.32,r:0.38,rgb:'100,50,200', period: 75,phase:4.1},
     ];
 
     /* ── Real planet colours ──────────────────────────────── */
@@ -335,51 +337,88 @@
         ctx.fillStyle=rim; ctx.beginPath(); ctx.arc(cx,cy,R*1.12,0,Math.PI*2); ctx.fill();
     }
 
+    /* ── Moon always orbiting Earth ──────────────────────── */
+    // moonBehind: sin(angle) < 0 means Moon is in the back half of its orbit
+    function moonAngle(t) { return (t / 120) * Math.PI * 2; }
+    function moonIsBehind(t) { return Math.sin(moonAngle(t)) < 0; }
+    function drawOrbitingMoon(t) {
+        const cx  = W*0.5, cy = H*0.5;
+        const eR  = earthR();
+        const orb = eR * 2.0;
+        const ang = moonAngle(t);
+        const mx  = cx + Math.cos(ang) * orb;
+        const my  = cy + Math.sin(ang) * orb;
+        const R   = eR * 0.28;
+        drawMoon(mx, my, R);
+    }
+
     /* ── Randomised pass events (different every page load) ── */
     // Realistic sizes relative to each other
     const PLANET_SIZES = {
-        MERCURY:0.038, VENUS:0.058, MARS:0.048,
-        JUPITER:0.095, SATURN:0.105,
-        URANUS:0.068,  NEPTUNE:0.065, PLUTO:0.028,
+        MERCURY:0.032, VENUS:0.088, MARS:0.052,
+        JUPITER:0.160, SATURN:0.140,
+        URANUS:0.082,  NEPTUNE:0.078, PLUTO:0.022,
         MOON:0.040,
     };
 
+    /* ── Random screen-edge entry/exit point generator ───── */
+    // Edges: 0=left, 1=right, 2=top, 3=bottom
+    // Returns a point (as 0-1 fractions) just off the chosen screen edge.
+    // margin pushes the point fully off-screen so large planets are hidden.
+    function edgePoint(edge, margin) {
+        const m = margin || 0.28;
+        const r = Math.random();
+        switch(edge) {
+            case 0: return {x:-m,          y:r};           // left edge
+            case 1: return {x:1+m,         y:r};           // right edge
+            case 2: return {x:r,           y:-m};          // top edge
+            case 3: return {x:r,           y:1+m};         // bottom edge
+        }
+    }
+
     function generatePassEvents() {
-        const pool = ['MERCURY','VENUS','MARS','JUPITER','SATURN','URANUS','NEPTUNE','PLUTO','MOON','ISS'];
-        // Shuffle with Math.random() — different every refresh
+        const pool = ['MERCURY','VENUS','MARS','JUPITER','SATURN','URANUS','NEPTUNE','PLUTO','ISS'];
         pool.sort(()=>Math.random()-0.5);
 
         const events = [];
-        let t = Math.random() * 15; // random start offset 0-15s
+        let t = Math.random() * 15;
 
         pool.forEach(type=>{
-            const isISS = type==='ISS';
-            // Crossing duration: ISS quick, small planets fast, big ones slow
-            const baseTime = isISS ? 10 : 18 + Math.random()*32;
-            if (t + baseTime > 292) return; // won't fit in cycle
+            const isISS    = type==='ISS';
+            const baseTime = isISS ? 12 : 20 + Math.random()*38;
+            if (t + baseTime > 288) return;
 
-            const dir = Math.random()>0.5 ? 1 : -1;
-
-            // Y position: avoid Earth center zone (0.35-0.65)
-            // Randomly pick top zone or bottom zone, with slight diagonal
-            const inTop = Math.random()>0.5;
-            const yMin  = inTop ? 0.04 : 0.68;
-            const yMax  = inTop ? 0.30 : 0.94;
-            const y0    = yMin + Math.random()*(yMax-yMin);
-            const y1    = yMin + Math.random()*(yMax-yMin);
-            // Arc bends object slightly toward Earth center
-            const arc   = inTop ? +(0.02+Math.random()*0.08) : -(0.02+Math.random()*0.08);
+            const behind = !isISS && Math.random() < 0.4;
 
             if (isISS) {
-                events.push({type:'ISS', tStart:t, cross:baseTime, yFrac:y0, dir});
+                // ISS always crosses horizontally (realistic low orbit)
+                const dir  = Math.random()>0.5 ? 1 : -1;
+                const yFrac= 0.05 + Math.random()*0.90; // any vertical position
+                events.push({type:'ISS', tStart:t, cross:baseTime, yFrac, dir, behind:false});
             } else {
-                const x0 = dir>0 ? -0.12 : 1.12;
-                const x1 = dir>0 ?  1.12 : -0.12;
-                events.push({type, tStart:t, cross:baseTime, x0, y0, x1, y1, size:PLANET_SIZES[type], arc});
+                // Pick a random entry edge, then a different exit edge
+                const entryEdge = Math.floor(Math.random()*4);
+                let exitEdge;
+                do { exitEdge = Math.floor(Math.random()*4); } while (exitEdge===entryEdge);
+
+                const margin = PLANET_SIZES[type] * 3.0; // proportional off-screen margin
+                const p0 = edgePoint(entryEdge, margin);
+                const p1 = edgePoint(exitEdge,  margin);
+
+                // Quadratic bezier control point: nudge midpoint randomly for a gentle curve
+                const midX = (p0.x+p1.x)*0.5 + (Math.random()-0.5)*0.30;
+                const midY = (p0.y+p1.y)*0.5 + (Math.random()-0.5)*0.30;
+
+                events.push({
+                    type, tStart:t, cross:baseTime,
+                    x0:p0.x, y0:p0.y,
+                    x1:p1.x, y1:p1.y,
+                    cx:midX,  cy:midY,   // bezier control point
+                    size:PLANET_SIZES[type], behind,
+                });
             }
 
-            // Gap between events: 4-18s random
-            t += baseTime + 4 + Math.random()*14;
+            t += baseTime + 5 + Math.random()*18;
         });
 
         return events;
@@ -395,9 +434,10 @@
             const x = ev.dir>0 ? (-0.06+p*1.12)*W : (1.06-p*1.12)*W;
             return {x, y:ev.yFrac*H, p};
         }
-        const x  = (ev.x0 + (ev.x1-ev.x0)*p) * W;
-        const mY = (ev.y0+ev.y1)*0.5 + ev.arc;
-        const y  = (ev.y0*(1-p)*(1-p) + mY*2*p*(1-p) + ev.y1*p*p) * H;
+        // Quadratic bezier interpolation using stored control point
+        const q = 1-p;
+        const x = (q*q*ev.x0 + 2*q*p*ev.cx + p*p*ev.x1) * W;
+        const y = (q*q*ev.y0 + 2*q*p*ev.cy + p*p*ev.y1) * H;
         return {x, y, p};
     }
 
@@ -431,36 +471,32 @@
         ctx.restore();
     }
 
-    /* ── Ships: 10 slots, random directions every load ────── */
-    let memberNames = ['EXPLORER','VOYAGER','SENTINEL','PHANTOM','NOVA','ECLIPSE','ZENITH','AURORA','COMET','PULSAR'];
-    let lastShuffle = 0;
+    /* ── Ships: 2 on screen at a time, random paths ─────── */
+    let memberData   = [
+        {name:'EXPLORER',joinedAt:''},{name:'VOYAGER',joinedAt:''},
+    ];
+    let lastShuffle  = 0;
 
-    // Generates random ship paths — different every page refresh
     function generateShipDefs() {
-        const periodPool = [25,25,50,50,75,75,100,100,150,150];
         const defs = [];
-        for (let i=0; i<10; i++) {
-            const period = periodPool[i];
-            const phase  = Math.random();
-            const sz     = MOBILE ? (3+Math.floor(Math.random()*2)) : (6+Math.floor(Math.random()*4));
-            // Path types: 0=L→R top, 1=R→L top, 2=L→R bottom, 3=R→L bottom,
-            //             4=diagonal top-left→bottom-right, 5=diagonal top-right→bottom-left,
-            //             6=diagonal bottom-left→top-right, 7=diagonal bottom-right→top-left
+        const periods = [75, 100];
+        for (let i=0; i<2; i++) {
+            const phase    = Math.random();
+            const sz       = MOBILE ? 5 : 10;
             const pathType = Math.floor(Math.random()*8);
             let x0,y0,x1,y1;
-            // Keep ships out of Earth's center zone (roughly y 0.35-0.65)
             switch(pathType) {
-                case 0: x0=-0.10;y0=0.04+Math.random()*0.26;x1=1.10;y1=0.04+Math.random()*0.26; break; // L→R top
-                case 1: x0=1.10; y0=0.04+Math.random()*0.26;x1=-0.10;y1=0.04+Math.random()*0.26; break; // R→L top
-                case 2: x0=-0.10;y0=0.70+Math.random()*0.26;x1=1.10;y1=0.70+Math.random()*0.26; break; // L→R bottom
-                case 3: x0=1.10; y0=0.70+Math.random()*0.26;x1=-0.10;y1=0.70+Math.random()*0.26; break; // R→L bottom
-                case 4: x0=-0.10;y0=0.04+Math.random()*0.26;x1=1.10;y1=0.70+Math.random()*0.26; break; // diag ↘
-                case 5: x0=1.10; y0=0.04+Math.random()*0.26;x1=-0.10;y1=0.70+Math.random()*0.26; break; // diag ↙
-                case 6: x0=-0.10;y0=0.70+Math.random()*0.26;x1=1.10;y1=0.04+Math.random()*0.26; break; // diag ↗
-                case 7: default: x0=1.10;y0=0.70+Math.random()*0.26;x1=-0.10;y1=0.04+Math.random()*0.26; break; // diag ↖
+                case 0: x0=-0.12;y0=0.05+Math.random()*0.22;x1=1.12;y1=0.05+Math.random()*0.22; break;
+                case 1: x0=1.12; y0=0.05+Math.random()*0.22;x1=-0.12;y1=0.05+Math.random()*0.22; break;
+                case 2: x0=-0.12;y0=0.72+Math.random()*0.22;x1=1.12;y1=0.72+Math.random()*0.22; break;
+                case 3: x0=1.12; y0=0.72+Math.random()*0.22;x1=-0.12;y1=0.72+Math.random()*0.22; break;
+                case 4: x0=-0.12;y0=0.05+Math.random()*0.22;x1=1.12;y1=0.72+Math.random()*0.22; break;
+                case 5: x0=1.12; y0=0.05+Math.random()*0.22;x1=-0.12;y1=0.72+Math.random()*0.22; break;
+                case 6: x0=-0.12;y0=0.72+Math.random()*0.22;x1=1.12;y1=0.05+Math.random()*0.22; break;
+                case 7: default: x0=1.12;y0=0.72+Math.random()*0.22;x1=-0.12;y1=0.05+Math.random()*0.22; break;
             }
-            const wAmp = 0.015 + Math.random()*0.040; // sine wobble amplitude (screen fraction)
-            defs.push({period, phase, x0, y0, x1, y1, wAmp, s:sz, type: Math.random()>0.45?'FIGHTER':'UFO'});
+            const wAmp = 0.012 + Math.random()*0.030;
+            defs.push({period:periods[i], phase, x0, y0, x1, y1, wAmp, s:sz, type:Math.random()>0.45?'ROCKET':'UFO'});
         }
         return defs;
     }
@@ -468,25 +504,61 @@
     const SHIP_DEFS = generateShipDefs();
     const ships = SHIP_DEFS.map((def,i)=>({
         ...def,
-        name: memberNames[i % memberNames.length],
+        name:     memberData[i % memberData.length].name,
+        joinedAt: memberData[i % memberData.length].joinedAt,
     }));
 
     function reshuffleShips() {
         lastShuffle = Date.now();
-        const names = [...memberNames].sort(()=>Math.random()-0.5);
+        const shuffled = [...memberData].sort(()=>Math.random()-0.5);
         ships.forEach((sh,i)=>{
-            sh.name = names[i % names.length] || '???';
-            sh.type = Math.random()>0.45 ? 'FIGHTER' : 'UFO';
+            const m   = shuffled[i % shuffled.length] || {name:'???',joinedAt:''};
+            sh.name   = m.name;
+            sh.joinedAt = m.joinedAt;
+            sh.type   = Math.random()>0.45 ? 'ROCKET' : 'UFO';
         });
     }
 
     fetch('/api/space-members')
         .then(r=>r.json())
-        .then(names=>{ if(Array.isArray(names)&&names.length){ memberNames=names; reshuffleShips(); } })
+        .then(data=>{
+            if (!Array.isArray(data)||!data.length) return;
+            // API may return [{name,joinedAt}] or legacy [string]
+            memberData = data.map(d=> typeof d==='string' ? {name:d,joinedAt:''} : d);
+            reshuffleShips();
+        })
         .catch(()=>{});
 
     function maybeReshuffle() {
         if (Date.now()-lastShuffle > 600000) reshuffleShips();
+    }
+
+    /* ── Hover card (HTML overlay above canvas) ───────────── */
+    const hoverCard = document.createElement('div');
+    hoverCard.style.cssText = [
+        'position:fixed',
+        'z-index:200',
+        'pointer-events:none',
+        'background:rgba(4,8,32,0.94)',
+        'border:1.5px solid rgba(88,101,242,0.70)',
+        'border-radius:10px',
+        'padding:10px 16px',
+        'font-family:"Courier New",monospace',
+        'color:#fff',
+        'font-size:13px',
+        'display:none',
+        'min-width:160px',
+        'backdrop-filter:blur(12px)',
+        'box-shadow:0 4px 28px rgba(0,0,0,0.70),0 0 18px rgba(88,101,242,0.25)',
+        'line-height:1.5',
+    ].join(';');
+    document.body.appendChild(hoverCard);
+
+    function formatJoinDate(iso) {
+        if (!iso) return 'Unknown';
+        try {
+            return new Date(iso).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+        } catch(e) { return 'Unknown'; }
     }
 
     /* ── Ship click / hover ───────────────────────────────── */
@@ -499,64 +571,172 @@
         if (activeShipRects.some(r=>Math.abs(mx-r.x)<r.hw&&Math.abs(my-r.y)<r.hh))
             window.open(DISCORD_INVITE,'_blank');
     });
+
     window.addEventListener('mousemove', e=>{
         const mx=e.clientX, my=e.clientY;
-        const hit=activeShipRects.find(r=>Math.abs(mx-r.x)<r.hw&&Math.abs(my-r.y)<r.hh);
-        hoveredShipIdx = hit ? hit.idx : -1;
-        document.body.style.cursor = hit ? 'pointer' : '';
+        const hit = activeShipRects.find(r=>Math.abs(mx-r.x)<r.hw&&Math.abs(my-r.y)<r.hh);
+        if (hit) {
+            hoveredShipIdx = hit.idx;
+            document.body.style.cursor = 'pointer';
+            const sh = ships[hit.idx];
+            const isUFO = sh.type==='UFO';
+            const accent = isUFO ? '#66ffaa' : '#88aaff';
+            hoverCard.innerHTML = `
+                <div style="font-size:11px;color:${accent};letter-spacing:1.5px;margin-bottom:4px">${isUFO?'👾 UFO':'🚀 ROCKET'}</div>
+                <div style="font-size:15px;font-weight:bold;color:#fff;margin-bottom:6px">${sh.name}</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.55)">Joined server</div>
+                <div style="font-size:12px;color:${accent}">${formatJoinDate(sh.joinedAt)}</div>
+                <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:6px">Click to join Discord</div>`;
+            // Position card above cursor, keep on screen
+            const cw = 190, ch = 100;
+            let cx2 = mx + 14;
+            let cy2 = my - ch - 12;
+            if (cx2 + cw > window.innerWidth)  cx2 = mx - cw - 14;
+            if (cy2 < 8) cy2 = my + 14;
+            hoverCard.style.left  = cx2 + 'px';
+            hoverCard.style.top   = cy2 + 'px';
+            hoverCard.style.display = 'block';
+        } else {
+            hoveredShipIdx = -1;
+            document.body.style.cursor = '';
+            hoverCard.style.display = 'none';
+        }
     },{passive:true});
 
     /* ── Draw Fighter ─────────────────────────────────────── */
-    function drawFighter(x, y, a, s, name, hovered) {
+    function drawRocket(x, y, a, s, name, hovered) {
         ctx.save(); ctx.translate(x,y); ctx.rotate(a);
 
-        const eg=ctx.createRadialGradient(-s*0.6,0,0,-s*0.6,0,s*1.8);
-        eg.addColorStop(0,'rgba(100,200,255,0.80)'); eg.addColorStop(0.4,'rgba(60,160,255,0.28)'); eg.addColorStop(1,'rgba(40,120,255,0)');
-        ctx.fillStyle=eg; ctx.beginPath(); ctx.arc(-s*0.6,0,s*1.8,0,Math.PI*2); ctx.fill();
+        /* ── Engine exhaust plume ── */
+        // outer glow
+        const eg = ctx.createRadialGradient(-s*0.55,0,0,-s*0.55,0,s*2.2);
+        eg.addColorStop(0,'rgba(255,160,40,0.70)');
+        eg.addColorStop(0.35,'rgba(255,80,20,0.22)');
+        eg.addColorStop(1,'rgba(255,60,10,0)');
+        ctx.fillStyle=eg; ctx.beginPath(); ctx.arc(-s*0.55,0,s*2.2,0,Math.PI*2); ctx.fill();
+        // inner hot cone
+        const pc = ctx.createLinearGradient(-s*2.6,0,-s*0.5,0);
+        pc.addColorStop(0,'rgba(255,255,200,0)');
+        pc.addColorStop(0.45,'rgba(255,200,60,0.55)');
+        pc.addColorStop(0.80,'rgba(255,120,20,0.82)');
+        pc.addColorStop(1,'rgba(255,255,255,0.95)');
+        ctx.beginPath();
+        ctx.moveTo(-s*0.50,-s*0.22); ctx.lineTo(-s*2.60,0); ctx.lineTo(-s*0.50,s*0.22);
+        ctx.closePath(); ctx.fillStyle=pc; ctx.fill();
+        // secondary flickering inner jet
+        const ic = ctx.createLinearGradient(-s*1.6,0,-s*0.50,0);
+        ic.addColorStop(0,'rgba(255,255,255,0)');
+        ic.addColorStop(1,'rgba(255,255,220,0.80)');
+        ctx.beginPath();
+        ctx.moveTo(-s*0.50,-s*0.10); ctx.lineTo(-s*1.60,0); ctx.lineTo(-s*0.50,s*0.10);
+        ctx.closePath(); ctx.fillStyle=ic; ctx.fill();
 
-        const ec=ctx.createLinearGradient(-s*2.8,0,-s*0.5,0);
-        ec.addColorStop(0,'rgba(80,180,255,0)'); ec.addColorStop(0.6,'rgba(120,210,255,0.45)'); ec.addColorStop(1,'rgba(200,240,255,0.88)');
-        ctx.beginPath(); ctx.moveTo(-s*0.5,-s*0.18); ctx.lineTo(-s*2.8,0); ctx.lineTo(-s*0.5,s*0.18); ctx.closePath();
-        ctx.fillStyle=ec; ctx.fill();
-
-        const bg=ctx.createLinearGradient(0,-s*0.28,0,s*0.28);
-        bg.addColorStop(0,'#ccd8f0'); bg.addColorStop(0.45,'#f0f4ff'); bg.addColorStop(1,'#8890b8');
-        ctx.beginPath(); ctx.moveTo(s*1.5,0); ctx.lineTo(s*0.6,-s*0.20); ctx.lineTo(-s*0.6,-s*0.28);
-        ctx.lineTo(-s*0.8,-s*0.20); ctx.lineTo(-s*0.8,s*0.20); ctx.lineTo(-s*0.6,s*0.28); ctx.lineTo(s*0.6,s*0.20); ctx.closePath();
+        /* ── Main body ── */
+        const bg = ctx.createLinearGradient(0,-s*0.38,0,s*0.38);
+        bg.addColorStop(0,'#dce8ff');
+        bg.addColorStop(0.3,'#ffffff');
+        bg.addColorStop(0.7,'#c8d8f0');
+        bg.addColorStop(1,'#8898c8');
+        // cylindrical fuselage
+        ctx.beginPath();
+        ctx.moveTo(s*0.60, -s*0.36);
+        ctx.lineTo(-s*0.50,-s*0.36);
+        ctx.lineTo(-s*0.50, s*0.36);
+        ctx.lineTo(s*0.60,  s*0.36);
+        ctx.closePath();
         ctx.fillStyle=bg; ctx.fill();
-        ctx.strokeStyle='rgba(80,100,180,0.40)'; ctx.lineWidth=0.8; ctx.stroke();
+        ctx.strokeStyle='rgba(80,110,200,0.35)'; ctx.lineWidth=0.8; ctx.stroke();
 
-        ctx.fillStyle='#8892c0';
-        ctx.beginPath(); ctx.moveTo(s*0.40,-s*0.28); ctx.lineTo(-s*0.50,-s*1.10); ctx.lineTo(-s*0.70,-s*0.28); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(s*0.40,s*0.28);  ctx.lineTo(-s*0.50,s*1.10);  ctx.lineTo(-s*0.70,s*0.28);  ctx.closePath(); ctx.fill();
-        ctx.fillStyle='#707898';
-        ctx.beginPath(); ctx.moveTo(-s*0.55,-s*0.28); ctx.lineTo(-s*0.80,-s*0.58); ctx.lineTo(-s*0.80,-s*0.28); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(-s*0.55,s*0.28);  ctx.lineTo(-s*0.80,s*0.58);  ctx.lineTo(-s*0.80,s*0.28);  ctx.closePath(); ctx.fill();
+        /* ── Nose cone ── */
+        const ng = ctx.createLinearGradient(s*0.60,0,s*1.60,0);
+        ng.addColorStop(0,'#e8f0ff');
+        ng.addColorStop(0.5,'#ffffff');
+        ng.addColorStop(1,'#5865f2');
+        ctx.beginPath();
+        ctx.moveTo(s*0.60,-s*0.36);
+        ctx.bezierCurveTo(s*1.20,-s*0.36, s*1.65,-s*0.14, s*1.65,0);
+        ctx.bezierCurveTo(s*1.65, s*0.14, s*1.20, s*0.36, s*0.60, s*0.36);
+        ctx.fillStyle=ng; ctx.fill();
+        ctx.strokeStyle='rgba(80,110,200,0.30)'; ctx.lineWidth=0.8; ctx.stroke();
 
-        const cg=ctx.createRadialGradient(s*0.72,-s*0.06,0,s*0.72,0,s*0.18);
-        cg.addColorStop(0,'rgba(160,220,255,0.95)'); cg.addColorStop(0.5,'rgba(50,140,220,0.85)'); cg.addColorStop(1,'rgba(15,60,160,0.90)');
-        ctx.beginPath(); ctx.ellipse(s*0.65,0,s*0.22,s*0.14,0,0,Math.PI*2); ctx.fillStyle=cg; ctx.fill();
+        /* ── Fins (3 swept rocket fins) ── */
+        // top fin
+        ctx.beginPath();
+        ctx.moveTo( s*0.20,-s*0.36);
+        ctx.lineTo(-s*0.10,-s*1.10);
+        ctx.lineTo(-s*0.50,-s*0.90);
+        ctx.lineTo(-s*0.50,-s*0.36);
+        ctx.closePath();
+        ctx.fillStyle='#7080b8'; ctx.fill();
+        ctx.strokeStyle='rgba(60,80,160,0.35)'; ctx.lineWidth=0.7; ctx.stroke();
+        // bottom fin (mirror)
+        ctx.beginPath();
+        ctx.moveTo( s*0.20, s*0.36);
+        ctx.lineTo(-s*0.10, s*1.10);
+        ctx.lineTo(-s*0.50, s*0.90);
+        ctx.lineTo(-s*0.50, s*0.36);
+        ctx.closePath();
+        ctx.fillStyle='#7080b8'; ctx.fill();
+        ctx.strokeStyle='rgba(60,80,160,0.35)'; ctx.lineWidth=0.7; ctx.stroke();
+        // small rear fin (side view third fin)
+        ctx.beginPath();
+        ctx.moveTo(-s*0.10,-s*0.36);
+        ctx.lineTo(-s*0.42,-s*0.70);
+        ctx.lineTo(-s*0.50,-s*0.36);
+        ctx.closePath();
+        ctx.fillStyle='#6070a8'; ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(-s*0.10, s*0.36);
+        ctx.lineTo(-s*0.42, s*0.70);
+        ctx.lineTo(-s*0.50, s*0.36);
+        ctx.closePath();
+        ctx.fillStyle='#6070a8'; ctx.fill();
+
+        /* ── Engine bell ── */
+        ctx.beginPath();
+        ctx.moveTo(-s*0.50,-s*0.36);
+        ctx.lineTo(-s*0.70,-s*0.48);
+        ctx.lineTo(-s*0.70, s*0.48);
+        ctx.lineTo(-s*0.50, s*0.36);
+        ctx.closePath();
+        const eb = ctx.createLinearGradient(-s*0.70,0,-s*0.50,0);
+        eb.addColorStop(0,'#4a5070'); eb.addColorStop(1,'#8898c0');
+        ctx.fillStyle=eb; ctx.fill();
+        ctx.strokeStyle='rgba(40,50,100,0.50)'; ctx.lineWidth=0.8; ctx.stroke();
+
+        /* ── Porthole window ── */
+        const wg = ctx.createRadialGradient(s*0.32,-s*0.06,0,s*0.32,0,s*0.20);
+        wg.addColorStop(0,'rgba(180,230,255,0.95)');
+        wg.addColorStop(0.5,'rgba(60,160,230,0.88)');
+        wg.addColorStop(1,'rgba(10,60,160,0.90)');
+        ctx.beginPath(); ctx.arc(s*0.32,0,s*0.20,0,Math.PI*2);
+        ctx.fillStyle=wg; ctx.fill();
+        ctx.strokeStyle='rgba(120,160,220,0.60)'; ctx.lineWidth=1.2; ctx.stroke();
+        // glint
         ctx.fillStyle='rgba(255,255,255,0.55)';
-        ctx.beginPath(); ctx.ellipse(s*0.58,-s*0.04,s*0.07,s*0.04,-0.3,0,Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(s*0.24,-s*0.07,s*0.07,s*0.04,-0.4,0,Math.PI*2); ctx.fill();
 
-        ctx.strokeStyle='rgba(88,101,242,0.70)'; ctx.lineWidth=1.4;
-        ctx.beginPath(); ctx.moveTo(s*0.40,-s*0.20); ctx.lineTo(-s*0.50,-s*0.20); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(s*0.40,s*0.20);  ctx.lineTo(-s*0.50,s*0.20);  ctx.stroke();
+        /* ── CUB SOFTWARE accent stripe ── */
+        ctx.strokeStyle='rgba(88,101,242,0.65)'; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.moveTo(s*0.58,-s*0.36); ctx.lineTo(-s*0.10,-s*0.36); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(s*0.58, s*0.36); ctx.lineTo(-s*0.10, s*0.36); ctx.stroke();
 
+        /* ── Name label ── */
         if (name) {
-            const fs = Math.max(9, s*1.1);
-            ctx.save(); ctx.rotate(-a); // un-rotate so label is always upright
+            const fs = Math.max(12, s*1.4);
+            ctx.save(); ctx.rotate(-a);
             ctx.font = `bold ${fs}px 'Courier New',monospace`;
             ctx.textAlign = 'center';
             const tw = ctx.measureText(name).width;
-            if (hovered) { ctx.shadowColor='#88aaff'; ctx.shadowBlur=18; }
-            ctx.fillStyle = `rgba(4,4,20,${hovered?0.90:0.55})`;
-            ctx.beginPath(); ctx.roundRect(-(tw/2+6),-s*2.2-fs,tw+12,fs+8,5); ctx.fill();
-            ctx.strokeStyle = hovered?'rgba(136,170,255,0.80)':'rgba(136,170,255,0.25)';
-            ctx.lineWidth = hovered?1.5:0.8; ctx.stroke();
-            ctx.fillStyle = hovered?'#ffffff':'#88aaff';
-            ctx.fillText(name, 0, -s*2.2);
-            ctx.shadowBlur=0;
+            ctx.shadowColor = '#88aaff';
+            ctx.shadowBlur  = hovered ? 22 : 8;
+            ctx.fillStyle   = hovered ? 'rgba(4,4,32,0.92)' : 'rgba(4,4,24,0.78)';
+            ctx.beginPath(); ctx.roundRect(-(tw/2+7),-s*2.6-fs,tw+14,fs+9,5); ctx.fill();
+            ctx.strokeStyle = hovered ? 'rgba(136,170,255,0.90)' : 'rgba(136,170,255,0.55)';
+            ctx.lineWidth   = hovered ? 1.8 : 1.0; ctx.stroke();
+            ctx.fillStyle   = hovered ? '#ffffff' : '#aaccff';
+            ctx.fillText(name, 0, -s*2.6);
+            ctx.shadowBlur  = 0;
             ctx.restore();
         }
         ctx.restore();
@@ -605,18 +785,19 @@
         }
 
         if (name) {
-            const fs=Math.max(9,s*1.1);
-            ctx.font=`bold ${fs}px 'Courier New',monospace`;
-            ctx.textAlign='center';
-            const tw=ctx.measureText(name).width;
-            if (hovered) { ctx.shadowColor='#66ffaa'; ctx.shadowBlur=18; }
-            ctx.fillStyle=`rgba(4,4,20,${hovered?0.90:0.55})`;
-            ctx.beginPath(); ctx.roundRect(-(tw/2+6),s*1.50,tw+12,fs+8,5); ctx.fill();
-            ctx.strokeStyle=hovered?'rgba(102,255,170,0.80)':'rgba(102,255,170,0.25)';
-            ctx.lineWidth=hovered?1.5:0.8; ctx.stroke();
-            ctx.fillStyle=hovered?'#ffffff':'#66ffaa';
-            ctx.fillText(name,0,s*1.50+fs);
-            ctx.shadowBlur=0;
+            const fs = Math.max(12, s*1.4);
+            ctx.font = `bold ${fs}px 'Courier New',monospace`;
+            ctx.textAlign = 'center';
+            const tw = ctx.measureText(name).width;
+            ctx.shadowColor = '#66ffaa';
+            ctx.shadowBlur  = hovered ? 22 : 8;
+            ctx.fillStyle   = hovered ? 'rgba(4,4,32,0.92)' : 'rgba(4,4,24,0.78)';
+            ctx.beginPath(); ctx.roundRect(-(tw/2+7), -s*2.2-fs, tw+14, fs+9, 5); ctx.fill();
+            ctx.strokeStyle = hovered ? 'rgba(102,255,170,0.90)' : 'rgba(102,255,170,0.55)';
+            ctx.lineWidth   = hovered ? 1.8 : 1.0; ctx.stroke();
+            ctx.fillStyle   = hovered ? '#ffffff' : '#99ffcc';
+            ctx.fillText(name, 0, -s*2.2);
+            ctx.shadowBlur  = 0;
         }
         ctx.restore();
     }
@@ -652,7 +833,7 @@
             if (sh.type==='UFO') {
                 drawUFO(x,y,a,sh.s,sh.name,t,hovered);
             } else {
-                drawFighter(x,y,a,sh.s,sh.name,hovered);
+                drawRocket(x,y,a,sh.s,sh.name,hovered);
             }
 
             activeShipRects.push({x, y, hw:sh.s*3.5, hh:sh.s*2.5, idx});
@@ -674,10 +855,10 @@
     /* ── Draw helpers ─────────────────────────────────────── */
     function drawNebulae(t) {
         nebulae.forEach(n=>{
-            const pulse=1+Math.sin((t/n.period)*Math.PI*2+n.phase)*0.10;
+            const pulse=1+Math.sin((t/n.period)*Math.PI*2+n.phase)*0.12;
             const R=n.r*Math.max(W,H)*pulse;
             const g=ctx.createRadialGradient(n.x*W,n.y*H,0,n.x*W,n.y*H,R);
-            g.addColorStop(0,`rgba(${n.rgb},0.06)`); g.addColorStop(0.5,`rgba(${n.rgb},0.025)`); g.addColorStop(1,`rgba(${n.rgb},0)`);
+            g.addColorStop(0,`rgba(${n.rgb},0.22)`); g.addColorStop(0.4,`rgba(${n.rgb},0.08)`); g.addColorStop(1,`rgba(${n.rgb},0)`);
             ctx.fillStyle=g; ctx.beginPath(); ctx.arc(n.x*W,n.y*H,R,0,Math.PI*2); ctx.fill();
         });
     }
@@ -695,7 +876,8 @@
                 });
             }
             ctx.beginPath(); ctx.arc(s.x*W,s.y*H,s.r,0,Math.PI*2);
-            ctx.fillStyle=s.warm?`rgba(255,235,185,${alpha})`:s.cool?`rgba(185,205,255,${alpha})`:`rgba(255,255,255,${alpha})`;
+            const a2=Math.min(1,alpha*1.6);
+            ctx.fillStyle=s.warm?`rgba(255,235,185,${a2})`:s.cool?`rgba(185,205,255,${a2})`:`rgba(255,255,255,${a2})`;
             ctx.fill();
         });
     }
@@ -734,24 +916,28 @@
         drawNebulae(t);
         drawStars(t);
 
-        // Earth — always centred
-        drawEarth(t);
-
-        // Planets, Moon and ISS pass in front of Earth
-        PASS_EVENTS.forEach(ev=>{
+        // Helper: draw one pass event
+        function drawPassEvent(ev) {
             const pos=getEventPos(ev,t);
             if(!pos) return;
             const {x,y}=pos;
             if (ev.type==='ISS') {
-                if(x>-(ISS_S*10)&&x<W+(ISS_S*10)) drawISS(x,y);
-            } else if (ev.type==='MOON') {
-                const R=Math.min(W,H)*ev.size;
-                if(x>-R*2&&x<W+R*2) drawMoon(x,y,R);
+                drawISS(x,y);
             } else {
-                const R=Math.min(W,H)*ev.size;
-                if(x>-R*2&&x<W+R*2) drawPlanet(ev.type,x,y,R);
+                drawPlanet(ev.type,x,y,Math.min(W,H)*ev.size);
             }
-        });
+        }
+
+        // 1. Objects that pass BEHIND Earth (drawn before Earth)
+        if (moonIsBehind(t)) drawOrbitingMoon(t);
+        PASS_EVENTS.forEach(ev=>{ if (ev.behind) drawPassEvent(ev); });
+
+        // 2. Earth — always centred
+        drawEarth(t);
+
+        // 3. Objects that pass IN FRONT of Earth (drawn after Earth)
+        if (!moonIsBehind(t)) drawOrbitingMoon(t);
+        PASS_EVENTS.forEach(ev=>{ if (!ev.behind) drawPassEvent(ev); });
 
         drawShips(t);
         drawShoots(t);

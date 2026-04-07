@@ -1,5 +1,11 @@
 /* ==================== LANDING PAGE ==================== */
 
+/* Suppress shared.css CSS overlays on home — the canvas handles the background */
+body.home-page::before,
+body.home-page::after {
+    display: none !important;
+}
+
 
 /* BMaC Banner */
 .bmac-banner {

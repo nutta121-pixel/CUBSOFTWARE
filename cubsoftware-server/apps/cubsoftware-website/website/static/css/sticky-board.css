@@ -33,8 +33,8 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 1.5rem;
-    background: var(--surface-color);
-    border-bottom: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     z-index: 100;
     flex-shrink: 0;
 }
@@ -49,7 +49,7 @@ body {
     font-family: 'Poppins', sans-serif;
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-light);
+    color: #ffffff;
     margin: 0;
 }
 
@@ -57,7 +57,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    background: var(--dark-bg);
+    background: #06061a;
     border-radius: 8px;
     padding: 0.25rem 0.5rem;
 }
@@ -71,20 +71,20 @@ body {
     background: transparent;
     border: none;
     border-radius: 6px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .zoom-btn:hover {
-    background: var(--surface-color);
-    color: var(--primary);
+    background: rgba(255, 255, 255, 0.04);
+    color: #5865f2;
 }
 
 .zoom-level {
     min-width: 50px;
     text-align: center;
-    color: var(--text-light);
+    color: #ffffff;
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
     font-weight: 500;
@@ -102,9 +102,9 @@ body {
     gap: 0.5rem;
     padding: 0.5rem 1rem;
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
     cursor: pointer;
@@ -112,12 +112,12 @@ body {
 }
 
 .control-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .control-btn.primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border: none;
     color: white;
 }
@@ -135,8 +135,8 @@ body {
     gap: 0.75rem;
     padding: 0.75rem;
     background: rgba(88, 101, 242, 0.1);
-    border-bottom: 1px solid var(--primary);
-    color: var(--text-light);
+    border-bottom: 1px solid #5865f2;
+    color: #ffffff;
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
     flex-shrink: 0;
@@ -144,7 +144,7 @@ body {
 
 .create-own-btn {
     padding: 0.4rem 0.75rem;
-    background: var(--primary);
+    background: #5865f2;
     border-radius: 6px;
     color: white;
     text-decoration: none;
@@ -153,7 +153,7 @@ body {
 }
 
 .create-own-btn:hover {
-    background: var(--secondary);
+    background: #7c3aed;
 }
 
 /* The Board Container (handles overflow and pan) */
@@ -162,7 +162,7 @@ body {
     position: relative;
     overflow: auto;
     min-height: 0;
-    background: var(--dark-bg);
+    background: #06061a;
 }
 
 /* The Board */
@@ -175,7 +175,7 @@ body {
     background:
         linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
         linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        var(--dark-bg);
+        #06061a;
     background-size: 40px 40px;
     cursor: default;
     transform-origin: 0 0;
@@ -290,8 +290,8 @@ body {
 }
 
 .modal-content {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     width: 100%;
     max-width: 500px;
@@ -306,11 +306,11 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .modal-header h3 {
-    color: var(--text-light);
+    color: #ffffff;
     font-family: 'Poppins', sans-serif;
     font-size: 1.1rem;
     margin: 0;
@@ -325,7 +325,7 @@ body {
     background: transparent;
     border: none;
     border-radius: 8px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.5rem;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -333,7 +333,7 @@ body {
 
 .modal-close:hover {
     background: rgba(239, 68, 68, 0.1);
-    color: var(--error);
+    color: #ef4444;
 }
 
 /* Note Editor */
@@ -346,10 +346,10 @@ body {
     width: 100%;
     min-height: 150px;
     padding: 1rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     font-family: 'Poppins', sans-serif;
     font-size: 1rem;
     resize: vertical;
@@ -358,7 +358,7 @@ body {
 
 #noteText:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .editor-options {
@@ -374,7 +374,7 @@ body {
 }
 
 .option-group label {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
     font-weight: 500;
@@ -400,30 +400,30 @@ body {
 }
 
 .color-btn.active {
-    border-color: var(--primary);
+    border-color: #5865f2;
     box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.3);
 }
 
 .option-group select {
     padding: 0.6rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
 }
 
 .option-group select:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .modal-footer {
     display: flex;
     justify-content: space-between;
     padding: 1rem 1.5rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .btn-delete {
@@ -432,9 +432,9 @@ body {
     gap: 0.5rem;
     padding: 0.6rem 1rem;
     background: transparent;
-    border: 1px solid var(--error);
+    border: 1px solid #ef4444;
     border-radius: 8px;
-    color: var(--error);
+    color: #ef4444;
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
     cursor: pointer;
@@ -447,7 +447,7 @@ body {
 
 .btn-save {
     padding: 0.6rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border: none;
     border-radius: 8px;
     color: white;
@@ -469,7 +469,7 @@ body {
 }
 
 .share-body p {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-family: 'Poppins', sans-serif;
     margin-bottom: 1rem;
 }
@@ -482,10 +482,10 @@ body {
 .share-link-container input {
     flex: 1;
     padding: 0.75rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
 }
@@ -495,7 +495,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1rem;
-    background: var(--primary);
+    background: #5865f2;
     border: none;
     border-radius: 8px;
     color: white;
@@ -506,14 +506,14 @@ body {
 }
 
 .btn-copy:hover {
-    background: var(--secondary);
+    background: #7c3aed;
 }
 
 /* Share options */
 .share-options {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .btn-shorten {
@@ -522,9 +522,9 @@ body {
     gap: 0.5rem;
     padding: 0.6rem 1rem;
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
     cursor: pointer;
@@ -534,8 +534,8 @@ body {
 }
 
 .btn-shorten:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .btn-shorten.loading {
@@ -545,7 +545,7 @@ body {
 
 .share-note {
     font-size: 0.85rem !important;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 1rem !important;
 }
 
@@ -562,11 +562,11 @@ body {
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 0.75rem 1.5rem;
-    color: var(--text-light);
+    color: #ffffff;
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
     opacity: 0;

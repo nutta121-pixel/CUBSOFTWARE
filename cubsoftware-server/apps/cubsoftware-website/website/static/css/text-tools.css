@@ -13,8 +13,8 @@
 
 .text-tools-header h1 {
     font-family: 'Orbitron', sans-serif;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -22,7 +22,7 @@
 }
 
 .text-tools-header p {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
@@ -36,7 +36,7 @@
 
 .text-column {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 20px;
     display: flex;
@@ -53,7 +53,7 @@
 .column-header h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.1rem;
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 .input-actions,
@@ -64,17 +64,17 @@
 
 .action-btn {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .action-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .action-btn svg {
@@ -87,7 +87,7 @@
     flex: 1;
     min-height: 250px;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     padding: 15px;
     color: #fff;
@@ -100,11 +100,11 @@
 }
 
 .text-column textarea:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .text-column textarea::placeholder {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     opacity: 0.6;
 }
 
@@ -115,7 +115,7 @@
     gap: 10px;
     margin-top: 15px;
     padding-top: 15px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .stat-item {
@@ -129,13 +129,13 @@
     display: block;
     font-family: 'Orbitron', sans-serif;
     font-size: 1.3rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 4px;
 }
 
 .stat-label {
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -150,7 +150,7 @@
 
 .tool-group {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 20px;
 }
@@ -158,7 +158,7 @@
 .tool-group h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 15px;
 }
 
@@ -170,25 +170,25 @@
 
 .tool-btn {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 10px 16px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.85rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .tool-btn:hover {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.1);
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 .tool-btn.selected {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.2);
-    color: var(--primary-color);
+    color: #5865f2;
     box-shadow: 0 0 10px rgba(88, 101, 242, 0.3);
 }
 
@@ -196,7 +196,7 @@
 /* Lorem Section */
 .lorem-section {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 25px;
     margin-bottom: 30px;
@@ -205,7 +205,7 @@
 .lorem-section h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.1rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 20px;
     text-align: center;
 }
@@ -225,14 +225,14 @@
 }
 
 .lorem-input-group label {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.95rem;
 }
 
 .lorem-input-group input,
 .lorem-input-group select {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 10px 14px;
     color: #fff;
@@ -270,7 +270,7 @@
 
 .lorem-input-group input:focus,
 .lorem-input-group select:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .generate-btn {
@@ -293,7 +293,7 @@
 /* Find & Replace Section */
 .find-replace-section {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 25px;
     margin-bottom: 30px;
@@ -302,7 +302,7 @@
 .find-replace-section h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.1rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 20px;
     text-align: center;
 }
@@ -322,7 +322,7 @@
 
 .find-replace-inputs input {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 10px 14px;
     color: #fff;
@@ -333,7 +333,7 @@
 }
 
 .find-replace-inputs input:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .find-replace-options {
@@ -345,25 +345,25 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 10px 14px;
     transition: all 0.3s ease;
 }
 
 .checkbox-label:hover {
-    border-color: var(--primary-color);
-    color: var(--text-primary);
+    border-color: #5865f2;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .checkbox-label:has(input:checked) {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.1);
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -373,7 +373,7 @@
 .checkbox-label .checkbox-custom {
     width: 20px;
     height: 20px;
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -382,12 +382,12 @@
 }
 
 .checkbox-label:hover .checkbox-custom {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .checkbox-label input:checked + .checkbox-custom {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
+    background: #5865f2;
+    border-color: #5865f2;
 }
 
 .checkbox-label .checkbox-custom svg {
@@ -404,10 +404,10 @@
 
 .replace-btn {
     background: rgba(88, 101, 242, 0.15);
-    border: 1px solid var(--primary-color);
+    border: 1px solid #5865f2;
     border-radius: 10px;
     padding: 10px 20px;
-    color: var(--primary-color);
+    color: #5865f2;
     font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
@@ -424,7 +424,7 @@
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--primary-color);
+    background: #5865f2;
     color: #fff;
     padding: 12px 25px;
     border-radius: 8px;

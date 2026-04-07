@@ -13,8 +13,8 @@
 
 .picker-header h1 {
     font-family: 'Orbitron', sans-serif;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -22,7 +22,7 @@
 }
 
 .picker-header p {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
@@ -36,7 +36,7 @@
 
 .picker-column {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 20px;
 }
@@ -141,20 +141,20 @@
     height: 100px;
     border-radius: 12px;
     background: #5865f2;
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     margin-bottom: 8px;
 }
 
 .preview-label {
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* Color Values Section */
 .color-values-section h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.2rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 20px;
 }
 
@@ -165,7 +165,7 @@
 .color-input-group label {
     display: block;
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 6px;
     font-weight: 500;
 }
@@ -178,7 +178,7 @@
 .input-with-copy input {
     flex: 1;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 12px 14px;
     color: #fff;
@@ -189,7 +189,7 @@
 }
 
 .input-with-copy input:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
 }
 
@@ -200,12 +200,12 @@
     padding: 10px 12px;
     cursor: pointer;
     transition: all 0.3s ease;
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 .copy-btn:hover {
     background: rgba(88, 101, 242, 0.25);
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .copy-btn svg {
@@ -217,7 +217,7 @@
 .rgb-sliders {
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .slider-group {
@@ -230,7 +230,7 @@
 .slider-group label {
     width: 20px;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .slider-group input[type="range"] {
@@ -270,13 +270,13 @@
     text-align: right;
     font-family: 'Consolas', monospace;
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* Palette Section */
 .palette-section {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 25px;
     margin-bottom: 30px;
@@ -286,7 +286,7 @@
 .palette-section h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.2rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 20px;
 }
 
@@ -300,24 +300,24 @@
 
 .palette-tab {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
     padding: 8px 18px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .palette-tab:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .palette-tab.active {
     background: rgba(88, 101, 242, 0.15);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .palette-colors {
@@ -348,7 +348,7 @@
     left: 50%;
     transform: translateX(-50%);
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-family: 'Consolas', monospace;
     white-space: nowrap;
 }
@@ -357,12 +357,12 @@
 .image-picker-section h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.1rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 15px;
 }
 
 .image-upload-area {
-    border: 2px dashed var(--border-color);
+    border: 2px dashed rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     min-height: 350px;
     display: flex;
@@ -375,7 +375,7 @@
 
 .image-upload-area:hover,
 .image-upload-area.dragover {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.05);
 }
 
@@ -387,18 +387,18 @@
 .upload-placeholder svg {
     width: 70px;
     height: 70px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 15px;
 }
 
 .upload-placeholder p {
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 1.1rem;
     margin-bottom: 8px;
 }
 
 .upload-placeholder span {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 
@@ -445,10 +445,10 @@
 
 .btn-secondary {
     background: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 10px 20px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -456,13 +456,13 @@
 
 .btn-secondary:hover {
     background: rgba(255, 255, 255, 0.15);
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 /* Recent Colors Section */
 .recent-colors-section {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 25px;
     width: 100%;
@@ -481,7 +481,7 @@
     text-align: center;
     font-family: 'Orbitron', sans-serif;
     font-size: 1.2rem;
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 .clear-recent {
@@ -489,7 +489,7 @@
     justify-self: end;
     background: none;
     border: none;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
     cursor: pointer;
     transition: color 0.3s ease;
@@ -525,7 +525,7 @@
 }
 
 .recent-empty {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     font-style: italic;
 }
@@ -536,7 +536,7 @@
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--primary-color);
+    background: #5865f2;
     color: #fff;
     padding: 12px 25px;
     border-radius: 8px;

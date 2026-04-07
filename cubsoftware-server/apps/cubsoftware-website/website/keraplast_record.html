@@ -22,23 +22,7 @@
     <link rel="stylesheet" href="/static/css/keraplast.css?v={{ v }}">
 </head>
 <body>
-    <!-- Navigation Header -->
-    <header class="site-header">
-        <div class="header-top">
-            <a href="/" class="logo">
-                <span class="logo-text">
-                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
-                </span>
-            </a>
-            <nav class="site-nav">
-                <a href="/">Home</a>
-                <a href="/#apps">Tools</a>
-                <a href="https://questcord.fun" target="_blank">QuestCord</a>
-                <a href="/contact">Contact</a>
-            </nav>
-        </div>
-        {% include 'nav_auth.html' %}
-    </header>
+    {% include 'header.html' %}
 
     <!-- Password Screen -->
     <div id="passwordScreen" class="password-screen">
@@ -136,7 +120,7 @@
 
             <!-- No step times fallback -->
             <div class="calculator-card" id="noStepsCard" style="display:none;">
-                <p style="color:var(--text-secondary); font-family:'Poppins',sans-serif; font-size:0.95rem; text-align:center; padding:20px 0;">
+                <p style="color:rgba(255,255,255,0.65); font-family:'Poppins',sans-serif; font-size:0.95rem; text-align:center; padding:20px 0;">
                     Step times are not available for records saved before this feature was added.
                 </p>
             </div>
@@ -158,24 +142,7 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-inner">
-            <div class="footer-text">
-                &copy; 2026 CUB SOFTWARE. Made with love by
-                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
-            </div>
-            <div class="footer-links">
-                <a href="/">Home</a>
-                <a href="/status">Status</a>
-                <a href="/terms">Terms</a>
-                <a href="/privacy">Privacy</a>
-                <a href="/copyright">Copyright</a>
-                <a href="/report">Report Issue</a>
-                <a href="/contact">Contact</a>
-            </div>
-        </div>
-    </footer>
+    {% include 'footer.html' %}
 
     <script>
         const RECORD_ID = '{{ record_id }}';

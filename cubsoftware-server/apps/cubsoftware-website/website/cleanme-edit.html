@@ -15,25 +15,7 @@
 </head>
 <body data-page="edit">
     <!-- Header -->
-    <header class="site-header cleanme-header">
-        <div class="header-container">
-            <a href="/" class="logo">
-                <span class="logo-text">
-                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
-                </span>
-            </a>
-            <nav class="site-nav" id="siteNav">
-                <a href="/cleanme" class="nav-link">Home</a>
-                <a href="/cleanme/browse" class="nav-link">Browse</a>
-                <a href="/cleanme/dashboard" class="nav-link">Dashboard</a>
-                <a href="/" class="nav-link">Back to Tools</a>
-            </nav>
-            {% include 'nav_auth.html' %}
-            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
-                <span></span><span></span><span></span>
-            </button>
-        </div>
-    </header>
+    {% include 'header.html' %}
 
     <main class="submit-main">
         <div class="submit-container">
@@ -82,70 +64,14 @@
 
                 <div class="form-actions" style="display:flex;gap:1rem;">
                     <button type="submit" class="submit-btn" id="save-btn">Save Changes</button>
-                    <a href="/cleanme/dashboard" class="submit-btn" style="background:var(--surface-color);border:1px solid var(--border-color);color:var(--text-light);text-align:center;text-decoration:none;">Cancel</a>
+                    <a href="/cleanme/dashboard" class="submit-btn submit-btn-ghost">Cancel</a>
                 </div>
             </form>
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="footer-inner">
-            <div class="footer-text">
-                &copy; 2026 CUB SOFTWARE. Made with love by
-                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
-            </div>
-            <div class="footer-links">
-                <a href="/">Home</a><a href="/status">Status</a>
-                <a href="/terms">Terms</a><a href="/privacy">Privacy</a>
-            </div>
-        </div>
-    </footer>
+    {% include 'footer.html' %}
 
     <script src="/static/js/cleanme.js?v={{ v }}"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const mobileBtn = document.getElementById('mobileMenuBtn');
-        const nav = document.getElementById('siteNav');
-        if (mobileBtn && nav) {
-            mobileBtn.addEventListener('click', function() {
-                nav.classList.toggle('active');
-                mobileBtn.classList.toggle('active');
-            });
-        }
-
-        document.getElementById('edit-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('save-btn');
-            btn.disabled = true;
-            btn.textContent = 'Saving...';
-
-            const data = {
-                description: document.getElementById('description').value,
-                category: document.getElementById('category').value,
-                tags: document.getElementById('tags').value
-            };
-
-            try {
-                const res = await fetch('/cleanme/api/servers/{{ server_id }}', {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (result.success) {
-                    window.location.href = '/cleanme/server/{{ server_id }}';
-                } else {
-                    alert(result.error || 'Failed to save');
-                    btn.disabled = false;
-                    btn.textContent = 'Save Changes';
-                }
-            } catch (err) {
-                alert('Failed to save changes');
-                btn.disabled = false;
-                btn.textContent = 'Save Changes';
-            }
-        });
-    });
-    </script>
 </body>
 </html>

@@ -27,8 +27,8 @@ main.wheel-container {
 /* Panels */
 .entries-panel,
 .settings-panel {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 20px;
     display: flex;
@@ -84,19 +84,19 @@ main.wheel-container {
     justify-content: space-between;
     align-items: center;
     padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .panel-header h2 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.3rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin: 0;
 }
 
 .entry-count {
     font-size: 0.85rem;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
     padding: 6px 14px;
     border-radius: 20px;
@@ -110,10 +110,10 @@ main.wheel-container {
 .panel-section h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.1rem;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin: 0 0 15px 0;
     padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Entries Input */
@@ -121,10 +121,10 @@ main.wheel-container {
     width: 100%;
     height: 160px;
     background: var(--background-color);
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 14px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
     resize: vertical;
@@ -134,12 +134,12 @@ main.wheel-container {
 
 .entries-input-section textarea:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
 }
 
 .entries-input-section textarea::placeholder {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     opacity: 0.6;
 }
 
@@ -170,13 +170,13 @@ main.wheel-container {
     gap: 10px;
     padding: 8px 12px;
     background: var(--background-color);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     transition: all 0.2s;
 }
 
 .entry-item:hover {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .entry-color {
@@ -189,7 +189,7 @@ main.wheel-container {
 .entry-name {
     flex: 1;
     font-size: 0.9rem;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -198,7 +198,7 @@ main.wheel-container {
 .entry-remove {
     background: none;
     border: none;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     padding: 4px;
     border-radius: 4px;
@@ -218,7 +218,7 @@ main.wheel-container {
     display: flex;
     gap: 10px;
     padding-top: 10px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Wheel Section */
@@ -257,7 +257,7 @@ main.wheel-container {
     height: 0;
     border-left: 20px solid transparent;
     border-right: 20px solid transparent;
-    border-top: 40px solid var(--primary-color);
+    border-top: 40px solid #5865f2;
     filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
     z-index: 10;
     transform-origin: center top;
@@ -341,29 +341,29 @@ main.wheel-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .btn-icon:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .btn-icon.active {
     background: rgba(88, 101, 242, 0.1);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 /* Winner Display */
 .winner-display {
     background: var(--background-color);
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 20px;
     text-align: center;
@@ -375,12 +375,12 @@ main.wheel-container {
 }
 
 .winner-display.has-winner {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.1);
 }
 
 .winner-placeholder {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-style: italic;
 }
 
@@ -388,7 +388,7 @@ main.wheel-container {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.3rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 /* Settings */
@@ -399,7 +399,7 @@ main.wheel-container {
 .setting-group label {
     display: block;
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 6px;
 }
 
@@ -407,9 +407,9 @@ main.wheel-container {
     width: 100%;
     padding: 10px 12px;
     background: var(--background-color);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
     cursor: pointer;
@@ -418,7 +418,7 @@ main.wheel-container {
 
 .setting-group select:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 /* Toggle Buttons */
@@ -444,7 +444,7 @@ main.wheel-container {
 }
 
 .toggle-btn:hover {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     color: #fff;
     background: rgba(88, 101, 242, 0.2);
 }
@@ -459,7 +459,7 @@ main.wheel-container {
 /* History */
 .history-list {
     background: var(--background-color);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 10px;
     max-height: 150px;
@@ -471,7 +471,7 @@ main.wheel-container {
 }
 
 .history-placeholder {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
     font-style: italic;
     text-align: center;
@@ -483,18 +483,18 @@ main.wheel-container {
     justify-content: space-between;
     align-items: center;
     padding: 6px 10px;
-    background: var(--surface-color);
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 6px;
     font-size: 0.85rem;
 }
 
 .history-item .name {
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-weight: 500;
 }
 
 .history-item .time {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.75rem;
 }
 
@@ -529,12 +529,12 @@ main.wheel-container {
 
 .btn-secondary {
     background: var(--background-color);
-    color: var(--text-primary);
-    border: 1px solid var(--border-color);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .btn-secondary:hover {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .btn-small {
@@ -574,8 +574,8 @@ main.wheel-container {
 }
 
 .modal-content {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 30px;
     max-width: 500px;
@@ -590,7 +590,7 @@ main.wheel-container {
     right: 15px;
     background: none;
     border: none;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.5rem;
     cursor: pointer;
     padding: 5px;
@@ -599,12 +599,12 @@ main.wheel-container {
 }
 
 .modal-close:hover {
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .modal-content h2 {
     font-family: 'Orbitron', sans-serif;
-    color: var(--primary-color);
+    color: #5865f2;
     margin: 0 0 15px 0;
 }
 
@@ -612,10 +612,10 @@ main.wheel-container {
     width: 100%;
     height: 120px;
     background: var(--background-color);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 12px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-family: monospace;
     font-size: 0.85rem;
     margin: 15px 0;
@@ -636,7 +636,7 @@ main.wheel-container {
     font-family: 'Orbitron', sans-serif;
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     padding: 20px;
     background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
     border-radius: 12px;
@@ -650,11 +650,11 @@ main.wheel-container {
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     padding: 12px 24px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.9rem;
     z-index: 3000;
     opacity: 0;

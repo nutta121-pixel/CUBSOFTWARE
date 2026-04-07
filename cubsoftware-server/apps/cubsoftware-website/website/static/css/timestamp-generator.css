@@ -30,13 +30,13 @@
     font-family: 'Orbitron', sans-serif;
     font-size: clamp(1.8rem, 4vw, 2.6rem);
     font-weight: 900;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 12px;
     line-height: 1.15;
 }
 
 .tg-hero p {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1rem;
     max-width: 520px;
     margin: 0 auto;
@@ -55,7 +55,7 @@
 /* Main Card */
 .tg-card {
     background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 28px;
     margin-bottom: 28px;
@@ -82,17 +82,17 @@
 .tg-input-group label {
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     letter-spacing: 0.04em;
 }
 
 .tg-input-group input,
 .tg-input-group select {
     background: rgba(255, 255, 255, 0.04);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     padding: 10px 14px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
     font-size: 0.92rem;
     outline: none;
@@ -109,12 +109,12 @@
 
 .tg-input-group input:focus,
 .tg-input-group select:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .tg-input-group select option {
     background: #1a1a2e;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 /* Quick buttons */
@@ -127,9 +127,9 @@
 
 .tg-quick-btn {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-family: 'Poppins', sans-serif;
     font-size: 0.8rem;
     font-weight: 600;
@@ -141,7 +141,7 @@
 .tg-quick-btn:hover {
     background: rgba(88, 101, 242, 0.12);
     border-color: rgba(88, 101, 242, 0.4);
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 /* Unix display bar */
@@ -158,7 +158,7 @@
 .tg-unix-label {
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     letter-spacing: 0.06em;
     text-transform: uppercase;
 }
@@ -181,7 +181,7 @@
 
 .tg-format-card {
     background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 16px;
     display: flex;
@@ -213,7 +213,7 @@
 .tg-format-label {
     font-size: 0.78rem;
     font-weight: 700;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     letter-spacing: 0.04em;
     text-transform: uppercase;
 }
@@ -232,7 +232,7 @@
 .tg-format-preview {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     min-height: 1.4em;
 }
 
@@ -250,7 +250,7 @@
 .tg-code {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.72rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0.05);
     padding: 3px 7px;
     border-radius: 5px;
@@ -279,8 +279,8 @@
 
 .tg-copy-btn:hover {
     background: rgba(88, 101, 242, 0.22);
-    border-color: var(--primary-color);
-    color: var(--text-primary);
+    border-color: #5865f2;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .tg-copy-btn.copied {
@@ -296,7 +296,7 @@
 }
 
 .tg-copy-all-btn {
-    background: var(--primary-color);
+    background: #5865f2;
     border: none;
     border-radius: 10px;
     color: #ffffff;
@@ -320,7 +320,7 @@
 /* Info Box */
 .tg-info-box {
     background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 14px;
     padding: 22px 26px;
 }
@@ -328,14 +328,14 @@
 .tg-info-title {
     font-weight: 700;
     font-size: 0.88rem;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 8px;
     letter-spacing: 0.03em;
 }
 
 .tg-info-box p {
     font-size: 0.84rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     line-height: 1.65;
     margin: 0;
 }

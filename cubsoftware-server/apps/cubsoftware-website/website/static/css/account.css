@@ -1,0 +1,209 @@
+/* My Account Page */
+
+.account-wrap {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 3rem 1rem 4rem;
+    animation: fadeInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.account-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 520px;
+    backdrop-filter: blur(8px);
+}
+
+.account-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    letter-spacing: 0.03em;
+    background: linear-gradient(135deg, #ffffff 0%, #c7d0ff 50%, #5865f2 90%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 2rem;
+}
+
+.account-section {
+    margin-bottom: 2rem;
+}
+
+.account-section-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.35);
+    margin-bottom: 0.75rem;
+}
+
+.account-user-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px 16px;
+}
+
+.account-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.account-username {
+    font-weight: 600;
+    color: #ffffff;
+    font-size: 0.95rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.account-provider-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-top: 3px;
+}
+
+.account-provider-tag svg { width: 11px; height: 11px; }
+.tag-discord { background: rgba(88, 101, 242, 0.2); color: #818cf8; }
+.tag-twitch  { background: rgba(145, 70, 255, 0.2); color: #c084fc; }
+
+/* ── Link section (no linked account) ── */
+.account-link-section {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.account-link-prompt {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.875rem;
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+/* ── Link/unlink buttons ── */
+.btn-link-discord,
+.btn-link-twitch,
+.btn-unlink,
+.btn-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: 9px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.15s ease;
+}
+
+.btn-link-discord { background: #5865f2; border: none; color: #fff; }
+.btn-link-discord:hover { background: #4752c4; transform: translateY(-1px); }
+
+.btn-link-twitch { background: #9146ff; border: none; color: #fff; }
+.btn-link-twitch:hover { background: #772ce8; transform: translateY(-1px); }
+
+.btn-link-discord svg, .btn-link-twitch svg { width: 16px; height: 16px; }
+
+.btn-unlink {
+    background: none;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+}
+.btn-unlink:hover { background: rgba(239, 68, 68, 0.1); border-color: #f87171; }
+
+.account-linked-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+/* ── Actions bar ── */
+.account-actions {
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-logout {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #f87171;
+}
+.btn-logout:hover { background: rgba(239, 68, 68, 0.18); }
+
+.btn-logout-discord {
+    background: rgba(88, 101, 242, 0.1);
+    border-color: rgba(88, 101, 242, 0.25);
+    color: #818cf8;
+}
+.btn-logout-discord:hover { background: rgba(88, 101, 242, 0.18); }
+
+.btn-logout-twitch {
+    background: rgba(145, 71, 255, 0.1);
+    border-color: rgba(145, 71, 255, 0.25);
+    color: #c084fc;
+}
+.btn-logout-twitch:hover { background: rgba(145, 71, 255, 0.18); }
+
+/* ── Toast ── */
+.toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: rgba(15, 15, 35, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 0.875rem;
+    color: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 9999;
+    backdrop-filter: blur(8px);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 480px) {
+    .account-card { padding: 1.75rem 1.25rem; }
+    .account-user-row { flex-wrap: wrap; }
+    .account-user-info { flex: 1 1 auto; }
+    .btn-unlink { width: 100%; text-align: center; justify-content: center; }
+    .account-actions { flex-direction: column; }
+    .btn-logout { width: 100%; justify-content: center; }
+}

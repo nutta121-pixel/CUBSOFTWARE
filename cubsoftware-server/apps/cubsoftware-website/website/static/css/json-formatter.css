@@ -13,8 +13,8 @@
 
 .formatter-header h1 {
     font-family: 'Orbitron', monospace;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -22,7 +22,7 @@
 }
 
 .formatter-header p {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
@@ -46,10 +46,10 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
@@ -57,12 +57,12 @@
 }
 
 .action-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .action-btn.primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border: none;
     color: white;
 }
@@ -83,8 +83,8 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     margin-bottom: 1rem;
 }
@@ -94,33 +94,33 @@
 }
 
 .status-bar.valid {
-    border-color: var(--success);
+    border-color: #22c55e;
     background: rgba(34, 197, 94, 0.1);
 }
 
 .status-bar.valid .status-icon {
-    color: var(--success);
+    color: #22c55e;
 }
 
 .status-bar.valid .status-text {
-    color: var(--success);
+    color: #22c55e;
 }
 
 .status-bar.error {
-    border-color: var(--error);
+    border-color: #ef4444;
     background: rgba(239, 68, 68, 0.1);
 }
 
 .status-bar.error .status-icon {
-    color: var(--error);
+    color: #ef4444;
 }
 
 .status-bar.error .status-text {
-    color: var(--error);
+    color: #ef4444;
 }
 
 .status-text {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 
@@ -133,8 +133,8 @@
 }
 
 .editor-panel {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     overflow: hidden;
     display: flex;
@@ -146,9 +146,9 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 1rem;
-    background: var(--dark-bg);
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-muted);
+    background: #06061a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
 }
 
@@ -166,22 +166,22 @@
 .panel-tab {
     padding: 0.4rem 0.75rem;
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 4px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .panel-tab:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .panel-tab.active {
-    background: var(--primary);
-    border-color: var(--primary);
+    background: #5865f2;
+    border-color: #5865f2;
     color: white;
 }
 
@@ -195,7 +195,7 @@
 .line-numbers {
     padding: 1rem 0.5rem;
     background: rgba(0, 0, 0, 0.2);
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
     line-height: 1.5;
@@ -211,7 +211,7 @@
     padding: 1rem;
     background: transparent;
     border: none;
-    color: var(--text-light);
+    color: #ffffff;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
     line-height: 1.5;
@@ -221,7 +221,7 @@
 }
 
 #jsonInput::placeholder {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* Output Wrapper */
@@ -240,7 +240,7 @@
     padding: 1rem;
     margin: 0;
     background: transparent;
-    color: var(--text-light);
+    color: #ffffff;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
     line-height: 1.5;
@@ -318,7 +318,7 @@
     display: inline-block;
     width: 1rem;
     cursor: pointer;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .tree-collapsed > .tree-children {
@@ -327,14 +327,14 @@
 
 /* Settings Section */
 .settings-section {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 1.5rem;
 }
 
 .settings-section h3 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1rem;
     margin-bottom: 1rem;
 }
@@ -352,16 +352,16 @@
 }
 
 .setting-item label:first-child {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 
 .setting-item select {
     padding: 0.5rem 1rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
-    color: var(--text-light);
+    color: #ffffff;
     cursor: pointer;
 }
 
@@ -386,8 +386,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 24px;
     transition: 0.3s;
 }
@@ -399,14 +399,14 @@
     width: 18px;
     left: 2px;
     bottom: 2px;
-    background: var(--text-muted);
+    background: rgba(255, 255, 255, 0.45);
     border-radius: 50%;
     transition: 0.3s;
 }
 
 .toggle input:checked + .toggle-slider {
-    background: var(--primary);
-    border-color: var(--primary);
+    background: #5865f2;
+    border-color: #5865f2;
 }
 
 .toggle input:checked + .toggle-slider:before {
@@ -420,7 +420,7 @@
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--success);
+    background: #22c55e;
     color: white;
     padding: 1rem 2rem;
     border-radius: 12px;

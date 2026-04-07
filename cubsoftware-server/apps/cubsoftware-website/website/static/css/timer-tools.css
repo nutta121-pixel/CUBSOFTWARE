@@ -13,8 +13,8 @@
 
 .timer-header h1 {
     font-family: 'Orbitron', monospace;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -22,7 +22,7 @@
 }
 
 .timer-header p {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
@@ -36,10 +36,10 @@
 .timer-tab {
     flex: 1;
     padding: 1rem;
-    background: var(--surface-color);
-    border: 2px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
@@ -48,23 +48,23 @@
 }
 
 .timer-tab:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .timer-tab.active {
     background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 /* Timer Panels */
 .timer-panel {
     display: none;
-    background: var(--surface-color);
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 16px;
     padding: 2rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .timer-panel.active {
@@ -81,7 +81,7 @@
     font-family: 'Orbitron', monospace;
     font-size: 4rem;
     font-weight: 700;
-    color: var(--text-light);
+    color: #ffffff;
     letter-spacing: 2px;
 }
 
@@ -110,7 +110,7 @@
 }
 
 .timer-btn.start {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     color: white;
 }
 
@@ -120,24 +120,24 @@
 }
 
 .timer-btn.secondary {
-    background: var(--dark-bg);
-    color: var(--text-light);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .timer-btn.secondary:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .timer-btn.danger {
     background: rgba(239, 68, 68, 0.1);
-    color: var(--error);
-    border: 1px solid var(--error);
+    color: #ef4444;
+    border: 1px solid #ef4444;
 }
 
 .timer-btn.danger:hover {
-    background: var(--error);
+    background: #ef4444;
     color: white;
 }
 
@@ -148,12 +148,12 @@
 
 /* Laps Section */
 .laps-section {
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding-top: 1.5rem;
 }
 
 .laps-section h3 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1rem;
     margin-bottom: 1rem;
 }
@@ -167,7 +167,7 @@
     display: flex;
     justify-content: space-between;
     padding: 0.75rem;
-    background: var(--dark-bg);
+    background: #06061a;
     border-radius: 8px;
     margin-bottom: 0.5rem;
 }
@@ -177,17 +177,17 @@
 }
 
 .lap-number {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-weight: 500;
 }
 
 .lap-time {
-    color: var(--text-light);
+    color: #ffffff;
     font-family: 'Orbitron', monospace;
 }
 
 .lap-diff {
-    color: var(--primary);
+    color: #5865f2;
     font-size: 0.85rem;
 }
 
@@ -214,27 +214,27 @@
     font-size: 2rem;
     font-family: 'Orbitron', monospace;
     text-align: center;
-    background: var(--dark-bg);
-    border: 2px solid var(--border-color);
+    background: #06061a;
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    color: var(--text-light);
+    color: #ffffff;
     outline: none;
 }
 
 .time-input-group input:focus {
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .time-input-group label {
     display: block;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.8rem;
     margin-top: 0.5rem;
 }
 
 .time-separator {
     font-size: 2rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     padding-bottom: 1.5rem;
 }
 
@@ -247,10 +247,10 @@
 
 .preset-btn {
     padding: 0.75rem 1.25rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -258,7 +258,7 @@
 }
 
 .preset-btn:hover {
-    border-color: var(--primary);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.1);
 }
 
@@ -272,7 +272,7 @@
     display: block;
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--primary);
+    color: #5865f2;
     margin-bottom: 0.25rem;
 }
 
@@ -281,13 +281,13 @@
 }
 
 .session-count {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 
 .pomodoro-progress {
     height: 8px;
-    background: var(--dark-bg);
+    background: #06061a;
     border-radius: 4px;
     margin-bottom: 2rem;
     overflow: hidden;
@@ -296,7 +296,7 @@
 .progress-bar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    background: linear-gradient(90deg, #5865f2, #7c3aed);
     border-radius: 4px;
     transition: width 0.5s ease;
 }
@@ -306,13 +306,13 @@
 }
 
 .pomodoro-settings {
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding-top: 1.5rem;
     margin-top: 1rem;
 }
 
 .pomodoro-settings h3 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1rem;
     margin-bottom: 1rem;
 }
@@ -325,7 +325,7 @@
 }
 
 .setting-group label {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .setting-input {
@@ -339,19 +339,19 @@
     padding: 0.5rem;
     font-size: 1rem;
     text-align: center;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     outline: none;
 }
 
 .setting-input input:focus {
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .setting-input span {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 
@@ -361,7 +361,7 @@
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--primary);
+    background: #5865f2;
     color: white;
     padding: 1rem 2rem;
     border-radius: 12px;

@@ -13,8 +13,8 @@
 
 .converter-header h1 {
     font-family: 'Orbitron', monospace;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -22,7 +22,7 @@
 }
 
 .converter-header p {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
@@ -32,49 +32,49 @@
 }
 
 .upload-zone {
-    border: 2px dashed var(--border-color);
+    border: 2px dashed rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 3rem;
     text-align: center;
-    background: var(--surface-color);
+    background: rgba(255, 255, 255, 0.04);
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .upload-zone:hover,
 .upload-zone.drag-over {
-    border-color: var(--primary);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.1);
 }
 
 .upload-icon {
     width: 64px;
     height: 64px;
-    color: var(--primary);
+    color: #5865f2;
     margin-bottom: 1rem;
 }
 
 .upload-content h3 {
-    color: var(--text-light);
+    color: #ffffff;
     margin-bottom: 0.5rem;
 }
 
 .upload-content p {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 
 /* Options Section */
 .options-section {
-    background: var(--surface-color);
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 16px;
     padding: 1.5rem;
     margin-bottom: 2rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .options-section h3 {
-    color: var(--text-light);
+    color: #ffffff;
     margin-bottom: 1rem;
     font-size: 1.1rem;
 }
@@ -92,17 +92,17 @@
 }
 
 .option-group label {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 
 .option-group select,
 .option-group input[type="number"] {
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 0.75rem;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.95rem;
     transition: border-color 0.3s ease;
 }
@@ -110,12 +110,12 @@
 .option-group select:focus,
 .option-group input[type="number"]:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .option-group input[type="range"] {
     width: 100%;
-    accent-color: var(--primary);
+    accent-color: #5865f2;
 }
 
 .size-inputs {
@@ -130,7 +130,7 @@
 }
 
 .size-inputs span {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .checkbox-label {
@@ -138,7 +138,7 @@
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.9rem;
 }
 
@@ -149,7 +149,7 @@
 .checkbox-custom {
     width: 20px;
     height: 20px;
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -165,8 +165,8 @@
 }
 
 .checkbox-label input:checked + .checkbox-custom {
-    background: var(--primary);
-    border-color: var(--primary);
+    background: #5865f2;
+    border-color: #5865f2;
 }
 
 .checkbox-label input:checked + .checkbox-custom svg {
@@ -176,11 +176,11 @@
 
 /* Files Section */
 .files-section {
-    background: var(--surface-color);
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 16px;
     padding: 1.5rem;
     margin-bottom: 2rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     display: none;
 }
 
@@ -196,7 +196,7 @@
 }
 
 .files-header h3 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1.1rem;
 }
 
@@ -211,17 +211,17 @@
     gap: 0.5rem;
     padding: 0.5rem 1rem;
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 0.9rem;
 }
 
 .action-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .action-btn svg {
@@ -234,7 +234,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border: none;
     border-radius: 8px;
     color: white;
@@ -266,9 +266,9 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    background: var(--dark-bg);
+    background: #06061a;
     border-radius: 12px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .file-preview {
@@ -276,7 +276,7 @@
     height: 60px;
     border-radius: 8px;
     object-fit: cover;
-    background: var(--surface-color);
+    background: rgba(255, 255, 255, 0.04);
 }
 
 .file-info {
@@ -284,14 +284,14 @@
 }
 
 .file-name {
-    color: var(--text-light);
+    color: #ffffff;
     font-weight: 500;
     margin-bottom: 0.25rem;
     word-break: break-all;
 }
 
 .file-size {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
 }
 
@@ -309,23 +309,23 @@
 
 .file-status.converting {
     background: rgba(88, 101, 242, 0.2);
-    color: var(--primary);
+    color: #5865f2;
 }
 
 .file-status.done {
     background: rgba(16, 185, 129, 0.2);
-    color: var(--success);
+    color: #22c55e;
 }
 
 .file-status.error {
     background: rgba(239, 68, 68, 0.2);
-    color: var(--error);
+    color: #ef4444;
 }
 
 .file-remove {
     background: transparent;
     border: none;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     padding: 0.5rem;
     border-radius: 8px;
@@ -333,7 +333,7 @@
 }
 
 .file-remove:hover {
-    color: var(--error);
+    color: #ef4444;
     background: rgba(239, 68, 68, 0.1);
 }
 
@@ -344,10 +344,10 @@
 
 /* Download Section */
 .download-section {
-    background: var(--surface-color);
+    background: rgba(255, 255, 255, 0.04);
     border-radius: 16px;
     padding: 1.5rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     display: none;
 }
 
@@ -356,7 +356,7 @@
 }
 
 .download-section h3 {
-    color: var(--text-light);
+    color: #ffffff;
     margin-bottom: 1rem;
     font-size: 1.1rem;
 }
@@ -373,9 +373,9 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    background: var(--dark-bg);
+    background: #06061a;
     border-radius: 12px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .download-item .file-preview {
@@ -385,7 +385,7 @@
 
 .download-btn {
     padding: 0.5rem 1rem;
-    background: var(--success);
+    background: #22c55e;
     border: none;
     border-radius: 8px;
     color: white;
@@ -410,7 +410,7 @@
 .download-all-btn {
     width: 100%;
     padding: 1rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border: none;
     border-radius: 12px;
     color: white;
@@ -440,7 +440,7 @@
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--success);
+    background: #22c55e;
     color: white;
     padding: 1rem 2rem;
     border-radius: 12px;

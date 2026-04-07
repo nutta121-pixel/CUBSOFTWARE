@@ -13,8 +13,8 @@
 
 .clock-header h1 {
     font-family: 'Orbitron', monospace;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -22,14 +22,14 @@
 }
 
 .clock-header p {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
 /* Local Time Card */
 .local-time-card {
     background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
-    border: 1px solid var(--primary);
+    border: 1px solid #5865f2;
     border-radius: 16px;
     padding: 2rem;
     text-align: center;
@@ -37,7 +37,7 @@
 }
 
 .local-label {
-    color: var(--primary);
+    color: #5865f2;
     font-size: 0.9rem;
     font-weight: 500;
     text-transform: uppercase;
@@ -49,18 +49,18 @@
     font-family: 'Orbitron', monospace;
     font-size: 4rem;
     font-weight: 700;
-    color: var(--text-light);
+    color: #ffffff;
     letter-spacing: 2px;
 }
 
 .local-date {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1.1rem;
     margin-top: 0.5rem;
 }
 
 .local-timezone {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     margin-top: 0.25rem;
 }
@@ -75,10 +75,10 @@
 .add-clock-section select {
     flex: 1;
     padding: 0.875rem;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1rem;
     font-family: 'Poppins', sans-serif;
     cursor: pointer;
@@ -86,12 +86,12 @@
 
 .add-clock-section select:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .add-btn {
     padding: 0.875rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border: none;
     border-radius: 12px;
     color: white;
@@ -116,8 +116,8 @@
 }
 
 .clock-card {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
     position: relative;
@@ -132,7 +132,7 @@
     border: none;
     border-radius: 50%;
     background: transparent;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -142,19 +142,19 @@
 
 .clock-card .remove-btn:hover {
     background: rgba(239, 68, 68, 0.1);
-    color: var(--error);
+    color: #ef4444;
 }
 
 .clock-city {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-light);
+    color: #ffffff;
     margin-bottom: 0.25rem;
 }
 
 .clock-timezone {
     font-size: 0.8rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 0.75rem;
 }
 
@@ -162,12 +162,12 @@
     font-family: 'Orbitron', monospace;
     font-size: 2rem;
     font-weight: 700;
-    color: var(--text-light);
+    color: #ffffff;
 }
 
 .clock-date {
     font-size: 0.9rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 0.25rem;
 }
 
@@ -175,14 +175,14 @@
     display: inline-block;
     margin-top: 0.5rem;
     padding: 0.25rem 0.5rem;
-    background: var(--dark-bg);
+    background: #06061a;
     border-radius: 4px;
     font-size: 0.8rem;
-    color: var(--primary);
+    color: #5865f2;
 }
 
 .clock-diff.behind {
-    color: var(--error);
+    color: #ef4444;
 }
 
 /* Day/Night indicator */
@@ -196,20 +196,20 @@
 
 /* Meeting Planner */
 .meeting-planner {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
 }
 
 .meeting-planner h2 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1.25rem;
     margin-bottom: 0.25rem;
 }
 
 .planner-desc {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     margin-bottom: 1rem;
 }
@@ -224,10 +224,10 @@
 .planner-inputs input,
 .planner-inputs select {
     padding: 0.75rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.95rem;
     font-family: 'Poppins', sans-serif;
 }
@@ -235,7 +235,7 @@
 .planner-inputs input:focus,
 .planner-inputs select:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .planner-inputs input[type="date"],
@@ -255,31 +255,31 @@
 }
 
 .planner-result {
-    background: var(--dark-bg);
+    background: #06061a;
     border-radius: 8px;
     padding: 0.75rem 1rem;
 }
 
 .planner-result .city {
     font-weight: 500;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.9rem;
 }
 
 .planner-result .time {
     font-family: 'Orbitron', monospace;
     font-size: 1.1rem;
-    color: var(--primary);
+    color: #5865f2;
     margin-top: 0.25rem;
 }
 
 .planner-result .date {
     font-size: 0.8rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .planner-result.different-day {
-    border-left: 3px solid var(--warning);
+    border-left: 3px solid #f59e0b;
 }
 
 /* Responsive */

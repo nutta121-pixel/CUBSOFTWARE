@@ -13,8 +13,8 @@
 
 .regex-header h1 {
     font-family: 'Orbitron', monospace;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -22,7 +22,7 @@
 }
 
 .regex-header p {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
@@ -33,7 +33,7 @@
 
 .pattern-section label {
     display: block;
-    color: var(--text-light);
+    color: #ffffff;
     font-weight: 500;
     margin-bottom: 0.5rem;
 }
@@ -41,15 +41,15 @@
 .pattern-input-row {
     display: flex;
     align-items: center;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     overflow: hidden;
 }
 
 .pattern-delim {
     padding: 0 0.75rem;
-    color: var(--primary);
+    color: #5865f2;
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 1.25rem;
 }
@@ -58,7 +58,7 @@
     border: none;
     background: transparent;
     padding: 1rem 0;
-    color: var(--text-light);
+    color: #ffffff;
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 1rem;
     outline: none;
@@ -72,7 +72,7 @@
 .pattern-input-row input:last-of-type {
     width: 60px;
     text-align: center;
-    border-left: 1px solid var(--border-color);
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
     padding: 1rem 0.5rem;
 }
 
@@ -81,7 +81,7 @@
     padding: 0.5rem 0.75rem;
     background: rgba(239, 68, 68, 0.1);
     border-radius: 6px;
-    color: var(--error);
+    color: #ef4444;
     font-size: 0.9rem;
     display: none;
 }
@@ -97,7 +97,7 @@
 
 .flags-section label {
     display: block;
-    color: var(--text-light);
+    color: #ffffff;
     font-weight: 500;
     margin-bottom: 0.5rem;
 }
@@ -113,32 +113,32 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 0.75rem;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .flag-option:hover {
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .flag-option input {
     width: 16px;
     height: 16px;
-    accent-color: var(--primary);
+    accent-color: #5865f2;
     cursor: pointer;
 }
 
 .flag-option .flag-name {
     font-family: 'Consolas', 'Monaco', monospace;
-    color: var(--primary);
+    color: #5865f2;
     font-weight: 600;
 }
 
 .flag-option .flag-desc {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
 }
 
@@ -150,7 +150,7 @@
 
 .test-section label {
     display: block;
-    color: var(--text-light);
+    color: #ffffff;
     font-weight: 500;
     margin-bottom: 0.5rem;
 }
@@ -158,11 +158,11 @@
 .test-section textarea {
     width: 100%;
     padding: 1rem;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     color: transparent;
-    caret-color: var(--text-light);
+    caret-color: #ffffff;
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 0.95rem;
     line-height: 1.6;
@@ -174,7 +174,7 @@
 
 .test-section textarea:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .highlighted-output {
@@ -191,7 +191,7 @@
     word-wrap: break-word;
     pointer-events: none;
     z-index: 1;
-    color: var(--text-light);
+    color: #ffffff;
     overflow: hidden;
     border: 1px solid transparent;
     border-radius: 12px;
@@ -206,8 +206,8 @@
 
 /* Results Section */
 .results-section {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
     margin-bottom: 2rem;
@@ -221,13 +221,13 @@
 }
 
 .results-header h2 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1.1rem;
     margin: 0;
 }
 
 .match-count {
-    color: var(--primary);
+    color: #5865f2;
     font-weight: 500;
 }
 
@@ -244,12 +244,12 @@
     align-items: flex-start;
     gap: 1rem;
     padding: 0.75rem;
-    background: var(--dark-bg);
+    background: #06061a;
     border-radius: 8px;
 }
 
 .match-index {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
     min-width: 30px;
 }
@@ -257,7 +257,7 @@
 .match-value {
     flex: 1;
     font-family: 'Consolas', 'Monaco', monospace;
-    color: var(--primary);
+    color: #5865f2;
     word-break: break-all;
 }
 
@@ -276,28 +276,28 @@
 }
 
 .match-group .group-name {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .match-group .group-value {
-    color: var(--secondary);
+    color: #7c3aed;
 }
 
 .match-position {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.8rem;
 }
 
 /* Quick Reference */
 .quick-reference {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
 }
 
 .quick-reference h2 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1.1rem;
     margin-bottom: 1rem;
 }
@@ -309,7 +309,7 @@
 }
 
 .ref-category h3 {
-    color: var(--primary);
+    color: #5865f2;
     font-size: 0.9rem;
     margin-bottom: 0.75rem;
 }
@@ -322,17 +322,17 @@
 }
 
 .ref-item code {
-    background: var(--dark-bg);
+    background: #06061a;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     font-family: 'Consolas', 'Monaco', monospace;
-    color: var(--secondary);
+    color: #7c3aed;
     min-width: 50px;
     text-align: center;
 }
 
 .ref-item span {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
 }
 

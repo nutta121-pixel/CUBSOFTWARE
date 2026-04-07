@@ -9,51 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
-    <style>
-        body { background: #0d0d0f; color: #e0e0e0; font-family: 'Poppins', sans-serif; }
-        .profile-wrap { max-width: 800px; margin: 0 auto; padding: 3rem 1.5rem; }
-        .profile-header {
-            display: flex; align-items: center; gap: 1.5rem;
-            background: #18191c; border: 1px solid #2b2d31; border-radius: 16px;
-            padding: 2rem; margin-bottom: 2rem;
-        }
-        .profile-avatar {
-            width: 80px; height: 80px; border-radius: 50%;
-            background: #5865F2; display: flex; align-items: center; justify-content: center;
-            font-size: 2rem; font-weight: 700; color: #fff; flex-shrink: 0;
-        }
-        .profile-avatar img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
-        .profile-name { font-size: 1.5rem; font-weight: 700; color: #fff; }
-        .profile-slug { color: #5865F2; font-size: 0.9rem; margin-top: 0.2rem; }
-        .profile-cta { margin-left: auto; }
-        .btn { display: inline-block; padding: 0.6rem 1.4rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; text-decoration: none; cursor: pointer; border: none; }
-        .btn-primary { background: #5865F2; color: #fff; }
-        .btn-primary:hover { background: #4752c4; }
-        .section-title { font-size: 1rem; font-weight: 600; color: #b0b3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem; }
-        .bots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-        .bot-card {
-            background: #18191c; border: 1px solid #2b2d31; border-radius: 12px;
-            padding: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem;
-        }
-        .bot-card-avatar {
-            width: 48px; height: 48px; border-radius: 50%;
-            background: #5865F2; display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.25rem;
-        }
-        .bot-card-avatar img { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
-        .bot-card-name { font-weight: 600; color: #fff; font-size: 0.95rem; }
-        .bot-card-guilds { font-size: 0.8rem; color: #b0b3b8; }
-        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #57F287; margin-right: 0.4rem; }
-        .empty { text-align: center; padding: 3rem; color: #b0b3b8; }
-        .loading { text-align: center; padding: 2rem; color: #b0b3b8; }
-
-        @media (max-width: 600px) {
-            .profile-wrap { padding: 1.5rem 1rem; }
-            .profile-header { flex-wrap: wrap; padding: 1.25rem; gap: 1rem; }
-            .profile-cta { margin-left: 0; width: 100%; }
-            .profile-cta .btn { width: 100%; text-align: center; }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/vanity-profile.css?v={{ v }}">
 </head>
 <body>
 {% include 'header.html' %}

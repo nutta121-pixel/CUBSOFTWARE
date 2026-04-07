@@ -10,485 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
-    <style>
-        * { box-sizing: border-box; }
-
-        .aff-wrap {
-            max-width: 860px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem 5rem;
-            text-align: center;
-        }
-
-        /* ── Header ── */
-        .aff-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            margin-bottom: 2.5rem;
-            flex-wrap: wrap;
-            text-align: left;
-        }
-
-        .aff-profile {
-            display: flex;
-            align-items: center;
-            gap: 0.85rem;
-        }
-
-        .aff-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 2px solid var(--border-color);
-        }
-
-        .aff-name {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-light);
-        }
-
-        .aff-role {
-            font-size: 0.75rem;
-            color: var(--primary);
-            font-weight: 500;
-            background: rgba(88,101,242,0.12);
-            padding: 2px 8px;
-            border-radius: 20px;
-        }
-
-        /* ── Page title ── */
-        .aff-page-title {
-            font-family: 'Orbitron', monospace;
-            font-size: 2.2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #009dff, #8a2be2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.3rem;
-        }
-        .aff-page-sub {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 2rem;
-        }
-
-        /* ── Vanity link card ── */
-        .link-card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            text-align: left;
-        }
-
-        .link-card-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #009dff22, #8a2be222);
-            border: 1px solid rgba(138,43,226,0.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            color: #8a2be2;
-        }
-
-        .link-card-info { flex: 1; min-width: 180px; }
-        .link-card-label {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.2rem;
-        }
-        .link-card-url { font-family: monospace; font-size: 0.95rem; color: var(--text-light); word-break: break-all; }
-        .link-card-url span { color: #009dff; }
-
-        .btn-copy {
-            padding: 0.55rem 1.3rem;
-            background: linear-gradient(135deg, #009dff, #8a2be2);
-            border: none;
-            border-radius: 10px;
-            color: white;
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        .btn-copy:hover { opacity: 0.85; transform: translateY(-1px); }
-        .btn-copy.copied { background: #57F287; color: #111; }
-
-        /* ── Stats row ── */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.4rem 1rem;
-        }
-
-        .stat-label {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.45rem;
-        }
-
-        .stat-value {
-            font-family: 'Orbitron', monospace;
-            font-size: 1.9rem;
-            font-weight: 700;
-            color: var(--text-light);
-            line-height: 1;
-        }
-
-        .stat-card.unique .stat-value { color: #009dff; }
-
-        .stat-card.earnings .stat-value {
-            background: linear-gradient(135deg, #57F287, #00d2ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stat-sublabel {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            margin-top: 0.3rem;
-        }
-
-        /* ── Payout card ── */
-        .payout-card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-
-        .payout-top {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 1rem;
-            margin-bottom: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .payout-label {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.25rem;
-        }
-
-        .payout-amount {
-            font-family: 'Orbitron', monospace;
-            font-size: 2rem;
-            font-weight: 700;
-            color: #57F287;
-            line-height: 1;
-        }
-
-        .payout-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            padding: 0.3rem 0.85rem;
-            border-radius: 20px;
-            white-space: nowrap;
-            align-self: flex-start;
-        }
-        .payout-badge.eligible {
-            background: rgba(87,242,135,0.12);
-            color: #57F287;
-            border: 1px solid rgba(87,242,135,0.3);
-        }
-        .payout-badge.not-eligible {
-            background: rgba(255,255,255,0.05);
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
-        }
-
-        .payout-progress-track {
-            height: 8px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 99px;
-            overflow: hidden;
-            margin-bottom: 0.5rem;
-        }
-        .payout-progress-fill {
-            height: 100%;
-            border-radius: 99px;
-            background: linear-gradient(90deg, #009dff, #57F287);
-            transition: width 0.6s ease;
-        }
-
-        .payout-progress-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.72rem;
-            color: var(--text-muted);
-        }
-
-        .payout-meta {
-            display: flex;
-            gap: 1.5rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-        }
-        .payout-meta-item { font-size: 0.8rem; color: var(--text-muted); }
-        .payout-meta-item strong { color: var(--text-light); }
-
-        /* ── Withdrawal form ── */
-        .withdraw-form {
-            margin-top: 1.25rem;
-            padding-top: 1.25rem;
-            border-top: 1px solid rgba(255,255,255,0.07);
-        }
-        .withdraw-form-title {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.75rem;
-        }
-        .withdraw-fields {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-            margin-bottom: 0.75rem;
-        }
-        .withdraw-field label {
-            display: block;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 0.3rem;
-        }
-        .withdraw-field input {
-            width: 100%;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 0.55rem 0.75rem;
-            color: var(--text-light);
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.88rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .withdraw-field input:focus { border-color: #57F287; }
-        .withdraw-hint {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            margin-bottom: 0.75rem;
-        }
-        .btn-withdraw {
-            background: linear-gradient(135deg, #57F287, #00d2ff);
-            border: none;
-            border-radius: 10px;
-            color: #111;
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.88rem;
-            font-weight: 700;
-            padding: 0.6rem 1.6rem;
-            cursor: pointer;
-            transition: opacity 0.2s, transform 0.15s;
-        }
-        .btn-withdraw:hover { opacity: 0.88; transform: translateY(-1px); }
-        .btn-withdraw:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-        .withdraw-error {
-            font-size: 0.78rem;
-            color: #ed4245;
-            margin-top: 0.5rem;
-            display: none;
-        }
-
-        /* ── Pending withdrawal notice ── */
-        .pending-withdrawal-notice {
-            margin-top: 1.25rem;
-            padding: 0.9rem 1rem;
-            background: rgba(255,196,0,0.06);
-            border: 1px solid rgba(255,196,0,0.2);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-        }
-        .pending-withdrawal-notice .pwd-icon { font-size: 1.1rem; flex-shrink: 0; }
-        .pending-withdrawal-notice .pwd-text { flex: 1; font-size: 0.82rem; color: var(--text-muted); }
-        .pending-withdrawal-notice .pwd-amount { font-family: 'Orbitron', monospace; font-size: 0.95rem; font-weight: 700; color: #ffc400; white-space: nowrap; }
-
-        /* ── Chart ── */
-        .chart-card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-
-        .card-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-light);
-            margin-bottom: 1rem;
-        }
-
-        .chart-wrap { position: relative; height: 150px; }
-        .chart-bars { display: flex; align-items: flex-end; gap: 3px; height: 100%; }
-        .chart-bar-group {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            height: 100%;
-        }
-        .chart-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; }
-        .chart-bar.total { background: rgba(0,157,255,0.2); }
-        .chart-bar.unique { background: #009dff; }
-        .chart-bar-group:hover .chart-bar { opacity: 0.7; }
-
-        .chart-labels { display: flex; gap: 3px; margin-top: 5px; }
-        .chart-label { flex: 1; text-align: center; font-size: 0.5rem; color: var(--text-muted); overflow: hidden; }
-
-        .chart-legend { display: flex; gap: 1.25rem; margin-bottom: 0.85rem; flex-wrap: wrap; }
-        .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--text-muted); }
-        .legend-dot { width: 9px; height: 9px; border-radius: 2px; }
-
-        /* ── Payment history ── */
-        .history-card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-
-        .history-empty {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            padding: 1rem 0 0.5rem;
-        }
-
-        .history-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        .history-item:last-child { border-bottom: none; }
-
-        .history-date { font-size: 0.8rem; color: var(--text-muted); }
-        .history-note { font-size: 0.82rem; color: var(--text-light); }
-        .history-amount {
-            font-family: 'Orbitron', monospace;
-            font-size: 1rem;
-            font-weight: 700;
-            color: #57F287;
-            white-space: nowrap;
-        }
-
-        /* ── Commission ── */
-        .commission-card {
-            background: var(--surface-color);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 1.25rem 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            text-align: left;
-        }
-        .commission-icon {
-            width: 40px; height: 40px; border-radius: 10px;
-            background: rgba(87,242,135,0.1); border: 1px solid rgba(87,242,135,0.25);
-            display: flex; align-items: center; justify-content: center;
-            color: #57F287; flex-shrink: 0;
-        }
-        .commission-info { flex: 1; }
-        .commission-title { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.15rem; }
-        .commission-rate { font-size: 1rem; font-weight: 700; color: #57F287; }
-        .commission-note { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.1rem; }
-
-        @media (max-width: 768px) {
-            /* Remove side padding — main-container already pads */
-            .aff-wrap {
-                padding-left: 0;
-                padding-right: 0;
-                padding-top: 1.5rem;
-            }
-
-            .aff-page-title { font-size: 1.6rem; }
-            .aff-page-sub { font-size: 0.85rem; }
-
-            /* Stats — 1 column on mobile */
-            .stats-row {
-                grid-template-columns: 1fr;
-                gap: 0.75rem;
-            }
-            .stat-card { padding: 1rem; text-align: left; }
-            .stat-value { font-size: 1.6rem; }
-
-            /* Link card — stack button below URL */
-            .link-card { flex-direction: column; align-items: stretch; }
-            .link-card-info { min-width: 0; }
-            .link-card-url { font-size: 0.85rem; word-break: break-all; }
-            .btn-copy { width: 100%; padding: 0.65rem; }
-
-            /* Payout */
-            .payout-amount { font-size: 1.6rem; }
-            .payout-top { flex-direction: column; gap: 0.75rem; }
-            .payout-meta { gap: 0.75rem; }
-
-            /* Withdrawal form — stack fields */
-            .withdraw-fields { grid-template-columns: 1fr; }
-            .btn-withdraw { width: 100%; padding: 0.65rem; }
-
-            /* History items */
-            .history-item { flex-direction: column; gap: 0.25rem; }
-            .history-amount { font-size: 0.9rem; }
-
-            /* Commission card */
-            .commission-card { flex-direction: column; align-items: flex-start; }
-        }
-
-        @media (max-width: 480px) {
-            .aff-wrap { padding-top: 1rem; padding-bottom: 3rem; }
-            .payout-card, .chart-card, .history-card { padding: 1rem; }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/affiliate-dashboard.css?v={{ v }}">
 </head>
 <body>
     <div class="main-container">
@@ -576,15 +98,15 @@
                     <div class="payout-meta-item">Reserved: <strong style="color:#ffc400;">NZ${{ "%.2f"|format(pending_withdrawal.amount) }}</strong></div>
                     {% endif %}
                 </div>
-                <div style="margin-top:0.5rem;font-size:0.72rem;color:var(--text-muted);">All amounts are in New Zealand dollars (NZD).</div>
+                <div class="aff-meta-note">All amounts are in New Zealand dollars (NZD).</div>
 
                 {% if pending_withdrawal %}
                 <!-- Pending withdrawal notice -->
                 <div class="pending-withdrawal-notice">
                     <div class="pwd-icon">⏳</div>
                     <div class="pwd-text">
-                        <strong style="color:var(--text-light);">Withdrawal in progress</strong><br>
-                        Sent to PayPal: <strong style="color:var(--text-light);">{{ pending_withdrawal.paypal_email }}</strong> — we'll process it shortly.
+                        <strong style="color:#ffffff;">Withdrawal in progress</strong><br>
+                        Sent to PayPal: <strong style="color:#ffffff;">{{ pending_withdrawal.paypal_email }}</strong> — we'll process it shortly.
                     </div>
                     <div class="pwd-amount">NZ${{ "%.2f"|format(pending_withdrawal.amount) }}</div>
                 </div>
@@ -633,9 +155,9 @@
                             <div class="history-date">{{ p.timestamp | int | datetime }}</div>
                             {% if p.note %}<div class="history-note">{{ p.note }}</div>{% endif %}
                         </div>
-                        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                        <div class="aff-flex-row">
                             {% if p.withdrawal_id %}
-                            <a href="/affiliate/invoice/{{ p.withdrawal_id }}" style="font-size:0.75rem;font-weight:600;color:#009dff;text-decoration:none;background:rgba(0,157,255,0.08);border:1px solid rgba(0,157,255,0.2);padding:3px 10px;border-radius:6px;">View Invoice</a>
+                            <a href="/affiliate/invoice/{{ p.withdrawal_id }}" class="aff-invoice-link">View Invoice</a>
                             {% endif %}
                             <div class="history-amount">+NZ${{ "%.2f"|format(p.amount) }}</div>
                         </div>
@@ -647,12 +169,12 @@
             </div>
 
             <!-- Stream Widget -->
-            <div class="history-card" style="text-align:left;">
-                <div class="card-title" style="margin-bottom:1rem;">Stream Widget</div>
-                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.25rem;">Add your personal widget to OBS as a browser source. It shows your referral link on stream so viewers can visit and you get credit for every unique visitor.</p>
+            <div class="history-card aff-left">
+                <div class="card-title aff-card-title-spaced">Stream Widget</div>
+                <p class="aff-hint">Add your personal widget to OBS as a browser source. It shows your referral link on stream so viewers can visit and you get credit for every unique visitor.</p>
 
                 <!-- Widget preview -->
-                <div style="background:linear-gradient(135deg,#1a1a2e,#0a0a1a);border-radius:10px;padding:20px;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:center;min-height:80px;border:1px solid rgba(255,255,255,0.06);">
+                <div class="aff-widget-preview">
                     <div style="display:inline-flex;align-items:center;gap:10px;padding:9px 20px;background:rgba(0,0,0,0.7);border-radius:8px;border:1px solid rgba(255,255,255,0.08);box-shadow:0 0 16px rgba(229,62,62,0.3);white-space:nowrap;">
                         <span style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#e53e3e;letter-spacing:1.5px;">Powered by CUB SOFTWARE</span>
                         <span style="color:rgba(255,255,255,0.25);">·</span>
@@ -661,10 +183,10 @@
                 </div>
 
                 <!-- URL copy row -->
-                <div style="margin-bottom:0.85rem;">
-                    <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.4rem;font-weight:500;">OBS Browser Source URL</div>
-                    <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
-                        <div style="flex:1;min-width:0;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);border-radius:8px;padding:10px 14px;font-size:0.82rem;color:var(--text-light);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                <div class="aff-url-section">
+                    <div class="aff-label-sm">OBS Browser Source URL</div>
+                    <div class="aff-url-row">
+                        <div class="aff-url-display">
                             https://cubsoftware.site/affiliate/widget/{{ affiliate.code }}
                         </div>
                         <button class="btn-copy" id="widgetCopyBtn" onclick="copyWidget()" style="flex-shrink:0;">Copy URL</button>
@@ -672,73 +194,73 @@
                 </div>
 
                 <!-- Instructions -->
-                <div style="background:rgba(0,157,255,0.06);border:1px solid rgba(0,157,255,0.15);border-radius:8px;padding:0.9rem 1rem;">
-                    <div style="font-size:0.78rem;font-weight:600;color:#009dff;margin-bottom:0.5rem;">How to add in OBS</div>
-                    <ol style="font-size:0.78rem;color:var(--text-muted);line-height:1.8;padding-left:1.2rem;">
-                        <li>In OBS, click <strong style="color:var(--text-light);">+</strong> in the Sources panel → <strong style="color:var(--text-light);">Browser</strong></li>
-                        <li>Paste the URL above, set width to <strong style="color:var(--text-light);">700</strong> and height to <strong style="color:var(--text-light);">70</strong></li>
-                        <li>Check <strong style="color:var(--text-light);">Shutdown source when not visible</strong></li>
+                <div class="aff-obs-infobox">
+                    <div class="aff-info-title">How to add in OBS</div>
+                    <ol class="aff-obs-list">
+                        <li>In OBS, click <strong style="color:#ffffff;">+</strong> in the Sources panel → <strong style="color:#ffffff;">Browser</strong></li>
+                        <li>Paste the URL above, set width to <strong style="color:#ffffff;">700</strong> and height to <strong style="color:#ffffff;">70</strong></li>
+                        <li>Check <strong style="color:#ffffff;">Shutdown source when not visible</strong></li>
                         <li>Position it anywhere on your scene — done!</li>
                     </ol>
                 </div>
             </div>
 
             <!-- Link SEO Settings -->
-            <div class="history-card" style="text-align:left;">
+            <div class="history-card aff-left">
                 <div class="card-title" style="margin-bottom:0.35rem;">Landing Page &amp; SEO Settings</div>
-                <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.5rem;">Fully customise your affiliate landing page and how it appears on social media, Discord, and search engines. Every affiliate gets their own unique page. Leave any field blank to use the smart default.</p>
+                <p style="font-size:0.82rem;color:rgba(255,255,255,0.4);margin-bottom:1.5rem;">Fully customise your affiliate landing page and how it appears on social media, Discord, and search engines. Every affiliate gets their own unique page. Leave any field blank to use the smart default.</p>
 
                 <!-- Social Preview -->
-                <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.75rem;">Social Preview (og: / Twitter / Discord embed)</div>
+                <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.75rem;">Social Preview (og: / Twitter / Discord embed)</div>
                 <div style="display:flex;flex-direction:column;gap:0.85rem;margin-bottom:1.5rem;">
                     <div class="withdraw-field">
-                        <label>Page Title <span style="color:var(--text-muted);font-weight:400;">(shown in link previews &amp; browser tab — max 120 chars)</span></label>
+                        <label>Page Title <span style="color:rgba(255,255,255,0.4);font-weight:400;">(shown in link previews &amp; browser tab — max 120 chars)</span></label>
                         <input type="text" id="seoTitle" maxlength="120" placeholder="e.g. HexechtV recommends CUB SOFTWARE — Free Online Tools" value="{{ affiliate.seo_title or '' }}">
                     </div>
                     <div class="withdraw-field">
-                        <label>Meta Description <span style="color:var(--text-muted);font-weight:400;">(shown under the title in previews — max 300 chars)</span></label>
-                        <textarea id="seoDesc" maxlength="300" rows="3" placeholder="e.g. HexechtV uses CUB SOFTWARE for all their stream tools — completely free, no signup needed." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;padding:0.55rem 0.75rem;color:var(--text-light);font-family:'Poppins',sans-serif;font-size:0.88rem;outline:none;resize:vertical;transition:border-color 0.2s;">{{ affiliate.seo_description or '' }}</textarea>
+                        <label>Meta Description <span style="color:rgba(255,255,255,0.4);font-weight:400;">(shown under the title in previews — max 300 chars)</span></label>
+                        <textarea id="seoDesc" maxlength="300" rows="3" placeholder="e.g. HexechtV uses CUB SOFTWARE for all their stream tools — completely free, no signup needed." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.55rem 0.75rem;color:#ffffff;font-family:'Poppins',sans-serif;font-size:0.88rem;outline:none;resize:vertical;transition:border-color 0.2s;">{{ affiliate.seo_description or '' }}</textarea>
                     </div>
                     <div class="withdraw-field">
-                        <label>Preview Image URL <span style="color:var(--text-muted);font-weight:400;">(thumbnail shown in embeds — ideally 1200×630px, must be https://)</span></label>
+                        <label>Preview Image URL <span style="color:rgba(255,255,255,0.4);font-weight:400;">(thumbnail shown in embeds — ideally 1200×630px, must be https://)</span></label>
                         <input type="url" id="seoImage" maxlength="500" placeholder="https://i.imgur.com/yourimage.png" value="{{ affiliate.seo_image_url or '' }}">
                     </div>
                     <div class="withdraw-field">
-                        <label>Keywords <span style="color:var(--text-muted);font-weight:400;">(comma-separated — max 200 chars)</span></label>
+                        <label>Keywords <span style="color:rgba(255,255,255,0.4);font-weight:400;">(comma-separated — max 200 chars)</span></label>
                         <input type="text" id="seoKeywords" maxlength="200" placeholder="free tools, stream setup, discord bots, no signup" value="{{ affiliate.seo_keywords or '' }}">
                     </div>
                     <div class="withdraw-field">
-                        <label>Twitter / X Handle <span style="color:var(--text-muted);font-weight:400;">(your @handle — tags you as creator in Twitter cards)</span></label>
+                        <label>Twitter / X Handle <span style="color:rgba(255,255,255,0.4);font-weight:400;">(your @handle — tags you as creator in Twitter cards)</span></label>
                         <input type="text" id="seoTwitter" maxlength="50" placeholder="@YourHandle" value="{{ affiliate.seo_twitter_handle or '' }}">
                     </div>
                 </div>
 
                 <!-- Landing Page -->
-                <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.75rem;">Landing Page Content</div>
+                <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.75rem;">Landing Page Content</div>
                 <div style="display:flex;flex-direction:column;gap:0.85rem;margin-bottom:1.5rem;">
                     <div class="withdraw-field">
-                        <label>Recommendation Message <span style="color:var(--text-muted);font-weight:400;">(displayed on the card visitors see — max 500 chars)</span></label>
-                        <textarea id="seoMessage" maxlength="500" rows="3" placeholder="e.g. I've been using CUB SOFTWARE for my streams for months — genuinely amazing free tools with no catch." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;padding:0.55rem 0.75rem;color:var(--text-light);font-family:'Poppins',sans-serif;font-size:0.88rem;outline:none;resize:vertical;transition:border-color 0.2s;">{{ affiliate.seo_custom_message or '' }}</textarea>
+                        <label>Recommendation Message <span style="color:rgba(255,255,255,0.4);font-weight:400;">(displayed on the card visitors see — max 500 chars)</span></label>
+                        <textarea id="seoMessage" maxlength="500" rows="3" placeholder="e.g. I've been using CUB SOFTWARE for my streams for months — genuinely amazing free tools with no catch." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.55rem 0.75rem;color:#ffffff;font-family:'Poppins',sans-serif;font-size:0.88rem;outline:none;resize:vertical;transition:border-color 0.2s;">{{ affiliate.seo_custom_message or '' }}</textarea>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 140px;gap:0.75rem;align-items:end;">
                         <div class="withdraw-field" style="margin:0;">
-                            <label>Redirect Destination <span style="color:var(--text-muted);font-weight:400;">(path on cubsoftware.site — default /)</span></label>
+                            <label>Redirect Destination <span style="color:rgba(255,255,255,0.4);font-weight:400;">(path on cubsoftware.site — default /)</span></label>
                             <input type="text" id="seoRedirectUrl" maxlength="200" placeholder="/cleanme or /apps/multi-twitch" value="{{ affiliate.seo_redirect_url or '' }}">
                         </div>
                         <div class="withdraw-field" style="margin:0;">
                             <label>Delay (1–30s)</label>
-                            <input type="number" id="seoDelay" min="1" max="30" placeholder="5" value="{{ affiliate.seo_redirect_delay or '' }}" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border-color);border-radius:8px;padding:0.55rem 0.75rem;color:var(--text-light);font-family:'Poppins',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.2s;">
+                            <input type="number" id="seoDelay" min="1" max="30" placeholder="5" value="{{ affiliate.seo_redirect_delay or '' }}" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.55rem 0.75rem;color:#ffffff;font-family:'Poppins',sans-serif;font-size:0.88rem;outline:none;transition:border-color 0.2s;">
                         </div>
                     </div>
                 </div>
 
-                <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+                <div class="aff-flex-row">
                     <button class="btn-withdraw" id="seoSaveBtn" onclick="saveSeo()">Save Settings</button>
                     <span id="seoMsg" style="font-size:0.8rem;color:#57F287;display:none;">Saved!</span>
                     <span id="seoErr" style="font-size:0.8rem;color:#ed4245;display:none;"></span>
                 </div>
 
-                <div style="margin-top:1rem;padding:0.85rem 1rem;background:rgba(0,157,255,0.05);border:1px solid rgba(0,157,255,0.15);border-radius:8px;font-size:0.78rem;color:var(--text-muted);">
+                <div style="margin-top:1rem;padding:0.85rem 1rem;background:rgba(0,157,255,0.05);border:1px solid rgba(0,157,255,0.15);border-radius:8px;font-size:0.78rem;color:rgba(255,255,255,0.4);">
                     Preview your landing page: <a href="/r/{{ affiliate.code }}" target="_blank" style="color:#009dff;text-decoration:none;font-weight:600;">cubsoftware.site/r/{{ affiliate.code }} ↗</a>
                 </div>
             </div>

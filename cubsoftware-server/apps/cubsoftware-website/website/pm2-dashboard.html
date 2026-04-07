@@ -342,7 +342,7 @@
 
                 <div class="links-stats" id="linksStats">
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(88, 101, 242, 0.15); color: #5865f2;">
+                        <div class="stat-icon" class="stat-icon stat-icon-indigo">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                                 <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
@@ -354,7 +354,7 @@
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon" style="background: rgba(34, 197, 94, 0.15); color: #22c55e;">
+                        <div class="stat-icon" class="stat-icon stat-icon-green">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                             </svg>
@@ -405,13 +405,13 @@
                 </div>
 
                 <!-- Whitelist tabs -->
-                <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--border-color);padding-bottom:0.75rem;">
+                <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0.75rem;">
                     <button class="control-btn small wl-tab-btn active" data-wl="pm2" onclick="switchWhitelistTab('pm2')">Server Dashboard</button>
                     <button class="control-btn small wl-tab-btn" data-wl="streamavatars" onclick="switchWhitelistTab('streamavatars')">StreamAvatars</button>
                 </div>
 
                 <div id="wl-pm2-panel" class="wl-panel">
-                    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">Users who can log in to the Server Dashboard (<code>/dashboard</code>).</p>
+                    <p class="pm-section-hint">Users who can log in to the Server Dashboard (<code>/dashboard</code>).</p>
                     <div class="whitelist-container">
                         <div class="whitelist-add-card">
                             <h3>Add User</h3>
@@ -432,7 +432,7 @@
                 </div>
 
                 <div id="wl-streamavatars-panel" class="wl-panel" style="display:none;">
-                    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;">Users who can access StreamAvatars (<code>/streamavatars</code>). Leave empty to allow everyone.</p>
+                    <p class="pm-section-hint">Users who can access StreamAvatars (<code>/streamavatars</code>). Leave empty to allow everyone.</p>
                     <div class="whitelist-container">
                         <div class="whitelist-add-card">
                             <h3>Add User</h3>
@@ -630,10 +630,10 @@
                     </div>
                     <div class="section-actions">
                         <div class="status-indicator">
-                            <span id="apiOnlineCount" style="color:#57F287;font-weight:600;">0</span>
-                            <span style="color:var(--text-muted);">/</span>
-                            <span id="apiTotalCount" style="color:var(--text-secondary);font-weight:600;">0</span>
-                            <span style="color:var(--text-muted);margin-left:4px;">online</span>
+                            <span id="apiOnlineCount" class="api-count-online">0</span>
+                            <span class="api-count-sep">/</span>
+                            <span id="apiTotalCount" class="api-count-total">0</span>
+                            <span class="api-count-label">online</span>
                         </div>
                         <input type="text" id="apiSearchInput" class="filter-select" placeholder="Search endpoints..." style="width:200px;">
                         <button id="refreshApiStatusBtn" class="control-btn primary" onclick="loadApiStatus()">
@@ -646,15 +646,15 @@
                     </div>
                 </div>
 
-                <div class="api-uptime-bar" id="apiUptimeBar" style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;padding:12px 16px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
-                    <div style="color:var(--text-muted);font-size:0.85rem;">Server uptime: <span id="serverUptime" style="color:#57F287;font-weight:600;">--</span></div>
-                    <div style="display:flex;gap:16px;font-size:0.85rem;">
-                        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#57F287;margin-right:4px;box-shadow:0 0 6px rgba(87,242,135,0.4);"></span> Online: <span id="apiOnlineStat" style="color:#57F287;font-weight:600;">0</span></span>
-                        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ed4245;margin-right:4px;box-shadow:0 0 6px rgba(237,66,69,0.4);"></span> Error: <span id="apiErrorStat" style="color:#ed4245;font-weight:600;">0</span></span>
+                <div class="api-uptime-bar" id="apiUptimeBar">
+                    <div class="api-uptime-label">Server uptime: <span id="serverUptime" class="api-uptime-value">--</span></div>
+                    <div class="api-uptime-stats">
+                        <span class="api-stat-item"><span class="api-stat-dot online"></span><span class="api-stat-label">Online:</span> <span id="apiOnlineStat" class="api-stat-value online">0</span></span>
+                        <span class="api-stat-item"><span class="api-stat-dot error"></span><span class="api-stat-label">Error:</span> <span id="apiErrorStat" class="api-stat-value error">0</span></span>
                     </div>
                 </div>
 
-                <div id="apiStatusGrid" style="display:flex;flex-direction:column;gap:4px;">
+                <div id="apiStatusGrid" class="api-status-grid">
                     <div class="loading">Loading API endpoints...</div>
                 </div>
             </section>
@@ -678,101 +678,101 @@
                 </div>
 
                 <!-- Summary stats -->
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.5rem;">
-                    <div class="stat-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1rem;">
-                        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Total Affiliates</div>
-                        <div style="font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:700;color:var(--text-light);" id="affSumTotal">—</div>
+                <div class="pm-stat-grid">
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label">Total Affiliates</div>
+                        <div class="pm-stat-value" id="affSumTotal">—</div>
                     </div>
-                    <div class="stat-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1rem;">
-                        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Active</div>
-                        <div style="font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:700;color:#57F287;" id="affSumActive">—</div>
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label">Active</div>
+                        <div class="pm-stat-value green" id="affSumActive">—</div>
                     </div>
-                    <div class="stat-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1rem;">
-                        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Total Unique Clicks</div>
-                        <div style="font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:700;color:#009dff;" id="affSumClicks">—</div>
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label">Total Unique Clicks</div>
+                        <div class="pm-stat-value blue" id="affSumClicks">—</div>
                     </div>
-                    <div class="stat-card" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:1rem;">
-                        <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.3rem;">Total Pending Payout</div>
-                        <div style="font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:700;color:#57F287;" id="affSumEarnings">—</div>
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label">Total Pending Payout</div>
+                        <div class="pm-stat-value green" id="affSumEarnings">—</div>
                     </div>
                 </div>
 
                 <!-- Create form -->
-                <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:1.25rem;margin-bottom:1.5rem;">
-                    <h3 style="font-size:0.875rem;font-weight:600;color:var(--text-light);margin-bottom:1rem;">Add New Affiliate</h3>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin-bottom:.6rem;">
+                <div class="pm-glass-panel-padded">
+                    <h3 class="pm-h3">Add New Affiliate</h3>
+                    <div class="pm-form-grid">
                         <div>
-                            <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem;">Discord User ID</label>
-                            <input type="text" id="affInId" placeholder="e.g. 523949187663585310" class="form-input" style="width:100%;">
+                            <label class="pm-form-label">Discord User ID</label>
+                            <input type="text" id="affInId" placeholder="e.g. 523949187663585310" class="form-input pm-input-w100">
                         </div>
                         <div>
-                            <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem;">Discord Username</label>
-                            <input type="text" id="affInUser" placeholder="e.g. HexEchoTV" class="form-input" style="width:100%;">
+                            <label class="pm-form-label">Discord Username</label>
+                            <input type="text" id="affInUser" placeholder="e.g. HexEchoTV" class="form-input pm-input-w100">
                         </div>
                         <div>
-                            <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem;">Vanity Code</label>
-                            <input type="text" id="affInCode" placeholder="e.g. hexechotv" maxlength="30" class="form-input" style="width:100%;">
+                            <label class="pm-form-label">Vanity Code</label>
+                            <input type="text" id="affInCode" placeholder="e.g. hexechotv" maxlength="30" class="form-input pm-input-w100">
                         </div>
                         <div>
-                            <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem;">$ per unique click</label>
-                            <input type="number" id="affInRate" placeholder="0.00" step="0.01" min="0" value="0" class="form-input" style="width:100%;">
+                            <label class="pm-form-label">$ per unique click</label>
+                            <input type="number" id="affInRate" placeholder="0.00" step="0.01" min="0" value="0" class="form-input pm-input-w100">
                         </div>
                     </div>
                     <div style="margin-bottom:.75rem;">
-                        <label style="display:block;font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem;">Notes (internal)</label>
-                        <input type="text" id="affInNotes" placeholder="Optional notes" class="form-input" style="width:100%;max-width:500px;">
+                        <label class="pm-form-label">Notes (internal)</label>
+                        <input type="text" id="affInNotes" placeholder="Optional notes" class="form-input pm-input-w100">
                     </div>
                     <div id="affCreateError" style="display:none;color:#ef4444;font-size:.8rem;margin-bottom:.5rem;"></div>
                     <button class="control-btn start" id="affCreateBtn" onclick="createAffiliateAdmin()">Add Affiliate</button>
                 </div>
 
                 <!-- Affiliates table -->
-                <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);flex-wrap:wrap;gap:.5rem;">
-                        <span style="font-size:.875rem;font-weight:600;color:var(--text-light);">All Affiliates</span>
-                        <input type="text" id="affSearch" placeholder="Search..." class="form-input" style="width:180px;padding:.4rem .65rem;font-size:.8rem;" oninput="filterAffiliatesTable()">
+                <div class="pm-glass-panel">
+                    <div class="pm-panel-header">
+                        <span class="pm-panel-title">All Affiliates</span>
+                        <input type="text" id="affSearch" placeholder="Search..." class="form-input pm-input-search" oninput="filterAffiliatesTable()">
                     </div>
-                    <div style="overflow-x:auto;">
-                        <table style="width:100%;border-collapse:collapse;" id="affTable">
+                    <div class="pm-table-scroll">
+                        <table class="pm-table" id="affTable">
                             <thead>
                                 <tr>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Affiliate</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Link</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Status</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Unique</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Total</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Rate</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Pending Payout</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Actions</th>
+                                    <th class="pm-th">Affiliate</th>
+                                    <th class="pm-th">Link</th>
+                                    <th class="pm-th">Status</th>
+                                    <th class="pm-th">Unique</th>
+                                    <th class="pm-th">Total</th>
+                                    <th class="pm-th">Rate</th>
+                                    <th class="pm-th">Pending Payout</th>
+                                    <th class="pm-th">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="affTbody"></tbody>
                         </table>
-                        <div id="affEmpty" style="text-align:center;padding:2.5rem;color:var(--text-muted);display:none;">No affiliates yet.</div>
+                        <div id="affEmpty" class="pm-empty-row" style="display:none">No affiliates yet.</div>
                     </div>
                 </div>
 
                 <!-- Withdrawal Requests -->
-                <div style="margin-top:1.5rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:.9rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);flex-wrap:wrap;gap:.5rem;">
-                        <span style="font-size:.875rem;font-weight:600;color:var(--text-light);">Withdrawal Requests</span>
+                <div class="pm-glass-panel" style="margin-top:1.5rem">
+                    <div class="pm-panel-header">
+                        <span class="pm-panel-title">Withdrawal Requests</span>
                         <span id="wdPendingBadge" style="display:none;font-size:.72rem;font-weight:700;background:rgba(255,196,0,0.12);color:#ffc400;border:1px solid rgba(255,196,0,0.25);padding:3px 10px;border-radius:20px;"></span>
                     </div>
-                    <div style="overflow-x:auto;">
-                        <table style="width:100%;border-collapse:collapse;" id="wdTable">
+                    <div class="pm-table-scroll">
+                        <table class="pm-table" id="wdTable">
                             <thead>
                                 <tr>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Affiliate</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Amount</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">PayPal Email</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Requested</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Status</th>
-                                    <th style="text-align:left;font-size:.68rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.06);">Actions</th>
+                                    <th class="pm-th">Affiliate</th>
+                                    <th class="pm-th">Amount</th>
+                                    <th class="pm-th">PayPal Email</th>
+                                    <th class="pm-th">Requested</th>
+                                    <th class="pm-th">Status</th>
+                                    <th class="pm-th">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="wdTbody"></tbody>
                         </table>
-                        <div id="wdEmpty" style="text-align:center;padding:2rem;color:var(--text-muted);font-size:.85rem;">No withdrawal requests yet.</div>
+                        <div id="wdEmpty" class="pm-empty-row-sm">No withdrawal requests yet.</div>
                     </div>
                 </div>
 
@@ -792,16 +792,16 @@
             <div class="modal-body">
                 <input type="hidden" id="affEditId">
                 <div style="margin-bottom:.75rem;">
-                    <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem;">Vanity Code</label>
-                    <input type="text" id="affEditCode" class="form-input" style="width:100%;" maxlength="30">
+                    <label class="pm-form-label-md">Vanity Code</label>
+                    <input type="text" id="affEditCode" class="form-input pm-input-w100" maxlength="30">
                 </div>
                 <div style="margin-bottom:.75rem;">
-                    <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem;">$ per unique click</label>
-                    <input type="number" id="affEditRate" class="form-input" style="width:100%;" step="0.01" min="0">
+                    <label class="pm-form-label-md">$ per unique click</label>
+                    <input type="number" id="affEditRate" class="form-input pm-input-w100" step="0.01" min="0">
                 </div>
                 <div style="margin-bottom:.75rem;">
-                    <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.3rem;">Notes (internal)</label>
-                    <input type="text" id="affEditNotes" class="form-input" style="width:100%;">
+                    <label class="pm-form-label-md">Notes (internal)</label>
+                    <input type="text" id="affEditNotes" class="form-input pm-input-w100">
                 </div>
                 <div id="affEditError" style="display:none;color:#ef4444;font-size:.8rem;"></div>
             </div>

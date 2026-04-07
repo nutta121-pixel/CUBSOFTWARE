@@ -1,0 +1,583 @@
+/* affiliate-dashboard Styles */
+
+* { box-sizing: border-box; }
+
+.aff-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    text-align: center;
+}
+
+/* ── Header ── */
+.aff-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    text-align: left;
+}
+
+.aff-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.aff-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.08);
+}
+
+.aff-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.aff-role {
+    font-size: 0.75rem;
+    color: #5865f2;
+    font-weight: 500;
+    background: rgba(88,101,242,0.12);
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+/* ── Page title ── */
+.aff-page-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #009dff, #8a2be2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.3rem;
+}
+.aff-page-sub {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+}
+
+/* ── Vanity link card ── */
+.link-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    text-align: left;
+}
+
+.link-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #009dff22, #8a2be222);
+    border: 1px solid rgba(138,43,226,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #8a2be2;
+}
+
+.link-card-info { flex: 1; min-width: 180px; }
+.link-card-label {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.2rem;
+}
+.link-card-url { font-family: monospace; font-size: 0.95rem; color: #ffffff; word-break: break-all; }
+.link-card-url span { color: #009dff; }
+
+.btn-copy {
+    padding: 0.55rem 1.3rem;
+    background: linear-gradient(135deg, #009dff, #8a2be2);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.btn-copy:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn-copy.copied { background: #57F287; color: #111; }
+
+/* ── Stats row ── */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.4rem 1rem;
+}
+
+.stat-label {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.45rem;
+}
+
+.stat-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.stat-card.unique .stat-value { color: #009dff; }
+
+.stat-card.earnings .stat-value {
+    background: linear-gradient(135deg, #57F287, #00d2ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-sublabel {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 0.3rem;
+}
+
+/* ── Payout card ── */
+.payout-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.payout-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.payout-label {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.payout-amount {
+    font-family: 'Orbitron', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #57F287;
+    line-height: 1;
+}
+
+.payout-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.3rem 0.85rem;
+    border-radius: 20px;
+    white-space: nowrap;
+    align-self: flex-start;
+}
+.payout-badge.eligible {
+    background: rgba(87,242,135,0.12);
+    color: #57F287;
+    border: 1px solid rgba(87,242,135,0.3);
+}
+.payout-badge.not-eligible {
+    background: rgba(255,255,255,0.05);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.payout-progress-track {
+    height: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+.payout-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #009dff, #57F287);
+    transition: width 0.6s ease;
+}
+
+.payout-progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.payout-meta {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+.payout-meta-item { font-size: 0.8rem; color: rgba(255, 255, 255, 0.5); }
+.payout-meta-item strong { color: #ffffff; }
+
+/* ── Withdrawal form ── */
+.withdraw-form {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255,255,255,0.07);
+}
+.withdraw-form-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+.withdraw-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+.withdraw-field label {
+    display: block;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.3rem;
+}
+.withdraw-field input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 0.55rem 0.75rem;
+    color: #ffffff;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.withdraw-field input:focus { border-color: #57F287; }
+.withdraw-hint {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 0.75rem;
+}
+.btn-withdraw {
+    background: linear-gradient(135deg, #57F287, #00d2ff);
+    border: none;
+    border-radius: 10px;
+    color: #111;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 0.6rem 1.6rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+}
+.btn-withdraw:hover { opacity: 0.88; transform: translateY(-1px); }
+.btn-withdraw:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.withdraw-error {
+    font-size: 0.78rem;
+    color: #ed4245;
+    margin-top: 0.5rem;
+    display: none;
+}
+
+/* ── Pending withdrawal notice ── */
+.pending-withdrawal-notice {
+    margin-top: 1.25rem;
+    padding: 0.9rem 1rem;
+    background: rgba(255,196,0,0.06);
+    border: 1px solid rgba(255,196,0,0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.pending-withdrawal-notice .pwd-icon { font-size: 1.1rem; flex-shrink: 0; }
+.pending-withdrawal-notice .pwd-text { flex: 1; font-size: 0.82rem; color: rgba(255, 255, 255, 0.5); }
+.pending-withdrawal-notice .pwd-amount { font-family: 'Orbitron', monospace; font-size: 0.95rem; font-weight: 700; color: #ffc400; white-space: nowrap; }
+
+/* ── Chart ── */
+.chart-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.card-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 1rem;
+}
+
+.chart-wrap { position: relative; height: 150px; }
+.chart-bars { display: flex; align-items: flex-end; gap: 3px; height: 100%; }
+.chart-bar-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+}
+.chart-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; }
+.chart-bar.total { background: rgba(0,157,255,0.2); }
+.chart-bar.unique { background: #009dff; }
+.chart-bar-group:hover .chart-bar { opacity: 0.7; }
+
+.chart-labels { display: flex; gap: 3px; margin-top: 5px; }
+.chart-label { flex: 1; text-align: center; font-size: 0.5rem; color: rgba(255, 255, 255, 0.5); overflow: hidden; }
+
+.chart-legend { display: flex; gap: 1.25rem; margin-bottom: 0.85rem; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: rgba(255, 255, 255, 0.5); }
+.legend-dot { width: 9px; height: 9px; border-radius: 2px; }
+
+/* ── Payment history ── */
+.history-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.history-empty {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    padding: 1rem 0 0.5rem;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+.history-item:last-child { border-bottom: none; }
+
+.history-date { font-size: 0.8rem; color: rgba(255, 255, 255, 0.5); }
+.history-note { font-size: 0.82rem; color: #ffffff; }
+.history-amount {
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #57F287;
+    white-space: nowrap;
+}
+
+/* ── Commission ── */
+.commission-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    text-align: left;
+}
+.commission-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(87,242,135,0.1); border: 1px solid rgba(87,242,135,0.25);
+    display: flex; align-items: center; justify-content: center;
+    color: #57F287; flex-shrink: 0;
+}
+.commission-info { flex: 1; }
+.commission-title { font-size: 0.8rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.15rem; }
+.commission-rate { font-size: 1rem; font-weight: 700; color: #57F287; }
+.commission-note { font-size: 0.75rem; color: rgba(255, 255, 255, 0.5); margin-top: 0.1rem; }
+
+@media (max-width: 768px) {
+    /* Remove side padding — main-container already pads */
+    .aff-wrap {
+        padding-left: 0;
+        padding-right: 0;
+        padding-top: 1.5rem;
+    }
+
+    .aff-page-title { font-size: 1.6rem; }
+    .aff-page-sub { font-size: 0.85rem; }
+
+    /* Stats — 1 column on mobile */
+    .stats-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    .stat-card { padding: 1rem; text-align: left; }
+    .stat-value { font-size: 1.6rem; }
+
+    /* Link card — stack button below URL */
+    .link-card { flex-direction: column; align-items: stretch; }
+    .link-card-info { min-width: 0; }
+    .link-card-url { font-size: 0.85rem; word-break: break-all; }
+    .btn-copy { width: 100%; padding: 0.65rem; }
+
+    /* Payout */
+    .payout-amount { font-size: 1.6rem; }
+    .payout-top { flex-direction: column; gap: 0.75rem; }
+    .payout-meta { gap: 0.75rem; }
+
+    /* Withdrawal form — stack fields */
+    .withdraw-fields { grid-template-columns: 1fr; }
+    .btn-withdraw { width: 100%; padding: 0.65rem; }
+
+    /* History items */
+    .history-item { flex-direction: column; gap: 0.25rem; }
+    .history-amount { font-size: 0.9rem; }
+
+    /* Commission card */
+    .commission-card { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 480px) {
+    .aff-wrap { padding-top: 1rem; padding-bottom: 3rem; }
+    .payout-card, .chart-card, .history-card { padding: 1rem; }
+}
+    
+/* ── Utility classes for inline-style cleanup ─────────────────── */
+.aff-meta-note {
+    margin-top: 0.5rem;
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.aff-hint {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 1.25rem;
+}
+
+.aff-label-sm {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 0.4rem;
+    font-weight: 500;
+}
+
+.aff-info-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #009dff;
+    margin-bottom: 0.5rem;
+}
+
+.aff-obs-list {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.8;
+    padding-left: 1.2rem;
+}
+
+.aff-obs-infobox {
+    background: rgba(0, 157, 255, 0.06);
+    border: 1px solid rgba(0, 157, 255, 0.15);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+}
+
+.aff-widget-preview {
+    background: linear-gradient(135deg, #1a1a2e, #0a0a1a);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.aff-url-display {
+    flex: 1;
+    min-width: 0;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    color: #ffffff;
+    font-family: monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.aff-url-section { margin-bottom: 0.85rem; }
+
+.aff-url-row {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.aff-left { text-align: left; }
+
+.aff-card-title-spaced { margin-bottom: 1rem; }
+
+.aff-invoice-link {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #009dff;
+    text-decoration: none;
+    background: rgba(0, 157, 255, 0.08);
+    border: 1px solid rgba(0, 157, 255, 0.2);
+    padding: 3px 10px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.aff-invoice-link:hover {
+    background: rgba(0, 157, 255, 0.15);
+}
+
+.aff-flex-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}

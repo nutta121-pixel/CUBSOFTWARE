@@ -13,8 +13,8 @@
 
 .encoding-header h1 {
     font-family: 'Orbitron', monospace;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -22,7 +22,7 @@
 }
 
 .encoding-header p {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
@@ -36,10 +36,10 @@
 
 .tab {
     padding: 0.75rem 1.25rem;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.95rem;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -47,19 +47,19 @@
 }
 
 .tab:hover {
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .tab.active {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border-color: transparent;
 }
 
 /* Panels */
 .panel {
     display: none;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
 }
@@ -75,7 +75,7 @@
 
 .input-section label {
     display: block;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
 }
@@ -85,10 +85,10 @@
 .input-section input[type="password"] {
     width: 100%;
     padding: 0.875rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.95rem;
     font-family: 'Consolas', 'Monaco', monospace;
     resize: vertical;
@@ -98,7 +98,7 @@
 .input-section textarea:focus,
 .input-section input:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 /* Hash Results */
@@ -110,7 +110,7 @@
 
 .hash-result label {
     display: block;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
     margin-bottom: 0.25rem;
     font-weight: 500;
@@ -124,10 +124,10 @@
 .hash-value-row input {
     flex: 1;
     padding: 0.75rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--primary);
+    color: #5865f2;
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 0.85rem;
     min-width: 0;
@@ -135,10 +135,10 @@
 
 .copy-btn {
     padding: 0.75rem 1rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     cursor: pointer;
     transition: all 0.3s ease;
     white-space: nowrap;
@@ -146,8 +146,8 @@
 }
 
 .copy-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 /* Dual Panel Layout */
@@ -163,7 +163,7 @@
 }
 
 .panel-section label {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
 }
@@ -172,10 +172,10 @@
     flex: 1;
     min-height: 150px;
     padding: 0.875rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 0.95rem;
     resize: vertical;
@@ -184,13 +184,13 @@
 
 .panel-section textarea:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .action-btn {
     margin-top: 0.75rem;
     padding: 0.75rem 1.25rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border: none;
     border-radius: 8px;
     color: white;
@@ -224,14 +224,14 @@
 .options-row {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .checkbox-label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.9rem;
     cursor: pointer;
 }
@@ -239,7 +239,7 @@
 .checkbox-label input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    accent-color: var(--primary);
+    accent-color: #5865f2;
     cursor: pointer;
 }
 
@@ -252,25 +252,25 @@
 .key-input-row input {
     flex: 1;
     padding: 0.875rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.95rem;
     min-width: 0;
 }
 
 .key-input-row input:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .toggle-btn {
     padding: 0.875rem 1.25rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     cursor: pointer;
     transition: all 0.3s ease;
     white-space: nowrap;
@@ -278,7 +278,7 @@
 }
 
 .toggle-btn:hover {
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 /* Encrypt Warning */
@@ -305,11 +305,11 @@
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 0.75rem 1.5rem;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.95rem;
     opacity: 0;
     transition: all 0.3s ease;
@@ -324,8 +324,8 @@
 }
 
 .toast.error {
-    border-color: var(--error);
-    color: var(--error);
+    border-color: #ef4444;
+    color: #ef4444;
 }
 
 /* Responsive */

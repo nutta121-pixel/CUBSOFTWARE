@@ -10,7 +10,7 @@
 }
 
 .gradient-text {
-    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -35,14 +35,14 @@
 
 .cubpresence-hero .hero-subtitle {
     font-size: 1.5rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 1rem;
 }
 
 .cubpresence-hero .hero-description {
     max-width: 600px;
     margin: 0 auto;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     line-height: 1.6;
 }
 
@@ -53,8 +53,8 @@
 }
 
 .setup-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 2.5rem;
     margin-bottom: 2rem;
@@ -123,14 +123,14 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .app-id-form input {
     width: 100%;
     padding: 0.75rem 1rem;
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     color: #fff;
     font-size: 1rem;
@@ -190,8 +190,8 @@
 
 /* Config Panel */
 .config-panel {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 2rem;
 }
@@ -228,12 +228,12 @@
     font-size: 0.85rem;
     font-weight: 600;
     margin-bottom: 0.35rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .field-group .field-hint {
     font-size: 0.75rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 0.25rem;
 }
 
@@ -244,7 +244,7 @@
     width: 100%;
     padding: 0.6rem 0.85rem;
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     color: #fff;
     font-size: 0.95rem;
@@ -290,7 +290,7 @@
     gap: 0.4rem;
     padding: 0.4rem 0.75rem;
     background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
@@ -406,8 +406,8 @@
 }
 
 .preview-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
 }
@@ -415,7 +415,7 @@
 .preview-card h3 {
     font-size: 1rem;
     margin-bottom: 1rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -555,8 +555,8 @@
 /* Bookmark / Share Section */
 .share-section {
     margin-top: 1.5rem;
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
 }
@@ -575,7 +575,7 @@
     flex: 1;
     padding: 0.5rem 0.75rem;
     background: rgba(0, 0, 0, 0.3);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     color: #fff;
     font-size: 0.85rem;
@@ -590,7 +590,7 @@
 .btn-copy {
     padding: 0.5rem 1rem;
     background: rgba(255, 255, 255, 0.1);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     color: #fff;
     font-size: 0.85rem;
@@ -659,8 +659,8 @@
 }
 
 .connect-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 3rem;
     text-align: center;
@@ -706,7 +706,7 @@
 }
 
 .connect-status-detail {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 2rem;
     line-height: 1.6;
 }
@@ -721,7 +721,7 @@
 }
 
 .connect-presence-info .label {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -771,7 +771,7 @@
 
 .connect-log h4 {
     font-size: 0.85rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 0.5rem;
 }
 
@@ -784,7 +784,7 @@
     font-family: monospace;
     font-size: 0.75rem;
     line-height: 1.6;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .connect-log-entries .log-entry.success {
@@ -898,7 +898,7 @@
 
 .extension-install-content p {
     font-size: 0.85rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin: 0;
 }
 

@@ -15,12 +15,12 @@
     font-family: 'Orbitron', sans-serif;
     font-size: clamp(1.6rem, 3vw, 2.2rem);
     font-weight: 900;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 10px;
 }
 
 .ws-header p {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.95rem;
     max-width: 580px;
     margin: 0 auto;
@@ -55,9 +55,9 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     padding: 11px 14px;
     outline: none;
     transition: border-color 0.2s;
@@ -65,7 +65,7 @@
 }
 
 .ws-url-input:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .ws-webhook-info {
@@ -120,7 +120,7 @@
 /* Sections */
 .ws-section {
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 16px 18px;
 }
@@ -130,9 +130,9 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 12px;
-    border-left: 3px solid var(--primary-color);
+    border-left: 3px solid #5865f2;
     padding-left: 8px;
     display: block;
 }
@@ -149,7 +149,7 @@
     display: block;
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 5px;
 }
 
@@ -157,9 +157,9 @@
 .ws-field-group textarea {
     width: 100%;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
     padding: 9px 12px;
@@ -175,20 +175,20 @@
 
 .ws-field-group input:focus,
 .ws-field-group textarea:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .char-counter {
     text-align: right;
     font-size: 0.72rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 3px;
 }
 
 .optional-label {
     font-weight: 400;
     font-size: 0.7rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     opacity: 0.7;
     text-transform: none;
     letter-spacing: 0;
@@ -243,12 +243,12 @@
     align-items: center;
     gap: 8px;
     font-size: 0.82rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
 }
 
 .ws-toggle-label input[type="checkbox"] {
-    accent-color: var(--primary-color);
+    accent-color: #5865f2;
     width: 15px;
     height: 15px;
 }
@@ -287,7 +287,7 @@
 
 .ws-empty-state p {
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* Response */
@@ -344,7 +344,7 @@
     gap: 10px;
     padding: 8px 10px;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     font-size: 0.78rem;
 }
@@ -369,14 +369,14 @@
 
 .ws-history-preview {
     flex: 1;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .ws-history-time {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.7rem;
     white-space: nowrap;
 }
@@ -386,7 +386,7 @@
     position: fixed;
     bottom: 24px;
     right: 24px;
-    background: var(--primary-color);
+    background: #5865f2;
     color: #fff;
     padding: 10px 20px;
     border-radius: 10px;

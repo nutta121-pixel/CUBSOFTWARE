@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMin slice">
+  <defs>
+    <linearGradient id="wfade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="white" stop-opacity="1"/>
+      <stop offset="50%"  stop-color="white" stop-opacity="0.4"/>
+      <stop offset="80%"  stop-color="white" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="wm">
+      <rect width="1440" height="900" fill="url(#wfade)"/>
+    </mask>
+  </defs>
+
+  <g mask="url(#wm)" fill="none" stroke-linecap="round">
+    <!-- Primary sweep waves — left to right, upper portion -->
+    <path stroke="white" stroke-width="1.5" stroke-opacity="0.22"
+          d="M-60,260 C220,90 420,460 680,200 C870,20 1060,370 1290,130 C1410,20 1520,200 1560,150"/>
+    <path stroke="white" stroke-width="1.0" stroke-opacity="0.18"
+          d="M-60,330 C160,140 460,540 710,260 C910,80 1100,430 1330,180 C1440,60 1540,250 1580,190"/>
+    <path stroke="white" stroke-width="0.8" stroke-opacity="0.14"
+          d="M-60,200 C140,50 400,380 620,160 C820,-10 1010,300 1220,80 C1370,-30 1480,160 1570,110"/>
+    <path stroke="white" stroke-width="1.2" stroke-opacity="0.16"
+          d="M-60,410 C260,230 370,600 610,350 C790,190 980,510 1200,290 C1370,140 1490,380 1570,300"/>
+    <path stroke="white" stroke-width="0.6" stroke-opacity="0.11"
+          d="M-60,160 C100,30 370,310 580,120 C780,-30 990,260 1190,60 C1360,-50 1480,150 1570,95"/>
+    <path stroke="white" stroke-width="0.9" stroke-opacity="0.13"
+          d="M-60,480 C300,300 380,640 640,410 C830,250 1020,570 1250,350 C1400,200 1500,430 1570,360"/>
+
+    <!-- Counter-direction waves — top-down diagonals creating the cross/mesh effect -->
+    <path stroke="white" stroke-width="1.0" stroke-opacity="0.19"
+          d="M320,-60 C480,210 170,400 360,560 C490,670 650,430 540,630"/>
+    <path stroke="white" stroke-width="0.8" stroke-opacity="0.14"
+          d="M620,-60 C760,190 510,390 670,530 C800,640 940,420 840,600"/>
+    <path stroke="white" stroke-width="1.1" stroke-opacity="0.17"
+          d="M920,-60 C1040,180 840,370 980,490 C1100,580 1210,370 1130,540"/>
+    <path stroke="white" stroke-width="0.7" stroke-opacity="0.12"
+          d="M110,-60 C300,190 60,360 200,510 C320,620 470,400 370,580"/>
+    <path stroke="white" stroke-width="0.6" stroke-opacity="0.10"
+          d="M1140,-40 C1240,170 1080,340 1180,450 C1270,540 1370,350 1300,500"/>
+
+    <!-- Fine accent lines for extra depth -->
+    <path stroke="white" stroke-width="0.5" stroke-opacity="0.08"
+          d="M-60,290 C310,110 520,500 780,240 C970,70 1140,400 1370,170 C1460,70 1560,230 1600,180"/>
+    <path stroke="white" stroke-width="0.5" stroke-opacity="0.07"
+          d="M500,-60 C630,140 400,320 530,460 C650,560 760,370 680,530"/>
+  </g>
+</svg>

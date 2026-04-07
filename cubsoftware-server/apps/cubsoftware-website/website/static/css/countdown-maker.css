@@ -13,8 +13,8 @@
 
 .countdown-header h1 {
     font-family: 'Orbitron', monospace;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -22,7 +22,7 @@
 }
 
 .countdown-header p {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
@@ -36,18 +36,18 @@
 
 /* Settings Panel */
 .settings-panel {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
 }
 
 .settings-panel h3 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1.1rem;
     margin-bottom: 1.5rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .input-group {
@@ -56,7 +56,7 @@
 
 .input-group label {
     display: block;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
     margin-bottom: 0.5rem;
 }
@@ -65,16 +65,16 @@
 .input-group input[type="datetime-local"] {
     width: 100%;
     padding: 0.875rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.95rem;
 }
 
 .input-group input:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 /* Theme Options */
@@ -87,7 +87,7 @@
 .theme-btn {
     width: 40px;
     height: 40px;
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -99,7 +99,7 @@
 }
 
 .theme-btn.active {
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .theme-check {
@@ -129,7 +129,7 @@
     align-items: center;
     gap: 0.5rem;
     cursor: pointer;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.9rem;
 }
 
@@ -140,7 +140,7 @@
 .checkbox-custom {
     width: 20px;
     height: 20px;
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -156,8 +156,8 @@
 }
 
 .checkbox-label input:checked + .checkbox-custom {
-    background: var(--primary);
-    border-color: var(--primary);
+    background: #5865f2;
+    border-color: #5865f2;
 }
 
 .checkbox-label input:checked + .checkbox-custom svg {
@@ -176,20 +176,20 @@
 
 /* Preview Panel */
 .preview-panel {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
 }
 
 .preview-panel h3 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1.1rem;
     margin-bottom: 1rem;
 }
 
 .countdown-preview {
-    background: var(--dark-bg);
+    background: #06061a;
     border-radius: 16px;
     padding: 2rem;
     text-align: center;
@@ -277,15 +277,15 @@
 
 /* Share Section */
 .share-section {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
     margin-bottom: 2rem;
 }
 
 .share-section h3 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1.1rem;
     margin-bottom: 1rem;
 }
@@ -296,7 +296,7 @@
 
 .share-input-group label {
     display: block;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
     margin-bottom: 0.75rem;
 }
@@ -312,7 +312,7 @@
     gap: 0.5rem;
     width: 100%;
     padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border: none;
     border-radius: 10px;
     color: white;
@@ -341,16 +341,16 @@
 .copy-input input {
     flex: 1;
     padding: 0.875rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--border-color);
+    background: #06061a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.9rem;
 }
 
 .copy-btn {
     padding: 0.875rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border: none;
     border-radius: 10px;
     color: white;
@@ -366,8 +366,8 @@
 
 /* Saved Section */
 .saved-section {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
 }
@@ -380,7 +380,7 @@
 }
 
 .saved-header h3 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1.1rem;
 }
 
@@ -395,17 +395,17 @@
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .new-btn:hover {
-    border-color: var(--success);
-    color: var(--success);
+    border-color: #22c55e;
+    color: #22c55e;
 }
 
 .new-btn svg {
@@ -421,7 +421,7 @@
 .editing-badge {
     margin-left: 0.5rem;
     font-size: 0.7rem;
-    background: var(--primary);
+    background: #5865f2;
     color: white;
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
@@ -430,7 +430,7 @@
 }
 
 .saved-item.editing {
-    border: 1px solid var(--primary);
+    border: 1px solid #5865f2;
     background: rgba(88, 101, 242, 0.1);
 }
 
@@ -440,17 +440,17 @@
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .save-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .save-btn svg {
@@ -466,7 +466,7 @@
 
 .empty-state {
     text-align: center;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     padding: 2rem;
 }
 
@@ -475,7 +475,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem;
-    background: var(--dark-bg);
+    background: #06061a;
     border-radius: 10px;
 }
 
@@ -484,7 +484,7 @@
 }
 
 .saved-item-title {
-    color: var(--text-light);
+    color: #ffffff;
     font-weight: 500;
     margin-bottom: 0.25rem;
     display: flex;
@@ -492,7 +492,7 @@
 }
 
 .saved-item-date {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
 }
 
@@ -504,22 +504,22 @@
 .saved-item-actions button {
     padding: 0.5rem 0.75rem;
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .saved-item-actions button:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .saved-item-actions .delete-btn:hover {
-    border-color: var(--error);
-    color: var(--error);
+    border-color: #ef4444;
+    color: #ef4444;
 }
 
 /* Toast */
@@ -528,7 +528,7 @@
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--success);
+    background: #22c55e;
     color: white;
     padding: 1rem 2rem;
     border-radius: 12px;

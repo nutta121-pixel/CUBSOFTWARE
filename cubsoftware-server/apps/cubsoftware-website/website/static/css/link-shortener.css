@@ -13,8 +13,8 @@
 
 .shortener-header h1 {
     font-family: 'Orbitron', monospace;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -22,14 +22,14 @@
 }
 
 .shortener-header p {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
 /* Main Shortener Card */
 .shortener-card {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
     padding: 2rem;
     margin-bottom: 2rem;
@@ -51,7 +51,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     font-size: 0.85rem;
     padding: 0.5rem 0;
@@ -61,14 +61,14 @@
 
 .vanity-toggle:hover,
 .vanity-toggle.active {
-    color: var(--primary);
+    color: #5865f2;
 }
 
 .vanity-input-wrapper {
     display: flex;
     align-items: center;
-    background: var(--dark-bg);
-    border: 2px solid var(--border-color);
+    background: #06061a;
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 0.75rem 1rem;
     margin-top: 0.5rem;
@@ -76,11 +76,11 @@
 }
 
 .vanity-input-wrapper:focus-within {
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .vanity-prefix {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     white-space: nowrap;
     font-family: 'Poppins', sans-serif;
@@ -90,7 +90,7 @@
     flex: 1;
     background: none;
     border: none;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.95rem;
     outline: none;
     padding: 0.25rem 0.5rem;
@@ -104,7 +104,7 @@
 }
 
 .vanity-status.checking {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .vanity-status.available {
@@ -127,32 +127,32 @@
     transform: translateY(-50%);
     width: 20px;
     height: 20px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .url-input-wrapper input {
     width: 100%;
     padding: 1.25rem 1.25rem 1.25rem 3rem;
-    background: var(--dark-bg);
-    border: 2px solid var(--border-color);
+    background: #06061a;
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1rem;
     transition: all 0.3s ease;
 }
 
 .url-input-wrapper input:focus {
     outline: none;
-    border-color: var(--primary);
+    border-color: #5865f2;
 }
 
 .url-input-wrapper input::placeholder {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .shorten-btn {
     padding: 1.25rem 2rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border: none;
     border-radius: 12px;
     color: white;
@@ -189,11 +189,11 @@
 .result-section {
     margin-top: 2rem;
     padding-top: 2rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .result-label {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     margin-bottom: 0.75rem;
 }
@@ -208,9 +208,9 @@
     flex: 1;
     padding: 1rem;
     background: linear-gradient(135deg, rgba(88, 101, 242, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
-    border: 2px solid var(--primary);
+    border: 2px solid #5865f2;
     border-radius: 10px;
-    color: var(--primary);
+    color: #5865f2;
     font-size: 1rem;
     font-weight: 600;
 }
@@ -220,7 +220,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
     border: none;
     border-radius: 10px;
     color: white;
@@ -250,9 +250,9 @@
     gap: 0.5rem;
     padding: 0.75rem 1.25rem;
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -260,8 +260,8 @@
 }
 
 .action-btn:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .action-btn svg {
@@ -274,16 +274,16 @@
     margin-top: 1rem;
     padding: 1rem;
     background: rgba(239, 68, 68, 0.1);
-    border: 1px solid var(--error);
+    border: 1px solid #ef4444;
     border-radius: 10px;
-    color: var(--error);
+    color: #ef4444;
     font-size: 0.9rem;
 }
 
 /* Recent Section */
 .recent-section {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
     margin-bottom: 2rem;
@@ -297,24 +297,24 @@
 }
 
 .recent-header h3 {
-    color: var(--text-light);
+    color: #ffffff;
     font-size: 1.1rem;
 }
 
 .clear-btn {
     padding: 0.5rem 1rem;
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .clear-btn:hover {
-    border-color: var(--error);
-    color: var(--error);
+    border-color: #ef4444;
+    color: #ef4444;
 }
 
 .recent-list {
@@ -325,7 +325,7 @@
 
 .empty-state {
     text-align: center;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     padding: 2rem;
 }
 
@@ -334,7 +334,7 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
-    background: var(--dark-bg);
+    background: #06061a;
     border-radius: 10px;
 }
 
@@ -344,13 +344,13 @@
 }
 
 .recent-item-short {
-    color: var(--primary);
+    color: #5865f2;
     font-weight: 600;
     margin-bottom: 0.25rem;
 }
 
 .recent-item-long {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
     white-space: nowrap;
     overflow: hidden;
@@ -367,22 +367,22 @@
 .recent-item-actions button {
     padding: 0.5rem 0.75rem;
     background: transparent;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .recent-item-actions button:hover {
-    border-color: var(--primary);
-    color: var(--primary);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .recent-item-actions button.delete-btn {
-    border-color: var(--error);
-    color: var(--error);
+    border-color: #ef4444;
+    color: #ef4444;
 }
 
 .recent-item-actions button.delete-btn:hover {
@@ -391,8 +391,8 @@
 
 /* Info Section */
 .info-section {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 1.5rem;
 }
@@ -422,16 +422,16 @@
 .info-icon svg {
     width: 24px;
     height: 24px;
-    color: var(--primary);
+    color: #5865f2;
 }
 
 .info-card h4 {
-    color: var(--text-light);
+    color: #ffffff;
     margin-bottom: 0.5rem;
 }
 
 .info-card p {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 
@@ -441,7 +441,7 @@
     bottom: 2rem;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--success);
+    background: #22c55e;
     color: white;
     padding: 1rem 2rem;
     border-radius: 12px;

@@ -3,7 +3,8 @@
 .rm-container {
     max-width: 860px;
     margin: 0 auto;
-    padding: 100px 20px 80px;
+    padding: 40px 20px 80px;
+    animation: fadeInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Hero */
@@ -30,13 +31,17 @@
     font-family: 'Orbitron', sans-serif;
     font-size: clamp(1.8rem, 4vw, 2.8rem);
     font-weight: 900;
-    color: var(--text-primary);
-    margin-bottom: 14px;
     line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, #ffffff 0%, #c7d0ff 45%, #5865f2 80%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .rm-hero p {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1rem;
     max-width: 520px;
     margin: 0 auto 28px;
@@ -91,8 +96,8 @@
 
 .rm-badge.considering {
     background: rgba(255, 255, 255, 0.04);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .rm-badge.considering::before { content: '💡 '; }
@@ -108,7 +113,7 @@
     gap: 16px;
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .rm-section-icon {
@@ -121,13 +126,13 @@
     font-family: 'Orbitron', sans-serif;
     font-size: 1.2rem;
     font-weight: 900;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 4px;
 }
 
 .rm-section-header p {
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* Items List */
@@ -143,7 +148,7 @@
     gap: 14px;
     padding: 14px 18px;
     border-radius: 12px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.02);
     transition: background 0.2s, border-color 0.2s;
 }
@@ -185,7 +190,7 @@
 .rm-item-title {
     font-weight: 600;
     font-size: 0.92rem;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 3px;
 }
 
@@ -195,7 +200,7 @@
 
 .rm-item-desc {
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     line-height: 1.5;
 }
 
@@ -211,7 +216,7 @@
 .rm-item-link {
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: #5865f2;
     text-decoration: none;
     white-space: nowrap;
     padding: 5px 10px;
@@ -225,12 +230,12 @@
 
 .rm-item-link:hover {
     background: rgba(88, 101, 242, 0.18);
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 /* Inline Links */
 .rm-inline-link {
-    color: var(--primary-color);
+    color: #5865f2;
     text-decoration: none;
     font-weight: 500;
 }
@@ -244,10 +249,10 @@
     text-align: center;
     padding: 28px;
     background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 14px;
     font-size: 0.88rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     line-height: 1.6;
 }
 

@@ -14,8 +14,8 @@
 
 .editor-header h1 {
     font-family: 'Orbitron', sans-serif;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -23,7 +23,7 @@
 }
 
 .editor-header p {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
@@ -44,7 +44,7 @@
 /* Sidebar */
 .editor-sidebar {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 20px;
     display: flex;
@@ -59,19 +59,19 @@
     display: flex;
     gap: 6px;
     padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     flex-wrap: wrap;
     justify-content: center;
 }
 
 .sidebar-tab {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     padding: 10px 12px;
     cursor: pointer;
     transition: all 0.3s ease;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -83,15 +83,15 @@
 }
 
 .sidebar-tab:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
     background: rgba(88, 101, 242, 0.1);
 }
 
 .sidebar-tab.active {
     background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
     box-shadow: 0 2px 10px rgba(88, 101, 242, 0.2);
 }
 
@@ -103,7 +103,7 @@
     flex: 1;
     overflow-y: auto;
     scrollbar-width: thin;
-    scrollbar-color: var(--primary-color) rgba(255, 255, 255, 0.05);
+    scrollbar-color: #5865f2 rgba(255, 255, 255, 0.05);
 }
 
 .tab-panel.active {
@@ -132,7 +132,7 @@
 .tool-section h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 0.85rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 10px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -147,23 +147,23 @@
 
 .tool-icon-btn {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .tool-icon-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
     background: rgba(88, 101, 242, 0.1);
 }
 
 .tool-icon-btn.active {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
     background: rgba(88, 101, 242, 0.2);
 }
 
@@ -186,24 +186,24 @@
 
 .ratio-btn {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     padding: 6px 10px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.75rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .ratio-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .ratio-btn.active {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.2);
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 /* Resize Inputs */
@@ -229,14 +229,14 @@
 
 .input-group label {
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     width: 50px;
 }
 
 .input-group input {
     flex: 1;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     padding: 8px 10px;
     color: #fff;
@@ -252,14 +252,14 @@
 }
 
 .input-group input:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .checkbox-label {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.8rem;
     cursor: pointer;
 }
@@ -271,7 +271,7 @@
 .checkbox-label .checkbox-custom {
     width: 16px;
     height: 16px;
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -280,12 +280,12 @@
 }
 
 .checkbox-label:hover .checkbox-custom {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .checkbox-label input:checked + .checkbox-custom {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
+    background: #5865f2;
+    border-color: #5865f2;
 }
 
 .checkbox-label .checkbox-custom svg {
@@ -302,10 +302,10 @@
 
 .apply-resize-btn {
     background: rgba(88, 101, 242, 0.15);
-    border: 1px solid var(--primary-color);
+    border: 1px solid #5865f2;
     border-radius: 8px;
     padding: 8px;
-    color: var(--primary-color);
+    color: #5865f2;
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -331,7 +331,7 @@
 
 .slider-group label {
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     display: flex;
     justify-content: space-between;
 }
@@ -352,7 +352,7 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: var(--primary-color);
+    background: #5865f2;
     cursor: pointer;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
@@ -361,7 +361,7 @@
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: var(--primary-color);
+    background: #5865f2;
     cursor: pointer;
     border: none;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
@@ -369,7 +369,7 @@
 
 .slider-value {
     font-size: 0.75rem;
-    color: var(--primary-color);
+    color: #5865f2;
     font-family: 'Consolas', monospace;
 }
 
@@ -382,24 +382,24 @@
 
 .filter-btn {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     padding: 8px 4px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.7rem;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .filter-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .filter-btn.active {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.2);
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 /* Text Controls */
@@ -411,7 +411,7 @@
 
 .text-input {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     padding: 10px;
     color: #fff;
@@ -421,7 +421,7 @@
 }
 
 .text-input:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .text-options {
@@ -432,7 +432,7 @@
 .text-select {
     flex: 1;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     padding: 8px;
     color: #fff;
@@ -449,7 +449,7 @@
 .text-size-input {
     width: 60px;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     padding: 8px;
     color: #fff;
@@ -480,10 +480,10 @@
 
 .style-btn {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     padding: 8px 12px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
     font-weight: bold;
     cursor: pointer;
@@ -492,8 +492,8 @@
 
 .style-btn:hover,
 .style-btn.active {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
     background: rgba(88, 101, 242, 0.1);
 }
 
@@ -502,7 +502,7 @@
     align-items: center;
     gap: 6px;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     padding: 4px 8px;
 }
@@ -528,13 +528,13 @@
 
 .color-input-wrapper span {
     font-size: 0.7rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* Tool Hint */
 .tool-hint {
     font-size: 0.75rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-top: 8px;
     padding: 8px;
     background: rgba(88, 101, 242, 0.1);
@@ -572,7 +572,7 @@
     cursor: move;
     pointer-events: auto;
     padding: 5px 10px;
-    border: 2px dashed var(--primary-color);
+    border: 2px dashed #5865f2;
     border-radius: 4px;
     background: rgba(0, 0, 0, 0.3);
     white-space: nowrap;
@@ -588,7 +588,7 @@
 /* Small hint text */
 .tool-hint-small {
     font-size: 0.7rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 8px;
 }
 
@@ -623,7 +623,7 @@
     pointer-events: auto;
     font-size: 64px;
     line-height: 1;
-    border: 2px dashed var(--primary-color);
+    border: 2px dashed #5865f2;
     border-radius: 8px;
     padding: 5px;
     background: rgba(0, 0, 0, 0.2);
@@ -672,7 +672,7 @@
 
 .sticker-btn {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     padding: 8px;
     font-size: 1.2rem;
@@ -681,7 +681,7 @@
 }
 
 .sticker-btn:hover {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.1);
     transform: scale(1.1);
 }
@@ -719,7 +719,7 @@
 /* Canvas Area */
 .editor-canvas-area {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 20px;
     display: flex;
@@ -736,10 +736,10 @@
     align-items: center;
     gap: 8px;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 8px 15px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -747,8 +747,8 @@
 
 .comparison-toggle:hover,
 .comparison-toggle.active {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .comparison-toggle svg {
@@ -758,7 +758,7 @@
 
 .upload-area {
     flex: 1;
-    border: 2px dashed var(--border-color);
+    border: 2px dashed rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -770,7 +770,7 @@
 
 .upload-area:hover,
 .upload-area.dragover {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.05);
 }
 
@@ -782,18 +782,18 @@
 .upload-placeholder svg {
     width: 80px;
     height: 80px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 15px;
 }
 
 .upload-placeholder p {
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 1.1rem;
     margin-bottom: 8px;
 }
 
 .upload-placeholder span {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 
@@ -845,7 +845,7 @@
 
 .crop-selection {
     position: absolute;
-    border: 2px dashed var(--primary-color);
+    border: 2px dashed #5865f2;
     background: transparent;
     box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
 }
@@ -866,7 +866,7 @@
     left: 50%;
     width: 4px;
     height: 100%;
-    background: var(--primary-color);
+    background: #5865f2;
     cursor: ew-resize;
     z-index: 10;
     transform: translateX(-50%);
@@ -879,7 +879,7 @@
     transform: translate(-50%, -50%);
     width: 30px;
     height: 30px;
-    background: var(--primary-color);
+    background: #5865f2;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -949,12 +949,12 @@
     gap: 20px;
     margin-top: 15px;
     padding-top: 15px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .image-info span {
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-family: 'Consolas', monospace;
 }
 
@@ -966,7 +966,7 @@
     gap: 15px;
     padding: 15px 20px;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     flex-wrap: wrap;
 }
@@ -1001,13 +1001,13 @@
 
 .action-btn.secondary {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .action-btn.secondary:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 /* Download Options */
@@ -1019,7 +1019,7 @@
 
 .format-select {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 10px 15px;
     color: #fff;
@@ -1038,14 +1038,14 @@
     align-items: center;
     gap: 10px;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 8px 12px;
 }
 
 .quality-slider label {
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     white-space: nowrap;
 }
 
@@ -1065,7 +1065,7 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: var(--primary-color);
+    background: #5865f2;
     cursor: pointer;
 }
 
@@ -1075,7 +1075,7 @@
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--primary-color);
+    background: #5865f2;
     color: #fff;
     padding: 12px 25px;
     border-radius: 8px;

@@ -10,255 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
-    <style>
-        * { box-sizing: border-box; }
-
-        .inv-wrap {
-            max-width: 680px;
-            margin: 0 auto;
-            padding: 100px 20px 80px;
-        }
-
-        /* Back link */
-        .inv-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-            text-decoration: none;
-            margin-bottom: 32px;
-            transition: color 0.2s;
-        }
-        .inv-back:hover { color: var(--text-primary); }
-
-        /* Invoice card */
-        .inv-card {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        /* Header band */
-        .inv-header {
-            background: linear-gradient(135deg, rgba(0,157,255,0.12), rgba(138,43,226,0.12));
-            border-bottom: 1px solid var(--border-color);
-            padding: 28px 36px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .inv-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .inv-brand img {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-        }
-
-        .inv-brand-name {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 900;
-            color: var(--text-primary);
-        }
-
-        .inv-brand-sub {
-            font-size: 0.72rem;
-            color: var(--text-secondary);
-        }
-
-        .inv-paid-stamp {
-            background: rgba(87,242,135,0.12);
-            border: 2px solid rgba(87,242,135,0.4);
-            color: #57F287;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 900;
-            letter-spacing: 0.12em;
-            padding: 7px 18px;
-            border-radius: 8px;
-            text-transform: uppercase;
-        }
-
-        /* Body */
-        .inv-body {
-            padding: 36px;
-        }
-
-        .inv-meta-row {
-            display: flex;
-            justify-content: space-between;
-            gap: 24px;
-            flex-wrap: wrap;
-            margin-bottom: 32px;
-        }
-
-        .inv-meta-block {}
-        .inv-meta-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 4px;
-        }
-        .inv-meta-value {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        .inv-meta-value.mono {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-        }
-
-        /* Line items table */
-        .inv-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 24px;
-        }
-
-        .inv-table thead th {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            padding: 0 0 10px;
-            border-bottom: 1px solid var(--border-color);
-            text-align: left;
-        }
-
-        .inv-table thead th:last-child { text-align: right; }
-
-        .inv-table tbody td {
-            padding: 16px 0;
-            font-size: 0.88rem;
-            color: var(--text-primary);
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-        }
-
-        .inv-table tbody td:last-child {
-            text-align: right;
-            font-family: 'Orbitron', monospace;
-            font-size: 0.9rem;
-            font-weight: 700;
-        }
-
-        .inv-table tfoot td {
-            padding: 16px 0 0;
-            font-size: 0.82rem;
-            color: var(--text-secondary);
-        }
-
-        .inv-table tfoot tr.inv-total td {
-            font-size: 1rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            border-top: 1px solid var(--border-color);
-            padding-top: 16px;
-        }
-
-        .inv-table tfoot tr.inv-total td:last-child {
-            font-family: 'Orbitron', monospace;
-            font-size: 1.1rem;
-            color: #57F287;
-            text-align: right;
-        }
-
-        /* Payment method */
-        .inv-payment-box {
-            background: rgba(255,255,255,0.02);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            margin-bottom: 28px;
-        }
-
-        .inv-payment-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
-            background: rgba(0,112,243,0.12);
-            border: 1px solid rgba(0,112,243,0.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            font-size: 1.1rem;
-        }
-
-        .inv-payment-info {}
-        .inv-payment-label {
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 2px;
-        }
-        .inv-payment-value {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        /* Footer note */
-        .inv-footer-note {
-            text-align: center;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            padding-top: 24px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-            line-height: 1.6;
-        }
-
-        /* Print button */
-        .inv-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 24px;
-        }
-
-        .btn-print {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border-color);
-            border-radius: 9px;
-            color: var(--text-secondary);
-            font-family: 'Poppins', sans-serif;
-            font-size: 0.82rem;
-            font-weight: 600;
-            padding: 8px 18px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .btn-print:hover { border-color: var(--primary-color); color: var(--text-primary); }
-
-        @media print {
-            .inv-back, .inv-actions, header, footer { display: none !important; }
-            .inv-wrap { padding: 20px; }
-            .inv-card { border: 1px solid #ccc; }
-        }
-
-        @media (max-width: 500px) {
-            .inv-header, .inv-body { padding: 20px; }
-            .inv-meta-row { flex-direction: column; gap: 16px; }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/affiliate-invoice.css?v={{ v }}">
 </head>
 <body>
     <div class="main-container">
@@ -316,7 +68,7 @@
                             <tr>
                                 <td>
                                     <strong>Affiliate Commission Payout</strong><br>
-                                    <span style="font-size:0.78rem;color:var(--text-secondary);">CUB SOFTWARE Affiliate Program — earned via referral link</span>
+                                    <span style="font-size:0.78rem;color:rgba(255,255,255,0.65);">CUB SOFTWARE Affiliate Program — earned via referral link</span>
                                 </td>
                                 <td>NZ${{ "%.2f"|format(withdrawal.amount) }}</td>
                             </tr>
@@ -324,7 +76,7 @@
                         <tfoot>
                             <tr>
                                 <td>Subtotal</td>
-                                <td style="text-align:right;font-family:'Poppins',sans-serif;font-size:0.85rem;color:var(--text-primary);">NZ${{ "%.2f"|format(withdrawal.amount) }}</td>
+                                <td style="text-align:right;font-family:'Poppins',sans-serif;font-size:0.85rem;color:rgba(255,255,255,0.9);">NZ${{ "%.2f"|format(withdrawal.amount) }}</td>
                             </tr>
                             <tr class="inv-total">
                                 <td>Total Paid</td>
@@ -345,7 +97,7 @@
                     <!-- Footer note -->
                     <div class="inv-footer-note">
                         This invoice confirms that CUB SOFTWARE has paid NZ${{ "%.2f"|format(withdrawal.amount) }} to the above PayPal account.<br>
-                        Thank you for being part of the CUB SOFTWARE Affiliate Program. Questions? Contact us at <a href="/contact" style="color:var(--primary-color);text-decoration:none;">cubsoftware.site/contact</a>
+                        Thank you for being part of the CUB SOFTWARE Affiliate Program. Questions? Contact us at <a href="/contact" style="color:#5865f2;text-decoration:none;">cubsoftware.site/contact</a>
                     </div>
 
                 </div>

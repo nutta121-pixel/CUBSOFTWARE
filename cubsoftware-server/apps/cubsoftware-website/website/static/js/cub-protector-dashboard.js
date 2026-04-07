@@ -1020,6 +1020,7 @@
             const data = await res.json();
             const cases = data.cases || [];
             const warnings = data.warnings || [];
+            const userCache = data.users || {};
 
             // Active punishments (temp bans not yet expired, active mutes)
             const now = Date.now() / 1000;
@@ -1080,6 +1081,7 @@
 
             // Store cases for filtering
             allModCases = cases;
+            modUserCache = userCache;
             renderModCases(cases);
         } catch (e) {
             el.innerHTML = '<div class="empty-state"><p>Failed to load mod logs.</p></div>';
@@ -1088,6 +1090,7 @@
 
     // Mod log filtering
     let allModCases = [];
+    let modUserCache = {};
     window.cpFilterModLogs = function() {
         const userId = document.getElementById('mod-search-user')?.value?.trim() || '';
         const type = document.getElementById('mod-search-type')?.value || '';
@@ -1104,27 +1107,44 @@
             return;
         }
         const typeColors = { ban: '#ed4245', unban: '#57f287', kick: '#fee75c', mute: '#eb459e', unmute: '#57f287', warn: '#fee75c', softban: '#e67e22', purge: '#5865f2', lock: '#ed4245', unlock: '#57f287' };
+        const typeLabels = { ban: 'Ban', unban: 'Unban', kick: 'Kick', mute: 'Timeout', unmute: 'Remove Timeout', warn: 'Warning', softban: 'Soft Ban', purge: 'Purge', lock: 'Lock Channel', unlock: 'Unlock Channel' };
         const now = Date.now() / 1000;
+        const defaultAvatar = idx => `https://cdn.discordapp.com/embed/avatars/${idx % 6}.png`;
+
         el.innerHTML = cases.slice(-50).reverse().map(c => {
+            const targetUser = modUserCache[c.target_id];
+            const modUser = c.moderator_id !== 'dashboard' ? modUserCache[c.moderator_id] : null;
+            const targetName = targetUser?.username || c.target_id;
+            const targetAvatar = targetUser?.avatar || defaultAvatar(parseInt(c.target_id.slice(-2), 16) || 0);
+            const modName = modUser?.username || (c.moderator_id === 'dashboard' ? 'Dashboard' : c.moderator_id);
+
             let extra = '';
             if (c.duration) {
                 const mins = Math.round(c.duration / 60000);
-                extra = ` | Duration: ${mins > 60 ? Math.round(mins / 60) + 'h' : mins + 'm'}`;
+                extra = ` · ${mins > 60 ? Math.round(mins / 60) + 'h' : mins + 'm'}`;
             }
-            // Action buttons for active punishments
             let actionBtn = '';
             if (c.type === 'mute' && c.expires_at && c.expires_at > now && !c.unmuted) {
-                actionBtn = `<button onclick="window.cpExecuteModAction('unmute','${c.target_id}','Untimeout from mod logs')" style="background:#57F287;color:#000;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.75rem;font-weight:600;margin-left:8px;">Untimeout</button>`;
+                actionBtn = `<button class="mod-log-action-btn" onclick="window.cpExecuteModAction('unmute','${c.target_id}','Untimeout from mod logs')">Untimeout</button>`;
             }
             if (c.type === 'ban' && !c.unbanned) {
-                actionBtn = `<button onclick="window.cpExecuteModAction('unban','${c.target_id}','Unbanned from mod logs')" style="background:#57F287;color:#000;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.75rem;font-weight:600;margin-left:8px;">Unban</button>`;
+                actionBtn = `<button class="mod-log-action-btn mod-log-action-unban" onclick="window.cpExecuteModAction('unban','${c.target_id}','Unbanned from mod logs')">Unban</button>`;
             }
-            return `<div class="channel-item">
-                <div class="channel-info"><div>
-                    <div class="channel-name" style="color: ${typeColors[c.type] || '#5865f2'}">Case #${c.case_id} - ${c.type.toUpperCase()}</div>
-                    <div class="channel-owner">Target: ${c.target_id} | By: ${c.moderator_id === 'dashboard' ? 'Dashboard' : c.moderator_id} | ${escapeHtml(c.reason || 'No reason')}${extra}</div>
-                </div></div>
-                <div class="channel-badges" style="display:flex;align-items:center;gap:6px;"><span class="channel-badge">${new Date(c.timestamp * 1000).toLocaleDateString()}</span>${actionBtn}</div>
+
+            const dateStr = new Date(c.timestamp * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })
+                + ' · ' + new Date(c.timestamp * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+            return `<div class="mod-log-card">
+                <img class="mod-log-avatar" src="${targetAvatar}" alt="" onerror="this.src='${defaultAvatar(0)}'">
+                <div class="mod-log-body">
+                    <div class="mod-log-username">${escapeHtml(targetName)}</div>
+                    <div class="mod-log-action" style="color:${typeColors[c.type] || '#5865f2'}">
+                        Case #${c.case_id} — ${typeLabels[c.type] || c.type.toUpperCase()}${extra}
+                    </div>
+                    <div class="mod-log-reason">${escapeHtml(c.reason || 'No reason')} · by ${escapeHtml(modName)}</div>
+                    <div class="mod-log-date">${dateStr}</div>
+                </div>
+                ${actionBtn}
             </div>`;
         }).join('');
     }

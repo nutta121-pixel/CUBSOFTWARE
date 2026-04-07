@@ -15,12 +15,12 @@
     font-family: 'Orbitron', sans-serif;
     font-size: clamp(1.6rem, 3vw, 2.2rem);
     font-weight: 900;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 10px;
 }
 
 .eb-header p {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.95rem;
     max-width: 600px;
     margin: 0 auto;
@@ -45,7 +45,7 @@
 
 .eb-section {
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 16px 18px;
 }
@@ -55,9 +55,9 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 12px;
-    border-left: 3px solid var(--primary-color);
+    border-left: 3px solid #5865f2;
     padding-left: 8px;
 }
 
@@ -85,22 +85,22 @@
 .eb-field label {
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .field-note {
     font-weight: 400;
     font-size: 0.72rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     opacity: 0.7;
 }
 
 .eb-field input[type="text"],
 .eb-field textarea {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
     padding: 8px 12px;
@@ -112,7 +112,7 @@
 
 .eb-field input[type="text"]:focus,
 .eb-field textarea:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 /* Color Field */
@@ -129,7 +129,7 @@
 .eb-color-row input[type="color"] {
     width: 42px;
     height: 36px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     background: none;
     cursor: pointer;
@@ -146,7 +146,7 @@
 .char-counter {
     text-align: right;
     font-size: 0.72rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 3px;
 }
 
@@ -156,14 +156,14 @@
     align-items: center;
     gap: 8px;
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
 }
 
 .eb-checkbox-label input[type="checkbox"] {
     width: 16px;
     height: 16px;
-    accent-color: var(--primary-color);
+    accent-color: #5865f2;
     cursor: pointer;
 }
 
@@ -174,7 +174,7 @@
     gap: 8px;
     align-items: start;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
     padding: 10px;
     margin-bottom: 8px;
@@ -191,15 +191,15 @@
 .eb-field-row label {
     font-size: 0.72rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .eb-field-row input[type="text"],
 .eb-field-row textarea {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
     font-size: 0.82rem;
     padding: 6px 10px;
@@ -211,7 +211,7 @@
 
 .eb-field-row input:focus,
 .eb-field-row textarea:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .eb-field-inline {
@@ -220,12 +220,12 @@
     align-items: center;
     gap: 4px;
     font-size: 0.7rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     padding-top: 4px;
 }
 
 .eb-field-inline input[type="checkbox"] {
-    accent-color: var(--primary-color);
+    accent-color: #5865f2;
     width: 15px;
     height: 15px;
     cursor: pointer;
@@ -287,13 +287,13 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 10px;
 }
 
 .eb-preview-note {
     font-size: 0.7rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     opacity: 0.6;
     margin-top: 8px;
     text-align: center;
@@ -488,7 +488,7 @@ a.embed-title:hover { text-decoration: underline; }
     position: fixed;
     bottom: 24px;
     right: 24px;
-    background: var(--primary-color);
+    background: #5865f2;
     color: #fff;
     padding: 10px 20px;
     border-radius: 10px;

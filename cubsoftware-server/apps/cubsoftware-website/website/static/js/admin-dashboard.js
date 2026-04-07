@@ -1451,7 +1451,7 @@
 
             renderApiEndpoints(data.categories || {});
         } catch (e) {
-            grid.innerHTML = '<div style="color:#ed4245;padding:20px;">Failed to load API status. Server may be offline.</div>';
+            grid.innerHTML = '<div class="api-error-message">Failed to load API status. Server may be offline.</div>';
             document.getElementById('apiOnlineCount').textContent = '0';
         }
     };
@@ -1500,14 +1500,6 @@
         const filterLower = filter.toLowerCase();
         let html = '';
 
-        const methodColors = {
-            'GET': '#57F287',
-            'POST': '#5865F2',
-            'PUT': '#fee75c',
-            'PATCH': '#faa61a',
-            'DELETE': '#ed4245'
-        };
-
         const catOrder = ['Admin Dashboard', 'CUB SOFTWARE Website', 'CUB SOFTWARE Tools', 'Stream Overlays', 'CUB PROTECTOR', 'CleanMe', 'CubReactive', 'CubPresence', 'Bot Dashboard', 'Affiliate Program', 'Keraplast'];
         const sortedCats = Object.keys(categories).sort((a, b) => {
             const ai = catOrder.indexOf(a);
@@ -1522,28 +1514,28 @@
             }
             if (eps.length === 0) continue;
 
-            html += `<div style="margin-bottom:16px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px 0;">
-                    <h3 style="font-size:0.95rem;font-weight:600;color:var(--text-primary);margin:0;">${cat}</h3>
-                    <span style="background:rgba(88,101,242,0.2);color:#5865F2;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:600;">${eps.length}</span>
+            html += `<div class="api-category">
+                <div class="api-category-header">
+                    <h3 class="api-category-title">${cat}</h3>
+                    <span class="api-category-count">${eps.length}</span>
                 </div>`;
 
             for (const ep of eps) {
-                const methodBadges = ep.methods.map(m =>
-                    `<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:0.7rem;font-weight:700;font-family:'JetBrains Mono',monospace;background:${methodColors[m] || '#999'}20;color:${methodColors[m] || '#999'};min-width:48px;text-align:center;">${m}</span>`
-                ).join(' ');
-
                 const isError = ep.status === 'error';
-                const statusColor = isError ? '#ed4245' : '#57F287';
-                const statusGlow = isError ? 'box-shadow:0 0 6px rgba(237,66,69,0.4);' : 'box-shadow:0 0 6px rgba(87,242,135,0.4);';
+                const dotClass = isError ? 'error' : 'online';
+                const rowClass = isError ? 'status-error' : 'status-online';
                 const lastCalledStr = ep.last_called ? timeAgo(ep.last_called) : '';
                 const statusTitle = isError ? `Error ${ep.last_status_code} - ${lastCalledStr}` : ep.last_called ? `Online (${ep.last_status_code}) - ${lastCalledStr}` : 'Online';
 
-                html += `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:6px;margin-bottom:3px;transition:background 0.15s;" onmouseenter="this.style.background='rgba(255,255,255,0.05)'" onmouseleave="this.style.background='rgba(255,255,255,0.02)'" title="${statusTitle}">
-                    <span style="width:10px;height:10px;border-radius:50%;background:${statusColor};flex-shrink:0;${statusGlow}"></span>
-                    <div style="display:flex;gap:4px;min-width:140px;flex-shrink:0;">${methodBadges}</div>
-                    <span style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--text-secondary);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ep.path}</span>
-                    <span style="color:var(--text-muted);font-size:0.7rem;flex-shrink:0;min-width:80px;text-align:right;">${lastCalledStr}</span>
+                const methodBadges = ep.methods.map(m =>
+                    `<span class="api-method-badge ${m.toLowerCase()}">${m}</span>`
+                ).join('');
+
+                html += `<div class="api-endpoint ${rowClass}" title="${statusTitle}">
+                    <span class="api-endpoint-dot ${dotClass}"></span>
+                    <div class="api-method-badges">${methodBadges}</div>
+                    <span class="api-endpoint-path">${ep.path}</span>
+                    <span class="api-endpoint-time">${lastCalledStr}</span>
                 </div>`;
             }
 
@@ -1551,7 +1543,7 @@
         }
 
         if (!html) {
-            html = '<div style="color:var(--text-muted);padding:20px;text-align:center;">No endpoints match your search.</div>';
+            html = '<div class="api-no-results">No endpoints match your search.</div>';
         }
 
         grid.innerHTML = html;

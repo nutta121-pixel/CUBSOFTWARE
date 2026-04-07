@@ -8,14 +8,14 @@
 .press-hero {
     text-align: center;
     padding: 70px 20px 50px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .press-eyebrow {
     font-family: 'Orbitron', sans-serif;
     font-size: 0.75rem;
     letter-spacing: 4px;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 12px;
 }
 
@@ -31,7 +31,7 @@
 }
 
 .press-subtitle {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
     max-width: 620px;
     margin: 0 auto 28px;
@@ -71,20 +71,28 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 2px;
-    color: var(--text-primary);
+    color: #ffffff;
     margin-bottom: 20px;
     padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.press-subsection-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 2rem 0 1rem;
 }
 
 /* ─── Generic card ─── */
 .press-card {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 28px 32px;
     line-height: 1.8;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .press-card p {
@@ -106,7 +114,7 @@
 .press-about-list li {
     padding-left: 18px;
     position: relative;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.95rem;
 }
 
@@ -114,12 +122,12 @@
     content: '→';
     position: absolute;
     left: 0;
-    color: var(--primary-color);
+    color: #5865f2;
     font-size: 0.85rem;
 }
 
 .press-card a {
-    color: var(--primary-color);
+    color: #5865f2;
     text-decoration: none;
 }
 
@@ -132,7 +140,7 @@
     display: flex;
     gap: 0;
     margin-top: 24px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     overflow: hidden;
 }
@@ -143,7 +151,7 @@
     flex-direction: column;
     align-items: center;
     padding: 20px 12px;
-    border-right: 1px solid var(--border-color);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .press-fact:last-child {
@@ -154,13 +162,13 @@
     font-family: 'Orbitron', sans-serif;
     font-size: 1.8rem;
     font-weight: 900;
-    color: var(--primary-color);
+    color: #5865f2;
     line-height: 1;
 }
 
 .press-fact-label {
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 6px;
     text-align: center;
     line-height: 1.3;
@@ -185,13 +193,13 @@
 .press-founder-info h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.3rem;
-    color: var(--text-primary);
+    color: #ffffff;
     margin-bottom: 2px;
 }
 
 .press-founder-role {
     font-size: 0.85rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 14px !important;
     font-weight: 600;
 }
@@ -208,17 +216,17 @@
     align-items: center;
     gap: 6px;
     padding: 6px 14px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     text-decoration: none;
     font-size: 0.85rem;
     transition: all 0.2s ease;
 }
 
 .press-link-badge:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
     text-decoration: none !important;
 }
 
@@ -226,7 +234,7 @@
 .press-release h3 {
     font-size: 1.15rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #ffffff;
     margin: 10px 0 14px;
     line-height: 1.4;
 }
@@ -235,7 +243,7 @@
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: var(--primary-color);
+    color: #5865f2;
     font-weight: 600;
     margin-bottom: 0 !important;
 }
@@ -249,7 +257,7 @@
 
 .press-asset-card {
     flex: 1 1 200px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 14px;
     overflow: hidden;
     display: flex;
@@ -280,7 +288,7 @@
 
 .press-asset-meta {
     background: rgba(255, 255, 255, 0.04);
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     padding: 14px 16px;
     display: flex;
     flex-direction: column;
@@ -290,12 +298,12 @@
 .press-asset-name {
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: #ffffff;
 }
 
 .press-asset-hint {
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 8px;
 }
 
@@ -319,7 +327,7 @@
 .press-brand-guide {
     margin-top: 20px;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 20px 24px;
 }
@@ -327,7 +335,7 @@
 .press-brand-guide h4 {
     font-size: 0.9rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #ffffff;
     margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -342,7 +350,7 @@
 
 .press-brand-guide li {
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     padding-left: 16px;
     position: relative;
     line-height: 1.5;
@@ -352,11 +360,11 @@
     content: '–';
     position: absolute;
     left: 0;
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 .press-brand-guide a {
-    color: var(--primary-color);
+    color: #5865f2;
     text-decoration: none;
 }
 
@@ -392,12 +400,12 @@
     display: block;
     border-radius: 12px;
     overflow: hidden;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     transition: border-color 0.2s ease, transform 0.2s ease;
 }
 
 .press-screenshot:hover {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     transform: translateY(-2px);
 }
 
@@ -411,7 +419,7 @@
 .press-screenshots-note {
     margin-top: 12px;
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     text-align: center;
 }
 
@@ -431,13 +439,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--primary-color);
+    color: #5865f2;
     flex-shrink: 0;
 }
 
 .press-contact-label {
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 8px !important;
 }
 
@@ -445,7 +453,7 @@
     display: inline-block;
     font-size: 1.15rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: #5865f2;
     text-decoration: none;
     margin-bottom: 8px;
 }
@@ -456,7 +464,7 @@
 
 .press-contact-note {
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 0 !important;
 }
 

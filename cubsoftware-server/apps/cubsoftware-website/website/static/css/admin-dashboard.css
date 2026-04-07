@@ -44,7 +44,7 @@ body {
     bottom: 0;
     width: var(--sidebar-width);
     background: var(--sidebar-bg);
-    border-right: 1px solid var(--border-color);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     flex-direction: column;
     z-index: 1001;
@@ -53,10 +53,11 @@ body {
 
 .sidebar-header {
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    background: linear-gradient(180deg, rgba(88, 101, 242, 0.08) 0%, transparent 100%);
 }
 
 .sidebar-logo {
@@ -69,7 +70,7 @@ body {
 }
 
 .sidebar-logo .cub {
-    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -83,7 +84,7 @@ body {
     display: none;
     background: none;
     border: none;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     padding: 0.5rem;
     border-radius: 8px;
@@ -112,7 +113,7 @@ body {
     gap: 0.75rem;
     padding: 0.875rem 1rem;
     margin-bottom: 0.25rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     text-decoration: none;
     border-radius: 10px;
     transition: all 0.2s ease;
@@ -132,12 +133,12 @@ body {
 
 .nav-item:hover {
     background: rgba(88, 101, 242, 0.1);
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .nav-item.active {
     background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .nav-item.active::before {
@@ -167,7 +168,7 @@ body {
 /* Sidebar Footer */
 .sidebar-footer {
     padding: 1rem 1.25rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -198,7 +199,7 @@ body {
 .user-name {
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -206,7 +207,7 @@ body {
 
 .user-role {
     font-size: 0.75rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .logout-btn {
@@ -241,7 +242,7 @@ body {
     right: 0;
     height: var(--header-height);
     background: var(--sidebar-bg);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding: 0 1rem;
     align-items: center;
     justify-content: space-between;
@@ -251,7 +252,7 @@ body {
 .mobile-menu-btn {
     background: none;
     border: none;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     padding: 0.5rem;
     cursor: pointer;
 }
@@ -265,7 +266,7 @@ body {
     font-family: 'Orbitron', monospace;
     font-size: 1rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .mobile-avatar {
@@ -311,13 +312,13 @@ body {
 .section-title h1 {
     font-size: 1.75rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin: 0 0 0.25rem 0;
 }
 
 .section-title p {
     font-size: 0.95rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin: 0;
 }
 
@@ -330,8 +331,8 @@ body {
 
 /* Controls Bar */
 .controls-bar {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 1rem 1.25rem;
     margin-bottom: 1.5rem;
@@ -356,9 +357,9 @@ body {
     gap: 0.5rem;
     padding: 0.625rem 1rem;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -387,12 +388,12 @@ body {
 .control-btn.secondary {
     background: rgba(255, 255, 255, 0.04);
     border-color: rgba(255, 255, 255, 0.12);
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .control-btn.secondary:hover {
     background: rgba(255, 255, 255, 0.08);
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .control-btn.start {
@@ -421,9 +422,9 @@ body {
 .form-input {
     padding: 0.625rem 1rem;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.875rem;
     font-family: inherit;
     outline: none;
@@ -439,9 +440,9 @@ body {
 .input-field {
     padding: 0.625rem 1rem;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.875rem;
     outline: none;
     transition: border-color 0.2s;
@@ -463,7 +464,7 @@ body {
     gap: 0.5rem;
     cursor: pointer;
     font-size: 0.875rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .auto-refresh input[type="checkbox"] {
@@ -473,7 +474,7 @@ body {
 .checkbox-custom {
     width: 18px;
     height: 18px;
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 4px;
     position: relative;
     transition: all 0.2s;
@@ -501,15 +502,15 @@ body {
     align-items: center;
     gap: 0.5rem;
     font-size: 0.875rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .refresh-rate select {
     padding: 0.375rem 0.75rem;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.8rem;
 }
 
@@ -519,7 +520,7 @@ body {
     align-items: center;
     gap: 0.5rem;
     font-size: 0.85rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .status-dot {
@@ -547,8 +548,8 @@ body {
 }
 
 .process-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 1.25rem;
     transition: all 0.2s;
@@ -568,7 +569,7 @@ body {
 .process-name {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .process-status {
@@ -608,14 +609,14 @@ body {
 
 .stat-label {
     font-size: 0.75rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 0.25rem;
 }
 
 .stat-value {
     font-size: 0.95rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'JetBrains Mono', monospace;
 }
 
@@ -627,10 +628,10 @@ body {
 .process-actions button {
     flex: 1;
     padding: 0.5rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     background: transparent;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.8rem;
     cursor: pointer;
     transition: all 0.2s;
@@ -638,7 +639,7 @@ body {
 
 .process-actions button:hover {
     background: rgba(255, 255, 255, 0.05);
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .process-actions button.restart:hover {
@@ -665,8 +666,8 @@ body {
 }
 
 .stat-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 1.25rem;
     display: flex;
@@ -716,18 +717,18 @@ body {
 .stat-card .stat-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .stat-card .stat-label {
     font-size: 0.85rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* Reports List */
 .reports-list {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     overflow: hidden;
 }
@@ -736,7 +737,7 @@ body {
     display: flex;
     align-items: center;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     cursor: pointer;
     transition: background 0.2s;
 }
@@ -771,7 +772,7 @@ body {
 
 .report-subject {
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 0.25rem;
     white-space: nowrap;
     overflow: hidden;
@@ -780,7 +781,7 @@ body {
 
 .report-meta {
     font-size: 0.8rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .report-status {
@@ -820,8 +821,8 @@ body {
 
 .whitelist-add-card,
 .whitelist-users-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 1.5rem;
 }
@@ -830,13 +831,13 @@ body {
 .whitelist-users-card h3 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin: 0 0 0.75rem 0;
 }
 
 .help-text {
     font-size: 0.85rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 1rem;
     line-height: 1.5;
 }
@@ -870,7 +871,7 @@ body {
 .whitelist-user-id {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.9rem;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .whitelist-remove {
@@ -895,7 +896,7 @@ body {
 /* Logs Section */
 .logs-container {
     background: #0d0d1a;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     height: 500px;
     overflow-y: auto;
@@ -909,7 +910,7 @@ body {
     align-items: center;
     justify-content: center;
     height: 100%;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .log-line {
@@ -922,12 +923,12 @@ body {
 }
 
 .log-time {
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin-right: 1rem;
 }
 
 .log-content {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .log-line.error .log-content {
@@ -955,7 +956,7 @@ body {
 
 .modal-content {
     background: var(--sidebar-bg);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     width: 100%;
     max-width: 600px;
@@ -970,19 +971,19 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .modal-header h3 {
     margin: 0;
     font-size: 1.25rem;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .modal-close {
     background: none;
     border: none;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.5rem;
     cursor: pointer;
     padding: 0;
@@ -990,7 +991,7 @@ body {
 }
 
 .modal-close:hover {
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .modal-body {
@@ -1001,7 +1002,7 @@ body {
 
 .modal-footer {
     padding: 1rem 1.5rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1017,7 +1018,7 @@ body {
 
 .status-btn {
     padding: 0.5rem 1rem;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     background: transparent;
     font-size: 0.85rem;
@@ -1097,7 +1098,7 @@ body {
 
 .report-field label {
     font-size: 0.75rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 0.25rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -1105,7 +1106,7 @@ body {
 
 .report-field .value {
     font-size: 0.95rem;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     word-break: break-word;
 }
 
@@ -1121,9 +1122,9 @@ body {
     right: 2rem;
     padding: 1rem 1.5rem;
     background: var(--sidebar-bg);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.9rem;
     opacity: 0;
     transform: translateY(20px);
@@ -1152,13 +1153,13 @@ body {
     align-items: center;
     justify-content: center;
     padding: 3rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .empty-state {
     text-align: center;
     padding: 3rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* Responsive */
@@ -1295,7 +1296,7 @@ body {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     padding: 0 1rem;
     margin-bottom: 0.5rem;
     display: block;
@@ -1309,8 +1310,8 @@ body {
 }
 
 .feature-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 1.25rem;
     display: flex;
@@ -1347,7 +1348,7 @@ body {
 
 .feature-name {
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     text-transform: capitalize;
 }
 
@@ -1391,8 +1392,8 @@ body {
 
 /* Links List */
 .links-list {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     overflow: hidden;
 }
@@ -1401,7 +1402,7 @@ body {
     display: flex;
     align-items: center;
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     cursor: pointer;
     transition: background 0.2s;
     gap: 1rem;
@@ -1425,7 +1426,7 @@ body {
 
 .link-url {
     flex: 1;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     white-space: nowrap;
     overflow: hidden;
@@ -1436,7 +1437,7 @@ body {
     display: flex;
     align-items: center;
     gap: 1rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
 }
 
@@ -1460,8 +1461,8 @@ body {
 
 .ipban-add-card,
 .ipbans-list-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 1.5rem;
 }
@@ -1471,7 +1472,7 @@ body {
 .ipban-add-card h4 {
     font-size: 1.1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin: 0 0 1rem 0;
 }
 
@@ -1479,7 +1480,7 @@ body {
     font-size: 0.95rem;
     margin-top: 1.5rem;
     padding-top: 1.5rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .ipban-form {
@@ -1497,7 +1498,7 @@ body {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     padding-bottom: 0.75rem;
 }
 
@@ -1505,7 +1506,7 @@ body {
     padding: 0.5rem 1rem;
     background: transparent;
     border: none;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -1514,12 +1515,12 @@ body {
 }
 
 .tab-btn:hover {
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     background: rgba(255, 255, 255, 0.05);
 }
 
 .tab-btn.active {
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     background: rgba(88, 101, 242, 0.15);
 }
 
@@ -1543,7 +1544,7 @@ body {
 }
 
 .ipban-item:hover {
-    border-color: var(--border-color);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .ipban-info {
@@ -1556,12 +1557,12 @@ body {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.95rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .ipban-meta {
     font-size: 0.8rem;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .ipban-type {
@@ -1641,8 +1642,8 @@ body {
 /* Passwords Section */
 .passwords-create,
 .passwords-list-container {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     padding: 1.5rem;
     margin-bottom: 1rem;
@@ -1652,7 +1653,7 @@ body {
 .passwords-list-container h3 {
     margin: 0 0 1rem 0;
     font-size: 1rem;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .password-form .form-row {
@@ -1665,15 +1666,15 @@ body {
     flex: 1;
     padding: 0.75rem 1rem;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-size: 0.9rem;
 }
 
 .password-form .form-input:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .passwords-list {
@@ -1689,7 +1690,7 @@ body {
     padding: 0.75rem 1rem;
     background: rgba(255, 255, 255, 0.02);
     border-radius: 8px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .password-info {
@@ -1741,12 +1742,12 @@ body {
     background: rgba(0, 0, 0, 0.3);
     padding: 20px;
     text-align: center;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 0;
 }
 
 .dashboard-footer .footer-content {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 

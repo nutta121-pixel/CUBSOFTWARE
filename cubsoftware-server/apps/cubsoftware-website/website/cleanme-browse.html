@@ -26,27 +26,7 @@
 </head>
 <body data-page="browse">
     <!-- Header -->
-    <header class="site-header cleanme-header">
-        <div class="header-container">
-            <a href="/" class="logo">
-                <span class="logo-text">
-                    <span class="cub">CUB</span><span class="software">SOFTWARE</span>
-                </span>
-            </a>
-            <nav class="site-nav" id="siteNav">
-                <a href="/cleanme" class="nav-link">Home</a>
-                <a href="/cleanme/browse" class="nav-link active">Browse</a>
-                <a href="/cleanme/submit" class="nav-link">Submit</a>
-                <a href="/" class="nav-link">Back to Tools</a>
-            </nav>
-            {% include 'nav_auth.html' %}
-            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-        </div>
-    </header>
+    {% include 'header.html' %}
 
     <!-- Browse Section -->
     <main class="browse-main">
@@ -104,37 +84,8 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-inner">
-            <div class="footer-text">
-                &copy; 2026 CUB SOFTWARE. Made with love by
-                <a href="https://discord.com/users/378501056008683530" target="_blank" rel="noopener noreferrer" class="footer-link">CUB</a>
-            </div>
-            <div class="footer-links">
-                <a href="/">Home</a>
-                <a href="/status">Status</a>
-                <a href="/terms">Terms</a>
-                <a href="/privacy">Privacy</a>
-                <a href="/copyright">Copyright</a>
-                <a href="/report">Report Issue</a>
-                <a href="/contact">Contact</a>
-            </div>
-        </div>
-    </footer>
+    {% include 'footer.html' %}
 
     <script src="/static/js/cleanme.js?v={{ v }}"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const mobileBtn = document.getElementById('mobileMenuBtn');
-        const nav = document.getElementById('siteNav');
-        if (mobileBtn && nav) {
-            mobileBtn.addEventListener('click', function() {
-                nav.classList.toggle('active');
-                mobileBtn.classList.toggle('active');
-            });
-        }
-    });
-    </script>
 </body>
 </html>

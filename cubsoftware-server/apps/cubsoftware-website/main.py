@@ -12205,7 +12205,32 @@ def cub_protector_moderation(guild_id):
         return jsonify({'error': 'Access denied'}), 403
     data = load_cp_json(CUB_PROTECTOR_MODERATION_FILE)
     guild_data = data.get('guilds', {}).get(guild_id, {})
-    return jsonify({'cases': guild_data.get('cases', []), 'warnings': guild_data.get('warnings', [])})
+    cases = guild_data.get('cases', [])
+
+    # Collect unique user IDs to look up (target + moderator, exclude 'dashboard')
+    unique_ids = set()
+    for c in cases[-50:]:
+        if c.get('target_id'): unique_ids.add(c['target_id'])
+        mid = c.get('moderator_id')
+        if mid and mid != 'dashboard': unique_ids.add(mid)
+
+    # Lookup user info via Discord API (best effort, limit to 20 unique users)
+    user_cache = {}
+    for uid in list(unique_ids)[:20]:
+        try:
+            u = _guild_bot_request(guild_id, f'/users/{uid}')
+            if u and isinstance(u, dict) and 'id' in u:
+                avatar_hash = u.get('avatar')
+                if avatar_hash:
+                    avatar_url = f"https://cdn.discordapp.com/avatars/{uid}/{avatar_hash}.webp?size=64"
+                else:
+                    default_idx = (int(uid) >> 22) % 6
+                    avatar_url = f"https://cdn.discordapp.com/embed/avatars/{default_idx}.png"
+                user_cache[uid] = {'username': u.get('global_name') or u.get('username', uid), 'avatar': avatar_url}
+        except Exception:
+            pass
+
+    return jsonify({'cases': cases, 'warnings': guild_data.get('warnings', []), 'users': user_cache})
 
 @app.route('/api/cub-protector/guilds/<guild_id>/automod', methods=['GET'])
 @cub_protector_auth_required

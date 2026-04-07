@@ -8,96 +8,53 @@
     <link rel="icon" type="image/png" href="/static/images/company-logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
-    <style>
-        .denied-container {
-            max-width: 500px;
-            margin: 100px auto;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .denied-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 2rem;
-            color: #ed4245;
-        }
-
-        .denied-container h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: #ed4245;
-        }
-
-        .denied-container p {
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-bottom: 2rem;
-        }
-
-        .user-info img {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-        }
-
-        .user-info .details {
-            text-align: left;
-        }
-
-        .user-info .username {
-            font-weight: 600;
-        }
-
-        .user-info .user-id {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-family: monospace;
-        }
-
-    </style>
+    <link rel="stylesheet" href="/static/css/state-pages.css?v={{ v }}">
 </head>
 <body>
     <div class="main-container">
         {% include 'header.html' %}
 
-        <main>
-            <div class="denied-container">
-                <svg class="denied-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    <line x1="9" y1="9" x2="15" y2="15"/>
-                    <line x1="15" y1="9" x2="9" y2="15"/>
-                </svg>
+        <div class="state-page">
+            <div class="state-card">
+                <div class="state-icon state-icon-red">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                    </svg>
+                </div>
 
-                <h1>Access Denied</h1>
-                <p>Your Discord account is not authorized to access the Bot Dashboard. Only whitelisted users can access this page.</p>
+                <h1 class="state-title state-title-red">Access Denied</h1>
+                <p class="state-subtitle">
+                    Your Discord account is not authorized to access the Bot Dashboard.
+                    Only whitelisted users can access this page.
+                </p>
 
-                <div class="user-info">
+                <div class="user-info-block">
                     <img src="{{ user.avatar }}" alt="Avatar">
-                    <div class="details">
+                    <div>
                         <div class="username">{{ user.username }}</div>
                         <div class="user-id">{{ user.id }}</div>
                     </div>
                 </div>
 
-                <p>If you believe you should have access, contact the administrator with your Discord ID shown above.</p>
+                <p class="state-subtitle" style="font-size:0.875rem;">
+                    If you believe you should have access, contact the administrator with your Discord ID shown above.
+                </p>
 
+                <div class="state-actions">
+                    <a href="/" class="state-btn-primary">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="19" y1="12" x2="5" y2="12"/>
+                            <polyline points="12 19 5 12 12 5"/>
+                        </svg>
+                        Back to Home
+                    </a>
+                </div>
             </div>
-        </main>
+        </div>
 
         {% include 'footer.html' %}
     </div>

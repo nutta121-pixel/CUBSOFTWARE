@@ -23,8 +23,8 @@ body.authenticated .password-screen {
 }
 
 .password-box {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 40px;
     text-align: center;
@@ -35,12 +35,12 @@ body.authenticated .password-screen {
 .password-box h2 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.5rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 10px;
 }
 
 .password-box p {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 20px;
     font-size: 0.9rem;
 }
@@ -50,16 +50,16 @@ body.authenticated .password-screen {
     padding: 12px 15px;
     font-size: 1rem;
     background: var(--background-color);
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     text-align: center;
     margin-bottom: 15px;
 }
 
 .password-box input:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .password-box .action-btn {
@@ -105,7 +105,7 @@ body {
 
 .page-subtitle {
     text-align: center;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.88rem;
     margin-bottom: 1.5rem;
 }
@@ -127,14 +127,14 @@ body {
     gap: 15px;
     margin-bottom: 25px;
     padding-bottom: 20px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .start-time-section label {
     font-family: 'Poppins', sans-serif;
     font-size: 1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .start-time-section input[type="time"] {
@@ -142,16 +142,16 @@ body {
     font-size: 1.2rem;
     font-family: 'Orbitron', sans-serif;
     background: var(--background-color);
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     text-align: center;
     width: 190px;
 }
 
 .start-time-section input[type="time"]:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .action-btn {
@@ -241,22 +241,22 @@ body {
 
 .sound-selector label {
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .sound-selector select {
     padding: 8px 12px;
     font-size: 0.9rem;
     background: var(--background-color);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     cursor: pointer;
 }
 
 .sound-selector select:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 
@@ -268,11 +268,11 @@ body {
     border-radius: 8px;
     margin-bottom: 20px;
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .timer-status strong {
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 .status-active {
@@ -281,7 +281,7 @@ body {
 }
 
 .status-inactive {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .status-complete {
@@ -314,14 +314,14 @@ body {
     background: transparent;
     padding-bottom: 8px;
     margin-bottom: 5px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .step-row.header-row span {
     font-family: 'Poppins', sans-serif;
     font-size: 0.75rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -329,13 +329,13 @@ body {
 .step-name {
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .step-offset {
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     text-align: center;
 }
 
@@ -343,7 +343,7 @@ body {
     font-family: 'Orbitron', sans-serif;
     font-size: 1rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: #5865f2;
     text-align: right;
     transition: transform 0.2s ease, color 0.2s ease;
 }
@@ -385,7 +385,7 @@ body {
 
 .step-row.step-active {
     background: linear-gradient(135deg, rgba(88, 101, 242, 0.2) 0%, rgba(124, 58, 237, 0.2) 100%);
-    border: 1px solid var(--primary-color);
+    border: 1px solid #5865f2;
 }
 
 .step-row.step-active .step-time {
@@ -413,21 +413,21 @@ body {
 .total-time {
     margin-top: 20px;
     padding-top: 15px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     text-align: center;
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .total-time strong {
-    color: var(--primary-color);
+    color: #5865f2;
     font-family: 'Orbitron', sans-serif;
 }
 
 .total-minutes {
     font-size: 0.78rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 4px;
     opacity: 0.7;
 }
@@ -436,7 +436,7 @@ body {
 .optional-label {
     font-size: 0.75rem;
     font-weight: 400;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     opacity: 0.7;
 }
 
@@ -447,7 +447,7 @@ body {
     padding: 14px 18px;
     background: rgba(88, 101, 242, 0.08);
     border: 1px solid rgba(88, 101, 242, 0.3);
-    border-left: 3px solid var(--primary-color);
+    border-left: 3px solid #5865f2;
     border-radius: 10px;
     gap: 8px;
     flex-direction: column;
@@ -462,7 +462,7 @@ body {
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 4px;
 }
 
@@ -475,20 +475,20 @@ body {
 }
 
 .finish-label {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     white-space: nowrap;
 }
 
 .finish-value {
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     text-align: right;
 }
 
 /* Step row highlighted at finish point */
 .step-row.step-finish-marker {
     background: rgba(88, 101, 242, 0.12);
-    border-left: 3px solid var(--primary-color);
+    border-left: 3px solid #5865f2;
 }
 
 /* Badge appended after the step name text, stays in name column */
@@ -498,7 +498,7 @@ body {
     margin-left: 8px;
     font-size: 0.65rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: #5865f2;
     background: rgba(88, 101, 242, 0.15);
     border: 1px solid rgba(88, 101, 242, 0.4);
     border-radius: 4px;
@@ -530,8 +530,8 @@ body {
 }
 
 .acknowledge-content {
-    background: var(--surface-color);
-    border: 2px solid var(--primary-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 2px solid #5865f2;
     border-radius: 20px;
     padding: 40px 50px;
     text-align: center;
@@ -565,7 +565,7 @@ body {
 .acknowledge-content h2 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.8rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 10px;
 }
 
@@ -573,7 +573,7 @@ body {
     font-family: 'Orbitron', sans-serif;
     font-size: 2.5rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     margin-bottom: 25px;
 }
 
@@ -591,7 +591,7 @@ body {
     margin-bottom: 20px;
     padding: 15px;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
 }
 
@@ -605,7 +605,7 @@ body {
     font-family: 'Poppins', sans-serif;
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     white-space: nowrap;
     min-width: 110px;
 }
@@ -616,22 +616,22 @@ body {
     font-size: 0.95rem;
     font-family: 'Poppins', sans-serif;
     background: var(--background-color);
-    border: 2px solid var(--border-color);
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     transition: border-color 0.2s ease;
 }
 
 .batch-field input[type="text"]:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 /* Save Button */
 .save-section {
     margin-top: 20px;
     padding-top: 15px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -707,7 +707,7 @@ body {
     background: transparent;
     border: none;
     border-radius: 9px;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
@@ -752,7 +752,7 @@ body {
 }
 
 .anytime-row .step-name {
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .anytime-row {
@@ -794,7 +794,7 @@ body {
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .admin-offsets-list {
@@ -817,7 +817,7 @@ body {
 .admin-step-name {
     font-family: 'Poppins', sans-serif;
     font-size: 0.85rem;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     flex: 1;
     min-width: 160px;
 }
@@ -830,7 +830,7 @@ body {
 
 .admin-offset-inputs label {
     font-size: 0.78rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     white-space: nowrap;
 }
 
@@ -842,7 +842,7 @@ body {
     background: var(--background-color);
     border: 2px solid rgba(251, 191, 36, 0.4);
     border-radius: 8px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     text-align: center;
 }
 
@@ -853,7 +853,7 @@ body {
 
 .admin-offset-relative {
     font-size: 0.78rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     opacity: 0.7;
     white-space: nowrap;
 }
@@ -913,8 +913,8 @@ body.authenticated .history-main {
 }
 
 .history-card {
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 0;
     overflow: hidden;
@@ -934,7 +934,7 @@ body.authenticated .history-main {
 
 .history-table thead tr {
     background: rgba(88, 101, 242, 0.1);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .history-table th {
@@ -944,12 +944,12 @@ body.authenticated .history-main {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     white-space: nowrap;
 }
 
 .history-table tbody tr {
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     transition: background 0.15s ease;
 }
 
@@ -963,14 +963,14 @@ body.authenticated .history-main {
 
 .history-table td {
     padding: 14px 18px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     vertical-align: middle;
     text-align: center;
 }
 
 .col-date {
     white-space: nowrap;
-    color: var(--text-secondary) !important;
+    color: rgba(255, 255, 255, 0.5) !important;
     font-size: 0.85rem !important;
 }
 
@@ -982,7 +982,7 @@ body.authenticated .history-main {
     display: inline-block;
     background: rgba(88, 101, 242, 0.15);
     border: 1px solid rgba(88, 101, 242, 0.35);
-    color: var(--primary-color);
+    color: #5865f2;
     border-radius: 6px;
     padding: 3px 10px;
     font-size: 0.85rem;
@@ -992,7 +992,7 @@ body.authenticated .history-main {
 
 .col-results {
     font-size: 0.88rem;
-    color: var(--text-secondary) !important;
+    color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .col-operator {
@@ -1033,12 +1033,12 @@ body.authenticated .history-main {
 
 .edit-btn {
     border: 1px solid rgba(88, 101, 242, 0.4);
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 .edit-btn:hover {
     background: rgba(88, 101, 242, 0.1);
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .save-edit-btn {
@@ -1058,15 +1058,15 @@ body.authenticated .history-main {
     font-size: 0.85rem;
     font-family: 'Poppins', sans-serif;
     background: var(--background-color);
-    border: 1px solid var(--primary-color);
+    border: 1px solid #5865f2;
     border-radius: 6px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .history-loading {
     text-align: center;
     padding: 50px 20px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
 }
@@ -1077,7 +1077,7 @@ body.authenticated .history-main {
     justify-content: center;
     min-height: 240px;
     padding: 40px 20px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-family: 'Poppins', sans-serif;
 }
 
@@ -1096,7 +1096,7 @@ body.authenticated .history-main {
 .history-empty-text {
     font-size: 1.1rem;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* Search bar */
@@ -1107,10 +1107,10 @@ body.authenticated .history-main {
 .history-search-bar input {
     width: 100%;
     padding: 12px 16px;
-    background: var(--surface-color);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
     font-family: 'Poppins', sans-serif;
     font-size: 0.95rem;
     box-sizing: border-box;
@@ -1119,17 +1119,17 @@ body.authenticated .history-main {
 
 .history-search-bar input:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: #5865f2;
 }
 
 .history-search-bar input::placeholder {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 /* View Here link */
 .view-link {
     display: inline-block;
-    color: var(--primary-color);
+    color: #5865f2;
     font-weight: 600;
     font-size: 0.88rem;
     text-decoration: none;
@@ -1158,14 +1158,14 @@ body.authenticated .history-main {
     gap: 10px;
     margin-top: 20px;
     padding-top: 16px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
     flex-wrap: wrap;
 }
 
 .record-edit-form {
     margin-top: 20px;
     padding-top: 16px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .record-edit-fields {
@@ -1187,7 +1187,7 @@ body.authenticated .history-main {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .record-edit-actions {
@@ -1198,10 +1198,10 @@ body.authenticated .history-main {
 }
 
 .step-time-edit-input {
-    background: var(--surface-color);
-    border: 1px solid var(--primary-color);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid #5865f2;
     border-radius: 6px;
-    color: var(--primary-color);
+    color: #5865f2;
     font-family: 'Orbitron', sans-serif;
     font-size: 0.9rem;
     font-weight: 700;
@@ -1230,20 +1230,20 @@ body.authenticated .history-main {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .record-meta-value {
     font-family: 'Poppins', sans-serif;
     font-size: 1rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .record-meta-value.time-value {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.1rem;
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 .card-section-title {
@@ -1252,7 +1252,7 @@ body.authenticated .history-main {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin: 0 0 16px 0;
 }
 
@@ -1268,7 +1268,7 @@ body.authenticated .history-main {
     gap: 14px;
     padding: 12px 16px;
     background: rgba(88, 101, 242, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
 }
 
@@ -1283,7 +1283,7 @@ body.authenticated .history-main {
     justify-content: center;
     font-size: 0.78rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: #5865f2;
     font-family: 'Poppins', sans-serif;
     flex-shrink: 0;
 }
@@ -1297,13 +1297,13 @@ body.authenticated .history-main {
     font-family: 'Poppins', sans-serif;
     font-size: 0.92rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .record-step-offset {
     font-family: 'Poppins', sans-serif;
     font-size: 0.78rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 2px;
 }
 
@@ -1311,7 +1311,7 @@ body.authenticated .history-main {
     font-family: 'Orbitron', sans-serif;
     font-size: 1rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: #5865f2;
     white-space: nowrap;
 }
 

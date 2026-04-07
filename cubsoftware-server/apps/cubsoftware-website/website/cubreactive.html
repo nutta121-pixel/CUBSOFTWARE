@@ -345,7 +345,7 @@
                                 <button type="button" class="style-btn {% if user_config and user_config.settings.animation_style == 'none' %}active{% endif %}" data-style="none">None</button>
                             </div>
                             <input type="hidden" id="setting-animation" value="{{ user_config.settings.animation_style if user_config and user_config.settings.animation_style else 'bounce' }}">
-                            <div class="slider-setting" style="margin-top: 1rem;">
+                            <div class="slider-setting">
                                 <label>Animation Speed</label>
                                 <input type="range" id="setting-animation-speed" min="50" max="200" step="10" value="{{ user_config.settings.animation_speed if user_config and user_config.settings.animation_speed else 100 }}">
                                 <span class="slider-value" id="animation-speed-value">{{ user_config.settings.animation_speed if user_config and user_config.settings.animation_speed else 100 }}%</span>
@@ -458,7 +458,7 @@
                                     <input type="range" id="setting-border-width" min="1" max="10" value="{{ user_config.settings.border_width if user_config and user_config.settings.border_width else 3 }}">
                                     <span class="slider-value" id="border-width-value">{{ user_config.settings.border_width if user_config and user_config.settings.border_width else 3 }}px</span>
                                 </div>
-                                <div class="style-buttons" style="margin-top: 0.75rem;">
+                                <div class="style-buttons cr-mt-sm">
                                     <button type="button" class="style-btn {% if not user_config or not user_config.settings.border_style or user_config.settings.border_style == 'solid' %}active{% endif %}" data-border-style="solid">Solid</button>
                                     <button type="button" class="style-btn {% if user_config and user_config.settings.border_style == 'dashed' %}active{% endif %}" data-border-style="dashed">Dashed</button>
                                     <button type="button" class="style-btn {% if user_config and user_config.settings.border_style == 'dotted' %}active{% endif %}" data-border-style="dotted">Dotted</button>
@@ -497,7 +497,7 @@
                                     <input type="range" id="setting-name-size" min="10" max="24" value="{{ user_config.settings.name_size if user_config and user_config.settings.name_size else 14 }}">
                                     <span class="slider-value" id="name-size-value">{{ user_config.settings.name_size if user_config and user_config.settings.name_size else 14 }}px</span>
                                 </div>
-                                <label class="setting-toggle" style="margin-top: 0.75rem;">
+                                <label class="setting-toggle cr-mt-sm">
                                     <input type="checkbox" id="setting-name-shadow" {% if user_config and user_config.settings.name_shadow_enabled %}checked{% endif %}>
                                     <span class="toggle-slider"></span>
                                     <span class="setting-label">Text shadow</span>
@@ -508,7 +508,7 @@
                                         <input type="color" id="setting-name-shadow-color" value="{{ user_config.settings.name_shadow_color if user_config and user_config.settings.name_shadow_color else '#000000' }}">
                                     </div>
                                 </div>
-                                <label class="setting-toggle" style="margin-top: 0.75rem;">
+                                <label class="setting-toggle cr-mt-sm">
                                     <input type="checkbox" id="setting-name-glow" {% if user_config and user_config.settings.name_glow_enabled %}checked{% endif %}>
                                     <span class="toggle-slider"></span>
                                     <span class="setting-label">Text glow</span>
@@ -634,7 +634,7 @@
                                 <button type="button" class="style-btn {% if user_config and user_config.settings.transition_style == 'none' %}active{% endif %}" data-transition="none">None</button>
                             </div>
                             <input type="hidden" id="setting-transition" value="{{ user_config.settings.transition_style if user_config and user_config.settings.transition_style else 'fade' }}">
-                            <div class="slider-setting" style="margin-top: 1rem;">
+                            <div class="slider-setting">
                                 <label>Duration</label>
                                 <input type="range" id="setting-transition-duration" min="100" max="500" step="50" value="{{ user_config.settings.transition_duration if user_config and user_config.settings.transition_duration else 200 }}">
                                 <span class="slider-value" id="transition-duration-value">{{ user_config.settings.transition_duration if user_config and user_config.settings.transition_duration else 200 }}ms</span>
@@ -657,7 +657,7 @@
                                 <button type="button" class="style-btn {% if user_config and user_config.settings.entry_animation == 'none' %}active{% endif %}" data-entry="none">None</button>
                             </div>
                             <input type="hidden" id="setting-entry-animation" value="{{ user_config.settings.entry_animation if user_config and user_config.settings.entry_animation else 'fade' }}">
-                            <div class="slider-setting" style="margin-top: 1rem;">
+                            <div class="slider-setting">
                                 <label>Entry Duration</label>
                                 <input type="range" id="setting-entry-duration" min="200" max="1000" step="100" value="{{ user_config.settings.entry_duration if user_config and user_config.settings.entry_duration else 500 }}">
                                 <span class="slider-value" id="entry-duration-value">{{ user_config.settings.entry_duration if user_config and user_config.settings.entry_duration else 500 }}ms</span>
@@ -697,7 +697,7 @@
                             <div class="color-setting">
                                 <label>Background</label>
                                 <input type="color" id="setting-overlay-bg" value="{{ user_config.settings.overlay_background if user_config and user_config.settings.overlay_background and user_config.settings.overlay_background != 'transparent' else '#000000' }}">
-                                <label class="setting-toggle" style="margin-left: 1rem;">
+                                <label class="setting-toggle cr-ml-md">
                                     <input type="checkbox" id="setting-overlay-bg-transparent" {% if not user_config or not user_config.settings.overlay_background or user_config.settings.overlay_background == 'transparent' %}checked{% endif %}>
                                     <span class="toggle-slider"></span>
                                     <span class="setting-label">Transparent</span>
@@ -727,14 +727,14 @@
                         <div class="settings-group">
                             <h3>Filter Mode</h3>
                             <p class="setting-description">Choose how to filter members in your overlay</p>
-                            <div class="filter-mode-buttons" style="margin-top: 0.75rem;">
+                            <div class="filter-mode-buttons">
                                 <button type="button" class="style-btn {% if not user_config or not user_config.settings.member_filter_mode or user_config.settings.member_filter_mode == 'none' %}active{% endif %}" data-filter-mode="none">Show All</button>
                                 <button type="button" class="style-btn {% if user_config and user_config.settings.member_filter_mode == 'whitelist' %}active{% endif %}" data-filter-mode="whitelist">Whitelist Only</button>
                                 <button type="button" class="style-btn {% if user_config and user_config.settings.member_filter_mode == 'blacklist' %}active{% endif %}" data-filter-mode="blacklist">Blacklist</button>
                             </div>
                             <input type="hidden" id="setting-member-filter-mode" value="{{ user_config.settings.member_filter_mode if user_config and user_config.settings.member_filter_mode else 'none' }}">
-                            <div class="filter-mode-info" style="margin-top: 1rem; padding: 1rem; background: var(--bg-primary); border-radius: 8px;">
-                                <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem;">
+                            <div class="filter-mode-info" class="cr-info-box">
+                                <p style="margin: 0; color: rgba(255,255,255,0.4); font-size: 0.85rem;">
                                     <strong>Show All:</strong> Everyone in your voice channel is visible<br>
                                     <strong>Whitelist:</strong> Only users you add will be shown<br>
                                     <strong>Blacklist:</strong> Everyone is shown except users you add
@@ -812,7 +812,7 @@
                                 <span class="setting-label">Enable particles when speaking</span>
                             </label>
                             <div class="particles-options" id="particles-options" style="{% if not user_config or not user_config.settings.particles_enabled %}display:none{% endif %}">
-                                <div class="style-buttons" style="margin-top: 0.75rem;">
+                                <div class="style-buttons cr-mt-sm">
                                     <button type="button" class="style-btn {% if not user_config or not user_config.settings.particle_type or user_config.settings.particle_type == 'sparkles' %}active{% endif %}" data-particle="sparkles">Sparkles</button>
                                     <button type="button" class="style-btn {% if user_config and user_config.settings.particle_type == 'fire' %}active{% endif %}" data-particle="fire">Fire</button>
                                     <button type="button" class="style-btn {% if user_config and user_config.settings.particle_type == 'bubbles' %}active{% endif %}" data-particle="bubbles">Bubbles</button>
@@ -845,7 +845,7 @@
                                 <span class="setting-label">Enable animated border</span>
                             </label>
                             <div class="animated-border-options" id="animated-border-options" style="{% if not user_config or not user_config.settings.animated_border_enabled %}display:none{% endif %}">
-                                <div class="style-buttons" style="margin-top: 0.75rem;">
+                                <div class="style-buttons cr-mt-sm">
                                     <button type="button" class="style-btn {% if not user_config or not user_config.settings.animated_border_type or user_config.settings.animated_border_type == 'rainbow' %}active{% endif %}" data-anim-border="rainbow">Rainbow</button>
                                     <button type="button" class="style-btn {% if user_config and user_config.settings.animated_border_type == 'gradient-spin' %}active{% endif %}" data-anim-border="gradient-spin">Gradient Spin</button>
                                     <button type="button" class="style-btn {% if user_config and user_config.settings.animated_border_type == 'pulse-gradient' %}active{% endif %}" data-anim-border="pulse-gradient">Pulse Gradient</button>
@@ -870,7 +870,7 @@
                                 <span class="setting-label">Enable background effect</span>
                             </label>
                             <div class="bg-effect-options" id="bg-effect-options" style="{% if not user_config or not user_config.settings.bg_effect_enabled %}display:none{% endif %}">
-                                <div class="style-buttons" style="margin-top: 0.75rem;">
+                                <div class="style-buttons cr-mt-sm">
                                     <button type="button" class="style-btn {% if not user_config or not user_config.settings.bg_effect_type or user_config.settings.bg_effect_type == 'glow-aura' %}active{% endif %}" data-bg-effect="glow-aura">Glow Aura</button>
                                     <button type="button" class="style-btn {% if user_config and user_config.settings.bg_effect_type == 'circle-pulse' %}active{% endif %}" data-bg-effect="circle-pulse">Circle Pulse</button>
                                     <button type="button" class="style-btn {% if user_config and user_config.settings.bg_effect_type == 'radial-gradient' %}active{% endif %}" data-bg-effect="radial-gradient">Radial Gradient</button>
@@ -1011,7 +1011,7 @@
                                 <span class="setting-label">Enable voice level indicator</span>
                             </label>
                             <div class="voice-indicator-options" id="voice-indicator-options" style="{% if not user_config or not user_config.settings.voice_indicator_enabled %}display:none{% endif %}">
-                                <div class="style-buttons" style="margin-top: 0.75rem;">
+                                <div class="style-buttons cr-mt-sm">
                                     <button type="button" class="style-btn {% if not user_config or not user_config.settings.voice_indicator_type or user_config.settings.voice_indicator_type == 'bar' %}active{% endif %}" data-voice-indicator="bar">Bar</button>
                                     <button type="button" class="style-btn {% if user_config and user_config.settings.voice_indicator_type == 'ring' %}active{% endif %}" data-voice-indicator="ring">Ring</button>
                                     <button type="button" class="style-btn {% if user_config and user_config.settings.voice_indicator_type == 'dots' %}active{% endif %}" data-voice-indicator="dots">Dots</button>
@@ -1106,7 +1106,7 @@
                                     <span class="setting-label">Hide self in group view</span>
                                 </label>
                             </div>
-                            <div class="slider-setting" style="margin-top: 1rem;">
+                            <div class="slider-setting">
                                 <label>Max Participants (0 = unlimited)</label>
                                 <input type="range" id="setting-max-participants" min="0" max="10" value="{{ user_config.settings.max_participants if user_config and user_config.settings.max_participants else 0 }}">
                                 <span class="slider-value" id="max-participants-value">{{ user_config.settings.max_participants if user_config and user_config.settings.max_participants else 0 }}</span>
@@ -1163,13 +1163,13 @@
                         <div class="settings-group">
                             <h3>Import/Export Settings</h3>
                             <p class="setting-description">Share your settings or import from others</p>
-                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <div class="cr-flex-row">
                                 <button type="button" class="btn-save-settings" onclick="exportSettings()" style="margin-top: 0;">Export Settings</button>
-                                <button type="button" class="btn-save-settings" onclick="document.getElementById('import-file').click()" style="margin-top: 0; background: var(--bg-secondary); border: 1px solid var(--border-color);">Import Settings</button>
+                                <button type="button" class="btn-save-settings btn-save-settings-ghost" onclick="document.getElementById('import-file').click()">Import Settings</button>
                                 <input type="file" id="import-file" accept=".json" hidden onchange="importSettings(this)">
                             </div>
                             <div style="margin-top: 1rem;">
-                                <label style="font-size: 0.9rem; color: var(--text-muted);">Share Code</label>
+                                <label class="cr-muted-label">Share Code</label>
                                 <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
                                     <input type="text" id="share-code" readonly placeholder="Click Generate to create code" style="flex: 1; font-family: monospace;">
                                     <button type="button" class="btn-copy" onclick="generateShareCode()">Generate</button>

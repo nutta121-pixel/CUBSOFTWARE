@@ -1,0 +1,184 @@
+/* countdown-view Styles */
+
+.view-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    min-height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.countdown-display {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+}
+
+.countdown-display.theme-dark {
+    background: #1a1b26;
+}
+
+.countdown-display.theme-gradient {
+    background: linear-gradient(135deg, #5865f2, #7c3aed);
+}
+
+.countdown-display.theme-light {
+    background: #f0f0f0;
+    color: #1a1a1a;
+}
+
+.countdown-display.theme-light .countdown-title,
+.countdown-display.theme-light .time-value,
+.countdown-display.theme-light .time-label {
+    color: #1a1a1a;
+}
+
+.countdown-display.theme-red {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.countdown-display.theme-green {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.countdown-display.theme-blue {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.countdown-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    color: #ffffff;
+}
+
+.countdown-timer {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.time-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 110px;
+    min-width: 110px;
+    max-width: 110px;
+}
+
+.time-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 4rem;
+    font-weight: 900;
+    color: #ffffff;
+    line-height: 1;
+}
+
+.time-label {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-top: 0.5rem;
+}
+
+.countdown-end-message {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-top: 1rem;
+}
+
+.view-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.view-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.view-btn.primary {
+    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
+    border: none;
+    color: white;
+}
+
+.view-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(88, 101, 242, 0.4);
+}
+
+.view-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.powered-by {
+    text-align: center;
+    margin-top: 2rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+}
+
+.powered-by a {
+    color: #5865f2;
+    text-decoration: none;
+}
+
+.powered-by a:hover {
+    text-decoration: underline;
+}
+
+.loading {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 4rem;
+}
+
+@media (max-width: 768px) {
+    .view-container {
+        padding: 1rem;
+    }
+
+    .countdown-display {
+        padding: 2rem 1rem;
+    }
+
+    .countdown-title {
+        font-size: 1.8rem;
+    }
+
+    .time-value {
+        font-size: 2.5rem;
+    }
+
+    .time-block {
+        width: 80px;
+        min-width: 80px;
+        max-width: 80px;
+    }
+
+    .countdown-timer {
+        gap: 1rem;
+    }
+}
+    

@@ -10,1428 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
-    <style>
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        .dashboard-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .dashboard-header h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .dashboard-header h1 svg {
-            width: 32px;
-            height: 32px;
-            color: #5865f2;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-
-        .user-info .username {
-            font-weight: 600;
-        }
-
-        .section {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .section h2 {
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .section h2 svg {
-            width: 20px;
-            height: 20px;
-            color: #5865f2;
-        }
-
-        /* Add Bot Form */
-        .add-bot-form {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .add-bot-form input {
-            flex: 1;
-            min-width: 200px;
-            padding: 0.75rem 1rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-        }
-
-        .add-bot-form input:focus {
-            outline: none;
-            border-color: #5865f2;
-        }
-
-        .add-bot-form button {
-            padding: 0.75rem 1.5rem;
-            background: #5865f2;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .add-bot-form button:hover {
-            background: #4752c4;
-        }
-
-        /* Bot List */
-        .bot-list {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .bot-card {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .bot-card:hover {
-            border-color: #5865f2;
-        }
-
-        .bot-card.active {
-            border-color: #5865f2;
-            background: rgba(88, 101, 242, 0.1);
-        }
-
-        .bot-card img {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-        }
-
-        .bot-card .bot-info {
-            flex: 1;
-        }
-
-        .bot-card .bot-name {
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .bot-card .bot-id {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-family: monospace;
-        }
-
-        .bot-card .bot-status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-        }
-
-        .bot-card .bot-status .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #57f287;
-        }
-
-        .bot-card .bot-status .dot.offline {
-            background: #ed4245;
-        }
-
-        .bot-card .delete-btn {
-            padding: 0.5rem;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-
-        .bot-card .delete-btn:hover {
-            background: rgba(237, 66, 69, 0.1);
-            color: #ed4245;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: var(--text-muted);
-        }
-
-        .empty-state svg {
-            width: 48px;
-            height: 48px;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-
-        /* Bot Details Panel */
-        .bot-details {
-            display: none;
-        }
-
-        .bot-details.active {
-            display: block;
-        }
-
-        .guild-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .guild-card {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .guild-card:hover {
-            border-color: #5865f2;
-        }
-
-        .guild-card img {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-        }
-
-        .guild-card .guild-name {
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .guild-card.active {
-            border-color: #5865f2;
-            background: rgba(88, 101, 242, 0.1);
-        }
-
-        /* Guild Details Panel */
-        .guild-details-panel {
-            display: none;
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-        }
-
-        .guild-details-panel.active {
-            display: block;
-        }
-
-        .guild-details-panel h4 {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            color: var(--text-primary);
-        }
-
-        .guild-details-panel h4 svg {
-            width: 18px;
-            height: 18px;
-            color: #5865f2;
-        }
-
-        .guild-tabs {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.5rem;
-        }
-
-        .guild-tab {
-            padding: 0.5rem 1rem;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .guild-tab:hover {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-        }
-
-        .guild-tab.active {
-            background: #5865f2;
-            color: white;
-        }
-
-        .guild-tab-content {
-            display: none;
-        }
-
-        .guild-tab-content.active {
-            display: block;
-        }
-
-        .channel-list {
-            display: grid;
-            gap: 0.5rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .channel-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 0.75rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .channel-item:hover {
-            border-color: #5865f2;
-        }
-
-        .channel-item svg {
-            width: 16px;
-            height: 16px;
-            color: var(--text-muted);
-        }
-
-        .channel-item .channel-name {
-            flex: 1;
-        }
-
-        .channel-item .channel-actions {
-            display: flex;
-            gap: 0.25rem;
-            opacity: 0;
-            transition: all 0.2s;
-        }
-
-        .channel-item:hover .channel-actions {
-            opacity: 1;
-        }
-
-        .channel-item .action-btn {
-            padding: 0.25rem 0.5rem;
-            background: var(--bg-primary);
-            border: none;
-            border-radius: 4px;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .channel-item .action-btn:hover {
-            background: #5865f2;
-            color: white;
-        }
-
-        .channel-item .action-btn.msg-btn {
-            background: #57f287;
-            color: #000;
-            opacity: 1;
-        }
-
-        .channel-item .action-btn.msg-btn:hover {
-            background: #3ba55c;
-        }
-
-        .member-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.35rem;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .member-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.5rem 0.75rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-        }
-
-        .member-item img {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .member-item .member-info {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .member-item .member-name {
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .member-item .member-id {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            font-family: monospace;
-            white-space: nowrap;
-        }
-
-        .member-item .member-actions {
-            display: flex;
-            gap: 0.25rem;
-            flex-shrink: 0;
-            opacity: 0;
-            transition: all 0.2s;
-        }
-
-        .member-item:hover .member-actions {
-            opacity: 1;
-        }
-
-        .member-item .action-btn {
-            padding: 0.25rem 0.5rem;
-            background: var(--bg-primary);
-            border: none;
-            border-radius: 4px;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-        }
-
-        .member-item .action-btn:hover {
-            background: #5865f2;
-            color: white;
-        }
-
-        .member-item .action-btn.msg-btn {
-            background: #57f287;
-            color: #000;
-        }
-
-        .member-item .action-btn.msg-btn:hover {
-            background: #3ba55c;
-        }
-
-        /* Quick Message Modal */
-        .quick-msg-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .quick-msg-modal.active {
-            display: flex;
-        }
-
-        .quick-msg-content {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
-            width: 100%;
-            max-width: 500px;
-            margin: 1rem;
-        }
-
-        .quick-msg-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-        }
-
-        .quick-msg-header h3 {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.1rem;
-        }
-
-        .quick-msg-header h3 svg {
-            width: 20px;
-            height: 20px;
-            color: #5865f2;
-        }
-
-        .quick-msg-header .close-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 0.5rem;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-
-        .quick-msg-header .close-btn:hover {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-        }
-
-        .quick-msg-target {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            margin-bottom: 1rem;
-        }
-
-        .quick-msg-target img {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-        }
-
-        .quick-msg-target .target-name {
-            font-weight: 500;
-        }
-
-        .quick-msg-target .target-id {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-family: monospace;
-        }
-
-        .quick-msg-form textarea {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            color: var(--text-primary);
-            min-height: 100px;
-            resize: vertical;
-            margin-bottom: 1rem;
-            font-family: inherit;
-        }
-
-        .quick-msg-form textarea:focus {
-            outline: none;
-            border-color: #5865f2;
-        }
-
-        .quick-msg-form button {
-            width: 100%;
-            padding: 0.75rem;
-            background: #57f287;
-            color: #000;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .quick-msg-form button:hover {
-            background: #3ba55c;
-        }
-
-        .quick-msg-form button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* DM List Section */
-        .dm-list-section {
-            margin-top: 1.5rem;
-        }
-
-        .dm-list {
-            display: grid;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .dm-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .dm-item:hover {
-            border-color: #5865f2;
-            background: rgba(88, 101, 242, 0.05);
-        }
-
-        .dm-item img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-        }
-
-        .dm-item .dm-info {
-            flex: 1;
-        }
-
-        .dm-item .dm-username {
-            font-weight: 500;
-        }
-
-        .dm-item .dm-user-id {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-family: monospace;
-        }
-
-        .dm-item .open-dm {
-            padding: 0.5rem 1rem;
-            background: #5865f2;
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .dm-item .open-dm:hover {
-            background: #4752c4;
-        }
-
-        /* Feature Tabs */
-        .feature-tabs {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .feature-tab {
-            padding: 0.5rem 1rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-
-        .feature-tab:hover {
-            border-color: #5865f2;
-            color: var(--text-primary);
-        }
-
-        .feature-tab.active {
-            background: #5865f2;
-            border-color: #5865f2;
-            color: white;
-        }
-
-        .feature-panel {
-            display: none;
-        }
-
-        .feature-panel.active {
-            display: block;
-        }
-
-        /* Embed Builder */
-        .embed-preview {
-            background: #2f3136;
-            border-radius: 4px;
-            padding: 1rem;
-            margin-top: 1rem;
-            border-left: 4px solid #5865f2;
-        }
-
-        .embed-preview .embed-author {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            font-size: 0.85rem;
-        }
-
-        .embed-preview .embed-title {
-            font-weight: 600;
-            color: #00b0f4;
-            margin-bottom: 0.5rem;
-        }
-
-        .embed-preview .embed-description {
-            color: #dcddde;
-            font-size: 0.9rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .embed-preview .embed-fields {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 0.5rem;
-        }
-
-        .embed-preview .embed-field {
-            margin-bottom: 0.5rem;
-        }
-
-        .embed-preview .embed-field-name {
-            font-weight: 600;
-            font-size: 0.85rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .embed-preview .embed-field-value {
-            font-size: 0.85rem;
-            color: #b9bbbe;
-        }
-
-        .embed-preview .embed-thumbnail {
-            float: right;
-            max-width: 80px;
-            border-radius: 4px;
-            margin-left: 1rem;
-        }
-
-        .embed-preview .embed-image {
-            max-width: 100%;
-            border-radius: 4px;
-            margin-top: 0.75rem;
-        }
-
-        .embed-preview .embed-footer {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-            font-size: 0.75rem;
-            color: #72767d;
-        }
-
-        .embed-form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .embed-form-grid.full {
-            grid-template-columns: 1fr;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            font-size: 0.85rem;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 0.6rem 0.75rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #5865f2;
-        }
-
-        .form-group textarea {
-            min-height: 80px;
-            resize: vertical;
-        }
-
-        .form-group .color-picker {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .form-group .color-picker input[type="color"] {
-            width: 50px;
-            height: 36px;
-            padding: 0;
-            border: none;
-            cursor: pointer;
-        }
-
-        .embed-fields-list {
-            margin-top: 1rem;
-        }
-
-        .embed-field-item {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto auto;
-            gap: 0.5rem;
-            align-items: end;
-            padding: 0.75rem;
-            background: var(--bg-secondary);
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
-        }
-
-        .embed-field-item input {
-            width: 100%;
-            padding: 0.5rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            color: var(--text-primary);
-        }
-
-        .embed-field-item .inline-toggle {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .embed-field-item .remove-btn {
-            padding: 0.5rem;
-            background: transparent;
-            border: none;
-            color: #ed4245;
-            cursor: pointer;
-        }
-
-        .add-field-btn {
-            padding: 0.5rem 1rem;
-            background: var(--bg-secondary);
-            border: 1px dashed var(--border-color);
-            border-radius: 6px;
-            color: var(--text-muted);
-            cursor: pointer;
-            width: 100%;
-            margin-top: 0.5rem;
-        }
-
-        .add-field-btn:hover {
-            border-color: #5865f2;
-            color: #5865f2;
-        }
-
-        /* User Lookup */
-        .user-lookup-result {
-            display: flex;
-            gap: 1.5rem;
-            padding: 1.5rem;
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            margin-top: 1rem;
-        }
-
-        .user-lookup-result .user-avatar-section {
-            text-align: center;
-        }
-
-        .user-lookup-result .user-avatar {
-            width: 128px;
-            height: 128px;
-            border-radius: 50%;
-            margin-bottom: 0.5rem;
-        }
-
-        .user-lookup-result .user-details {
-            flex: 1;
-        }
-
-        .user-lookup-result .user-name {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .user-lookup-result .user-username {
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-        }
-
-        .user-lookup-result .user-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .user-lookup-result .info-item {
-            padding: 0.75rem;
-            background: var(--bg-primary);
-            border-radius: 8px;
-        }
-
-        .user-lookup-result .info-item .label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 0.25rem;
-        }
-
-        .user-lookup-result .info-item .value {
-            font-weight: 500;
-        }
-
-        .user-lookup-result .user-banner {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-        }
-
-        /* Role Tags */
-        .role-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .role-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.4rem 0.75rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            font-size: 0.85rem;
-        }
-
-        .role-tag .role-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-
-        .role-tag .assign-btn {
-            background: none;
-            border: none;
-            color: #57f287;
-            cursor: pointer;
-            padding: 0;
-            font-size: 1rem;
-        }
-
-        .role-tag .remove-btn {
-            background: none;
-            border: none;
-            color: #ed4245;
-            cursor: pointer;
-            padding: 0;
-            font-size: 1rem;
-        }
-
-        /* Moderation Panel */
-        .mod-action-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .mod-action-card {
-            padding: 1.25rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .mod-action-card h4 {
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .mod-action-card p {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-        }
-
-        .mod-action-card .kick-btn {
-            background: #faa61a;
-            color: #000;
-        }
-
-        .mod-action-card .ban-btn {
-            background: #ed4245;
-            color: white;
-        }
-
-        .mod-action-card .timeout-btn {
-            background: #5865f2;
-            color: white;
-        }
-
-        .mod-action-card button {
-            padding: 0.5rem 1.5rem;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* Webhook List */
-        .webhook-list {
-            display: grid;
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-
-        .webhook-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-        }
-
-        .webhook-item img {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-        }
-
-        .webhook-item .webhook-info {
-            flex: 1;
-        }
-
-        .webhook-item .webhook-name {
-            font-weight: 600;
-        }
-
-        .webhook-item .webhook-url {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            font-family: monospace;
-            word-break: break-all;
-        }
-
-        .webhook-item .webhook-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        /* Invite List */
-        .invite-list {
-            display: grid;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .invite-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.75rem 1rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-        }
-
-        .invite-item .invite-code {
-            font-family: monospace;
-            font-weight: 600;
-            color: #5865f2;
-        }
-
-        .invite-item .invite-channel {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        .invite-item .invite-uses {
-            margin-left: auto;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        /* Audit Log */
-        .audit-log-list {
-            display: grid;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .audit-log-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-        }
-
-        .audit-log-item img {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-        }
-
-        .audit-log-item .log-action {
-            flex: 1;
-        }
-
-        .audit-log-item .log-action-type {
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .audit-log-item .log-user {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-
-        .audit-log-item .log-reason {
-            font-size: 0.8rem;
-            color: #faa61a;
-            font-style: italic;
-        }
-
-        /* Send Message Form */
-        .message-form {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: var(--bg-primary);
-            border-radius: 8px;
-        }
-
-        .message-form label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        .message-form input,
-        .message-form textarea {
-            width: 100%;
-            padding: 0.75rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-primary);
-            margin-bottom: 1rem;
-        }
-
-        .message-form textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-
-        .message-form button {
-            padding: 0.75rem 1.5rem;
-            background: #57f287;
-            color: #000;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .message-form button:hover {
-            background: #3ba55c;
-        }
-
-        /* Whitelist Section */
-        .whitelist-section {
-            margin-top: 2rem;
-        }
-
-        .whitelist-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .whitelist-tag {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            font-family: monospace;
-            font-size: 0.85rem;
-        }
-
-        .whitelist-tag .remove-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            padding: 0;
-            line-height: 1;
-        }
-
-        .whitelist-tag .remove-btn:hover {
-            color: #ed4245;
-        }
-
-        .add-whitelist-form {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .add-whitelist-form input {
-            flex: 1;
-            max-width: 250px;
-            padding: 0.5rem 1rem;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            color: var(--text-primary);
-        }
-
-        .add-whitelist-form button {
-            padding: 0.5rem 1rem;
-            background: #5865f2;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            padding: 1rem 1.5rem;
-            background: #5865f2;
-            color: white;
-            border-radius: 8px;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 1000;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .toast.error {
-            background: #ed4245;
-        }
-
-        .toast.success {
-            background: #57f287;
-            color: #000;
-        }
-
-        /* Loading Spinner */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .dashboard-container {
-                padding: 1rem;
-            }
-
-            .dashboard-header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-
-            .dashboard-header h1 {
-                font-size: 1.4rem;
-            }
-
-            .add-bot-form {
-                flex-direction: column;
-            }
-
-            .add-bot-form input,
-            .add-bot-form button {
-                width: 100%;
-                min-width: unset;
-                box-sizing: border-box;
-            }
-
-            .guild-list {
-                grid-template-columns: 1fr;
-            }
-
-            .member-item .member-info {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.15rem;
-            }
-
-            /* Always show member/channel actions on mobile (no hover) */
-            .member-item .member-actions,
-            .channel-item .channel-actions {
-                opacity: 1;
-            }
-
-            .member-item .action-btn,
-            .channel-item .action-btn {
-                font-size: 0.7rem;
-                padding: 0.2rem 0.4rem;
-            }
-
-            .dm-item {
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-
-            .dm-item .open-dm {
-                width: 100%;
-            }
-
-            .guild-tabs {
-                flex-wrap: wrap;
-            }
-
-            .feature-tabs {
-                gap: 0.35rem;
-            }
-
-            .feature-tab {
-                font-size: 0.8rem;
-                padding: 0.4rem 0.75rem;
-            }
-
-            .bot-card {
-                flex-wrap: wrap;
-            }
-
-            .bot-card .bot-id {
-                word-break: break-all;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .dashboard-container {
-                padding: 0.75rem;
-            }
-
-            .section {
-                padding: 1rem;
-            }
-
-            .bot-card .bot-name {
-                font-size: 0.95rem;
-            }
-
-            .guild-tabs .guild-tab {
-                font-size: 0.8rem;
-                padding: 0.4rem 0.6rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/bot-dashboard.css?v={{ v }}">
 </head>
 <body>
     <div class="main-container">
@@ -1481,20 +60,20 @@
                         </svg>
                         Your Profile URL
                     </h2>
-                    <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1rem;">Set a custom URL so others can view your public profile at <strong>cubsoftware.site/u/yourslug</strong></p>
-                    <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
-                        <div style="display:flex;align-items:center;background:var(--bg-primary);border:1px solid var(--border-color);border-radius:8px;overflow:hidden;flex:1;min-width:200px;">
-                            <span style="padding:0.75rem 0.75rem;color:var(--text-muted);font-size:0.85rem;white-space:nowrap;border-right:1px solid var(--border-color);">cubsoftware.site/u/</span>
+                    <p class="bd-hint">Set a custom URL so others can view your public profile at <strong>cubsoftware.site/u/yourslug</strong></p>
+                    <div class="bd-row">
+                        <div class="bd-prefix-input-wrap">
+                            <span class="bd-prefix-label">cubsoftware.site/u/</span>
                             <input type="text" id="vanity-input" placeholder="yourslug" maxlength="32"
-                                style="flex:1;padding:0.75rem;background:transparent;border:none;color:var(--text-primary);font-size:0.9rem;outline:none;"
+                                class="bd-bare-input"
                                 oninput="vanityCheck(this.value)">
                         </div>
-                        <button onclick="vanitySave()" style="padding:0.75rem 1.5rem;background:#5865f2;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Save</button>
+                        <button onclick="vanitySave()" class="bd-btn bd-btn-primary">Save</button>
                         <button onclick="vanityDelete()" id="vanity-delete-btn" style="display:none;padding:0.75rem 1rem;background:transparent;color:#ED4245;border:1px solid #ED4245;border-radius:8px;font-weight:600;cursor:pointer;">Remove</button>
                     </div>
-                    <div id="vanity-status" style="margin-top:0.6rem;font-size:0.85rem;min-height:1.2em;"></div>
-                    <div id="vanity-url-display" style="display:none;margin-top:0.75rem;padding:0.75rem 1rem;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;font-size:0.9rem;">
-                        Your profile: <a id="vanity-url-link" href="#" target="_blank" style="color:#5865f2;font-weight:600;"></a>
+                    <div id="vanity-status" class="bd-status-mini"></div>
+                    <div id="vanity-url-display" style="display:none;margin-top:0.75rem;padding:0.75rem 1rem;background:#0f0f23;border:1px solid rgba(255,255,255,0.08);border-radius:8px;font-size:0.9rem;">
+                        Your profile: <a id="vanity-url-link" href="#" target="_blank" class="bd-url-link"></a>
                     </div>
                 </div>
 
@@ -1551,12 +130,12 @@
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                         </svg>
                         Bot Details
-                        <span id="selected-bot-name" style="margin-left: auto; font-weight: normal; font-size: 0.9rem; color: var(--text-muted);"></span>
+                        <span id="selected-bot-name" class="bd-section-tag"></span>
                     </h2>
 
-                    <div id="bot-info-loading" style="text-align: center; padding: 2rem;">
+                    <div id="bot-info-loading" class="bd-loading-wrap">
                         <div class="loading"></div>
-                        <p style="margin-top: 1rem; color: var(--text-muted);">Loading bot info...</p>
+                        <p class="bd-loading-text">Loading bot info...</p>
                     </div>
 
                     <div id="bot-info-content" style="display: none;">
@@ -1578,7 +157,7 @@
                         <!-- Servers Panel -->
                         <div class="feature-panel active" id="panel-servers">
                             <h3>Server List</h3>
-                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">Click on a server to view its members and channels</p>
+                            <p class="bd-hint-sm">Click on a server to view its members and channels</p>
                             <div class="guild-list" id="guild-list"></div>
 
                             <!-- Guild Details Panel -->
@@ -1597,31 +176,31 @@
                                 </div>
                                 <div class="guild-tab-content active" id="tab-channels">
                                     <div class="channel-list" id="channel-list">
-                                        <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading channels...</p>
+                                        <p class="bd-muted-msg">Loading channels...</p>
                                     </div>
-                                    <h4 style="margin-top: 1rem;">Create Channel</h4>
-                                    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                                        <input type="text" id="new-channel-name" placeholder="Channel name" style="flex: 1; padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
-                                        <select id="new-channel-type" style="padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                                    <h4 style="margin-top:1rem">Create Channel</h4>
+                                    <div class="bd-row-sm" style="margin-top:0.5rem">
+                                        <input type="text" id="new-channel-name" placeholder="Channel name" class="bd-dark-input bd-flex-1">
+                                        <select id="new-channel-type" class="bd-dark-input">
                                             <option value="0">Text</option>
                                             <option value="2">Voice</option>
                                         </select>
-                                        <button onclick="createChannel()" style="padding: 0.5rem 1rem; background: #57f287; border: none; border-radius: 6px; color: #000; font-weight: 600; cursor: pointer;">Create</button>
+                                        <button onclick="createChannel()" class="bd-btn-success">Create</button>
                                     </div>
                                 </div>
                                 <div class="guild-tab-content" id="tab-members">
                                     <div class="member-list" id="member-list">
-                                        <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading members...</p>
+                                        <p class="bd-muted-msg">Loading members...</p>
                                     </div>
                                 </div>
                                 <div class="guild-tab-content" id="tab-roles">
                                     <div class="role-list" id="role-list">
-                                        <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading roles...</p>
+                                        <p class="bd-muted-msg">Loading roles...</p>
                                     </div>
                                 </div>
                                 <div class="guild-tab-content" id="tab-voice">
                                     <div id="voice-channel-list">
-                                        <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading voice channels...</p>
+                                        <p class="bd-muted-msg">Loading voice channels...</p>
                                     </div>
                                 </div>
                             </div>
@@ -1630,12 +209,12 @@
                         <!-- Messages Panel -->
                         <div class="feature-panel" id="panel-messages">
                             <h3>Direct Messages</h3>
-                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.5rem;">Click on a conversation to view messages</p>
+                            <p class="bd-hint-sm">Click on a conversation to view messages</p>
                             <div class="dm-list" id="dm-list">
-                                <p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading DMs...</p>
+                                <p class="bd-muted-msg">Loading DMs...</p>
                             </div>
 
-                            <h3 style="margin-top: 2rem;">Send Channel Message</h3>
+                            <h3 style="margin-top:2rem">Send Channel Message</h3>
                             <div class="message-form">
                                 <label>Channel ID</label>
                                 <input type="text" id="message-channel-id" placeholder="Enter channel ID">
@@ -1644,7 +223,7 @@
                                 <button onclick="sendMessage()">Send Message</button>
                             </div>
 
-                            <h3 style="margin-top: 1.5rem;">Send Direct Message</h3>
+                            <h3 style="margin-top:1.5rem">Send Direct Message</h3>
                             <div class="message-form">
                                 <label>User ID</label>
                                 <input type="text" id="dm-user-id" placeholder="Enter Discord user ID">
@@ -1657,7 +236,7 @@
                         <!-- Embed Builder Panel -->
                         <div class="feature-panel" id="panel-embeds">
                             <h3>Embed Builder</h3>
-                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Create rich embed messages</p>
+                            <p class="bd-hint-sm">Create rich embed messages</p>
 
                             <div class="form-group">
                                 <label>Channel ID</label>
@@ -1716,13 +295,13 @@
                                 </div>
                             </div>
 
-                            <h4 style="margin-top: 1rem;">Fields</h4>
+                            <h4 style="margin-top:1rem">Fields</h4>
                             <div class="embed-fields-list" id="embed-fields-list"></div>
                             <button class="add-field-btn" onclick="addEmbedField()">+ Add Field</button>
 
-                            <h4 style="margin-top: 1.5rem;">Preview</h4>
+                            <h4 style="margin-top:1.5rem">Preview</h4>
                             <div class="embed-preview" id="embed-preview">
-                                <div class="embed-description" style="color: #72767d;">Your embed preview will appear here</div>
+                                <div class="embed-description" class="bd-embed-placeholder">Your embed preview will appear here</div>
                             </div>
 
                             <button onclick="sendEmbed()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #57f287; border: none; border-radius: 8px; color: #000; font-weight: 600; cursor: pointer; width: 100%;">Send Embed</button>
@@ -1731,11 +310,11 @@
                         <!-- User Lookup Panel -->
                         <div class="feature-panel" id="panel-lookup">
                             <h3>User Lookup</h3>
-                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Look up any Discord user by their ID</p>
+                            <p class="bd-hint-sm">Look up any Discord user by their ID</p>
 
-                            <div style="display: flex; gap: 0.5rem;">
-                                <input type="text" id="lookup-user-id" placeholder="Enter user ID" style="flex: 1; padding: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary);">
-                                <button onclick="lookupUser()" style="padding: 0.75rem 1.5rem; background: #5865f2; border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;">Lookup</button>
+                            <div class="bd-row-sm">
+                                <input type="text" id="lookup-user-id" placeholder="Enter user ID" class="bd-dark-input bd-flex-1">
+                                <button onclick="lookupUser()" class="bd-btn bd-btn-primary">Lookup</button>
                             </div>
 
                             <div id="user-lookup-result"></div>
@@ -1744,11 +323,11 @@
                         <!-- Moderation Panel -->
                         <div class="feature-panel" id="panel-moderation">
                             <h3>Moderation</h3>
-                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Kick, ban, or timeout users across any server.</p>
+                            <p class="bd-hint-sm">Kick, ban, or timeout users across any server.</p>
 
                             <div class="form-group">
                                 <label>Server</label>
-                                <select id="mod-server-select" onchange="onModServerChange()" style="padding: 0.75rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); width: 100%;">
+                                <select id="mod-server-select" onchange="onModServerChange()" class="bd-dark-input bd-w100">
                                     <option value="">-- Select a server --</option>
                                 </select>
                             </div>
@@ -1798,7 +377,7 @@
                                         Timeout
                                     </h4>
                                     <p>Temporarily mute user</p>
-                                    <select id="timeout-duration" style="margin-bottom: 0.5rem; padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); width: 100%;">
+                                    <select id="timeout-duration" class="bd-dark-input bd-w100" style="margin-bottom:0.5rem">
                                         <option value="1">1 minute</option>
                                         <option value="5" selected>5 minutes</option>
                                         <option value="10">10 minutes</option>
@@ -1811,41 +390,41 @@
                             </div>
 
                             <!-- Power Tools -->
-                            <h4 style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">Power Tools</h4>
-                            <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;">Advanced actions for the selected server.</p>
-                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-                                <button onclick="grantHighestRole()" style="padding: 0.75rem 1.25rem; background: #5865f2; border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;">Grant Me Highest Role</button>
-                                <button onclick="createAdminRole()" style="padding: 0.75rem 1.25rem; background: #57f287; border: none; border-radius: 8px; color: #000; font-weight: 600; cursor: pointer;">Create Admin Role</button>
+                            <h4 class="bd-section-divider">Power Tools</h4>
+                            <p class="bd-hint-sm">Advanced actions for the selected server.</p>
+                            <div class="bd-row">
+                                <button onclick="grantHighestRole()" class="bd-btn bd-btn-primary">Grant Me Highest Role</button>
+                                <button onclick="createAdminRole()" class="bd-btn-success">Create Admin Role</button>
                             </div>
                         </div>
 
                         <!-- Roles Panel -->
                         <div class="feature-panel" id="panel-roles">
                             <h3>Role Management</h3>
-                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">View and manage server roles. Select a server first.</p>
+                            <p class="bd-hint-sm">View and manage server roles. Select a server first.</p>
 
                             <div id="roles-panel-content">
-                                <p style="color: var(--text-muted);">Select a server from the Servers tab to view roles.</p>
+                                <p class="bd-muted-msg">Select a server from the Servers tab to view roles.</p>
                             </div>
                         </div>
 
                         <!-- Webhooks Panel -->
                         <div class="feature-panel" id="panel-webhooks">
                             <h3>Webhook Manager</h3>
-                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Create and manage webhooks. Select a server first.</p>
+                            <p class="bd-hint-sm">Create and manage webhooks. Select a server first.</p>
 
                             <div id="webhook-list" class="webhook-list">
-                                <p style="color: var(--text-muted);">Select a server from the Servers tab to view webhooks.</p>
+                                <p class="bd-muted-msg">Select a server from the Servers tab to view webhooks.</p>
                             </div>
 
-                            <h4 style="margin-top: 1.5rem;">Create Webhook</h4>
-                            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
-                                <input type="text" id="webhook-channel-id" placeholder="Channel ID" style="flex: 1; padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
-                                <input type="text" id="webhook-name" placeholder="Webhook name" style="flex: 1; padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
-                                <button onclick="createWebhook()" style="padding: 0.5rem 1rem; background: #57f287; border: none; border-radius: 6px; color: #000; font-weight: 600; cursor: pointer;">Create</button>
+                            <h4 style="margin-top:1.5rem">Create Webhook</h4>
+                            <div class="bd-row-sm" style="margin-top:0.5rem">
+                                <input type="text" id="webhook-channel-id" placeholder="Channel ID" class="bd-dark-input bd-flex-1">
+                                <input type="text" id="webhook-name" placeholder="Webhook name" class="bd-dark-input bd-flex-1">
+                                <button onclick="createWebhook()" class="bd-btn-success">Create</button>
                             </div>
 
-                            <h4 style="margin-top: 1.5rem;">Send via Webhook</h4>
+                            <h4 style="margin-top:1.5rem">Send via Webhook</h4>
                             <div class="form-group">
                                 <label>Webhook URL</label>
                                 <input type="text" id="webhook-send-url" placeholder="https://discord.com/api/webhooks/...">
@@ -1858,22 +437,22 @@
                                 <label>Message</label>
                                 <textarea id="webhook-send-content" placeholder="Message content"></textarea>
                             </div>
-                            <button onclick="sendWebhookMessage()" style="padding: 0.75rem 1.5rem; background: #5865f2; border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer;">Send</button>
+                            <button onclick="sendWebhookMessage()" class="bd-btn bd-btn-primary">Send</button>
                         </div>
 
                         <!-- Invites Panel -->
                         <div class="feature-panel" id="panel-invites">
                             <h3>Server Invites</h3>
-                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">View and create server invites. Select a server first.</p>
+                            <p class="bd-hint-sm">View and create server invites. Select a server first.</p>
 
                             <div id="invite-list" class="invite-list">
-                                <p style="color: var(--text-muted);">Select a server from the Servers tab to view invites.</p>
+                                <p class="bd-muted-msg">Select a server from the Servers tab to view invites.</p>
                             </div>
 
-                            <h4 style="margin-top: 1.5rem;">Create Invite</h4>
+                            <h4 style="margin-top:1.5rem">Create Invite</h4>
                             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0.5rem; margin-top: 0.5rem;">
-                                <input type="text" id="invite-channel-id" placeholder="Channel ID" style="padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
-                                <select id="invite-max-age" style="padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                                <input type="text" id="invite-channel-id" placeholder="Channel ID" class="bd-dark-input">
+                                <select id="invite-max-age" class="bd-dark-input">
                                     <option value="1800">30 mins</option>
                                     <option value="3600">1 hour</option>
                                     <option value="21600">6 hours</option>
@@ -1882,7 +461,7 @@
                                     <option value="604800">7 days</option>
                                     <option value="0">Never</option>
                                 </select>
-                                <select id="invite-max-uses" style="padding: 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);">
+                                <select id="invite-max-uses" class="bd-dark-input">
                                     <option value="0">Unlimited</option>
                                     <option value="1">1 use</option>
                                     <option value="5">5 uses</option>
@@ -1891,17 +470,17 @@
                                     <option value="50">50 uses</option>
                                     <option value="100">100 uses</option>
                                 </select>
-                                <button onclick="createInvite()" style="padding: 0.5rem 1rem; background: #57f287; border: none; border-radius: 6px; color: #000; font-weight: 600; cursor: pointer;">Create</button>
+                                <button onclick="createInvite()" class="bd-btn-success">Create</button>
                             </div>
                         </div>
 
                         <!-- Audit Log Panel -->
                         <div class="feature-panel" id="panel-audit">
                             <h3>Audit Log</h3>
-                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">View server audit logs. Select a server first.</p>
+                            <p class="bd-hint-sm">View server audit logs. Select a server first.</p>
 
                             <div id="audit-log-list" class="audit-log-list">
-                                <p style="color: var(--text-muted);">Select a server from the Servers tab to view audit logs.</p>
+                                <p class="bd-muted-msg">Select a server from the Servers tab to view audit logs.</p>
                             </div>
                         </div>
                     </div>
@@ -1916,7 +495,7 @@
                         </svg>
                         Whitelist Management
                     </h2>
-                    <p style="color: var(--text-muted); margin-bottom: 1rem;">Only whitelisted users can access this dashboard.</p>
+                    <p style="color: rgba(255,255,255,0.4); margin-bottom: 1rem;">Only whitelisted users can access this dashboard.</p>
                     <div class="whitelist-list" id="whitelist-list">
                         <!-- Populated by JS -->
                     </div>
@@ -2150,11 +729,11 @@
                     contentEl.style.display = 'block';
                 } else {
                     showToast('Bot appears to be offline', 'error');
-                    loadingEl.innerHTML = '<p style="color: #ed4245;">Bot is offline or token is invalid</p>';
+                    loadingEl.innerHTML = '<p class="bd-error-inline">Bot is offline or token is invalid</p>';
                 }
             } catch (e) {
                 showToast('Failed to load bot info', 'error');
-                loadingEl.innerHTML = '<p style="color: #ed4245;">Failed to load bot info</p>';
+                loadingEl.innerHTML = '<p class="bd-error-inline">Failed to load bot info</p>';
             }
         }
 
@@ -2194,19 +773,19 @@
 
         async function loadGuildChannels(guildId) {
             const container = document.getElementById('channel-list');
-            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading channels...</p>';
+            container.innerHTML = '<p class="bd-muted-msg">Loading channels...</p>';
 
             try {
                 const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/channels`);
                 const data = await res.json();
 
                 if (data.error) {
-                    container.innerHTML = `<p style="color: #ed4245; text-align: center; padding: 1rem;">${escapeHtml(data.error)}</p>`;
+                    container.innerHTML = `<p class="bd-error-msg">${escapeHtml(data.error)}</p>`;
                     return;
                 }
 
                 if (data.channels.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">No text channels found</p>';
+                    container.innerHTML = '<p class="bd-muted-msg">No text channels found</p>';
                     return;
                 }
 
@@ -2224,25 +803,25 @@
                 `).join('');
 
             } catch (e) {
-                container.innerHTML = '<p style="color: #ed4245; text-align: center; padding: 1rem;">Failed to load channels</p>';
+                container.innerHTML = '<p class="bd-error-msg">Failed to load channels</p>';
             }
         }
 
         async function loadGuildMembers(guildId) {
             const container = document.getElementById('member-list');
-            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading members...</p>';
+            container.innerHTML = '<p class="bd-muted-msg">Loading members...</p>';
 
             try {
                 const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/members`);
                 const data = await res.json();
 
                 if (data.error) {
-                    container.innerHTML = `<p style="color: #ed4245; text-align: center; padding: 1rem;">${escapeHtml(data.error)}</p>`;
+                    container.innerHTML = `<p class="bd-error-msg">${escapeHtml(data.error)}</p>`;
                     return;
                 }
 
                 if (data.members.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">No members found</p>';
+                    container.innerHTML = '<p class="bd-muted-msg">No members found</p>';
                     return;
                 }
 
@@ -2263,25 +842,25 @@
                 `}).join('');
 
             } catch (e) {
-                container.innerHTML = '<p style="color: #ed4245; text-align: center; padding: 1rem;">Failed to load members</p>';
+                container.innerHTML = '<p class="bd-error-msg">Failed to load members</p>';
             }
         }
 
         async function loadDMs() {
             const container = document.getElementById('dm-list');
-            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading DMs...</p>';
+            container.innerHTML = '<p class="bd-muted-msg">Loading DMs...</p>';
 
             try {
                 const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/dms`);
                 const data = await res.json();
 
                 if (data.error) {
-                    container.innerHTML = `<p style="color: #ed4245; text-align: center; padding: 1rem;">${escapeHtml(data.error)}</p>`;
+                    container.innerHTML = `<p class="bd-error-msg">${escapeHtml(data.error)}</p>`;
                     return;
                 }
 
                 if (data.dms.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">No DM conversations yet</p>';
+                    container.innerHTML = '<p class="bd-muted-msg">No DM conversations yet</p>';
                     return;
                 }
 
@@ -2297,7 +876,7 @@
                 `).join('');
 
             } catch (e) {
-                container.innerHTML = '<p style="color: #ed4245; text-align: center; padding: 1rem;">Failed to load DMs</p>';
+                container.innerHTML = '<p class="bd-error-msg">Failed to load DMs</p>';
             }
         }
 
@@ -2691,7 +1270,7 @@
                 html += `${escapeHtml(footerText)}</div>`;
             }
 
-            preview.innerHTML = html || '<div class="embed-description" style="color: #72767d;">Your embed preview will appear here</div>';
+            preview.innerHTML = html || '<div class="embed-description" class="bd-embed-placeholder">Your embed preview will appear here</div>';
         }
 
         function buildEmbedObject() {
@@ -2774,14 +1353,14 @@
             }
 
             const container = document.getElementById('user-lookup-result');
-            container.innerHTML = '<p style="color: var(--text-muted); padding: 1rem;">Looking up user...</p>';
+            container.innerHTML = '<p class="bd-muted-msg">Looking up user...</p>';
 
             try {
                 const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/users/${userId}`);
                 const user = await res.json();
 
                 if (user.error) {
-                    container.innerHTML = `<p style="color: #ed4245; padding: 1rem;">${escapeHtml(user.error)}</p>`;
+                    container.innerHTML = `<p class="bd-error-msg">${escapeHtml(user.error)}</p>`;
                     return;
                 }
 
@@ -2794,7 +1373,7 @@
                         ${user.banner ? `<img src="${user.banner}" class="user-banner">` : ''}
                         <div class="user-avatar-section">
                             <img src="${user.avatar}" class="user-avatar">
-                            ${user.bot ? '<span style="background:#5865f2;color:white;padding:0.25rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:600;">BOT</span>' : ''}
+                            ${user.bot ? '<span class="bd-badge-bot">BOT</span>' : ''}
                         </div>
                         <div class="user-details">
                             <div class="user-name">${escapeHtml(user.global_name || user.username)}</div>
@@ -2802,7 +1381,7 @@
                             <div class="user-info-grid">
                                 <div class="info-item">
                                     <div class="label">User ID</div>
-                                    <div class="value" style="font-family: monospace;">${user.id}</div>
+                                    <div class="value" class="bd-mono">${user.id}</div>
                                 </div>
                                 <div class="info-item">
                                     <div class="label">Created</div>
@@ -2818,15 +1397,15 @@
                                 </div>
                                 ` : ''}
                             </div>
-                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                                <button onclick="fillDmUserId('${user.id}')" style="padding: 0.5rem 1rem; background: #5865f2; border: none; border-radius: 6px; color: white; cursor: pointer;">Send DM</button>
-                                <button onclick="copyToClipboard('${user.id}')" style="padding: 0.5rem 1rem; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); cursor: pointer;">Copy ID</button>
+                            <div class="bd-flex-row" style="margin-top:1rem">
+                                <button onclick="fillDmUserId('${user.id}')" class="bd-action-btn">Send DM</button>
+                                <button onclick="copyToClipboard('${user.id}')" class="bd-copy-btn">Copy ID</button>
                             </div>
                         </div>
                     </div>
                 `;
             } catch (e) {
-                container.innerHTML = `<p style="color: #ed4245; padding: 1rem;">Failed to lookup user</p>`;
+                container.innerHTML = `<p class="bd-error-msg">Failed to lookup user</p>`;
             }
         }
 
@@ -3029,14 +1608,14 @@
         // Roles
         async function loadGuildRoles(guildId) {
             const container = document.getElementById('role-list');
-            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading roles...</p>';
+            container.innerHTML = '<p class="bd-muted-msg">Loading roles...</p>';
 
             try {
                 const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/roles`);
                 const data = await res.json();
 
                 if (data.error) {
-                    container.innerHTML = `<p style="color: #ed4245;">${escapeHtml(data.error)}</p>`;
+                    container.innerHTML = `<p class="bd-error-inline">${escapeHtml(data.error)}</p>`;
                     return;
                 }
 
@@ -3046,50 +1625,50 @@
                         <div class="role-tag">
                             <span class="role-color" style="background: ${colorHex}"></span>
                             <span>${escapeHtml(r.name)}</span>
-                            <button onclick="copyToClipboard('${r.id}')" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;">Copy ID</button>
+                            <button onclick="copyToClipboard('${r.id}')" class="bd-ghost-btn-xs">Copy ID</button>
                         </div>
                     `;
                 }).join('');
 
             } catch (e) {
-                container.innerHTML = '<p style="color: #ed4245;">Failed to load roles</p>';
+                container.innerHTML = '<p class="bd-error-inline">Failed to load roles</p>';
             }
         }
 
         // Voice Channels
         async function loadVoiceChannels(guildId) {
             const container = document.getElementById('voice-channel-list');
-            container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 1rem;">Loading voice channels...</p>';
+            container.innerHTML = '<p class="bd-muted-msg">Loading voice channels...</p>';
 
             try {
                 const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/voice-states`);
                 const data = await res.json();
 
                 if (data.error) {
-                    container.innerHTML = `<p style="color: #ed4245;">${escapeHtml(data.error)}</p>`;
+                    container.innerHTML = `<p class="bd-error-inline">${escapeHtml(data.error)}</p>`;
                     return;
                 }
 
                 if (data.voice_channels.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted);">No voice channels</p>';
+                    container.innerHTML = '<p class="bd-muted-msg">No voice channels</p>';
                     return;
                 }
 
                 container.innerHTML = data.voice_channels.map(vc => `
-                    <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--bg-secondary); border-radius: 6px; margin-bottom: 0.5rem;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="color: var(--text-muted);">
+                    <div class="bd-vc-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" class="bd-muted-msg">
                             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
                             <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
                             <line x1="12" y1="19" x2="12" y2="23"/>
                             <line x1="8" y1="23" x2="16" y2="23"/>
                         </svg>
-                        <span style="flex: 1;">${escapeHtml(vc.name)}</span>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">${vc.user_limit ? vc.user_limit + ' limit' : 'No limit'}</span>
+                        <span class="bd-vc-name">${escapeHtml(vc.name)}</span>
+                        <span class="bd-vc-limit">${vc.user_limit ? vc.user_limit + ' limit' : 'No limit'}</span>
                     </div>
                 `).join('');
 
             } catch (e) {
-                container.innerHTML = '<p style="color: #ed4245;">Failed to load voice channels</p>';
+                container.innerHTML = '<p class="bd-error-inline">Failed to load voice channels</p>';
             }
         }
 
@@ -3131,19 +1710,19 @@
         // Webhooks
         async function loadWebhooks(guildId) {
             const container = document.getElementById('webhook-list');
-            container.innerHTML = '<p style="color: var(--text-muted);">Loading webhooks...</p>';
+            container.innerHTML = '<p class="bd-muted-msg">Loading webhooks...</p>';
 
             try {
                 const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/webhooks`);
                 const data = await res.json();
 
                 if (data.error) {
-                    container.innerHTML = `<p style="color: #ed4245;">${escapeHtml(data.error)}</p>`;
+                    container.innerHTML = `<p class="bd-error-inline">${escapeHtml(data.error)}</p>`;
                     return;
                 }
 
                 if (data.webhooks.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted);">No webhooks in this server</p>';
+                    container.innerHTML = '<p class="bd-muted-msg">No webhooks in this server</p>';
                     return;
                 }
 
@@ -3155,14 +1734,14 @@
                             <div class="webhook-url">${w.url || 'No token available'}</div>
                         </div>
                         <div class="webhook-actions">
-                            ${w.url ? `<button onclick="copyToClipboard('${w.url}')" style="padding: 0.5rem 1rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); cursor: pointer;">Copy URL</button>` : ''}
-                            ${w.token ? `<button onclick="deleteWebhook('${w.id}', '${w.token}')" style="padding: 0.5rem 1rem; background: #ed4245; border: none; border-radius: 6px; color: white; cursor: pointer;">Delete</button>` : ''}
+                            ${w.url ? `<button onclick="copyToClipboard('${w.url}')" class="bd-copy-btn">Copy URL</button>` : ''}
+                            ${w.token ? `<button onclick="deleteWebhook('${w.id}', '${w.token}')" class="bd-delete-btn-sm">Delete</button>` : ''}
                         </div>
                     </div>
                 `).join('');
 
             } catch (e) {
-                container.innerHTML = '<p style="color: #ed4245;">Failed to load webhooks</p>';
+                container.innerHTML = '<p class="bd-error-inline">Failed to load webhooks</p>';
             }
         }
 
@@ -3264,19 +1843,19 @@
         // Invites
         async function loadInvites(guildId) {
             const container = document.getElementById('invite-list');
-            container.innerHTML = '<p style="color: var(--text-muted);">Loading invites...</p>';
+            container.innerHTML = '<p class="bd-muted-msg">Loading invites...</p>';
 
             try {
                 const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/invites`);
                 const data = await res.json();
 
                 if (data.error) {
-                    container.innerHTML = `<p style="color: #ed4245;">${escapeHtml(data.error)}</p>`;
+                    container.innerHTML = `<p class="bd-error-inline">${escapeHtml(data.error)}</p>`;
                     return;
                 }
 
                 if (data.invites.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted);">No invites in this server</p>';
+                    container.innerHTML = '<p class="bd-muted-msg">No invites in this server</p>';
                     return;
                 }
 
@@ -3285,13 +1864,13 @@
                         <span class="invite-code">${i.code}</span>
                         <span class="invite-channel">#${escapeHtml(i.channel?.name || 'unknown')}</span>
                         <span class="invite-uses">${i.uses}${i.max_uses ? '/' + i.max_uses : ''} uses</span>
-                        <button onclick="copyToClipboard('${i.url}')" style="padding: 0.25rem 0.5rem; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-primary); cursor: pointer; font-size: 0.8rem;">Copy</button>
-                        <button onclick="deleteInvite('${i.code}')" style="padding: 0.25rem 0.5rem; background: #ed4245; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 0.8rem;">Delete</button>
+                        <button onclick="copyToClipboard('${i.url}')" class="bd-copy-btn-xs">Copy</button>
+                        <button onclick="deleteInvite('${i.code}')" class="bd-delete-btn-xs">Delete</button>
                     </div>
                 `).join('');
 
             } catch (e) {
-                container.innerHTML = '<p style="color: #ed4245;">Failed to load invites</p>';
+                container.innerHTML = '<p class="bd-error-inline">Failed to load invites</p>';
             }
         }
 
@@ -3353,19 +1932,19 @@
         // Audit Logs
         async function loadAuditLogs(guildId) {
             const container = document.getElementById('audit-log-list');
-            container.innerHTML = '<p style="color: var(--text-muted);">Loading audit logs...</p>';
+            container.innerHTML = '<p class="bd-muted-msg">Loading audit logs...</p>';
 
             try {
                 const res = await fetch(`/api/bot-dashboard/bots/${selectedBotId}/guilds/${guildId}/audit-logs?limit=50`);
                 const data = await res.json();
 
                 if (data.error) {
-                    container.innerHTML = `<p style="color: #ed4245;">${escapeHtml(data.error)}</p>`;
+                    container.innerHTML = `<p class="bd-error-inline">${escapeHtml(data.error)}</p>`;
                     return;
                 }
 
                 if (data.entries.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-muted);">No audit log entries</p>';
+                    container.innerHTML = '<p class="bd-muted-msg">No audit log entries</p>';
                     return;
                 }
 
@@ -3381,7 +1960,7 @@
                 `).join('');
 
             } catch (e) {
-                container.innerHTML = '<p style="color: #ed4245;">Failed to load audit logs</p>';
+                container.innerHTML = '<p class="bd-error-inline">Failed to load audit logs</p>';
             }
         }
 

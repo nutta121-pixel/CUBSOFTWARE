@@ -13,8 +13,8 @@
 
 .qr-header h1 {
     font-family: 'Orbitron', sans-serif;
-    font-size: 2.5rem;
-    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -22,7 +22,7 @@
 }
 
 .qr-header p {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 1.1rem;
 }
 
@@ -36,7 +36,7 @@
 
 .qr-column {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 25px;
 }
@@ -49,7 +49,7 @@
 .recent-section h3 {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.1rem;
-    color: var(--primary-color);
+    color: #5865f2;
     margin-bottom: 20px;
 }
 
@@ -66,10 +66,10 @@
     align-items: center;
     gap: 8px;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     padding: 12px 18px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.95rem;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -81,14 +81,14 @@
 }
 
 .type-tab:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 .type-tab.active {
     background: rgba(88, 101, 242, 0.15);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 /* Form Groups */
@@ -99,7 +99,7 @@
 .form-group label {
     display: block;
     font-size: 0.9rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-bottom: 8px;
     font-weight: 500;
 }
@@ -113,7 +113,7 @@
 .form-group select {
     width: 100%;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 10px;
     padding: 14px 16px;
     color: #fff;
@@ -126,7 +126,7 @@
 .form-group input:focus,
 .form-group textarea:focus,
 .form-group select:focus {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
 }
 
@@ -172,14 +172,14 @@
     transform: translateY(-50%);
     background: none;
     border: none;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     padding: 5px;
     transition: color 0.3s ease;
 }
 
 .toggle-password:hover {
-    color: var(--primary-color);
+    color: #5865f2;
 }
 
 .toggle-password svg {
@@ -197,7 +197,7 @@
 .checkbox-group input[type="checkbox"] {
     width: 18px;
     height: 18px;
-    accent-color: var(--primary-color);
+    accent-color: #5865f2;
     cursor: pointer;
 }
 
@@ -210,7 +210,7 @@
 .customization-section {
     margin-top: 30px;
     padding-top: 30px;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Color Options */
@@ -254,7 +254,7 @@
 .help-text {
     display: block;
     font-size: 0.8rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     margin-top: 6px;
     opacity: 0.8;
 }
@@ -323,7 +323,7 @@
 .preview-info {
     text-align: center;
     margin-top: 15px;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
 }
 
@@ -366,12 +366,12 @@
 
 .download-btn.secondary {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .download-btn.secondary:hover {
-    border-color: var(--primary-color);
+    border-color: #5865f2;
     background: rgba(88, 101, 242, 0.1);
 }
 
@@ -388,8 +388,8 @@
     cursor: pointer;
     transition: all 0.3s ease;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .copy-btn svg {
@@ -398,14 +398,14 @@
 }
 
 .copy-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
+    border-color: #5865f2;
+    color: #5865f2;
 }
 
 /* Recent Section */
 .recent-section {
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     padding: 25px;
     text-align: center;
@@ -429,7 +429,7 @@
     justify-self: end;
     background: none;
     border: none;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.85rem;
     cursor: pointer;
     transition: color 0.3s ease;
@@ -477,7 +477,7 @@
 
 .recent-qr-label {
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     text-align: center;
     max-width: 100px;
     overflow: hidden;
@@ -486,7 +486,7 @@
 }
 
 .recent-empty {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.9rem;
     font-style: italic;
     padding: 20px;
@@ -498,7 +498,7 @@
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%) translateY(100px);
-    background: var(--primary-color);
+    background: #5865f2;
     color: #fff;
     padding: 12px 25px;
     border-radius: 8px;

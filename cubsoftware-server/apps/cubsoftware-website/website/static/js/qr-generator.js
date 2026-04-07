@@ -220,20 +220,13 @@ function generateQrCode() {
     // Update character count
     qrDataLength.textContent = `${data.length} characters`;
 
-    // Get logo overlay element
-    const logoOverlay = document.getElementById('qrLogoOverlay');
-
     // Clear previous QR code
     qrPreview.innerHTML = '';
 
     if (!data) {
         qrPreview.innerHTML = '<div style="color: #888; font-size: 0.9rem;">Enter content to generate QR code</div>';
-        if (logoOverlay) logoOverlay.style.display = 'none';
         return;
     }
-
-    // Show logo overlay when QR code is present
-    if (logoOverlay) logoOverlay.style.display = 'block';
 
     const foreground = qrForeground.value;
     const background = qrBackground.value;
@@ -260,68 +253,6 @@ function getQrCanvas() {
     return qrPreview.querySelector('canvas');
 }
 
-// Create canvas with logo overlay for download
-function createCanvasWithLogo() {
-    const originalCanvas = getQrCanvas();
-    if (!originalCanvas) return null;
-
-    // Create new canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = originalCanvas.width;
-    canvas.height = originalCanvas.height;
-    const ctx = canvas.getContext('2d');
-
-    // Draw original QR code
-    ctx.drawImage(originalCanvas, 0, 0);
-
-    // Draw logo text
-    const fontSize = Math.floor(canvas.width / 28);
-    ctx.font = `900 ${fontSize}px Orbitron, sans-serif`;
-
-    const cubText = 'CUB';
-    const softwareText = 'SOFTWARE';
-    const fullText = cubText + softwareText;
-    const textWidth = ctx.measureText(fullText).width;
-    const cubWidth = ctx.measureText(cubText).width;
-
-    const paddingX = 6;
-    const paddingY = 6;
-    const boxWidth = textWidth + paddingX * 2;
-    const boxHeight = fontSize + paddingY * 2;
-    const boxX = (canvas.width - boxWidth) / 2;
-    const boxY = (canvas.height - boxHeight) / 2;
-
-    // Draw small white box background with rounded corners
-    ctx.fillStyle = '#ffffff';
-    const radius = 4;
-    ctx.beginPath();
-    ctx.moveTo(boxX + radius, boxY);
-    ctx.lineTo(boxX + boxWidth - radius, boxY);
-    ctx.quadraticCurveTo(boxX + boxWidth, boxY, boxX + boxWidth, boxY + radius);
-    ctx.lineTo(boxX + boxWidth, boxY + boxHeight - radius);
-    ctx.quadraticCurveTo(boxX + boxWidth, boxY + boxHeight, boxX + boxWidth - radius, boxY + boxHeight);
-    ctx.lineTo(boxX + radius, boxY + boxHeight);
-    ctx.quadraticCurveTo(boxX, boxY + boxHeight, boxX, boxY + boxHeight - radius);
-    ctx.lineTo(boxX, boxY + radius);
-    ctx.quadraticCurveTo(boxX, boxY, boxX + radius, boxY);
-    ctx.closePath();
-    ctx.fill();
-
-    // Center text in the box
-    ctx.textBaseline = 'middle';
-    const textX = boxX + paddingX;
-    const textY = boxY + boxHeight / 2;
-
-    // Draw "CUB" in purple
-    ctx.fillStyle = '#5865f2';
-    ctx.fillText(cubText, textX, textY);
-
-    // Draw "SOFTWARE" in dark gray
-    ctx.fillStyle = '#333333';
-    ctx.fillText(softwareText, textX + cubWidth, textY);
-
-    return canvas;
-}
 
 // Get filename based on QR content
 function getFilename(format) {
@@ -359,7 +290,7 @@ function downloadQrCode(format) {
         return;
     }
 
-    const canvas = createCanvasWithLogo();
+    const canvas = getQrCanvas();
     if (!canvas) {
         showToast('No QR code to download');
         return;
@@ -416,7 +347,7 @@ async function copyQrToClipboard() {
         return;
     }
 
-    const canvas = createCanvasWithLogo();
+    const canvas = getQrCanvas();
     if (!canvas) {
         showToast('No QR code to copy');
         return;

@@ -166,29 +166,31 @@ pre, code {
     /* Primary Colors */
     --primary-color: #5865f2;
     --primary: #5865f2;
-    --primary-dark: #4752c4;
+    --primary-dark: #7c3aed;
     --secondary-color: #7c3aed;
     --secondary: #7c3aed;
-    --accent-color: #00ff88;
+    --accent-color: #22c55e;
 
     /* Background Colors */
-    --bg-dark: #000000;
-    --dark-bg: rgba(0, 0, 0, 0.3);
+    --bg-dark: #06061a;
+    --dark-bg: #06061a;
+    --bg-primary: #06061a;
+    --bg-secondary: #0f0f23;
+    --background-color: #06061a;
     --surface-color: rgba(255, 255, 255, 0.04);
     --surface-hover: rgba(255, 255, 255, 0.07);
 
     /* Text Colors */
-    --text-primary: #ffffff;
+    --text-primary: rgba(255, 255, 255, 0.9);
     --text-light: #ffffff;
-    --text-secondary: #a8aab8;
-    --text-muted: #6b6d80;
+    --text-secondary: rgba(255, 255, 255, 0.65);
+    --text-muted: rgba(255, 255, 255, 0.4);
 
     /* Border */
-    --border-color: rgba(255, 255, 255, 0.09);
+    --border-color: rgba(255, 255, 255, 0.08);
     --border-hover: rgba(255, 255, 255, 0.18);
 
-    /* Input / surface background (used by tool pages for form inputs) */
-    --background-color: rgba(0, 0, 0, 0.3);
+    /* Input / surface background */
     --card-bg: rgba(255, 255, 255, 0.04);
 
     /* Status Colors */
@@ -196,6 +198,7 @@ pre, code {
     --error: #ef4444;
     --warning: #f59e0b;
     --info: #3b82f6;
+    --danger: #ef4444;
 }
 
 body {
@@ -469,7 +472,7 @@ a:hover {
 }
 
 .site-header .logo .cub {
-    background: linear-gradient(135deg, #5865f2 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1384,6 +1387,15 @@ button {
         gap: 0.5rem;
         text-align: center;
     }
+
+    /* Mobile footer — hide non-essential links */
+    .footer-mobile-hide {
+        display: none;
+    }
+
+    .footer-links {
+        gap: 1rem;
+    }
 }
 
 /* Small phones (≤480px) */
@@ -1496,4 +1508,1036 @@ button {
     .bots-grid {
         grid-template-columns: 1fr 1fr;
     }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   UNIFIED DESIGN SYSTEM
+   All reusable components — apply the same to every page of the site.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes pulse-online {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+    50%       { box-shadow: 0 0 0 5px rgba(34, 197, 94, 0); }
+}
+@keyframes pulse-warn {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+    50%       { box-shadow: 0 0 0 5px rgba(245, 158, 11, 0); }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease both;
+}
+
+
+/* ==================== GLASS CARD ==================== */
+/* Generic card used everywhere — the atomic building block */
+.glass-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, transform 0.25s ease;
+}
+
+.glass-card:hover {
+    border-color: rgba(88, 101, 242, 0.35);
+    box-shadow: 0 8px 32px rgba(88, 101, 242, 0.12);
+}
+
+.glass-card-lift:hover {
+    transform: translateY(-4px);
+}
+
+
+/* ==================== PAGE HEADER ==================== */
+/* Used on content/info pages: privacy, terms, contact, roadmap, etc. */
+.page-header {
+    padding: 56px 24px 48px;
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto;
+    animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.page-header-eyebrow {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #5865f2;
+    margin-bottom: 0.85rem;
+}
+
+.page-header-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #ffffff 0%, #c7d0ff 50%, #5865f2 85%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.page-header-description {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: clamp(0.95rem, 2vw, 1.05rem);
+    line-height: 1.75;
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+
+/* ==================== TOOL PAGE LAYOUT ==================== */
+/* Consistent layout for every /apps/* tool page */
+
+.tool-page-hero {
+    padding: 48px 24px 32px;
+    text-align: center;
+    animation: fadeInUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.tool-page-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.15), rgba(124, 58, 237, 0.15));
+    border: 1px solid rgba(88, 101, 242, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    font-size: 1.6rem;
+}
+
+.tool-page-icon svg {
+    width: 28px;
+    height: 28px;
+    color: #818cf8;
+}
+
+.tool-page-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, #ffffff 0%, #5865f2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.tool-page-subtitle {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: clamp(0.88rem, 2vw, 1rem);
+    line-height: 1.7;
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+/* The main container wrapping the tool UI */
+.tool-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 980px;
+    margin: 0 auto 3rem;
+    animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+.tool-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.tool-card-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Tab bar inside tool cards */
+.tool-tab-bar {
+    display: flex;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tool-tab {
+    flex-shrink: 0;
+    padding: 8px 18px;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: 'Poppins', sans-serif;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tool-tab:hover {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.tool-tab.active {
+    background: linear-gradient(135deg, #5865f2, #7c3aed);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(88, 101, 242, 0.35);
+}
+
+/* Two-column tool layout (editor + preview) */
+.tool-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .tool-split { grid-template-columns: 1fr; }
+    .tool-card { padding: 1.25rem; }
+    .tool-page-hero { padding: 32px 16px 24px; }
+}
+
+@media (max-width: 480px) {
+    .tool-card { padding: 1rem; border-radius: 16px; }
+    .tool-tab { padding: 7px 13px; font-size: 0.8rem; }
+}
+
+
+/* ==================== CONTENT CONTAINER ==================== */
+/* Prose layout for privacy, terms, roadmap, press, etc. */
+.content-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 24px 4rem;
+    animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+.content-container h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+    margin: 2.5rem 0 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.content-container h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 1.5rem 0 0.5rem;
+}
+
+.content-container p {
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.content-container ul,
+.content-container ol {
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.content-container li {
+    margin-bottom: 0.35rem;
+}
+
+.content-container a {
+    color: #818cf8;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.content-container a:hover { color: #a5b4fc; }
+
+/* Summary highlight card at top of content pages */
+.content-summary-card {
+    background: rgba(88, 101, 242, 0.07);
+    border: 1px solid rgba(88, 101, 242, 0.2);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.content-summary-card p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+
+/* ==================== BADGE SYSTEM ==================== */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.badge-green {
+    background: rgba(34, 197, 94, 0.12);
+    color: #4ade80;
+    border-color: rgba(34, 197, 94, 0.25);
+}
+
+.badge-red {
+    background: rgba(239, 68, 68, 0.12);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.25);
+}
+
+.badge-amber {
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.25);
+}
+
+.badge-blue {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.25);
+}
+
+.badge-purple {
+    background: rgba(124, 58, 237, 0.12);
+    color: #a78bfa;
+    border-color: rgba(124, 58, 237, 0.25);
+}
+
+.badge-indigo {
+    background: rgba(88, 101, 242, 0.12);
+    color: #818cf8;
+    border-color: rgba(88, 101, 242, 0.25);
+}
+
+.badge-grey {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+
+/* ==================== STATUS DOT ==================== */
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-dot-online {
+    background: #22c55e;
+    animation: pulse-online 2s ease-in-out infinite;
+}
+
+.status-dot-offline {
+    background: #ef4444;
+}
+
+.status-dot-warn {
+    background: #f59e0b;
+    animation: pulse-warn 2s ease-in-out infinite;
+}
+
+.status-dot-unknown {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+
+/* ==================== FORM COMPONENTS ==================== */
+/* Unified dark form styles — apply to any form across all pages */
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 1.25rem;
+}
+
+.form-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: 0.02em;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    color: #ffffff;
+    padding: 10px 14px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    outline: none;
+    width: 100%;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    border-color: rgba(88, 101, 242, 0.6);
+    box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.12);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 120px;
+    line-height: 1.6;
+}
+
+.form-hint {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.35);
+    line-height: 1.5;
+}
+
+.form-error {
+    font-size: 0.78rem;
+    color: #f87171;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Row of form fields side by side */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+}
+
+/* Inline search input */
+.search-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-input-wrap svg {
+    position: absolute;
+    left: 12px;
+    width: 16px;
+    height: 16px;
+    color: rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+}
+
+.search-input-wrap input {
+    padding-left: 38px;
+}
+
+
+/* ==================== DATA TABLE ==================== */
+/* Dark themed table used in dashboards, admin pages, history pages */
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.data-table th {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.35);
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    white-space: nowrap;
+}
+
+.data-table td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+    vertical-align: middle;
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.data-table tbody tr:hover td {
+    background: rgba(255, 255, 255, 0.025);
+}
+
+/* Table wrapper for horizontal scroll on mobile */
+.table-wrap {
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.table-wrap .data-table th:first-child { border-radius: 16px 0 0 0; }
+.table-wrap .data-table th:last-child  { border-radius: 0 16px 0 0; }
+
+
+/* ==================== METRIC CARD ==================== */
+/* Stat/number cards in dashboards and overview pages */
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card:hover {
+    border-color: rgba(88, 101, 242, 0.3);
+    box-shadow: 0 6px 24px rgba(88, 101, 242, 0.1);
+    transform: translateY(-2px);
+}
+
+.metric-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.metric-card-icon-indigo {
+    background: rgba(88, 101, 242, 0.15);
+    border: 1px solid rgba(88, 101, 242, 0.25);
+    color: #818cf8;
+}
+
+.metric-card-icon-purple {
+    background: rgba(124, 58, 237, 0.15);
+    border: 1px solid rgba(124, 58, 237, 0.25);
+    color: #a78bfa;
+}
+
+.metric-card-icon-green {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    color: #4ade80;
+}
+
+.metric-card-icon-amber {
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    color: #fbbf24;
+}
+
+.metric-card-icon-red {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #f87171;
+}
+
+.metric-card-number {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+}
+
+.metric-card-label {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.metric-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 480px) {
+    .metric-cards-grid { grid-template-columns: 1fr 1fr; }
+    .metric-card { padding: 1.1rem; }
+    .metric-card-number { font-size: 1.4rem; }
+}
+
+
+/* ==================== EMPTY STATE ==================== */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    text-align: center;
+    gap: 0.75rem;
+}
+
+.empty-state-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-title {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+}
+
+.empty-state-description {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 0.85rem;
+    max-width: 320px;
+    line-height: 1.6;
+}
+
+
+/* ==================== SECTION UTILITIES ==================== */
+
+.page-section {
+    padding: 60px 24px;
+    width: 100%;
+}
+
+.section-divider {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+    border: none;
+}
+
+/* Eyebrow label + gradient title + description — consistent across all sections */
+.section-eyebrow {
+    display: block;
+    text-align: center;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #5865f2;
+    margin-bottom: 0.75rem;
+}
+
+.section-heading {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(135deg, #ffffff 0%, #c7d0ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.section-subtext {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1rem;
+    max-width: 580px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+    .page-section { padding: 40px 16px; }
+}
+
+@media (max-width: 480px) {
+    .page-section { padding: 32px 12px; }
+}
+
+
+/* ==================== FLOATING BUYMEACOFFEE BUTTON ==================== */
+.bmac-float {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 16px;
+    background: rgba(10, 10, 26, 0.85);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.8);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+    animation: fadeIn 0.5s ease 3s both;
+}
+
+.bmac-float:hover {
+    border-color: rgba(255, 193, 7, 0.6);
+    box-shadow: 0 6px 24px rgba(255, 193, 7, 0.15);
+    color: #ffffff;
+    transform: translateY(-2px);
+    background: rgba(20, 16, 40, 0.9);
+}
+
+.bmac-float-emoji {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+@media (max-width: 768px) {
+    .bmac-float {
+        bottom: 1rem;
+        right: 1rem;
+        padding: 9px 13px;
+    }
+    .bmac-float-label {
+        display: none;
+    }
+}
+
+
+/* ==================== AUTH / LOGIN CARD LAYOUT ==================== */
+/* Centered glass card for login, auth, error pages */
+
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+}
+
+.auth-card {
+    background: rgba(8, 6, 30, 0.7);
+    border: 1px solid rgba(124, 58, 237, 0.25);
+    border-radius: 24px;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 420px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 0 60px rgba(88, 101, 242, 0.12), 0 24px 64px rgba(0, 0, 0, 0.5);
+    animation: fadeInUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-card-logo {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.auth-card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #ffffff 0%, #c7d0ff 50%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.auth-card-subtitle {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.85rem;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+}
+
+.auth-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 1rem;
+}
+
+.auth-badge-admin {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.auth-badge-affiliate {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 2rem 1.25rem;
+        border-radius: 18px;
+    }
+}
+
+
+/* ==================== PROGRESS BAR ==================== */
+.progress-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #5865f2, #7c3aed);
+    transition: width 0.3s ease;
+}
+
+.progress-bar-fill-green {
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+}
+
+.progress-bar-fill-amber {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+
+/* ==================== COPY BUTTON PATTERN ==================== */
+.copy-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.copy-btn:hover {
+    background: rgba(88, 101, 242, 0.12);
+    border-color: rgba(88, 101, 242, 0.3);
+    color: #ffffff;
+}
+
+.copy-btn.copied {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+}
+
+
+/* ==================== CODE BLOCK ==================== */
+.code-block {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.85);
+    overflow-x: auto;
+    line-height: 1.65;
+    position: relative;
+}
+
+.code-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.code-block-lang {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: 'Poppins', sans-serif;
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   GLOBAL PAGE HEADER HARMONIZATION
+   Targets the page-specific header divs used by every tool/content page so
+   they all share the same Orbitron gradient heading + muted description style
+   without needing HTML changes on each page.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* All tool page headers — the h1 inside any *-header div */
+.formatter-header h1, .audio-header h1, .pdf-header h1, .picker-header h1,
+.audio-container .audio-header h1, .text-container h1, .code-header h1,
+.encoder-header h1, .diff-header h1, .regex-header h1, .webhook-header h1,
+.embed-header h1, .timestamp-header h1, .perm-header h1, .timer-header h1,
+.qr-header h1, .url-header h1, .password-header h1, .word-header h1,
+.image-header h1, .video-header h1, .file-header h1, .resume-header h1,
+.invoice-header h1, .calc-header h1, .currency-header h1, .unit-header h1,
+.clock-header h1, .countdown-header h1, .picker-header h1,
+.sticky-header h1, .random-header h1, .wheel-header h1, .md-header h1,
+.note-header h1, .diff-checker-header h1, .json-formatter-header h1,
+.rm-hero h1, .cleanme-hero h1, .cubreactive-hero h1,
+.cleanme-header h1, .page-title h1,
+/* catch-all: any direct h1 inside a *-header class */
+[class$="-header"] > h1, [class*="-header "] h1 {
+    font-family: 'Orbitron', sans-serif !important;
+    font-size: clamp(1.5rem, 3.5vw, 2.4rem) !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.02em !important;
+    background: linear-gradient(135deg, #ffffff 0%, #c7d0ff 45%, #5865f2 80%, #7c3aed 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    margin-bottom: 0.75rem !important;
+    text-align: center !important;
+}
+
+/* Descriptions / subtitles inside page headers */
+.formatter-header p, .audio-header p, .pdf-header p, .picker-header p,
+.text-container > p, .code-header p, .encoder-header p, .diff-header p,
+.regex-header p, .webhook-header p, .embed-header p, .timestamp-header p,
+.perm-header p, .timer-header p, .qr-header p, .url-header p,
+.password-header p, .word-header p, .image-header p, .video-header p,
+.file-header p, .resume-header p, .invoice-header p, .calc-header p,
+.currency-header p, .unit-header p, .clock-header p, .countdown-header p,
+.sticky-header p, .random-header p, .wheel-header p, .md-header p,
+.note-header p, .rm-hero > p, .cleanme-hero > p, .cubreactive-hero > p,
+[class$="-header"] > p {
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: clamp(0.88rem, 2vw, 1rem) !important;
+    line-height: 1.7 !important;
+    text-align: center !important;
+    max-width: 560px !important;
+    margin: 0 auto !important;
+}
+
+/* Consistent padding on all page header sections */
+.formatter-header, .audio-header, .pdf-header, .picker-header,
+.code-header, .encoder-header, .diff-header, .regex-header,
+.webhook-header, .embed-header, .timestamp-header, .perm-header,
+.timer-header, .qr-header, .url-header, .password-header,
+.word-header, .image-header, .video-header, .file-header,
+.resume-header, .invoice-header, .calc-header, .currency-header,
+.unit-header, .clock-header, .countdown-header, .sticky-header,
+.random-header, .wheel-header, .md-header, .note-header,
+.rm-hero, .cleanme-hero, .cubreactive-hero {
+    padding: 48px 24px 32px !important;
+    text-align: center !important;
+    animation: fadeInUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+/* Main tool containers — glass card treatment */
+.formatter-container, .audio-container, .pdf-container, .picker-container,
+.text-container, .encoder-container, .diff-container, .regex-container,
+.webhook-container, .embed-container, .timestamp-container, .perm-container,
+.timer-container, .qr-container, .url-container, .password-container,
+.word-container, .video-container, .file-container, .resume-container,
+.invoice-container, .calc-container, .currency-container, .unit-container,
+.clock-container, .countdown-container, .sticky-container, .random-container,
+.wheel-container, .md-container, .note-container, .json-container {
+    animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
 }

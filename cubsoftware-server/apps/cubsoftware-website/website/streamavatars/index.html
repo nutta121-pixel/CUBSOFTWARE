@@ -103,7 +103,7 @@
                 {% if char.thumbnail %}
                 <img class="char-thumbnail" src="{{ char.thumbnail }}" alt="{{ char.name }}">
                 {% else %}
-                <div class="char-thumbnail" style="display:flex;align-items:center;justify-content:center;font-size:28px;color:#333;">👤</div>
+                <div class="char-thumbnail" style="display:flex;align-items:center;justify-content:center;font-size:28px;color:rgba(255,255,255,0.35);">👤</div>
                 {% endif %}
                 <div class="char-name">{{ char.name }}</div>
                 <div class="char-date">{{ char.updated_at | datetime }}</div>

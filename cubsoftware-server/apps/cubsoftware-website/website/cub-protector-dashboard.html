@@ -16,19 +16,6 @@
     <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
     <link rel="stylesheet" href="/static/css/admin-dashboard.css?v={{ v }}">
     <link rel="stylesheet" href="/static/css/cub-protector-dashboard.css?v={{ v }}">
-    <style>
-        /* Dashboard pages don't use the marketing nav header */
-        .site-header { display: none !important; }
-        /* Sidebar fills from top */
-        .admin-sidebar { top: 0; }
-        /* Coming soon nav items */
-        .nav-item-disabled {
-            opacity: 0.45;
-            cursor: default;
-            pointer-events: none;
-            color: var(--text-muted);
-        }
-    </style>
 </head>
 <body>
 
@@ -545,7 +532,7 @@
 
                 <div class="settings-card" style="margin-bottom:1rem;">
                     <h3 style="margin-bottom:0.75rem;">Moderator Roles</h3>
-                    <p style="color:var(--text-muted);margin-bottom:1rem;font-size:0.85rem;">Roles that can moderate all temporary voice channels (lock, kick, ban, etc.)</p>
+                    <p style="color:rgba(255,255,255,0.4);margin-bottom:1rem;font-size:0.85rem;">Roles that can moderate all temporary voice channels (lock, kick, ban, etc.)</p>
                     <div id="voicemods-roles-list" style="margin-bottom:1rem;">Loading...</div>
                     <div class="add-row">
                         <div class="form-group"><select id="voicemods-add-role" class="form-select"><option value="">-- Select Role --</option></select></div>
@@ -555,7 +542,7 @@
 
                 <div class="settings-card">
                     <h3 style="margin-bottom:0.75rem;">Individual Moderators</h3>
-                    <p style="color:var(--text-muted);margin-bottom:1rem;font-size:0.85rem;">Individual users who can moderate all temporary voice channels</p>
+                    <p style="color:rgba(255,255,255,0.4);margin-bottom:1rem;font-size:0.85rem;">Individual users who can moderate all temporary voice channels</p>
                     <div id="voicemods-users-list" style="margin-bottom:1rem;">Loading...</div>
                     <div class="add-row">
                         <div class="form-group"><input type="text" id="voicemods-add-user" class="form-input" placeholder="Enter Discord User ID"></div>
@@ -593,7 +580,7 @@
                     <!-- Moderator Stats -->
                     <div class="settings-card">
                         <h3 style="margin-bottom:0.75rem;">Moderator Activity</h3>
-                        <div id="mod-stats"><p style="color:var(--text-muted);">Loading...</p></div>
+                        <div id="mod-stats"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                     </div>
                 </div>
 
@@ -601,7 +588,7 @@
                     <!-- Active Punishments -->
                     <div class="settings-card" style="margin-bottom:1rem;">
                         <h3 style="margin-bottom:0.75rem;">Active Punishments</h3>
-                        <div id="mod-active-punishments"><p style="color:var(--text-muted);">Loading...</p></div>
+                        <div id="mod-active-punishments"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                     </div>
 
                     <!-- Warnings -->
@@ -609,7 +596,7 @@
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
                             <h3>Recent Warnings</h3>
                         </div>
-                        <div id="mod-warnings-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                        <div id="mod-warnings-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                     </div>
                 </div>
 
@@ -906,7 +893,7 @@
                     <!-- Exempt Roles / Channels (applies to all filters) -->
                     <div class="settings-card">
                         <h3 style="margin-bottom:0.75rem;">Global Exemptions</h3>
-                        <p style="color:var(--text-muted);margin-bottom:1rem;font-size:0.85rem;">Roles and channels exempt from all auto-mod filters</p>
+                        <p style="color:rgba(255,255,255,0.4);margin-bottom:1rem;font-size:0.85rem;">Roles and channels exempt from all auto-mod filters</p>
                         <div class="form-group">
                             <label>Exempt Roles</label>
                             <div id="am-exempt-roles"></div>
@@ -946,8 +933,8 @@
                     </div>
                     <div class="settings-card" style="margin-top: 1rem;">
                         <h3 style="margin-bottom: 1rem;">Log Channels</h3>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Set "All Events" to log everything to one channel, or configure individual channels per event type.</p>
-                        <div id="logging-channels-list"><p style="color: var(--text-muted); padding: 1rem;">Loading...</p></div>
+                        <p style="color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-bottom: 1rem;">Set "All Events" to log everything to one channel, or configure individual channels per event type.</p>
+                        <div id="logging-channels-list"><p style="color: rgba(255,255,255,0.4); padding: 1rem;">Loading...</p></div>
                     </div>
                     <div class="settings-card" style="margin-top: 1rem;">
                         <h3 style="margin-bottom: 1rem;">Logging Options</h3>
@@ -962,12 +949,12 @@
                         <div class="form-group" style="margin-top: 1rem;">
                             <label>Ignore Channels</label>
                             <div id="log-ignore-channels" class="multi-check-list"></div>
-                            <small style="color: var(--text-muted);">Events in these channels will not be logged</small>
+                            <small style="color: rgba(255,255,255,0.4);">Events in these channels will not be logged</small>
                         </div>
                         <div class="form-group">
                             <label>Ignore Roles</label>
                             <div id="log-ignore-roles" class="multi-check-list"></div>
-                            <small style="color: var(--text-muted);">Actions by users with these roles will not be logged</small>
+                            <small style="color: rgba(255,255,255,0.4);">Actions by users with these roles will not be logged</small>
                         </div>
                     </div>
                 </div>
@@ -1000,7 +987,7 @@
                         <div class="form-group">
                             <label>Welcome Message</label>
                             <textarea id="welcome-message" class="form-textarea" rows="3" placeholder="Welcome to {server}, {user}!" onchange="window.cpSaveWelcome()"></textarea>
-                            <small style="color: var(--text-muted);">Variables: {user}, {username}, {server}, {membercount}, {usertag}</small>
+                            <small style="color: rgba(255,255,255,0.4);">Variables: {user}, {username}, {server}, {membercount}, {usertag}</small>
                         </div>
                         <div id="welcome-embed-options">
                             <div class="form-group">
@@ -1010,7 +997,7 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>Embed Color</label>
-                                    <input type="color" id="welcome-embed-color" value="#5865f2" onchange="window.cpSaveWelcome()" style="width:100%;height:40px;border:1px solid var(--border-color);border-radius:8px;background:var(--admin-bg);cursor:pointer;">
+                                    <input type="color" id="welcome-embed-color" value="#5865f2" onchange="window.cpSaveWelcome()" style="width:100%;height:40px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;background:#06061a;cursor:pointer;">
                                 </div>
                                 <div class="form-group">
                                     <label>Embed Image URL (optional)</label>
@@ -1029,16 +1016,16 @@
                         <div class="form-group">
                             <label>DM Message (optional)</label>
                             <textarea id="welcome-dm" class="form-textarea" rows="2" placeholder="Leave empty to disable DM on join" onchange="window.cpSaveWelcome()"></textarea>
-                            <small style="color: var(--text-muted);">Send a DM to new members when they join. Variables: {user}, {username}, {server}, {membercount}</small>
+                            <small style="color: rgba(255,255,255,0.4);">Send a DM to new members when they join. Variables: {user}, {username}, {server}, {membercount}</small>
                         </div>
                         <div class="form-group">
                             <label>Welcome Banner URL (optional)</label>
                             <input type="text" id="welcome-banner-url" placeholder="https://example.com/welcome-banner.png" onchange="window.cpSaveWelcome()">
-                            <small style="color: var(--text-muted);">A large banner image shown in the welcome message</small>
+                            <small style="color: rgba(255,255,255,0.4);">A large banner image shown in the welcome message</small>
                         </div>
                         <div style="margin-top: 0.75rem;">
                             <button class="control-btn secondary" onclick="window.cpTestWelcome()">Test Welcome Message</button>
-                            <small style="color: var(--text-muted); margin-left: 0.5rem;">Sends a preview to the selected welcome channel</small>
+                            <small style="color: rgba(255,255,255,0.4); margin-left: 0.5rem;">Sends a preview to the selected welcome channel</small>
                         </div>
                     </div>
 
@@ -1066,7 +1053,7 @@
                         <div class="form-group">
                             <label>Delay (seconds)</label>
                             <input type="number" id="welcome-autorole-delay" min="0" max="300" value="0" onchange="window.cpSaveWelcome()">
-                            <small style="color: var(--text-muted);">0 = instant. Set a delay to prevent raids from getting roles immediately.</small>
+                            <small style="color: rgba(255,255,255,0.4);">0 = instant. Set a delay to prevent raids from getting roles immediately.</small>
                         </div>
                     </div>
 
@@ -1091,7 +1078,7 @@
                         <div class="form-group">
                             <label>Goodbye Message</label>
                             <textarea id="goodbye-message" class="form-textarea" rows="2" placeholder="Goodbye {user}!" onchange="window.cpSaveWelcome()"></textarea>
-                            <small style="color: var(--text-muted);">Variables: {user}, {username}, {server}, {membercount}, {usertag}</small>
+                            <small style="color: rgba(255,255,255,0.4);">Variables: {user}, {username}, {server}, {membercount}, {usertag}</small>
                         </div>
                         <div id="goodbye-embed-options">
                             <div class="form-group">
@@ -1101,7 +1088,7 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>Embed Color</label>
-                                    <input type="color" id="goodbye-embed-color" value="#ed4245" onchange="window.cpSaveWelcome()" style="width:100%;height:40px;border:1px solid var(--border-color);border-radius:8px;background:var(--admin-bg);cursor:pointer;">
+                                    <input type="color" id="goodbye-embed-color" value="#ed4245" onchange="window.cpSaveWelcome()" style="width:100%;height:40px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;background:#06061a;cursor:pointer;">
                                 </div>
                                 <div class="form-group">
                                     <label>Embed Image URL (optional)</label>
@@ -1192,7 +1179,7 @@
                         </div>
                         <div class="form-group"><label>Level Up Message</label>
                             <textarea id="leveling-level-msg" rows="2" placeholder="Congrats {user}, you reached level {level}!" onchange="window.cpSaveLeveling()"></textarea>
-                            <small style="color:var(--text-muted);">Variables: {user}, {level}, {xp}</small>
+                            <small style="color:rgba(255,255,255,0.4);">Variables: {user}, {level}, {xp}</small>
                         </div>
                         <div class="settings-row" style="margin-top:0.5rem;">
                             <div class="settings-info"><h4>Stack Role Rewards</h4><p>Keep previous level roles when earning new ones</p></div>
@@ -1201,7 +1188,7 @@
                     </div>
                     <div class="settings-card" style="margin-top:1rem;">
                         <h3 style="margin-bottom:0.75rem;">Role Rewards</h3>
-                        <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:0.75rem;">Assign roles when members reach certain levels</p>
+                        <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-bottom:0.75rem;">Assign roles when members reach certain levels</p>
                         <div id="leveling-role-rewards"></div>
                         <button class="control-btn secondary" onclick="cpAddRoleReward()" style="margin-top:0.5rem;">+ Add Role Reward</button>
                     </div>
@@ -1218,7 +1205,7 @@
                     </div>
                     <div class="settings-card" style="margin-top: 1rem;">
                         <h3 style="margin-bottom: 1rem;">Leaderboard (Top 10)</h3>
-                        <div id="leveling-leaderboard"><p style="color: var(--text-muted);">Loading...</p></div>
+                        <div id="leveling-leaderboard"><p style="color: rgba(255,255,255,0.4);">Loading...</p></div>
                     </div>
                 </div>
             </section>
@@ -1275,7 +1262,7 @@
                     </div>
                     <div class="settings-card" style="margin-top: 1rem;">
                         <h3 style="margin-bottom: 1rem;">Top Balances</h3>
-                        <div id="economy-leaderboard"><p style="color: var(--text-muted);">Loading...</p></div>
+                        <div id="economy-leaderboard"><p style="color: rgba(255,255,255,0.4);">Loading...</p></div>
                     </div>
                 </div>
             </section>
@@ -1303,7 +1290,7 @@
                 <!-- Channel Restrictions -->
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:0.75rem;">Channel Restrictions</h3>
-                    <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:1rem;">Limit games to specific channels. Leave empty to allow in all channels.</p>
+                    <p style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin-bottom:1rem;">Limit games to specific channels. Leave empty to allow in all channels.</p>
                     <div class="form-group">
                         <label>Allowed Channels</label>
                         <select id="games-channel-add" class="form-select" style="margin-bottom:0.5rem;" onchange="cpGamesAddChannel(this)">
@@ -1313,7 +1300,7 @@
                     </div>
                     <div class="form-group" style="margin-top:1rem;">
                         <label>Blocked Roles</label>
-                        <p style="color:var(--text-muted);font-size:0.75rem;margin-bottom:0.4rem;">Users with these roles cannot use any games</p>
+                        <p style="color:rgba(255,255,255,0.4);font-size:0.75rem;margin-bottom:0.4rem;">Users with these roles cannot use any games</p>
                         <select id="games-role-add" class="form-select" onchange="cpGamesAddRole(this)">
                             <option value="">— Select a role to block —</option>
                         </select>
@@ -1324,7 +1311,7 @@
                 <!-- Bet Settings -->
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:0.75rem;">Bet Settings</h3>
-                    <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:1rem;">Controls for all economy games (slots, blackjack, roulette, etc.)</p>
+                    <p style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin-bottom:1rem;">Controls for all economy games (slots, blackjack, roulette, etc.)</p>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Minimum Bet</label>
@@ -1337,7 +1324,7 @@
                         <div class="form-group">
                             <label>Bet Cooldown (seconds)</label>
                             <input type="number" id="games-bet-cooldown" value="0" min="0" onchange="window.cpSaveGames()">
-                            <p style="color:var(--text-muted);font-size:0.72rem;margin-top:0.25rem;">0 = no cooldown</p>
+                            <p style="color:rgba(255,255,255,0.4);font-size:0.72rem;margin-top:0.25rem;">0 = no cooldown</p>
                         </div>
                     </div>
                 </div>
@@ -1345,7 +1332,7 @@
                 <!-- Channel Games Settings -->
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:0.75rem;">Channel Games</h3>
-                    <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:1rem;">Controls for /scramble, /typerace, and /mathrace</p>
+                    <p style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin-bottom:1rem;">Controls for /scramble, /typerace, and /mathrace</p>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Default Reward (coins)</label>
@@ -1361,26 +1348,26 @@
                 <!-- Game Toggles -->
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:0.75rem;">Individual Game Toggles</h3>
-                    <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:1rem;">Enable or disable each game independently</p>
+                    <p style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin-bottom:1rem;">Enable or disable each game independently</p>
 
                     <div style="margin-bottom:1rem;">
-                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.5rem;">🎰 Economy Games</div>
+                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:rgba(255,255,255,0.4);margin-bottom:0.5rem;">🎰 Economy Games</div>
                         <div id="games-toggles-economy" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
                     </div>
                     <div style="margin-bottom:1rem;">
-                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.5rem;">👥 Multiplayer</div>
+                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:rgba(255,255,255,0.4);margin-bottom:0.5rem;">👥 Multiplayer</div>
                         <div id="games-toggles-pvp" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
                     </div>
                     <div style="margin-bottom:1rem;">
-                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.5rem;">🧠 Knowledge & Words</div>
+                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:rgba(255,255,255,0.4);margin-bottom:0.5rem;">🧠 Knowledge & Words</div>
                         <div id="games-toggles-knowledge" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
                     </div>
                     <div style="margin-bottom:1rem;">
-                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.5rem;">⚡ Channel Party Games</div>
+                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:rgba(255,255,255,0.4);margin-bottom:0.5rem;">⚡ Channel Party Games</div>
                         <div id="games-toggles-channel" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
                     </div>
                     <div>
-                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:0.5rem;">🕹️ Visual Games</div>
+                        <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.05em;color:rgba(255,255,255,0.4);margin-bottom:0.5rem;">🕹️ Visual Games</div>
                         <div id="games-toggles-visual" style="display:flex;flex-direction:column;gap:0.4rem;"></div>
                     </div>
                 </div>
@@ -1401,21 +1388,21 @@
                             <select id="ticket-support-role" class="form-select" onchange="window.cpSaveTickets()">
                                 <option value="">-- No support role --</option>
                             </select>
-                            <small style="color: var(--text-muted);">Users with this role can see and manage all tickets</small>
+                            <small style="color: rgba(255,255,255,0.4);">Users with this role can see and manage all tickets</small>
                         </div>
                         <div class="form-group">
                             <label>Transcript Channel</label>
                             <select id="ticket-transcript-channel" class="form-select" onchange="window.cpSaveTickets()">
                                 <option value="">-- No transcript channel --</option>
                             </select>
-                            <small style="color: var(--text-muted);">Closed ticket transcripts will be sent here</small>
+                            <small style="color: rgba(255,255,255,0.4);">Closed ticket transcripts will be sent here</small>
                         </div>
                         <div class="form-group">
-                            <label>Log Channel <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                            <label>Log Channel <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                             <select id="ticket-log-channel" class="form-select" onchange="window.cpSaveTickets()">
                                 <option value="">-- No log channel --</option>
                             </select>
-                            <small style="color: var(--text-muted);">Ticket actions (open, claim, close, reopen) will be logged here</small>
+                            <small style="color: rgba(255,255,255,0.4);">Ticket actions (open, claim, close, reopen) will be logged here</small>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -1427,7 +1414,7 @@
                                     <option value="5">5 per type</option>
                                     <option value="0">Unlimited</option>
                                 </select>
-                                <small style="color: var(--text-muted);">How many tickets of each type a user can have open</small>
+                                <small style="color: rgba(255,255,255,0.4);">How many tickets of each type a user can have open</small>
                             </div>
                             <div class="form-group">
                                 <label>Ping Support Role</label>
@@ -1435,7 +1422,7 @@
                                     <option value="true">Yes - Ping on new ticket</option>
                                     <option value="false">No - Don't ping</option>
                                 </select>
-                                <small style="color: var(--text-muted);">Ping the support role when a new ticket is created</small>
+                                <small style="color: rgba(255,255,255,0.4);">Ping the support role when a new ticket is created</small>
                             </div>
                         </div>
                         <div class="form-group">
@@ -1446,12 +1433,12 @@
                                 <option value="type-id">type-123</option>
                                 <option value="username-type">username-type</option>
                             </select>
-                            <small style="color: var(--text-muted);">How ticket channel names are formatted</small>
+                            <small style="color: rgba(255,255,255,0.4);">How ticket channel names are formatted</small>
                         </div>
                         <div class="form-group" style="margin-top: 1rem;">
                             <label>Auto-Close After Inactivity (hours)</label>
                             <input type="number" id="ticket-auto-close" min="0" max="720" value="0" onchange="window.cpSaveTickets()">
-                            <small style="color: var(--text-muted);">Automatically close tickets after this many hours of inactivity. 0 = disabled.</small>
+                            <small style="color: rgba(255,255,255,0.4);">Automatically close tickets after this many hours of inactivity. 0 = disabled.</small>
                         </div>
                         <div class="settings-row" style="margin-top: 0.75rem;">
                             <div class="settings-info"><h4>Close Confirmation Required</h4><p>Ask for confirmation before closing a ticket</p></div>
@@ -1476,20 +1463,20 @@
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
                             <h3>Ticket Panels</h3>
                             <div style="display:flex;gap:0.5rem;align-items:center;">
-                                <span id="panel-count" style="color:var(--text-muted);font-size:0.85rem;">0 panels</span>
+                                <span id="panel-count" style="color:rgba(255,255,255,0.4);font-size:0.85rem;">0 panels</span>
                                 <button class="control-btn primary small" onclick="window.cpShowCreatePanelModal()">+ Create Panel</button>
                             </div>
                         </div>
-                        <div id="panels-list"><p style="color: var(--text-muted);">Loading...</p></div>
+                        <div id="panels-list"><p style="color: rgba(255,255,255,0.4);">Loading...</p></div>
                     </div>
                 </div>
                 <div id="tickets-open">
                     <div class="settings-card">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
                             <h3>Open Tickets</h3>
-                            <span id="ticket-count" style="color:var(--text-muted);font-size:0.85rem;">0 open</span>
+                            <span id="ticket-count" style="color:rgba(255,255,255,0.4);font-size:0.85rem;">0 open</span>
                         </div>
-                        <div id="tickets-list"><p style="color: var(--text-muted);">Loading...</p></div>
+                        <div id="tickets-list"><p style="color: rgba(255,255,255,0.4);">Loading...</p></div>
                     </div>
                 </div>
                 </div>
@@ -1508,9 +1495,9 @@
                             <label class="toggle"><input type="checkbox" id="giveaway-settings-dm-winners"><span class="toggle-slider"></span></label>
                         </div>
                         <div class="form-group" style="margin-top: 1rem;">
-                            <label>End Message Template <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                            <label>End Message Template <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                             <input type="text" id="giveaway-settings-end-message" placeholder="Congratulations {winners}! You won {prize}!">
-                            <small style="color: var(--text-muted);">Default message when a giveaway ends. Use {winners} and {prize}. Can be overridden per giveaway.</small>
+                            <small style="color: rgba(255,255,255,0.4);">Default message when a giveaway ends. Use {winners} and {prize}. Can be overridden per giveaway.</small>
                         </div>
                     </div>
                     <div class="settings-card" style="margin-top: 1rem;">
@@ -1518,11 +1505,11 @@
                             <h3>Giveaways</h3>
                             <div style="display:flex;gap:0.5rem;align-items:center;">
                                 <span id="giveaway-active-count" style="background:rgba(87,242,135,0.15);color:#57f287;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.8rem;font-weight:600;">0 active</span>
-                                <span id="giveaway-ended-count" style="background:rgba(255,255,255,0.06);color:var(--text-muted);padding:0.2rem 0.6rem;border-radius:6px;font-size:0.8rem;font-weight:600;">0 ended</span>
+                                <span id="giveaway-ended-count" style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.4);padding:0.2rem 0.6rem;border-radius:6px;font-size:0.8rem;font-weight:600;">0 ended</span>
                                 <button class="control-btn primary small" onclick="window.cpShowCreateGiveawayModal()">+ Create Giveaway</button>
                             </div>
                         </div>
-                        <div id="giveaways-list"><p style="color: var(--text-muted);">Loading...</p></div>
+                        <div id="giveaways-list"><p style="color: rgba(255,255,255,0.4);">Loading...</p></div>
                     </div>
                 </div>
             </section>
@@ -1536,7 +1523,7 @@
                     <!-- Filter controls bar -->
                     <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;padding:0.875rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.07);">
                         <div style="display:flex;align-items:center;gap:0.625rem;">
-                            <label style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap;">Date Range</label>
+                            <label style="font-size:0.8rem;color:rgba(255,255,255,0.4);white-space:nowrap;">Date Range</label>
                             <select id="stats-date-range" class="form-select" style="width:auto;min-width:130px;padding:0.25rem 0.5rem;font-size:0.85rem;" onchange="loadStats()">
                                 <option value="24h">Last 24 Hours</option>
                                 <option value="7d" selected>Last 7 Days</option>
@@ -1547,52 +1534,52 @@
                         <div style="width:1px;height:1.25rem;background:rgba(255,255,255,0.12);"></div>
                         <div style="display:flex;align-items:center;gap:0.5rem;">
                             <label class="toggle" style="margin:0;"><input type="checkbox" id="stats-show-commands" checked onchange="loadStats()"><span class="toggle-slider"></span></label>
-                            <span style="font-size:0.85rem;color:var(--text-secondary);">Commands</span>
+                            <span style="font-size:0.85rem;color:rgba(255,255,255,0.65);">Commands</span>
                         </div>
                         <div style="display:flex;align-items:center;gap:0.5rem;">
                             <label class="toggle" style="margin:0;"><input type="checkbox" id="stats-show-voice" checked onchange="loadStats()"><span class="toggle-slider"></span></label>
-                            <span style="font-size:0.85rem;color:var(--text-secondary);">Voice Minutes</span>
+                            <span style="font-size:0.85rem;color:rgba(255,255,255,0.65);">Voice Minutes</span>
                         </div>
                     </div>
                     <!-- 4 summary stat numbers -->
                     <div style="display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid rgba(255,255,255,0.07);">
                         <div style="padding:1.25rem 1rem;text-align:center;border-right:1px solid rgba(255,255,255,0.07);">
                             <div style="font-size:1.875rem;font-weight:700;color:#5865F2;line-height:1;" id="stat-total-messages">0</div>
-                            <div style="color:var(--text-muted);font-size:0.78rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.04em;">Total Messages</div>
+                            <div style="color:rgba(255,255,255,0.4);font-size:0.78rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.04em;">Total Messages</div>
                         </div>
                         <div style="padding:1.25rem 1rem;text-align:center;border-right:1px solid rgba(255,255,255,0.07);">
                             <div style="font-size:1.875rem;font-weight:700;color:#57f287;line-height:1;" id="stat-today-messages">0</div>
-                            <div style="color:var(--text-muted);font-size:0.78rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.04em;">Messages Today</div>
+                            <div style="color:rgba(255,255,255,0.4);font-size:0.78rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.04em;">Messages Today</div>
                         </div>
                         <div style="padding:1.25rem 1rem;text-align:center;border-right:1px solid rgba(255,255,255,0.07);">
                             <div style="font-size:1.875rem;font-weight:700;color:#fee75c;line-height:1;" id="stat-total-joins">0</div>
-                            <div style="color:var(--text-muted);font-size:0.78rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.04em;">Total Joins</div>
+                            <div style="color:rgba(255,255,255,0.4);font-size:0.78rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.04em;">Total Joins</div>
                         </div>
                         <div style="padding:1.25rem 1rem;text-align:center;">
                             <div style="font-size:1.875rem;font-weight:700;color:#ed4245;line-height:1;" id="stat-total-leaves">0</div>
-                            <div style="color:var(--text-muted);font-size:0.78rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.04em;">Total Leaves</div>
+                            <div style="color:rgba(255,255,255,0.4);font-size:0.78rem;margin-top:0.35rem;text-transform:uppercase;letter-spacing:0.04em;">Total Leaves</div>
                         </div>
                     </div>
                     <!-- Charts row -->
                     <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(255,255,255,0.07);">
                         <div style="padding:1.25rem;border-right:1px solid rgba(255,255,255,0.07);">
-                            <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:0.875rem;">Message Activity</div>
+                            <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.4);margin-bottom:0.875rem;">Message Activity</div>
                             <div id="stats-message-chart"></div>
                         </div>
                         <div style="padding:1.25rem;">
-                            <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:0.875rem;">Member Growth</div>
+                            <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.4);margin-bottom:0.875rem;">Member Growth</div>
                             <div id="stats-member-chart"></div>
                         </div>
                     </div>
                     <!-- Leaderboards row -->
                     <div style="display:grid;grid-template-columns:1fr 1fr;">
                         <div style="padding:1.25rem;border-right:1px solid rgba(255,255,255,0.07);">
-                            <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:0.875rem;">Most Active Channels</div>
-                            <div id="stats-top-channels"><p style="color:var(--text-muted);font-size:0.85rem;">Loading...</p></div>
+                            <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.4);margin-bottom:0.875rem;">Most Active Channels</div>
+                            <div id="stats-top-channels"><p style="color:rgba(255,255,255,0.4);font-size:0.85rem;">Loading...</p></div>
                         </div>
                         <div style="padding:1.25rem;">
-                            <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);margin-bottom:0.875rem;">Most Active Users</div>
-                            <div id="stats-top-users"><p style="color:var(--text-muted);font-size:0.85rem;">Loading...</p></div>
+                            <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:rgba(255,255,255,0.4);margin-bottom:0.875rem;">Most Active Users</div>
+                            <div id="stats-top-users"><p style="color:rgba(255,255,255,0.4);font-size:0.85rem;">Loading...</p></div>
                         </div>
                     </div>
                 </div>
@@ -1619,7 +1606,7 @@
                             <select id="autoroles-verification-role" class="form-select">
                                 <option value="">-- None --</option>
                             </select>
-                            <small style="color:var(--text-muted);">Role given to members after verification</small>
+                            <small style="color:rgba(255,255,255,0.4);">Role given to members after verification</small>
                         </div>
                         <div class="form-group">
                             <label>Verification Type</label>
@@ -1628,7 +1615,7 @@
                                 <option value="reaction">Reaction</option>
                                 <option value="button">Button</option>
                             </select>
-                            <small style="color:var(--text-muted);">How members verify themselves</small>
+                            <small style="color:rgba(255,255,255,0.4);">How members verify themselves</small>
                         </div>
                     </div>
 
@@ -1637,19 +1624,19 @@
                         <p style="color:#f59e0b;font-size:0.85rem;margin:0;line-height:1.5;">For auto-roles to work, the bot's role must be placed <strong>higher</strong> than any role it assigns in your Discord server's role list. Go to <strong>Server Settings → Roles</strong> and drag the bot's role above the roles configured here.</p>
                     </div>
 
-                    <h3 style="margin-bottom:0.75rem;">Join Roles <span style="color:var(--text-muted);font-size:0.8rem;">(assigned to humans on join)</span></h3>
+                    <h3 style="margin-bottom:0.75rem;">Join Roles <span style="color:rgba(255,255,255,0.4);font-size:0.8rem;">(assigned to humans on join)</span></h3>
                     <div id="autoroles-join-roles" style="margin-bottom:1.5rem;"></div>
                     <button class="control-btn secondary" onclick="cpAddJoinRole()" style="margin-bottom:1.5rem;">+ Add Join Role</button>
 
-                    <h3 style="margin-bottom:0.75rem;">Bot Roles <span style="color:var(--text-muted);font-size:0.8rem;">(assigned to bots on join)</span></h3>
+                    <h3 style="margin-bottom:0.75rem;">Bot Roles <span style="color:rgba(255,255,255,0.4);font-size:0.8rem;">(assigned to bots on join)</span></h3>
                     <div id="autoroles-bot-roles" style="margin-bottom:1.5rem;"></div>
                     <button class="control-btn secondary" onclick="cpAddBotRole()" style="margin-bottom:1.5rem;">+ Add Bot Role</button>
 
-                    <h3 style="margin-bottom:0.75rem;">Account Age Roles <span style="color:var(--text-muted);font-size:0.8rem;">(assigned if account is old enough)</span></h3>
+                    <h3 style="margin-bottom:0.75rem;">Account Age Roles <span style="color:rgba(255,255,255,0.4);font-size:0.8rem;">(assigned if account is old enough)</span></h3>
                     <div id="autoroles-age-roles" style="margin-bottom:1.5rem;"></div>
                     <button class="control-btn secondary" onclick="cpAddAgeRole()" style="margin-bottom:1.5rem;">+ Add Age Role</button>
 
-                    <h3 style="margin-bottom:0.75rem;">Delay Roles <span style="color:var(--text-muted);font-size:0.8rem;">(assigned after a delay)</span></h3>
+                    <h3 style="margin-bottom:0.75rem;">Delay Roles <span style="color:rgba(255,255,255,0.4);font-size:0.8rem;">(assigned after a delay)</span></h3>
                     <div id="autoroles-delay-roles" style="margin-bottom:1.5rem;"></div>
                     <button class="control-btn secondary" onclick="cpAddDelayRole()" style="margin-bottom:1.5rem;">+ Add Delay Role</button>
 
@@ -1663,7 +1650,7 @@
                     <button class="control-btn primary small" onclick="cpShowCreateScheduledMsg()">+ New Scheduled Message</button>
                 </div>
                 <div class="settings-card">
-                    <div id="scheduled-messages-list"><p style="color: var(--text-muted);">Loading...</p></div>
+                    <div id="scheduled-messages-list"><p style="color: rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -1723,7 +1710,7 @@
                         <div>
                             <h4 style="margin-bottom:0.5rem;">Preview</h4>
                             <div id="embed-preview" style="background:rgba(0,0,0,0.2);border-radius:8px;padding:1rem;min-height:200px;border-left:4px solid #5865F2;">
-                                <div id="embed-preview-content" style="color:var(--text-muted);font-size:0.9rem;">Fill in fields to see preview</div>
+                                <div id="embed-preview-content" style="color:rgba(255,255,255,0.4);font-size:0.9rem;">Fill in fields to see preview</div>
                             </div>
                         </div>
                     </div>
@@ -1731,7 +1718,7 @@
                 </div>
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:1rem;">Sent Embeds</h3>
-                    <div id="custom-embeds-list"><p style="color: var(--text-muted);">Loading...</p></div>
+                    <div id="custom-embeds-list"><p style="color: rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -1742,8 +1729,8 @@
                     <button class="control-btn primary small" onclick="cpShowCreateFeed()">+ Add Feed</button>
                 </div>
                 <div class="settings-card">
-                    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:1rem;">Supports YouTube channels (via RSS) and custom RSS feeds. The bot checks for new posts every 5 minutes.</p>
-                    <div id="social-feeds-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-bottom:1rem;">Supports YouTube channels (via RSS) and custom RSS feeds. The bot checks for new posts every 5 minutes.</p>
+                    <div id="social-feeds-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -1765,7 +1752,7 @@
                     <div class="form-group" style="margin:0;">
                         <label>Alert Channel</label>
                         <select id="live-alerts-channel" class="form-select" style="max-width:320px;"></select>
-                        <small style="color:var(--text-muted);">All live alerts for this server will be posted here.</small>
+                        <small style="color:rgba(255,255,255,0.4);">All live alerts for this server will be posted here.</small>
                     </div>
                     <div style="margin-top:1rem;">
                         <button class="control-btn primary small" onclick="window.cpSaveLiveAlertsSettings()">Save Settings</button>
@@ -1773,7 +1760,7 @@
                 </div>
                 <!-- Streamer list -->
                 <div class="settings-card" style="margin-bottom:1rem;">
-                    <div id="live-alerts-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="live-alerts-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
                 <!-- Add / Edit streamer form -->
                 <div class="settings-card" id="live-alerts-form" style="display:none;">
@@ -1790,16 +1777,16 @@
                         <div class="form-group">
                             <label>Username / Channel Handle</label>
                             <input type="text" id="la-username" class="form-input" placeholder="e.g. HexEchoTV">
-                            <small id="la-username-hint" style="color:var(--text-muted);">The streamer's username on the platform</small>
+                            <small id="la-username-hint" style="color:rgba(255,255,255,0.4);">The streamer's username on the platform</small>
                         </div>
                     </div>
                     <div class="form-group" id="la-platform-id-group" style="display:none;">
                         <label>YouTube Channel ID</label>
                         <input type="text" id="la-platform-id" class="form-input" placeholder="UCxxxxxxxxxxxxxxxxxxxxxx">
-                        <small style="color:var(--text-muted);">Required for YouTube. Found in the channel URL: youtube.com/channel/<b>UCxxx...</b></small>
+                        <small style="color:rgba(255,255,255,0.4);">Required for YouTube. Found in the channel URL: youtube.com/channel/<b>UCxxx...</b></small>
                     </div>
                     <div class="form-group">
-                        <label>Ping Role <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+                        <label>Ping Role <span style="color:rgba(255,255,255,0.4);font-weight:400;">(optional)</span></label>
                         <select id="la-ping-role" class="form-select">
                             <option value="">— No ping —</option>
                             <option value="everyone">@everyone</option>
@@ -1807,9 +1794,9 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Alert Message <span style="color:var(--text-muted);font-weight:400;">(optional — leave blank for default)</span></label>
+                        <label>Alert Message <span style="color:rgba(255,255,255,0.4);font-weight:400;">(optional — leave blank for default)</span></label>
                         <textarea id="la-message" class="form-input" rows="3" placeholder="{emoji} **{username}** is now live on {platform}!&#10;**{title}**&#10;{url}"></textarea>
-                        <small style="color:var(--text-muted);">Variables: <code>{username}</code> <code>{title}</code> <code>{game}</code> <code>{url}</code> <code>{platform}</code> <code>{emoji}</code> <code>{viewers}</code></small>
+                        <small style="color:rgba(255,255,255,0.4);">Variables: <code>{username}</code> <code>{title}</code> <code>{game}</code> <code>{url}</code> <code>{platform}</code> <code>{emoji}</code> <code>{viewers}</code></small>
                     </div>
                     <div class="settings-row" style="margin-top:0.75rem;">
                         <div class="settings-info">
@@ -1836,8 +1823,8 @@
                         <input type="text" id="backup-name" placeholder="Backup name (optional)" style="flex:1;">
                         <button class="control-btn primary small" onclick="cpCreateBackup()">+ Create Backup</button>
                     </div>
-                    <p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:1rem;">Backups save: roles, channels, server settings, and all bot configurations (auto-mod, welcome, logging, leveling, auto-roles). Max 10 per server.</p>
-                    <div id="backups-list"><p style="color: var(--text-muted);">Loading...</p></div>
+                    <p style="color:rgba(255,255,255,0.4);font-size:0.8rem;margin-bottom:1rem;">Backups save: roles, channels, server settings, and all bot configurations (auto-mod, welcome, logging, leveling, auto-roles). Max 10 per server.</p>
+                    <div id="backups-list"><p style="color: rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -1851,7 +1838,7 @@
                         <h3>Reaction Role Messages</h3>
                         <button class="control-btn primary small" onclick="window.cpShowCreateRR()">+ Create</button>
                     </div>
-                    <div id="rr-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="rr-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -1865,7 +1852,7 @@
                         <h3>Commands</h3>
                         <button class="control-btn primary small" onclick="window.cpShowCreateCmd()">+ Create Command</button>
                     </div>
-                    <div id="cc-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="cc-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -1881,7 +1868,7 @@
                     </div>
                     <div class="form-group" style="margin-top:1rem;"><label>AFK Message Template</label>
                         <textarea id="afk-message" rows="2" placeholder="{user} is AFK: {reason} (since {time})" onchange="window.cpSaveAFK()"></textarea>
-                        <small style="color:var(--text-muted);">Variables: {user}, {reason}, {time}</small>
+                        <small style="color:rgba(255,255,255,0.4);">Variables: {user}, {reason}, {time}</small>
                     </div>
                     <div class="form-group"><label>Max AFK Duration (hours, 0 = unlimited)</label>
                         <input type="number" id="afk-max-duration" value="0" min="0" max="720" onchange="window.cpSaveAFK()">
@@ -1892,7 +1879,7 @@
                         <h3>Currently AFK Users</h3>
                         <button class="control-btn danger small" onclick="window.cpClearAllAFK()">Clear All</button>
                     </div>
-                    <div id="afk-users-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="afk-users-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -1928,7 +1915,7 @@
                 </div>
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:1rem;">Recent Suggestions</h3>
-                    <div id="suggestions-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="suggestions-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -1945,7 +1932,7 @@
                     <div class="form-row" style="margin-top:1rem;">
                         <div class="form-group"><label>Max Joins</label>
                             <input type="number" id="antiraid-max-joins" value="10" min="2" max="100" onchange="window.cpSaveAntiRaid()">
-                            <small style="color:var(--text-muted);">Max joins in time window</small>
+                            <small style="color:rgba(255,255,255,0.4);">Max joins in time window</small>
                         </div>
                         <div class="form-group"><label>Time Window (seconds)</label>
                             <input type="number" id="antiraid-window" value="10" min="5" max="300" onchange="window.cpSaveAntiRaid()">
@@ -1965,11 +1952,11 @@
                         </div>
                         <div class="form-group"><label>Min Account Age (days)</label>
                             <input type="number" id="antiraid-min-age" value="0" min="0" max="365" onchange="window.cpSaveAntiRaid()">
-                            <small style="color:var(--text-muted);">0 = disabled</small>
+                            <small style="color:rgba(255,255,255,0.4);">0 = disabled</small>
                         </div>
                         <div class="form-group"><label>Lockdown Duration (min)</label>
                             <input type="number" id="antiraid-lockdown-duration" value="0" min="0" max="1440" onchange="window.cpSaveAntiRaid()">
-                            <small style="color:var(--text-muted);">0 = manual unlock</small>
+                            <small style="color:rgba(255,255,255,0.4);">0 = manual unlock</small>
                         </div>
                     </div>
                     <div class="settings-row" style="margin-top:0.5rem;">
@@ -1996,7 +1983,7 @@
                         </select>
                         <button class="control-btn secondary small" onclick="window.cpLoadAuditLog()">Refresh</button>
                     </div>
-                    <div id="audit-log-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="audit-log-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -2047,7 +2034,7 @@
                         </div>
                         <div class="form-group"><label>Mute at Points</label>
                             <input type="number" id="warn-mute-threshold" value="3" min="0" max="50" onchange="window.cpSaveWarnSettings()">
-                            <small style="color:var(--text-muted);">0 = disabled</small>
+                            <small style="color:rgba(255,255,255,0.4);">0 = disabled</small>
                         </div>
                         <div class="form-group"><label>Kick at Points</label>
                             <input type="number" id="warn-kick-threshold" value="5" min="0" max="50" onchange="window.cpSaveWarnSettings()">
@@ -2068,7 +2055,7 @@
                             <button class="control-btn danger small" onclick="window.cpClearAllWarnings()">Clear All</button>
                         </div>
                     </div>
-                    <div id="warnings-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="warnings-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -2098,7 +2085,7 @@
                     <div id="announce-embed-fields" style="display:none;">
                         <div class="form-row">
                             <div class="form-group"><label>Title</label><input type="text" id="announce-embed-title"></div>
-                            <div class="form-group"><label>Color</label><input type="color" id="announce-embed-color" value="#5865f2" style="width:100%;height:40px;border:1px solid var(--border-color);border-radius:8px;background:var(--admin-bg);cursor:pointer;"></div>
+                            <div class="form-group"><label>Color</label><input type="color" id="announce-embed-color" value="#5865f2" style="width:100%;height:40px;border:1px solid rgba(255,255,255,0.08);border-radius:8px;background:#06061a;cursor:pointer;"></div>
                         </div>
                         <div class="form-group"><label>Description</label>
                             <textarea id="announce-embed-desc" rows="4" placeholder="Embed description..."></textarea>
@@ -2110,7 +2097,7 @@
                         <div class="form-group"><label>Image URL</label><input type="text" id="announce-embed-image" placeholder="https://..."></div>
                     </div>
                     <div style="margin-top:0.75rem;">
-                        <label style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.5rem;display:block;">Mentions</label>
+                        <label style="font-size:0.85rem;color:rgba(255,255,255,0.4);margin-bottom:0.5rem;display:block;">Mentions</label>
                         <div style="display:flex;gap:1rem;flex-wrap:wrap;">
                             <label style="display:flex;align-items:center;gap:0.35rem;cursor:pointer;"><input type="checkbox" id="announce-mention-everyone"> @everyone</label>
                             <label style="display:flex;align-items:center;gap:0.35rem;cursor:pointer;"><input type="checkbox" id="announce-mention-here"> @here</label>
@@ -2120,7 +2107,7 @@
                 </div>
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:1rem;">Recent Announcements</h3>
-                    <div id="announcements-history"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="announcements-history"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -2131,9 +2118,9 @@
                     <button class="control-btn primary small" onclick="window.cpShowCreateCounter()">+ Create Counter</button>
                 </div>
                 <div class="settings-card">
-                    <p style="color:var(--text-muted);margin-bottom:1rem;">Counter channels are voice channels whose names automatically update to show live statistics like member count, role count, boosts, and more. Members cannot join these channels.</p>
+                    <p style="color:rgba(255,255,255,0.4);margin-bottom:1rem;">Counter channels are voice channels whose names automatically update to show live statistics like member count, role count, boosts, and more. Members cannot join these channels.</p>
                     <button class="control-btn primary small" onclick="window.cpShowCreateCounter()" style="margin-bottom:1rem;">+ Create Counter</button>
-                    <div id="counters-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="counters-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -2320,7 +2307,7 @@
                     </div>
                     <div class="form-group" style="margin-top:1rem;"><label>Min Account Age (days) to Count</label>
                         <input type="number" id="invites-min-age" class="form-input" value="0" min="0" max="365">
-                        <small style="color:var(--text-muted);">0 = no minimum</small>
+                        <small style="color:rgba(255,255,255,0.4);">0 = no minimum</small>
                     </div>
                     <div class="form-group" style="margin-top:1rem;"><label>Exempt Roles from Tracking</label>
                         <div id="invites-exempt-roles" class="multi-check-list"></div>
@@ -2330,7 +2317,7 @@
                 </div>
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:0.75rem;">Invite Leaderboard</h3>
-                    <div id="invites-leaderboard"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="invites-leaderboard"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -2401,7 +2388,7 @@
                         </div>
                         <div class="form-group"><label>Mute Duration (minutes)</label>
                             <input type="number" id="phishing-mute-duration" class="form-input" value="60" min="1" max="10080">
-                            <small style="color:var(--text-muted);">When action is mute</small>
+                            <small style="color:rgba(255,255,255,0.4);">When action is mute</small>
                         </div>
                     </div>
                     <div class="settings-row" style="margin-top:1rem;">
@@ -2601,7 +2588,7 @@
                     </div>
                     <div class="form-group" style="margin-top:1rem;"><label>Timeout (minutes, kick if not verified, 0 = no timeout)</label>
                         <input type="number" id="verify-timeout" class="form-input" value="0" min="0" max="10080">
-                        <small style="color:var(--text-muted);">0 = no timeout</small>
+                        <small style="color:rgba(255,255,255,0.4);">0 = no timeout</small>
                     </div>
                     <div style="margin-top:1.5rem;display:flex;gap:0.5rem;">
                         <button class="control-btn primary" onclick="window.cpSendVerifyPanel()">Send Verification Panel</button>
@@ -2656,7 +2643,7 @@
                 </div>
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:0.75rem;">Quarantined Members</h3>
-                    <div id="quarantine-members-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="quarantine-members-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -2816,7 +2803,7 @@
                 </div>
                 <div style="background:rgba(254,231,92,0.08);border:1px solid rgba(254,231,92,0.3);border-radius:10px;padding:0.875rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:0.75rem;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FEE75C" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    <span style="color:var(--text-muted);font-size:0.875rem;line-height:1.5;">For ban appeals to work, bans must be issued using the <strong style="color:var(--text-light);">/ban</strong> command. Native Discord right-click bans may not deliver the appeal link — once the ban is executed the user and bot no longer share a server, which can prevent DMs.</span>
+                    <span style="color:rgba(255,255,255,0.4);font-size:0.875rem;line-height:1.5;">For ban appeals to work, bans must be issued using the <strong style="color:#ffffff;">/ban</strong> command. Native Discord right-click bans may not deliver the appeal link — once the ban is executed the user and bot no longer share a server, which can prevent DMs.</span>
                 </div>
                 <div class="settings-card">
                     <div class="settings-row">
@@ -3332,12 +3319,12 @@
 
                 <!-- Instructions card -->
                 <div class="settings-card" style="margin-bottom:1rem;">
-                    <h3 style="margin-bottom:0.75rem;font-size:1rem;color:var(--text-primary);">How to set up your custom bot</h3>
-                    <ol style="color:var(--text-muted);font-size:0.875rem;line-height:2.2;padding-left:1.5rem;margin:0;">
-                        <li>Go to <strong style="color:var(--text-primary);">discord.com/developers/applications</strong> and click <strong style="color:var(--text-primary);">New Application</strong></li>
-                        <li>Go to the <strong style="color:var(--text-primary);">Bot</strong> tab, enable <strong style="color:var(--text-primary);">Privileged Gateway Intents</strong> (Presence, Server Members, Message Content)</li>
-                        <li>Under <strong style="color:var(--text-primary);">Token</strong>, click <strong style="color:var(--text-primary);">Reset Token</strong>, copy it, and paste it below</li>
-                        <li>Click <strong style="color:var(--text-primary);">Activate Custom Bot</strong> — your bot starts automatically and the invite page opens</li>
+                    <h3 style="margin-bottom:0.75rem;font-size:1rem;color:rgba(255,255,255,0.9);">How to set up your custom bot</h3>
+                    <ol style="color:rgba(255,255,255,0.4);font-size:0.875rem;line-height:2.2;padding-left:1.5rem;margin:0;">
+                        <li>Go to <strong style="color:rgba(255,255,255,0.9);">discord.com/developers/applications</strong> and click <strong style="color:rgba(255,255,255,0.9);">New Application</strong></li>
+                        <li>Go to the <strong style="color:rgba(255,255,255,0.9);">Bot</strong> tab, enable <strong style="color:rgba(255,255,255,0.9);">Privileged Gateway Intents</strong> (Presence, Server Members, Message Content)</li>
+                        <li>Under <strong style="color:rgba(255,255,255,0.9);">Token</strong>, click <strong style="color:rgba(255,255,255,0.9);">Reset Token</strong>, copy it, and paste it below</li>
+                        <li>Click <strong style="color:rgba(255,255,255,0.9);">Activate Custom Bot</strong> — your bot starts automatically and the invite page opens</li>
                     </ol>
                 </div>
 
@@ -3356,10 +3343,10 @@
                             <div class="custom-bot-hero-discord-name" id="custom-bot-hero-discord-name" style="display:none;"></div>
                             <div class="custom-bot-hero-status">
                                 <span class="custom-bot-status-dot" id="custom-bot-status-dot"></span>
-                                <span id="custom-bot-status-text" style="color:var(--text-muted);font-size:0.85rem;">Checking...</span>
+                                <span id="custom-bot-status-text" style="color:rgba(255,255,255,0.4);font-size:0.85rem;">Checking...</span>
                             </div>
                             <div class="custom-bot-hero-meta">
-                                <span id="custom-bot-client-id-display" style="font-size:0.78rem;color:var(--text-muted);font-family:monospace;"></span>
+                                <span id="custom-bot-client-id-display" style="font-size:0.78rem;color:rgba(255,255,255,0.4);font-family:monospace;"></span>
                             </div>
                         </div>
                     </div>
@@ -3376,14 +3363,14 @@
                     </div>
                     <!-- Inline Edit Form -->
                     <div id="custom-bot-edit-form" style="display:none;border-top:1px solid rgba(255,255,255,0.07);margin-top:1.25rem;padding-top:1.25rem;">
-                        <h4 style="margin:0 0 1rem;font-size:0.9rem;color:var(--text-primary);">Edit Custom Bot</h4>
+                        <h4 style="margin:0 0 1rem;font-size:0.9rem;color:rgba(255,255,255,0.9);">Edit Custom Bot</h4>
                         <div class="form-group">
-                            <label>Bot Name <span style="color:var(--text-muted);font-weight:400;">(renames the bot on Discord)</span></label>
+                            <label>Bot Name <span style="color:rgba(255,255,255,0.4);font-weight:400;">(renames the bot on Discord)</span></label>
                             <input type="text" id="custom-bot-edit-name" class="form-input" placeholder="e.g. My Server Bot" maxlength="32">
-                            <small style="color:var(--text-muted);">Updates the bot's actual Discord username. Max 2 changes per hour.</small>
+                            <small style="color:rgba(255,255,255,0.4);">Updates the bot's actual Discord username. Max 2 changes per hour.</small>
                         </div>
                         <div class="form-group">
-                            <label>New Token <span style="color:var(--text-muted);font-weight:400;">(optional — only if you reset your token)</span></label>
+                            <label>New Token <span style="color:rgba(255,255,255,0.4);font-weight:400;">(optional — only if you reset your token)</span></label>
                             <input type="password" id="custom-bot-edit-token" class="form-input" placeholder="Leave blank to keep current token" autocomplete="new-password">
                         </div>
                         <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem;">
@@ -3408,9 +3395,9 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>Activity Text <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+                            <label>Activity Text <span style="color:rgba(255,255,255,0.4);font-weight:400;">(optional)</span></label>
                             <input type="text" id="custom-bot-edit-activity" class="form-input" placeholder="e.g. your server" maxlength="128">
-                            <small style="color:var(--text-muted);">Shown as e.g. "Playing your server". Leave blank for no activity.</small>
+                            <small style="color:rgba(255,255,255,0.4);">Shown as e.g. "Playing your server". Leave blank for no activity.</small>
                         </div>
                         <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
                             <button class="control-btn primary" onclick="window.cpUpdateCustomBot()">Save Changes</button>
@@ -3427,26 +3414,26 @@
                         </div>
                         <div>
                             <div style="font-weight:600;font-size:1rem;margin-bottom:2px;">Connect Your Bot</div>
-                            <div style="color:var(--text-muted);font-size:0.83rem;">Paste your bot token to activate CUB PROTECTOR under your bot</div>
+                            <div style="color:rgba(255,255,255,0.4);font-size:0.83rem;">Paste your bot token to activate CUB PROTECTOR under your bot</div>
                         </div>
                     </div>
                     <div id="custom-bot-form" style="margin-top:1.25rem;">
                         <div class="form-group">
                             <label>Bot Token <span style="color:#ed4245;">*</span></label>
                             <input type="password" id="custom-bot-token" class="form-input" placeholder="Enter your bot token" autocomplete="new-password">
-                            <small style="color:var(--text-muted);">Stored securely. The Application ID is extracted automatically.</small>
+                            <small style="color:rgba(255,255,255,0.4);">Stored securely. The Application ID is extracted automatically.</small>
                         </div>
                         <div class="form-group">
-                            <label>Display Name <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+                            <label>Display Name <span style="color:rgba(255,255,255,0.4);font-weight:400;">(optional)</span></label>
                             <input type="text" id="custom-bot-name" class="form-input" placeholder="e.g. My Server Bot" maxlength="32">
-                            <small style="color:var(--text-muted);">Label for this dashboard. If blank, your bot's Discord username is used.</small>
+                            <small style="color:rgba(255,255,255,0.4);">Label for this dashboard. If blank, your bot's Discord username is used.</small>
                         </div>
                         <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;margin-top:0.25rem;">
                             <button class="control-btn primary" onclick="window.cpSaveCustomBot()">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="margin-right:5px;"><path d="M12 5v14M5 12h14"/></svg>Activate Custom Bot
                             </button>
                         </div>
-                        <p style="margin-top:0.75rem;font-size:0.83rem;color:var(--text-muted);">
+                        <p style="margin-top:0.75rem;font-size:0.83rem;color:rgba(255,255,255,0.4);">
                             A dedicated process will start for this server using your token. Slash commands are registered instantly under your bot.
                         </p>
                     </div>
@@ -3459,13 +3446,13 @@
                     <div class="section-title"><h1>Bot Masters</h1><p>Grant dashboard access to users who aren't server admins</p></div>
                 </div>
                 <div class="settings-card">
-                    <p style="color:var(--text-muted);margin-bottom:1rem;font-size:0.85rem;">Bot Masters can access and manage this server's dashboard settings. Only server owners and administrators can add or remove bot masters.</p>
+                    <p style="color:rgba(255,255,255,0.4);margin-bottom:1rem;font-size:0.85rem;">Bot Masters can access and manage this server's dashboard settings. Only server owners and administrators can add or remove bot masters.</p>
                     <div id="botmasters-list" style="margin-bottom:1rem;">Loading...</div>
                     <div class="add-row">
                         <div class="form-group"><input type="text" id="botmasters-add-user" class="form-input" placeholder="Enter Discord User ID"></div>
                         <button class="control-btn primary small" onclick="window.cpAddBotMaster()">+ Add Bot Master</button>
                     </div>
-                    <div id="botmasters-no-permission" style="display:none;color:var(--text-muted);padding:0.5rem;font-style:italic;">Only server owners and administrators can manage bot masters.</div>
+                    <div id="botmasters-no-permission" style="display:none;color:rgba(255,255,255,0.4);padding:0.5rem;font-style:italic;">Only server owners and administrators can manage bot masters.</div>
                 </div>
             </section>
 
@@ -3486,9 +3473,9 @@
                         <div class="form-group"><label>Counting Channel</label>
                             <select id="counting-channel" class="form-select" onchange="window.cpSaveCounting()"><option value="">-- Select Channel --</option></select>
                         </div>
-                        <div class="form-group"><label>Fail Log Channel <small style="color:var(--text-muted);">(optional)</small></label>
+                        <div class="form-group"><label>Fail Log Channel <small style="color:rgba(255,255,255,0.4);">(optional)</small></label>
                             <select id="counting-fail-log-channel" class="form-select" onchange="window.cpSaveCounting()"><option value="">-- None --</option></select>
-                            <small style="color:var(--text-muted);">Log wrong counts here without polluting the counting channel.</small>
+                            <small style="color:rgba(255,255,255,0.4);">Log wrong counts here without polluting the counting channel.</small>
                         </div>
                     </div>
 
@@ -3498,7 +3485,7 @@
                             <option value="strict">Strict — React ❌, announce, and reset to 0</option>
                             <option value="silent">Silent — Delete the wrong message and continue</option>
                         </select>
-                        <small style="color:var(--text-muted);">Applies to wrong numbers, math errors, and (if enabled below) consecutive counts.</small>
+                        <small style="color:rgba(255,255,255,0.4);">Applies to wrong numbers, math errors, and (if enabled below) consecutive counts.</small>
                     </div>
 
                     <!-- Toggles -->
@@ -3508,7 +3495,7 @@
                     </div>
                     <div class="form-group" style="margin-top:0.75rem;"><label>Max Consecutive Counts Per User</label>
                         <input type="number" id="counting-max-consecutive" class="form-input" min="0" max="1000" value="1" onchange="window.cpSaveCounting()" placeholder="1">
-                        <small style="color:var(--text-muted);">How many times the same user can count in a row before someone else must go. <strong>0</strong> = unlimited, <strong>1</strong> = no consecutive (default).</small>
+                        <small style="color:rgba(255,255,255,0.4);">How many times the same user can count in a row before someone else must go. <strong>0</strong> = unlimited, <strong>1</strong> = no consecutive (default).</small>
                     </div>
                     <div class="settings-row" style="margin-top:0.75rem;">
                         <div class="settings-info"><h4>Show ✅ Reaction</h4><p>React with ✅ on every correct count — turn off to reduce clutter on busy channels</p></div>
@@ -3523,11 +3510,11 @@
                     <div class="form-row" style="margin-top:1rem;">
                         <div class="form-group"><label>Count By</label>
                             <input type="number" id="counting-count-by" class="form-input" min="1" max="1000" value="1" onchange="window.cpSaveCounting()" placeholder="1">
-                            <small style="color:var(--text-muted);">Step size — e.g. 2 = count in even numbers (2, 4, 6…)</small>
+                            <small style="color:rgba(255,255,255,0.4);">Step size — e.g. 2 = count in even numbers (2, 4, 6…)</small>
                         </div>
                         <div class="form-group"><label>Cooldown (seconds)</label>
                             <input type="number" id="counting-cooldown" class="form-input" min="0" max="3600" value="0" onchange="window.cpSaveCounting()" placeholder="0 = off">
-                            <small style="color:var(--text-muted);">Minimum seconds between counts per user. 0 = no cooldown.</small>
+                            <small style="color:rgba(255,255,255,0.4);">Minimum seconds between counts per user. 0 = no cooldown.</small>
                         </div>
                     </div>
 
@@ -3535,11 +3522,11 @@
                     <div class="form-row" style="margin-top:0.5rem;">
                         <div class="form-group"><label>Milestone Every</label>
                             <input type="number" id="counting-milestone" class="form-input" min="0" max="100000" value="0" onchange="window.cpSaveCounting()" placeholder="0 = off">
-                            <small style="color:var(--text-muted);">Celebrate every N counts (e.g. 100 = celebrate at 100, 200, 300…). 0 = off.</small>
+                            <small style="color:rgba(255,255,255,0.4);">Celebrate every N counts (e.g. 100 = celebrate at 100, 200, 300…). 0 = off.</small>
                         </div>
                         <div class="form-group"><label>Count Goal</label>
                             <input type="number" id="counting-goal" class="form-input" min="0" max="1000000" value="0" onchange="window.cpSaveCounting()" placeholder="0 = off">
-                            <small style="color:var(--text-muted);">Target number to reach. Bot celebrates when hit. 0 = no goal.</small>
+                            <small style="color:rgba(255,255,255,0.4);">Target number to reach. Bot celebrates when hit. 0 = no goal.</small>
                         </div>
                     </div>
                     <div class="settings-row" style="margin-top:0.75rem;">
@@ -3548,7 +3535,7 @@
                     </div>
 
                     <!-- Stats -->
-                    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:1rem;">Current count: <strong id="counting-current">—</strong> &nbsp;|&nbsp; High score: <strong id="counting-highscore">—</strong>
+                    <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-top:1rem;">Current count: <strong id="counting-current">—</strong> &nbsp;|&nbsp; High score: <strong id="counting-highscore">—</strong>
                         &nbsp;<button class="control-btn danger small" onclick="window.cpResetCount()" style="margin-left:0.5rem;">Reset Count</button></p>
                 </div>
 
@@ -3567,7 +3554,7 @@
                     </div>
                     <div class="form-group" style="margin-top:1rem;"><label>Panel Channel</label>
                         <select id="self-roles-channel" class="form-select" onchange="window.cpSaveSelfRoles()"><option value="">-- Select Channel --</option></select>
-                        <small style="color:var(--text-muted);">Select the channel, add your categories below, then click <strong>Publish Panel</strong> to post to Discord. Clicking Publish again will update the existing messages.</small>
+                        <small style="color:rgba(255,255,255,0.4);">Select the channel, add your categories below, then click <strong>Publish Panel</strong> to post to Discord. Clicking Publish again will update the existing messages.</small>
                     </div>
                     <div style="margin-top:1rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
                         <button class="control-btn primary" onclick="window.cpPublishSelfRoles()">
@@ -3589,14 +3576,14 @@
                     <div class="form-row">
                         <div class="form-group"><label>Category Name</label><input type="text" id="sr-add-name" placeholder="e.g. Hobbies" maxlength="50"></div>
                         <div class="form-group"><label>Description</label><textarea id="sr-add-desc" class="form-input" rows="2" placeholder="Pick your hobby!" maxlength="4096" style="resize:vertical;"></textarea></div>
-                        <div class="form-group"><label>Emoji <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label><input type="text" id="sr-add-emoji" placeholder="None" maxlength="64"></div>
-                        <div class="form-group"><label>Embed Colour</label><input type="color" id="sr-add-color" value="#5865f2" style="width:42px;height:38px;padding:2px;border-radius:6px;border:1px solid var(--border-color);cursor:pointer;background:none;"></div>
+                        <div class="form-group"><label>Emoji <span style="color:rgba(255,255,255,0.4);font-weight:400;">(optional)</span></label><input type="text" id="sr-add-emoji" placeholder="None" maxlength="64"></div>
+                        <div class="form-group"><label>Embed Colour</label><input type="color" id="sr-add-color" value="#5865f2" style="width:42px;height:38px;padding:2px;border-radius:6px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;background:none;"></div>
                         <div class="form-group" style="align-self:flex-end;"><button class="control-btn primary" onclick="window.cpAddSelfRoleCategory()">Add Category</button></div>
                     </div>
                 </div>
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:1rem;">Categories</h3>
-                    <div id="self-roles-categories"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="self-roles-categories"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -3610,11 +3597,11 @@
                         <div class="form-group" style="max-width:140px;"><label>Max Players</label><input type="number" id="t-create-max" value="16" min="2" max="64" class="form-input"></div>
                         <div class="form-group" style="align-self:flex-end;"><button class="control-btn primary" onclick="window.cpCreateTournament()">Create</button></div>
                     </div>
-                    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;">Members join with <code>/tournament join id:[id]</code> → start bracket with <code>/tournament start</code> → record results with <code>/tournament advance @winner</code>.</p>
+                    <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-top:0.5rem;">Members join with <code>/tournament join id:[id]</code> → start bracket with <code>/tournament start</code> → record results with <code>/tournament advance @winner</code>.</p>
                 </div>
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:1rem;">All Tournaments</h3>
-                    <div id="tournaments-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="tournaments-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -3622,14 +3609,14 @@
             <section class="content-section" id="debateSection" data-section="debate">
                 <div class="section-header"><div class="section-title"><h1>Debate Mode</h1><p>Lock a channel to two debaters — others' messages are deleted</p></div></div>
                 <div class="settings-card">
-                    <div class="form-group"><label>Debate Log Channel <small style="color:var(--text-muted);">(optional)</small></label>
+                    <div class="form-group"><label>Debate Log Channel <small style="color:rgba(255,255,255,0.4);">(optional)</small></label>
                         <select id="debate-log-channel" class="form-select" onchange="window.cpSaveDebate()"><option value="">-- None --</option></select>
                     </div>
-                    <p style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;">Start a debate with <code>/debate start @user1 @user2 topic</code> in any channel. End with <code>/debate end</code>. Debates auto-end after 30 minutes.</p>
+                    <p style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-top:0.5rem;">Start a debate with <code>/debate start @user1 @user2 topic</code> in any channel. End with <code>/debate end</code>. Debates auto-end after 30 minutes.</p>
                 </div>
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:1rem;">Active Debates</h3>
-                    <div id="debate-active-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="debate-active-list"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
             </section>
 
@@ -3649,7 +3636,7 @@
                         </div>
                         <div class="form-group" style="align-self:flex-end;"><button class="control-btn primary" onclick="window.cpAddRedditFeed()">Add</button></div>
                     </div>
-                    <div id="reddit-feeds-list" style="margin-top:0.75rem;"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="reddit-feeds-list" style="margin-top:0.75rem;"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
 
                 <div class="settings-card" style="margin-top:1rem;">
@@ -3660,23 +3647,23 @@
                         <div class="form-group"><label>Channel</label><select id="news-channel" class="form-select"><option value="">-- Select --</option></select></div>
                         <div class="form-group" style="align-self:flex-end;"><button class="control-btn primary" onclick="window.cpAddNewsFeed()">Add</button></div>
                     </div>
-                    <div id="news-feeds-list" style="margin-top:0.75rem;"><p style="color:var(--text-muted);">Loading...</p></div>
+                    <div id="news-feeds-list" style="margin-top:0.75rem;"><p style="color:rgba(255,255,255,0.4);">Loading...</p></div>
                 </div>
 
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:1rem;">😂 Meme of the Day</h3>
-                    <div class="form-group"><label>Post Channel <small style="color:var(--text-muted);">(leave blank to disable)</small></label>
+                    <div class="form-group"><label>Post Channel <small style="color:rgba(255,255,255,0.4);">(leave blank to disable)</small></label>
                         <select id="meme-channel" class="form-select" onchange="window.cpSaveMemeOfDay()"><option value="">-- Disabled --</option></select>
                     </div>
-                    <p id="meme-last-date" style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;"></p>
+                    <p id="meme-last-date" style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-top:0.5rem;"></p>
                 </div>
 
                 <div class="settings-card" style="margin-top:1rem;">
                     <h3 style="margin-bottom:1rem;">💬 Quote of the Day</h3>
-                    <div class="form-group"><label>Post Channel <small style="color:var(--text-muted);">(leave blank to disable)</small></label>
+                    <div class="form-group"><label>Post Channel <small style="color:rgba(255,255,255,0.4);">(leave blank to disable)</small></label>
                         <select id="qotd-channel" class="form-select" onchange="window.cpSaveQuoteOfDay()"><option value="">-- Disabled --</option></select>
                     </div>
-                    <p id="qotd-last-date" style="color:var(--text-muted);font-size:0.85rem;margin-top:0.5rem;"></p>
+                    <p id="qotd-last-date" style="color:rgba(255,255,255,0.4);font-size:0.85rem;margin-top:0.5rem;"></p>
                 </div>
             </section>
 
@@ -3713,7 +3700,7 @@
                 <div class="form-group">
                     <label>Display Template</label>
                     <input type="text" id="counter-template" placeholder="e.g. 📊 {count} Members" class="form-input">
-                    <small style="color:var(--text-muted);">Use <code>{count}</code> where the value should appear</small>
+                    <small style="color:rgba(255,255,255,0.4);">Use <code>{count}</code> where the value should appear</small>
                 </div>
                 <div class="form-group">
                     <label>Category</label>
@@ -3926,7 +3913,7 @@
                 <div class="form-group">
                     <label>Channel Name Template</label>
                     <input type="text" id="hub-template" value="{username}" placeholder="Use {username} and {index}">
-                    <small style="color: var(--text-muted);">Preview: Username</small>
+                    <small style="color: rgba(255,255,255,0.4);">Preview: Username</small>
                 </div>
                 <div class="form-group">
                     <label>Category</label>
@@ -4009,7 +3996,7 @@
                 <div class="form-group">
                     <label>Channel Name Template</label>
                     <input type="text" id="edit-hub-template" placeholder="Use {username} and {index}">
-                    <small style="color: var(--text-muted);">Variables: {username}, {index}</small>
+                    <small style="color: rgba(255,255,255,0.4);">Variables: {username}, {index}</small>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -4083,7 +4070,7 @@
                     <select id="panel-channel" class="form-select">
                         <option value="">-- Select a channel --</option>
                     </select>
-                    <small style="color: var(--text-muted);">The channel where the ticket panel will be posted</small>
+                    <small style="color: rgba(255,255,255,0.4);">The channel where the ticket panel will be posted</small>
                 </div>
                 <div class="form-group">
                     <label>Panel Title</label>
@@ -4099,23 +4086,23 @@
                         <input type="color" id="panel-embed-color" value="#5865F2" style="height:38px;padding:2px;">
                     </div>
                     <div class="form-group" style="flex:2;">
-                        <label>Embed Image URL <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Embed Image URL <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <input type="text" id="panel-embed-image" placeholder="https://example.com/banner.png">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Thumbnail URL <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Thumbnail URL <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <input type="text" id="panel-embed-thumbnail" placeholder="https://example.com/icon.png">
                     </div>
                     <div class="form-group">
-                        <label>Footer Text <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Footer Text <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <input type="text" id="panel-embed-footer" value="CUB PROTECTOR Tickets" placeholder="Footer text">
                     </div>
                 </div>
                 <div style="margin-top: 1.5rem;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
-                        <label style="font-weight:600;font-size:0.9rem;">Buttons <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(max 5)</span></label>
+                        <label style="font-weight:600;font-size:0.9rem;">Buttons <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(max 5)</span></label>
                         <button class="control-btn small" onclick="window.cpAddPanelButton()" id="add-panel-btn-btn">+ Add Button</button>
                     </div>
                     <div id="panel-buttons-list"></div>
@@ -4138,8 +4125,8 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label>Channel</label>
-                    <div id="edit-panel-channel-display" style="padding:0.5rem 0.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:var(--text-muted);font-size:0.9rem;">#channel</div>
-                    <small style="color: var(--text-muted);">Channel cannot be changed after creation</small>
+                    <div id="edit-panel-channel-display" style="padding:0.5rem 0.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:rgba(255,255,255,0.4);font-size:0.9rem;">#channel</div>
+                    <small style="color: rgba(255,255,255,0.4);">Channel cannot be changed after creation</small>
                 </div>
                 <div class="form-group">
                     <label>Panel Title</label>
@@ -4155,23 +4142,23 @@
                         <input type="color" id="edit-panel-embed-color" value="#5865F2" style="height:38px;padding:2px;">
                     </div>
                     <div class="form-group" style="flex:2;">
-                        <label>Embed Image URL <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Embed Image URL <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <input type="text" id="edit-panel-embed-image" placeholder="https://example.com/banner.png">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Thumbnail URL <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Thumbnail URL <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <input type="text" id="edit-panel-embed-thumbnail" placeholder="https://example.com/icon.png">
                     </div>
                     <div class="form-group">
-                        <label>Footer Text <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Footer Text <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <input type="text" id="edit-panel-embed-footer" placeholder="Footer text">
                     </div>
                 </div>
                 <div style="margin-top: 1.5rem;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
-                        <label style="font-weight:600;font-size:0.9rem;">Buttons <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(max 5)</span></label>
+                        <label style="font-weight:600;font-size:0.9rem;">Buttons <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(max 5)</span></label>
                         <button class="control-btn small" onclick="window.cpAddEditPanelButton()" id="edit-add-panel-btn-btn">+ Add Button</button>
                     </div>
                     <div id="edit-panel-buttons-list"></div>
@@ -4229,20 +4216,20 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Required Role <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                    <label>Required Role <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                     <select id="giveaway-required-role" class="form-select">
                         <option value="">-- No requirement --</option>
                     </select>
-                    <small style="color: var(--text-muted);">Only users with this role can enter</small>
+                    <small style="color: rgba(255,255,255,0.4);">Only users with this role can enter</small>
                 </div>
                 <div class="settings-row" style="margin: 0.5rem 0;">
                     <div class="settings-info"><h4>Allow Multiple Entries</h4><p>Let users enter the giveaway more than once</p></div>
                     <label class="toggle"><input type="checkbox" id="giveaway-allow-multiple"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="form-group">
-                    <label>Enter Button Text <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                    <label>Enter Button Text <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                     <input type="text" id="giveaway-button-label" placeholder="Default: Enter Giveaway">
-                    <small style="color: var(--text-muted);">Customize the text on the enter button</small>
+                    <small style="color: rgba(255,255,255,0.4);">Customize the text on the enter button</small>
                 </div>
 
                 <!-- Advanced Options -->
@@ -4251,11 +4238,11 @@
                         <label style="font-weight:600;font-size:0.9rem;">Advanced Options</label>
                     </div>
                     <div class="form-group">
-                        <label>Blacklisted Roles <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Blacklisted Roles <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <div id="giveaway-blacklisted-roles" class="multi-check-list"></div>
                     </div>
                     <div class="form-group">
-                        <label>Bonus Entry Role <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Bonus Entry Role <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <select id="giveaway-bonus-role" class="form-select">
                             <option value="">-- No bonus entries --</option>
                         </select>
@@ -4270,7 +4257,7 @@
                                 <option value="5">+5 extra</option>
                                 <option value="10">+10 extra</option>
                             </select>
-                            <small style="color: var(--text-muted);">Extra entries for users with the bonus role</small>
+                            <small style="color: rgba(255,255,255,0.4);">Extra entries for users with the bonus role</small>
                         </div>
                         <div class="form-group">
                             <label>Max Entries</label>
@@ -4282,7 +4269,7 @@
                                 <option value="500">500</option>
                                 <option value="1000">1000</option>
                             </select>
-                            <small style="color: var(--text-muted);">Maximum total entries allowed</small>
+                            <small style="color: rgba(255,255,255,0.4);">Maximum total entries allowed</small>
                         </div>
                     </div>
                     <div class="form-row">
@@ -4293,7 +4280,7 @@
                                 <option value="@everyone">@everyone</option>
                                 <option value="@here">@here</option>
                             </select>
-                            <small style="color: var(--text-muted);">Ping a role when the giveaway starts</small>
+                            <small style="color: rgba(255,255,255,0.4);">Ping a role when the giveaway starts</small>
                         </div>
                         <div class="form-group">
                             <label>DM Winners</label>
@@ -4301,13 +4288,13 @@
                                 <option value="false" selected>No</option>
                                 <option value="true">Yes - DM winners</option>
                             </select>
-                            <small style="color: var(--text-muted);">Send a DM to winners when they win</small>
+                            <small style="color: rgba(255,255,255,0.4);">Send a DM to winners when they win</small>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Winner Message <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Winner Message <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <textarea id="giveaway-winner-message" class="form-textarea" rows="2" placeholder="Custom message sent when announcing winners"></textarea>
-                        <small style="color: var(--text-muted);">Custom text for the winner announcement. Use {winners} for winner mentions, {prize} for the prize name.</small>
+                        <small style="color: rgba(255,255,255,0.4);">Custom text for the winner announcement. Use {winners} for winner mentions, {prize} for the prize name.</small>
                     </div>
                 </div>
 
@@ -4315,15 +4302,15 @@
                 <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:1.25rem;padding-top:1.25rem;">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
                         <label style="font-weight:600;font-size:0.9rem;">Embed Customization</label>
-                        <small style="color:var(--text-muted);">Customize how the giveaway looks</small>
+                        <small style="color:rgba(255,255,255,0.4);">Customize how the giveaway looks</small>
                     </div>
                     <div class="form-group">
-                        <label>Title <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Title <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <input type="text" id="giveaway-embed-title" placeholder="Default: GIVEAWAY">
-                        <small style="color:var(--text-muted);">Leave empty for default</small>
+                        <small style="color:rgba(255,255,255,0.4);">Leave empty for default</small>
                     </div>
                     <div class="form-group">
-                        <label>Description <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Description <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <textarea id="giveaway-embed-description" class="form-textarea" rows="3" placeholder="Custom description text. The prize, winners, and end time are always shown."></textarea>
                     </div>
                     <div class="form-row">
@@ -4332,17 +4319,17 @@
                             <input type="color" id="giveaway-embed-color" value="#57f287" style="height:38px;padding:2px;">
                         </div>
                         <div class="form-group" style="flex:2;">
-                            <label>Image URL <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                            <label>Image URL <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                             <input type="text" id="giveaway-embed-image" placeholder="https://example.com/banner.png">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Thumbnail URL <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                            <label>Thumbnail URL <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                             <input type="text" id="giveaway-embed-thumbnail" placeholder="https://example.com/icon.png">
                         </div>
                         <div class="form-group">
-                            <label>Footer Text <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                            <label>Footer Text <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                             <input type="text" id="giveaway-embed-footer" placeholder="e.g. Hosted by Server Name">
                         </div>
                     </div>
@@ -4375,12 +4362,12 @@
                 </div>
                 <div class="form-group">
                     <label>Channel</label>
-                    <div id="edit-giveaway-channel-display" style="padding:0.5rem 0.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:var(--text-muted);font-size:0.9rem;">#channel</div>
-                    <small style="color: var(--text-muted);">Channel cannot be changed after creation</small>
+                    <div id="edit-giveaway-channel-display" style="padding:0.5rem 0.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:6px;color:rgba(255,255,255,0.4);font-size:0.9rem;">#channel</div>
+                    <small style="color: rgba(255,255,255,0.4);">Channel cannot be changed after creation</small>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>New Duration <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(resets timer)</span></label>
+                        <label>New Duration <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(resets timer)</span></label>
                         <select id="edit-giveaway-duration" class="form-select">
                             <option value="">-- Keep current --</option>
                             <option value="30m">30 minutes</option>
@@ -4406,13 +4393,13 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Required Role <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                    <label>Required Role <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                     <select id="edit-giveaway-required-role" class="form-select">
                         <option value="">-- No requirement --</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Enter Button Text <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                    <label>Enter Button Text <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                     <input type="text" id="edit-giveaway-button-label" placeholder="Default: Enter Giveaway">
                 </div>
 
@@ -4422,11 +4409,11 @@
                         <label style="font-weight:600;font-size:0.9rem;">Advanced Options</label>
                     </div>
                     <div class="form-group">
-                        <label>Blacklisted Roles <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Blacklisted Roles <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <div id="edit-giveaway-blacklisted-roles" class="multi-check-list"></div>
                     </div>
                     <div class="form-group">
-                        <label>Bonus Entry Role <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Bonus Entry Role <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <select id="edit-giveaway-bonus-role" class="form-select">
                             <option value="">-- No bonus entries --</option>
                         </select>
@@ -4462,7 +4449,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Winner Message <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Winner Message <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <textarea id="edit-giveaway-winner-message" class="form-textarea" rows="2" placeholder="Custom message. Use {winners} and {prize}"></textarea>
                     </div>
                 </div>
@@ -4473,11 +4460,11 @@
                         <label style="font-weight:600;font-size:0.9rem;">Embed Customization</label>
                     </div>
                     <div class="form-group">
-                        <label>Title <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Title <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <input type="text" id="edit-giveaway-embed-title" placeholder="Default: GIVEAWAY">
                     </div>
                     <div class="form-group">
-                        <label>Description <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                        <label>Description <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                         <textarea id="edit-giveaway-embed-description" class="form-textarea" rows="3" placeholder="Custom description text."></textarea>
                     </div>
                     <div class="form-row">
@@ -4486,17 +4473,17 @@
                             <input type="color" id="edit-giveaway-embed-color" value="#57f287" style="height:38px;padding:2px;">
                         </div>
                         <div class="form-group" style="flex:2;">
-                            <label>Image URL <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                            <label>Image URL <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                             <input type="text" id="edit-giveaway-embed-image" placeholder="https://example.com/banner.png">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Thumbnail URL <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                            <label>Thumbnail URL <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                             <input type="text" id="edit-giveaway-embed-thumbnail" placeholder="https://example.com/icon.png">
                         </div>
                         <div class="form-group">
-                            <label>Footer Text <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+                            <label>Footer Text <span style="color:rgba(255,255,255,0.4);font-weight:400;font-size:0.8rem;">(optional)</span></label>
                             <input type="text" id="edit-giveaway-embed-footer" placeholder="e.g. Hosted by Server Name">
                         </div>
                     </div>
@@ -4555,7 +4542,7 @@
                 </div>
                 <div class="form-group"><label>Response Content</label>
                     <textarea id="cmd-response" rows="4" placeholder="Hello {user}! Welcome to {server}!"></textarea>
-                    <small style="color:var(--text-muted);">Variables: {user}, {server}, {channel}, {members}</small>
+                    <small style="color:rgba(255,255,255,0.4);">Variables: {user}, {server}, {channel}, {members}</small>
                 </div>
                 <div class="form-row">
                     <div class="form-group"><label>Required Role (optional)</label>

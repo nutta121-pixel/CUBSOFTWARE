@@ -1,0 +1,271 @@
+/* cubpresence-wiki Styles */
+
+.wiki-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.wiki-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.wiki-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #5865f2, #eb459e);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.wiki-header p {
+    color: #b9bbbe;
+    font-size: 1.1rem;
+}
+
+.wiki-nav {
+    background: rgba(30, 30, 50, 0.5);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 40px;
+    border: 1px solid rgba(88, 101, 242, 0.2);
+}
+
+.wiki-nav h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #72767d;
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+}
+
+.wiki-nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.wiki-nav-links a {
+    padding: 8px 16px;
+    background: rgba(88, 101, 242, 0.1);
+    border: 1px solid rgba(88, 101, 242, 0.3);
+    border-radius: 20px;
+    color: #b9bbbe;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.wiki-nav-links a:hover {
+    background: rgba(88, 101, 242, 0.2);
+    color: #fff;
+    border-color: #5865f2;
+}
+
+.wiki-section {
+    background: rgba(20, 20, 40, 0.6);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.wiki-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wiki-section h2 .emoji {
+    font-size: 1.3rem;
+}
+
+.wiki-section h3 {
+    font-size: 1.1rem;
+    margin: 25px 0 15px 0;
+    color: #5865f2;
+}
+
+.wiki-section p {
+    color: #b9bbbe;
+    line-height: 1.7;
+    margin-bottom: 15px;
+}
+
+.wiki-section ul, .wiki-section ol {
+    color: #b9bbbe;
+    padding-left: 25px;
+    margin-bottom: 15px;
+}
+
+.wiki-section li {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+.wiki-section strong {
+    color: #fff;
+}
+
+.wiki-section code {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Consolas', monospace;
+    color: #57f287;
+    font-size: 0.9em;
+}
+
+.tip-box {
+    background: rgba(87, 242, 135, 0.1);
+    border-left: 4px solid #57f287;
+    padding: 15px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 20px 0;
+}
+
+.tip-box strong {
+    color: #57f287;
+}
+
+.warning-box {
+    background: rgba(250, 166, 26, 0.1);
+    border-left: 4px solid #faa61a;
+    padding: 15px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 20px 0;
+}
+
+.warning-box strong {
+    color: #faa61a;
+}
+
+.info-box {
+    background: rgba(88, 101, 242, 0.1);
+    border-left: 4px solid #5865f2;
+    padding: 15px 20px;
+    border-radius: 0 8px 8px 0;
+    margin: 20px 0;
+}
+
+.info-box strong {
+    color: #5865f2;
+}
+
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.feature-item {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.feature-item h4 {
+    color: #fff;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.feature-item p {
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.step-list {
+    counter-reset: step-counter;
+    list-style: none;
+    padding-left: 0;
+}
+
+.step-list li {
+    counter-increment: step-counter;
+    position: relative;
+    padding-left: 50px;
+    margin-bottom: 20px;
+}
+
+.step-list li::before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 32px;
+    height: 32px;
+    background: #5865f2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+}
+
+.download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #5865f2, #4752c4);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.2s;
+    margin-top: 10px;
+}
+
+.download-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(88, 101, 242, 0.3);
+}
+
+.activity-types-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.activity-types-table th,
+.activity-types-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.activity-types-table th {
+    color: #72767d;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.activity-types-table td {
+    color: #b9bbbe;
+}
+
+.activity-types-table tr:hover td {
+    background: rgba(88, 101, 242, 0.05);
+}
+
+@media (max-width: 768px) {
+    .wiki-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .wiki-section {
+        padding: 20px;
+    }
+}
+    

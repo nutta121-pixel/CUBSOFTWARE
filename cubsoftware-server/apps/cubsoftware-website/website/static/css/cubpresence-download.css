@@ -1,0 +1,145 @@
+/* cubpresence-download Styles */
+
+.download-page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.download-hero {
+    margin-bottom: 3rem;
+}
+
+.download-hero h1 {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-family: 'Orbitron', sans-serif;
+    margin-bottom: 0.5rem;
+}
+
+.download-hero p {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.1rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.download-card {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.download-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #5865f2, #eb459e);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+.download-icon svg {
+    width: 40px;
+    height: 40px;
+    color: white;
+}
+
+.download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 32px;
+    background: #5865f2;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+    margin-bottom: 1rem;
+}
+
+.download-btn:hover {
+    background: #4752c4;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(88, 101, 242, 0.3);
+}
+
+.download-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+.download-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.download-btn-secondary {
+    background: transparent;
+    border: 2px solid #5865f2;
+}
+
+.download-btn-secondary:hover {
+    background: #5865f2;
+    color: white;
+}
+
+.download-info {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.download-info span {
+    margin: 0 8px;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.feature {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1.25rem;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.feature h3 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+}
+
+.feature h3 svg {
+    width: 18px;
+    height: 18px;
+    color: #57f287;
+}
+
+.feature p {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+}
+
+@media (max-width: 600px) {
+    .features {
+        grid-template-columns: 1fr;
+    }
+}
+    

@@ -548,6 +548,52 @@ def bmac_supporters():
     } for s in supporters]
     return jsonify(result)
 
+# ── Space background — Discord member names for ship labels ──────────────
+_space_members_cache = {'data': [], 'ts': 0}
+_SPACE_MEMBERS_TTL   = 300   # refresh every 5 minutes
+_SPACE_GUILD_ID      = '1284593395188367502'
+_SPACE_ROLE_ID       = '1284601218571829370'
+
+@app.route('/api/space-members')
+def space_members_api():
+    """Return display names of guild members with the spaceship role."""
+    global _space_members_cache
+    now = time.time()
+    if now - _space_members_cache['ts'] > _SPACE_MEMBERS_TTL:
+        token = get_cub_protector_token()
+        if token:
+            try:
+                headers = {'Authorization': f'Bot {token}'}
+                names, after = [], None
+                while True:
+                    url = f'https://discord.com/api/v10/guilds/{_SPACE_GUILD_ID}/members?limit=1000'
+                    if after:
+                        url += f'&after={after}'
+                    r = requests.get(url, headers=headers, timeout=10)
+                    if r.status_code != 200:
+                        break
+                    batch = r.json()
+                    if not batch:
+                        break
+                    for m in batch:
+                        if _SPACE_ROLE_ID in m.get('roles', []):
+                            name = (m.get('nick') or
+                                    m.get('user', {}).get('global_name') or
+                                    m.get('user', {}).get('username', ''))
+                            if name:
+                                names.append(name[:20])
+                    if len(batch) < 1000:
+                        break
+                    after = batch[-1]['user']['id']
+                if names:
+                    _space_members_cache['data'] = names
+                    _space_members_cache['ts'] = now
+            except Exception as e:
+                app.logger.warning(f'[SpaceMembers] {e}')
+    resp = jsonify(_space_members_cache['data'])
+    resp.headers['Cache-Control'] = 'public, max-age=300'
+    return resp
+
 # StreamerBot docs path — normpath removes the '..' so Werkzeug safe_join doesn't 500
 STREAMERBOT_DOCS_PATH = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'streamerbot-docs'))
 

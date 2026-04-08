@@ -438,21 +438,24 @@ async def send(ctx, channel: discord.TextChannel, *, message):
         await channel.send(embed=embed)
 @client.command()
 async def vinvite(ctx, member:discord.Member, interaction:discord.Integration):
-    if ctx.author.voice:
-        channel = ctx.author.voice.channel
-        if "'s Private Channel" in channel.name:
-            await channel.set_permissions(member, connect=True, speak=True, view_channel=True)
-            await interaction.respnse.send_message(f"Done! {member.name} can now see your private channel!!", ephemeral=True)
-            await asyncio.sleep(0.5)
-            await ctx.message.delete()
+    try:
+        if ctx.author.voice:
+            channel = ctx.author.voice.channel
+            if "'s Private Channel" in channel.name:
+                await channel.set_permissions(member, connect=True, speak=True, view_channel=True)
+                await interaction.respnse.send_message(f"Done! {member.name} can now see your private channel!!", ephemeral=True)
+                await asyncio.sleep(0.5)
+                await ctx.message.delete()
+            else:
+                await interaction.respnse.send_message("You are not in a private call!", ephemeral=True)
+                await asyncio.sleep(0.5)
+                await ctx.message.delete()
         else:
-            await interaction.respnse.send_message("You are not in a private call!", ephemeral=True)
+            await interaction.respnse.send_message('you must send this in a voice call', ephemeral=True)
             await asyncio.sleep(0.5)
             await ctx.message.delete()
-    else:
-        await interaction.respnse.send_message('you must send this in a voice call', ephemeral=True)
-        await asyncio.sleep(0.5)
-        await ctx.message.delete()
+    except Exception as e:
+            print(f"ERROR deleting channel {e}")
 @client.command()
 async def summon(ctx):
     if ctx.author.voice:

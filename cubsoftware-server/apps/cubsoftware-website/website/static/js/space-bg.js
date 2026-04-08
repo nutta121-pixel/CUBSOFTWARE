@@ -76,377 +76,280 @@
         PLUTO:   '120,100,90',    // almost none
     };
 
+    /* ── Planet / Earth / Moon images ────────────────────── */
+    const PLANET_IMGS = {};
+    [['SUN',     '/static/images/Planets/sun.png'],
+     ['EARTH',   '/static/images/Planets/earth.jpg'],
+     ['MERCURY', '/static/images/Planets/mercury.png'],
+     ['VENUS',   '/static/images/Planets/venus.png'],
+     ['MARS',    '/static/images/Planets/mars.png'],
+     ['JUPITER', '/static/images/Planets/jupiter.png'],
+     ['SATURN',  '/static/images/Planets/saturn.png'],
+     ['URANUS',  '/static/images/Planets/uranus.png'],
+     ['NEPTUNE', '/static/images/Planets/neptune.png'],
+     ['MOON',    '/static/images/Planets/moon.png'],
+    ].forEach(([k,src])=>{ const i=new Image(); i.src=src; PLANET_IMGS[k]=i; });
+
     /* ── Draw planet ──────────────────────────────────────── */
     function drawPlanet(type, x, y, R) {
-        const bands = BAND_SETS[type];
-        const bh    = (R*2) / bands.length;
+        const img = PLANET_IMGS[type];
+        const atm = ATM[type] || '200,200,200';
+        const atmStr = type==='MERCURY'||type==='PLUTO' ? 0.10 : type==='VENUS' ? 0.45 : 0.26;
 
-        // Atmosphere glow
-        const atmStr = type==='MERCURY'||type==='PLUTO' ? 0.12 : type==='VENUS' ? 0.50 : 0.30;
-        const ag = ctx.createRadialGradient(x,y,R*0.80,x,y,R*1.55);
-        ag.addColorStop(0,  `rgba(${ATM[type]},${atmStr})`);
-        ag.addColorStop(0.5,`rgba(${ATM[type]},${atmStr*0.35})`);
-        ag.addColorStop(1,  `rgba(${ATM[type]},0)`);
-        ctx.fillStyle=ag; ctx.beginPath(); ctx.arc(x,y,R*1.55,0,Math.PI*2); ctx.fill();
-
-        // Saturn rings — back half (behind planet)
         if (type==='SATURN') {
-            ctx.save(); ctx.translate(x,y); ctx.scale(1,0.22);
-            ctx.beginPath(); ctx.ellipse(0,0,R*2.15,R*2.15,0,Math.PI,Math.PI*2);
-            ctx.strokeStyle='rgba(240,200,80,0.55)'; ctx.lineWidth=R*0.62; ctx.stroke();
-            ctx.beginPath(); ctx.ellipse(0,0,R*1.62,R*1.62,0,Math.PI,Math.PI*2);
-            ctx.strokeStyle='rgba(200,160,50,0.35)'; ctx.lineWidth=R*0.30; ctx.stroke();
-            ctx.restore();
+            // Saturn image includes rings — draw full image unclipped, centred on x,y
+            if (img && img.complete && img.naturalWidth) {
+                const aspect = img.naturalHeight / img.naturalWidth;
+                const iw = R * 4.4;
+                const ih = iw * aspect;
+                ctx.drawImage(img, x - iw*0.5, y - ih*0.5, iw, ih);
+            }
+            return;
         }
 
-        // Uranus rings (nearly edge-on, vertical tilt)
-        if (type==='URANUS') {
-            ctx.save(); ctx.translate(x,y); ctx.rotate(Math.PI*0.14); ctx.scale(0.18,1);
-            ctx.beginPath(); ctx.ellipse(0,0,R*1.80,R*1.80,0,Math.PI,Math.PI*2);
-            ctx.strokeStyle='rgba(130,240,230,0.28)'; ctx.lineWidth=R*0.22; ctx.stroke();
-            ctx.restore();
-        }
-
-        // Surface (clipped to sphere)
+        // All other planets: everything inside the clipped circle — no outer ring
+        // Draw image much larger than clip radius — crops the dark shadow/halo
+        // baked into the planet PNGs so only the bare sphere shows
+        const d = R * 3.8;
         ctx.save();
         ctx.beginPath(); ctx.arc(x,y,R,0,Math.PI*2); ctx.clip();
-        bands.forEach((col,i)=>{ ctx.fillStyle=col; ctx.fillRect(x-R,y-R+i*bh,R*2,bh+1); });
-
-        // Planet-specific surface features
-        switch(type) {
-            case 'MERCURY':
-                // Heavy cratering — grey + slightly darker craters
-                [{cx:-0.30,cy:-0.22,r:0.18},{cx:0.20,cy:0.32,r:0.12},{cx:-0.08,cy:0.06,r:0.22},
-                 {cx:0.38,cy:-0.14,r:0.09},{cx:-0.42,cy:0.26,r:0.08},{cx:0.12,cy:-0.38,r:0.10},
-                 {cx:-0.22,cy:0.50,r:0.07},{cx:0.50,cy:0.18,r:0.07}]
-                .forEach(c=>{
-                    ctx.strokeStyle='rgba(50,45,45,0.62)'; ctx.lineWidth=R*0.022;
-                    ctx.beginPath(); ctx.arc(x+c.cx*R,y+c.cy*R,c.r*R,0,Math.PI*2); ctx.stroke();
-                    ctx.fillStyle='rgba(45,40,40,0.22)'; ctx.fill();
-                });
-                // Caloris Basin — large lighter impact region
-                ctx.fillStyle='rgba(165,155,150,0.40)';
-                ctx.beginPath(); ctx.ellipse(x-R*0.15,y+R*0.08,R*0.40,R*0.38,0.3,0,Math.PI*2); ctx.fill();
-                break;
-
-            case 'VENUS':
-                // Dense cloud swirls — no surface visible, all cloud texture
-                ctx.fillStyle='rgba(255,252,210,0.28)';
-                ctx.beginPath(); ctx.ellipse(x+R*0.10,y-R*0.20,R*0.72,R*0.14,-0.2,0,Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.ellipse(x-R*0.20,y+R*0.10,R*0.60,R*0.12, 0.3,0,Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.ellipse(x+R*0.05,y+R*0.38,R*0.50,R*0.10,-0.1,0,Math.PI*2); ctx.fill();
-                ctx.fillStyle='rgba(255,245,180,0.18)';
-                ctx.beginPath(); ctx.ellipse(x-R*0.30,y-R*0.42,R*0.44,R*0.09, 0.4,0,Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.ellipse(x+R*0.25,y+R*0.60,R*0.38,R*0.08,-0.2,0,Math.PI*2); ctx.fill();
-                // Overall bright diffuse layer
-                const vl=ctx.createRadialGradient(x-R*0.18,y-R*0.18,0,x,y,R);
-                vl.addColorStop(0,'rgba(255,252,220,0.22)'); vl.addColorStop(1,'rgba(255,245,180,0)');
-                ctx.fillStyle=vl; ctx.fillRect(x-R,y-R,R*2,R*2);
-                break;
-
-            case 'MARS':
-                // Polar ice caps
-                ctx.fillStyle='rgba(240,248,255,0.85)';
-                ctx.beginPath(); ctx.ellipse(x,y-R*0.80,R*0.46,R*0.20,0,0,Math.PI*2); ctx.fill();
-                ctx.fillStyle='rgba(230,240,255,0.60)';
-                ctx.beginPath(); ctx.ellipse(x,y+R*0.84,R*0.28,R*0.12,0,0,Math.PI*2); ctx.fill();
-                // Craters
-                [{cx:-0.24,cy:-0.10,r:0.13},{cx:0.32,cy:0.28,r:0.10},{cx:-0.12,cy:0.20,r:0.16},
-                 {cx:0.42,cy:-0.18,r:0.08},{cx:-0.38,cy:0.30,r:0.07}]
-                .forEach(c=>{
-                    ctx.strokeStyle='rgba(90,25,8,0.55)'; ctx.lineWidth=R*0.022;
-                    ctx.beginPath(); ctx.arc(x+c.cx*R,y+c.cy*R,c.r*R,0,Math.PI*2); ctx.stroke();
-                    ctx.fillStyle='rgba(80,20,5,0.20)'; ctx.fill();
-                });
-                // Olympus Mons (large shield volcano — slightly darker circle)
-                ctx.fillStyle='rgba(90,25,10,0.22)';
-                ctx.beginPath(); ctx.ellipse(x-R*0.28,y-R*0.22,R*0.18,R*0.15,0.3,0,Math.PI*2); ctx.fill();
-                // Dust haze near limb
-                const ml=ctx.createRadialGradient(x,y,R*0.88,x,y,R);
-                ml.addColorStop(0,'rgba(215,85,50,0)'); ml.addColorStop(1,'rgba(215,85,50,0.18)');
-                ctx.fillStyle=ml; ctx.fillRect(x-R,y-R,R*2,R*2);
-                break;
-
-            case 'JUPITER':
-                // Great Red Spot
-                ctx.fillStyle='rgba(200,55,30,0.90)';
-                ctx.beginPath(); ctx.ellipse(x+R*0.20,y+R*0.12,R*0.22,R*0.14,-0.08,0,Math.PI*2); ctx.fill();
-                ctx.fillStyle='rgba(240,140,60,0.55)';
-                ctx.beginPath(); ctx.ellipse(x+R*0.18,y+R*0.10,R*0.12,R*0.07,-0.08,0,Math.PI*2); ctx.fill();
-                // Band turbulence
-                ctx.strokeStyle='rgba(160,70,20,0.28)'; ctx.lineWidth=R*0.028;
-                for(let i=0;i<5;i++){
-                    ctx.beginPath(); ctx.moveTo(x-R,y+R*(i*0.22-0.35));
-                    ctx.bezierCurveTo(x-R*0.35,y+R*(i*0.22-0.46),x+R*0.35,y+R*(i*0.22-0.20),x+R,y+R*(i*0.22-0.35));
-                    ctx.stroke();
-                }
-                break;
-
-            case 'SATURN':
-                // Subtle polar hexagon hint
-                ctx.fillStyle='rgba(200,180,90,0.20)';
-                ctx.beginPath(); ctx.ellipse(x,y-R*0.72,R*0.42,R*0.18,0,0,Math.PI*2); ctx.fill();
-                break;
-
-            case 'URANUS':
-                // Pale polar brightening — nearly uniform but slight gradient
-                ctx.fillStyle='rgba(180,252,248,0.22)';
-                ctx.beginPath(); ctx.ellipse(x,y-R*0.62,R*0.60,R*0.30,0,0,Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.ellipse(x,y+R*0.65,R*0.48,R*0.22,0,0,Math.PI*2); ctx.fill();
-                break;
-
-            case 'NEPTUNE':
-                // Great Dark Spot
-                ctx.fillStyle='rgba(5,12,80,0.72)';
-                ctx.beginPath(); ctx.ellipse(x-R*0.18,y-R*0.12,R*0.28,R*0.18,0.4,0,Math.PI*2); ctx.fill();
-                // White companion cloud (Scooter)
-                ctx.fillStyle='rgba(220,240,255,0.70)';
-                ctx.beginPath(); ctx.ellipse(x-R*0.08,y-R*0.24,R*0.10,R*0.05,-0.2,0,Math.PI*2); ctx.fill();
-                // White cloud streaks
-                ctx.strokeStyle='rgba(200,230,255,0.55)'; ctx.lineWidth=R*0.030;
-                ctx.beginPath(); ctx.moveTo(x-R,y+R*0.20); ctx.bezierCurveTo(x-R*0.30,y+R*0.15,x+R*0.30,y+R*0.28,x+R,y+R*0.22); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(x-R,y-R*0.48); ctx.bezierCurveTo(x-R*0.30,y-R*0.52,x+R*0.30,y-R*0.42,x+R,y-R*0.46); ctx.stroke();
-                // Faint rings (nearly edge-on)
-                ctx.save(); ctx.translate(x,y); ctx.scale(1,0.12);
-                ctx.beginPath(); ctx.arc(0,0,R*1.45,0,Math.PI*2);
-                ctx.strokeStyle='rgba(80,120,220,0.20)'; ctx.lineWidth=R*0.20; ctx.stroke();
-                ctx.restore();
-                break;
-
-            case 'PLUTO':
-                // Tombaugh Regio — the famous heart shape (bright nitrogen ice)
-                ctx.fillStyle='rgba(240,228,215,0.78)';
-                ctx.beginPath();
-                ctx.save(); ctx.translate(x+R*0.10,y+R*0.05);
-                // Crude heart: two lobes
-                ctx.beginPath(); ctx.ellipse(-R*0.12,0,R*0.24,R*0.20, 0.2,0,Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.ellipse( R*0.12,0,R*0.22,R*0.20,-0.2,0,Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.ellipse(0,R*0.14,R*0.16,R*0.18,0,0,Math.PI*2); ctx.fill();
-                ctx.restore();
-                // Dark polar collar
-                ctx.fillStyle='rgba(50,30,25,0.35)';
-                ctx.beginPath(); ctx.ellipse(x,y-R*0.76,R*0.50,R*0.22,0,0,Math.PI*2); ctx.fill();
-                break;
+        if (img && img.complete && img.naturalWidth) {
+            ctx.drawImage(img, x - d*0.5, y - d*0.5, d, d);
+        } else {
+            ctx.fillStyle='#334'; ctx.fillRect(x-R,y-R,R*2,R*2);
         }
-
-        // Sphere shading (all planets)
-        const shade=ctx.createRadialGradient(x-R*0.28,y-R*0.26,R*0.06,x+R*0.18,y+R*0.18,R);
-        shade.addColorStop(0,'rgba(255,255,255,0.13)'); shade.addColorStop(0.5,'rgba(0,0,0,0)'); shade.addColorStop(1,'rgba(0,0,0,0.60)');
-        ctx.fillStyle=shade; ctx.fillRect(x-R,y-R,R*2,R*2);
         ctx.restore();
-
-        // Saturn rings — front half (in front of planet)
-        if (type==='SATURN') {
-            ctx.save(); ctx.translate(x,y); ctx.scale(1,0.22);
-            ctx.beginPath(); ctx.ellipse(0,0,R*2.15,R*2.15,0,0,Math.PI);
-            ctx.strokeStyle='rgba(240,200,80,0.55)'; ctx.lineWidth=R*0.62; ctx.stroke();
-            ctx.beginPath(); ctx.ellipse(0,0,R*1.62,R*1.62,0,0,Math.PI);
-            ctx.strokeStyle='rgba(200,160,50,0.35)'; ctx.lineWidth=R*0.30; ctx.stroke();
-            ctx.restore();
-        }
-
-        // Uranus rings — front half
-        if (type==='URANUS') {
-            ctx.save(); ctx.translate(x,y); ctx.rotate(Math.PI*0.14); ctx.scale(0.18,1);
-            ctx.beginPath(); ctx.ellipse(0,0,R*1.80,R*1.80,0,0,Math.PI);
-            ctx.strokeStyle='rgba(130,240,230,0.28)'; ctx.lineWidth=R*0.22; ctx.stroke();
-            ctx.restore();
-        }
     }
 
     /* ── Draw Moon ────────────────────────────────────────── */
-    function drawMoon(x, y, R) {
-        const mg=ctx.createRadialGradient(x,y,R*0.85,x,y,R*1.35);
-        mg.addColorStop(0,'rgba(200,195,180,0.18)'); mg.addColorStop(1,'rgba(200,195,180,0)');
-        ctx.fillStyle=mg; ctx.beginPath(); ctx.arc(x,y,R*1.35,0,Math.PI*2); ctx.fill();
-
+    function drawMoon(x, y, R, redAmount) {
+        const img = PLANET_IMGS.MOON;
+        const md = R * 3.8;
         ctx.save(); ctx.beginPath(); ctx.arc(x,y,R,0,Math.PI*2); ctx.clip();
-        ctx.fillStyle='#c4bcac'; ctx.fillRect(x-R,y-R,R*2,R*2);
-
-        ctx.fillStyle='#a09080';
-        ctx.beginPath(); ctx.ellipse(x-R*0.14,y-R*0.08,R*0.36,R*0.26,0.3,0,Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(x+R*0.28,y+R*0.22,R*0.20,R*0.16,-0.4,0,Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(x-R*0.30,y+R*0.28,R*0.16,R*0.13,0.2,0,Math.PI*2); ctx.fill();
-
-        [{cx:0.12,cy:-0.32,r:0.13},{cx:-0.28,cy:0.10,r:0.09},{cx:0.40,cy:-0.16,r:0.07},{cx:-0.08,cy:0.38,r:0.11},{cx:0.26,cy:0.34,r:0.06}]
-        .forEach(c=>{
-            ctx.strokeStyle='rgba(75,65,55,0.60)'; ctx.lineWidth=R*0.024;
-            ctx.beginPath(); ctx.arc(x+c.cx*R,y+c.cy*R,c.r*R,0,Math.PI*2); ctx.stroke();
-            ctx.fillStyle='rgba(75,65,55,0.18)'; ctx.fill();
-        });
-
-        const shade=ctx.createRadialGradient(x-R*0.28,y-R*0.26,R*0.06,x+R*0.16,y+R*0.16,R);
-        shade.addColorStop(0,'rgba(255,255,255,0.10)'); shade.addColorStop(0.5,'rgba(0,0,0,0)'); shade.addColorStop(1,'rgba(0,0,0,0.58)');
-        ctx.fillStyle=shade; ctx.fillRect(x-R,y-R,R*2,R*2);
+        if (img && img.complete && img.naturalWidth) {
+            ctx.drawImage(img, x - md*0.5, y - md*0.5, md, md);
+        } else {
+            ctx.fillStyle='#c4bcac'; ctx.fillRect(x-R,y-R,R*2,R*2);
+        }
+        if (redAmount > 0) {
+            // Blood moon tint — opacity driven by redAmount (0→1)
+            ctx.fillStyle = `rgba(180,30,0,${(0.62 * redAmount).toFixed(3)})`;
+            ctx.fillRect(x-R, y-R, R*2, R*2);
+        }
         ctx.restore();
     }
 
     /* ── Draw Earth (centred, rotating) ──────────────────── */
-    function earthR() { return Math.min(W,H) * (MOBILE ? 0.28 : 0.38); }
+    function earthR() { return Math.min(W,H) * (MOBILE ? 0.22 : 0.32); }
 
     function drawEarth(t) {
         const cx=W*0.5, cy=H*0.5, R=earthR();
-        const rot=(t/120)*Math.PI*2;
+        const img = PLANET_IMGS.EARTH;
 
-        const ag=ctx.createRadialGradient(cx,cy,R*0.85,cx,cy,R*1.70);
-        ag.addColorStop(0,'rgba(90,155,255,0.28)'); ag.addColorStop(0.45,'rgba(50,110,255,0.10)'); ag.addColorStop(1,'rgba(15,70,200,0)');
-        ctx.fillStyle=ag; ctx.beginPath(); ctx.arc(cx,cy,R*1.70,0,Math.PI*2); ctx.fill();
-
+        // Scroll flat map texture horizontally — one full revolution per 120s
+        // The map is drawn at R*2 height (fills the sphere diameter).
+        // Width = R*2 * (naturalWidth/naturalHeight) to preserve the map's aspect ratio.
+        // Two copies placed side-by-side ensure seamless wrapping.
         ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip();
 
-        const og=ctx.createLinearGradient(cx-R,cy,cx+R,cy);
-        og.addColorStop(0,'#0e2248'); og.addColorStop(0.35,'#1a4080'); og.addColorStop(0.65,'#1555a0'); og.addColorStop(1,'#0a1c38');
-        ctx.fillStyle=og; ctx.fillRect(cx-R,cy-R,R*2,R*2);
+        if (img && img.complete && img.naturalWidth) {
+            // Draw taller than the clip circle so the poles (most distorted area of
+            // equirectangular maps) are cropped out — only mid-latitudes (~±65°) show,
+            // which is how a real globe looks. Equator stays centred on cy.
+            const mapH  = R * 2.8;
+            const mapW  = mapH * (img.naturalWidth / img.naturalHeight);
+            const scrollX = ((t % 120) / 120) * mapW;
+            const x0 = cx - mapW * 0.5 + scrollX;
+            const y0 = cy - mapH * 0.5;   // centre equator on sphere centre
+            ctx.drawImage(img, x0,        y0, mapW, mapH);
+            ctx.drawImage(img, x0 - mapW, y0, mapW, mapH);
+        } else {
+            ctx.fillStyle='#1a5fa0'; ctx.fillRect(cx-R,cy-R,R*2,R*2);
+        }
 
-        ctx.save(); ctx.translate(cx,cy); ctx.rotate(rot);
-        ctx.fillStyle='#246832';
-        ctx.beginPath(); ctx.ellipse(R*0.08,-R*0.10,R*0.30,R*0.40,0.15,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#2c7a3a';
-        ctx.beginPath(); ctx.ellipse(R*0.12,R*0.20,R*0.18,R*0.25,-0.10,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#2e7c38';
-        ctx.beginPath(); ctx.ellipse(R*0.44,-R*0.04,R*0.20,R*0.42,-0.08,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#246832';
-        ctx.beginPath(); ctx.ellipse(R*0.72,-R*0.06,R*0.26,R*0.34,0.12,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#2e7c38';
-        ctx.beginPath(); ctx.ellipse(R*0.80,R*0.30,R*0.14,R*0.10,0.3,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#246832';
-        ctx.beginPath(); ctx.ellipse(-R*0.60,-R*0.08,R*0.24,R*0.30,-0.08,0,Math.PI*2); ctx.fill();
-        ctx.restore();
-
-        ctx.fillStyle='rgba(230,245,255,0.90)';
-        ctx.beginPath(); ctx.ellipse(cx,cy-R*0.80,R*0.52,R*0.26,0,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='rgba(215,235,255,0.75)';
-        ctx.beginPath(); ctx.ellipse(cx,cy+R*0.84,R*0.38,R*0.18,0,0,Math.PI*2); ctx.fill();
-
-        ctx.save(); ctx.translate(cx,cy); ctx.rotate(rot*0.62);
-        ctx.fillStyle='rgba(255,255,255,0.22)';
-        ctx.beginPath(); ctx.ellipse(R*0.16,-R*0.26,R*0.38,R*0.08,-0.3,0,Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(-R*0.24,R*0.16,R*0.28,R*0.07,0.4,0,Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(R*0.40,R*0.34,R*0.22,R*0.06,-0.1,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='rgba(255,255,255,0.16)';
-        ctx.beginPath(); ctx.ellipse(-R*0.42,-R*0.16,R*0.20,R*0.06,0.6,0,Math.PI*2); ctx.fill();
-        ctx.restore();
-
+        // Sphere shading — dark limb, light highlight (gives 3D look)
         const shade=ctx.createRadialGradient(cx-R*0.32,cy-R*0.30,R*0.06,cx+R*0.18,cy+R*0.18,R);
-        shade.addColorStop(0,'rgba(255,255,255,0.16)'); shade.addColorStop(0.5,'rgba(0,0,0,0)'); shade.addColorStop(1,'rgba(0,0,0,0.62)');
+        shade.addColorStop(0,'rgba(255,255,255,0.14)'); shade.addColorStop(0.5,'rgba(0,0,0,0)'); shade.addColorStop(1,'rgba(0,0,0,0.55)');
         ctx.fillStyle=shade; ctx.fillRect(cx-R,cy-R,R*2,R*2);
-        ctx.restore();
 
-        const rim=ctx.createRadialGradient(cx,cy,R*0.92,cx,cy,R*1.12);
-        rim.addColorStop(0,'rgba(110,180,255,0.34)'); rim.addColorStop(0.55,'rgba(80,155,255,0.14)'); rim.addColorStop(1,'rgba(50,130,255,0)');
-        ctx.fillStyle=rim; ctx.beginPath(); ctx.arc(cx,cy,R*1.12,0,Math.PI*2); ctx.fill();
+        // Night-side shadow — sun is top-right, so left side is in shadow.
+        // Linear gradient from dark-left to transparent-right creates a terminator line.
+        const night=ctx.createLinearGradient(cx-R, cy, cx+R*0.25, cy);
+        night.addColorStop(0,   'rgba(0,0,15,0.88)');
+        night.addColorStop(0.30,'rgba(0,0,10,0.60)');
+        night.addColorStop(0.55,'rgba(0,0,5,0.15)');
+        night.addColorStop(0.68,'rgba(0,0,0,0)');
+        ctx.fillStyle=night; ctx.fillRect(cx-R,cy-R,R*2,R*2);
+
+        // Atmosphere edge — thin blue glow around the rim, drawn inside the clip
+        const rim=ctx.createRadialGradient(cx,cy,R*0.82,cx,cy,R);
+        rim.addColorStop(0,'rgba(80,160,255,0)'); rim.addColorStop(1,'rgba(80,160,255,0.35)');
+        ctx.fillStyle=rim; ctx.fillRect(cx-R,cy-R,R*2,R*2);
+
+        ctx.restore();
     }
 
     /* ── Moon always orbiting Earth ──────────────────────── */
-    // moonBehind: sin(angle) < 0 means Moon is in the back half of its orbit
+    // Orbit is a wide flat ellipse — like a tilted ring around Earth.
+    // sin(ang) < 0  →  upper arc  →  behind Earth
+    // sin(ang) > 0  →  lower arc  →  in front of Earth
+    const MOON_ORB_H = () => earthR() * 2.1;   // horizontal radius
+    const MOON_ORB_V = () => earthR() * 0.55;  // vertical radius (flat perspective)
     function moonAngle(t) { return (t / 120) * Math.PI * 2; }
     function moonIsBehind(t) { return Math.sin(moonAngle(t)) < 0; }
+
+    // Draw the orbit ring — pass front=false for the back arc (drawn before Earth),
+    // front=true for the front arc (drawn after Earth)
+    function drawOrbitRing(front) {
+        const cx = W*0.5, cy = H*0.5;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.30)';
+        ctx.lineWidth   = 1.5;
+        ctx.beginPath();
+        // front arc: angles 0→π (sin > 0, below centre = in front)
+        // back arc:  angles π→2π (sin < 0, above centre = behind)
+        ctx.ellipse(cx, cy, MOON_ORB_H(), MOON_ORB_V(), 0,
+                    front ? 0 : Math.PI,
+                    front ? Math.PI : Math.PI*2);
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    let _moonWasBehind  = false;
+    let _moonRedTarget  = 0;      // 0 = normal, 1 = full blood moon
+    let _moonRedAmount  = 0;      // current interpolated intensity
+    // Step per frame — at ~30fps a full transition takes ~110 seconds,
+    // so the moon is still mid-fade when it reappears from behind Earth (~60s hidden).
+    const MOON_RED_STEP = 0.0003;
+
     function drawOrbitingMoon(t) {
+        const behind = moonIsBehind(t);
+
+        if (behind && !_moonWasBehind) {
+            // Moon just slipped behind Earth — decide this orbit's colour
+            if (_moonRedTarget < 0.5) {
+                // Currently normal: 1 in 10,000 chance of a blood moon
+                if (Math.random() < 1 / 10000) _moonRedTarget = 1;
+            } else {
+                // Currently red: end the blood moon next pass
+                _moonRedTarget = 0;
+            }
+        }
+        _moonWasBehind = behind;
+
+        // Smoothly slide intensity toward target each frame
+        if (_moonRedAmount < _moonRedTarget) {
+            _moonRedAmount = Math.min(1, _moonRedAmount + MOON_RED_STEP);
+        } else if (_moonRedAmount > _moonRedTarget) {
+            _moonRedAmount = Math.max(0, _moonRedAmount - MOON_RED_STEP);
+        }
+
         const cx  = W*0.5, cy = H*0.5;
-        const eR  = earthR();
-        const orb = eR * 2.0;
         const ang = moonAngle(t);
-        const mx  = cx + Math.cos(ang) * orb;
-        const my  = cy + Math.sin(ang) * orb;
-        const R   = eR * 0.28;
-        drawMoon(mx, my, R);
+        const mx  = cx + Math.cos(ang) * MOON_ORB_H();
+        const my  = cy + Math.sin(ang) * MOON_ORB_V();
+        drawMoon(mx, my, earthR() * 0.18, _moonRedAmount);
+    }
+
+    /* ── ISS orbiting Earth (fast, tight) ───────────────── */
+    // ISS orbit is much tighter than the Moon and 4× faster
+    const ISS_ORB_H = () => earthR() * 1.18;
+    const ISS_ORB_V = () => earthR() * 0.32;
+    function issAngle(t) { return (t / 28) * Math.PI * 2; }
+    function issIsBehind(t) { return Math.sin(issAngle(t)) < 0; }
+
+    function drawOrbitingISS(t) {
+        const cx  = W*0.5, cy = H*0.5;
+        const ang = issAngle(t);
+        const ix  = cx + Math.cos(ang) * ISS_ORB_H();
+        const iy  = cy + Math.sin(ang) * ISS_ORB_V();
+        // Tangent direction so ISS faces the way it's travelling
+        const tx  = -ISS_ORB_H() * Math.sin(ang);
+        const ty  =  ISS_ORB_V() * Math.cos(ang);
+        drawISS(ix, iy, Math.atan2(ty, tx));
     }
 
     /* ── Randomised pass events (different every page load) ── */
-    // Realistic sizes relative to each other
+    // Sizes as fraction of min(W,H) — proportional to Earth (0.32),
+    // capped so giants don't swamp the screen
     const PLANET_SIZES = {
-        MERCURY:0.032, VENUS:0.088, MARS:0.052,
-        JUPITER:0.160, SATURN:0.140,
-        URANUS:0.082,  NEPTUNE:0.078, PLUTO:0.022,
-        MOON:0.040,
+        MERCURY:0.022, VENUS:0.058, MARS:0.034,
+        JUPITER:0.180, SATURN:0.155,
+        URANUS:0.090,  NEPTUNE:0.086, PLUTO:0.016,
+        MOON:0.030,
     };
 
-    /* ── Random screen-edge entry/exit point generator ───── */
-    // Edges: 0=left, 1=right, 2=top, 3=bottom
-    // Returns a point (as 0-1 fractions) just off the chosen screen edge.
-    // margin pushes the point fully off-screen so large planets are hidden.
-    function edgePoint(edge, margin) {
-        const m = margin || 0.28;
-        const r = Math.random();
-        switch(edge) {
-            case 0: return {x:-m,          y:r};           // left edge
-            case 1: return {x:1+m,         y:r};           // right edge
-            case 2: return {x:r,           y:-m};          // top edge
-            case 3: return {x:r,           y:1+m};         // bottom edge
-        }
-    }
+    /* ── Planet transit system ───────────────────────────── */
+    // One planet at a time crosses the back arc (behind Earth/Moon).
+    // It enters off-screen from one side, arcs over the top, exits off-screen
+    // the other side. Fades in/out at the edges so there's no pop-in.
+    const ORB_V_RATIO = 0.55 / 2.1; // same perspective tilt as Moon
 
-    function generatePassEvents() {
-        const pool = ['MERCURY','VENUS','MARS','JUPITER','SATURN','URANUS','NEPTUNE','PLUTO','ISS'];
-        pool.sort(()=>Math.random()-0.5);
-
-        const events = [];
-        let t = Math.random() * 15;
-
-        pool.forEach(type=>{
-            const isISS    = type==='ISS';
-            const baseTime = isISS ? 12 : 20 + Math.random()*38;
-            if (t + baseTime > 288) return;
-
-            const behind = !isISS && Math.random() < 0.4;
-
-            if (isISS) {
-                // ISS always crosses horizontally (realistic low orbit)
-                const dir  = Math.random()>0.5 ? 1 : -1;
-                const yFrac= 0.05 + Math.random()*0.90; // any vertical position
-                events.push({type:'ISS', tStart:t, cross:baseTime, yFrac, dir, behind:false});
-            } else {
-                // Pick a random entry edge, then a different exit edge
-                const entryEdge = Math.floor(Math.random()*4);
-                let exitEdge;
-                do { exitEdge = Math.floor(Math.random()*4); } while (exitEdge===entryEdge);
-
-                const margin = PLANET_SIZES[type] * 3.0; // proportional off-screen margin
-                const p0 = edgePoint(entryEdge, margin);
-                const p1 = edgePoint(exitEdge,  margin);
-
-                // Quadratic bezier control point: nudge midpoint randomly for a gentle curve
-                const midX = (p0.x+p1.x)*0.5 + (Math.random()-0.5)*0.30;
-                const midY = (p0.y+p1.y)*0.5 + (Math.random()-0.5)*0.30;
-
-                events.push({
-                    type, tStart:t, cross:baseTime,
-                    x0:p0.x, y0:p0.y,
-                    x1:p1.x, y1:p1.y,
-                    cx:midX,  cy:midY,   // bezier control point
-                    size:PLANET_SIZES[type], behind,
-                });
-            }
-
-            t += baseTime + 5 + Math.random()*18;
+    const PLANET_QUEUE = (() => {
+        const all = ['MERCURY','VENUS','MARS','JUPITER','SATURN','URANUS','NEPTUNE','PLUTO'];
+        all.sort(() => Math.random() - 0.5);
+        const count = 4 + Math.floor(Math.random() * 3);
+        return all.slice(0, count).map((type, i, arr) => {
+            const frac   = arr.length > 1 ? i / (arr.length - 1) : 0;
+            const hMult  = 4.0 + frac * 3.0 + (Math.random() - 0.5) * 0.3; // 3.9–7.1× earthR (further back)
+            const arcDur = 45  + frac * 65   + Math.random() * 15;           // 45–125s crossing
+            return { type, hMult, arcDur, dir: 1 }; // always left→right
         });
+    })();
 
-        return events;
-    }
+    let _pIdx      = 0;
+    let _pStartMs  = performance.now();
+    let _pGapMs    = 2000 + Math.random() * 6000;
+    let _pInGap    = false;
 
-    const PASS_EVENTS = generatePassEvents();
+    function drawActivePlanet() {
+        const now     = performance.now();
+        const def     = PLANET_QUEUE[_pIdx];
+        const arcMs   = def.arcDur * 1000;
+        const elapsed = now - _pStartMs;
 
-    function getEventPos(ev, t) {
-        const rel = ((t - ev.tStart) % CYCLE + CYCLE) % CYCLE;
-        if (rel > ev.cross) return null;
-        const p = rel / ev.cross;
-        if (ev.type==='ISS') {
-            const x = ev.dir>0 ? (-0.06+p*1.12)*W : (1.06-p*1.12)*W;
-            return {x, y:ev.yFrac*H, p};
+        if (_pInGap) {
+            if (elapsed >= _pGapMs) {
+                _pIdx     = (_pIdx + 1) % PLANET_QUEUE.length;
+                _pStartMs = now;
+                _pGapMs   = 2000 + Math.random() * 6000;
+                _pInGap   = false;
+            }
+            return;
         }
-        // Quadratic bezier interpolation using stored control point
-        const q = 1-p;
-        const x = (q*q*ev.x0 + 2*q*p*ev.cx + p*p*ev.x1) * W;
-        const y = (q*q*ev.y0 + 2*q*p*ev.cy + p*p*ev.y1) * H;
-        return {x, y, p};
+
+        if (elapsed >= arcMs) {
+            _pStartMs = now;
+            _pInGap   = true;
+            return;
+        }
+
+        const progress = elapsed / arcMs;
+        // Always left → right: angle sweeps π → 2π over the top (back arc)
+        const ang    = Math.PI + progress * Math.PI;
+        const sinAng = Math.sin(ang);
+        // Fade over the first/last 30% of the sin range to avoid pop-in at edges
+        const alpha  = Math.min(1, Math.abs(sinAng) / 0.30);
+
+        const cx   = W * 0.5, cy = H * 0.5;
+        const eR   = earthR();
+        const orbH = eR * def.hMult;
+        const orbV = orbH * ORB_V_RATIO;
+        const px   = cx + Math.cos(ang) * orbH;
+        const py   = cy + Math.sin(ang) * orbV;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        drawPlanet(def.type, px, py, Math.min(W, H) * PLANET_SIZES[def.type]);
+        ctx.restore();
     }
 
     /* ── ISS ──────────────────────────────────────────────── */
-    const ISS_S = MOBILE ? 7 : 12;
+    const ISS_S = MOBILE ? 0.7 : 1.2;
 
-    function drawISS(x, y) {
+    function drawISS(x, y, angle) {
         const s=ISS_S;
-        ctx.save(); ctx.translate(x,y); ctx.rotate(-0.04);
+        ctx.save(); ctx.translate(x,y); ctx.rotate(angle !== undefined ? angle : -0.04);
         const tg=ctx.createLinearGradient(0,-s*0.42,0,s*0.42);
         tg.addColorStop(0,'#b8c2d4'); tg.addColorStop(0.5,'#dce6f4'); tg.addColorStop(1,'#8892a4');
         [-6.8,-3.4,3.4,6.8].forEach(px=>{
@@ -804,12 +707,20 @@
 
     /* ── Draw all 10 ships ────────────────────────────────── */
     function drawShips(t) {
-        maybeReshuffle();
         activeShipRects.length=0;
 
         ships.forEach((sh,idx)=>{
             if (!sh.s) return;
             const lT = ((t/sh.period)+sh.phase) % 1;
+
+            // Detect when ship completes a loop (lT wraps 1→0) — assign new random name/type
+            if (sh._prevLT !== undefined && lT < sh._prevLT) {
+                const m = memberData[Math.floor(Math.random()*memberData.length)] || {name:'???',joinedAt:''};
+                sh.name     = m.name;
+                sh.joinedAt = m.joinedAt;
+                sh.type     = Math.random()>0.45 ? 'ROCKET' : 'UFO';
+            }
+            sh._prevLT = lT;
 
             // Direction vector for this ship's path
             const dx = sh.x1-sh.x0;
@@ -901,6 +812,31 @@
         });
     }
 
+    /* ── Draw Sun (fixed top-right corner, partially off-screen) ── */
+    function drawSun() {
+        const img = PLANET_IMGS.SUN;
+        const R   = Math.min(W,H) * 0.30;
+        const sx  = W + R * 0.10;   // mostly off-screen right
+        const sy  = -R * 0.10;      // mostly off-screen top
+
+        // Outer corona glow
+        const glow = ctx.createRadialGradient(sx,sy,R*0.5,sx,sy,R*2.8);
+        glow.addColorStop(0,'rgba(255,210,80,0.30)');
+        glow.addColorStop(0.4,'rgba(255,160,20,0.10)');
+        glow.addColorStop(1,'rgba(255,120,0,0)');
+        ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(sx,sy,R*2.8,0,Math.PI*2); ctx.fill();
+
+        // Sun image clipped to circle
+        const d = R * 2.0;
+        ctx.save(); ctx.beginPath(); ctx.arc(sx,sy,R,0,Math.PI*2); ctx.clip();
+        if (img && img.complete && img.naturalWidth) {
+            ctx.drawImage(img, sx-R, sy-R, d, d);
+        } else {
+            ctx.fillStyle='#ffcc00'; ctx.fillRect(sx-R,sy-R,d,d);
+        }
+        ctx.restore();
+    }
+
     /* ── Render loop ──────────────────────────────────────── */
     let lastTs=0;
     function render(ts) {
@@ -913,31 +849,25 @@
         ctx.fillStyle='rgba(4,4,20,1)';
         ctx.fillRect(0,0,W,H);
 
+        drawSun();
         drawNebulae(t);
         drawStars(t);
 
-        // Helper: draw one pass event
-        function drawPassEvent(ev) {
-            const pos=getEventPos(ev,t);
-            if(!pos) return;
-            const {x,y}=pos;
-            if (ev.type==='ISS') {
-                drawISS(x,y);
-            } else {
-                drawPlanet(ev.type,x,y,Math.min(W,H)*ev.size);
-            }
-        }
+        // 1. One planet at a time — back arc only, behind Earth/Moon/ISS
+        drawActivePlanet();
 
-        // 1. Objects that pass BEHIND Earth (drawn before Earth)
+        // 2. Back arc of orbit ring + ISS/Moon behind Earth
+        drawOrbitRing(false);
+        if (issIsBehind(t)) drawOrbitingISS(t);
         if (moonIsBehind(t)) drawOrbitingMoon(t);
-        PASS_EVENTS.forEach(ev=>{ if (ev.behind) drawPassEvent(ev); });
 
-        // 2. Earth — always centred
+        // 3. Earth — always centred
         drawEarth(t);
 
-        // 3. Objects that pass IN FRONT of Earth (drawn after Earth)
+        // 4. Front arc of orbit ring + ISS/Moon in front of Earth
+        drawOrbitRing(true);
+        if (!issIsBehind(t)) drawOrbitingISS(t);
         if (!moonIsBehind(t)) drawOrbitingMoon(t);
-        PASS_EVENTS.forEach(ev=>{ if (!ev.behind) drawPassEvent(ev); });
 
         drawShips(t);
         drawShoots(t);

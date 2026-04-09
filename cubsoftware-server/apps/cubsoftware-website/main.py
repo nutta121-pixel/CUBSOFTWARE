@@ -526,6 +526,13 @@ def _before_request_logging():
     if request.path in ('/ip-ban-appeal', '/api/ip-ban-appeal'):
         return None
 
+    # Private/localhost IPs — never ban them (would break the server) but still log scanner hits
+    _PRIVATE_PREFIXES = ('127.', '::1', '10.', '192.168.', '172.16.', '172.17.', '172.18.',
+                         '172.19.', '172.20.', '172.21.', '172.22.', '172.23.', '172.24.',
+                         '172.25.', '172.26.', '172.27.', '172.28.', '172.29.', '172.30.',
+                         '172.31.')
+    _is_private_ip = ip and any(ip.startswith(p) for p in _PRIVATE_PREFIXES)
+
     # Auto-ban: block already-banned scanner IPs immediately
     if ip in _auto_banned_ips:
         # Re-validate against persistent storage — allows external removals (bot /ip unban,
@@ -611,6 +618,9 @@ def _before_request_logging():
 
     # ── Helper: execute a ban immediately (no 3-strike grace) ────────────────
     def _do_instant_ban(reason_path):
+        if _is_private_ip:
+            _web_log('Security', f'SUSPICIOUS local/private IP {ip} — would instant-ban but skipping (not banneable): {reason_path}')
+            return None
         now_utc    = datetime.now(timezone.utc)
         banned_at  = now_utc.isoformat()
         expires_at = (now_utc + timedelta(days=_BAN_TTL_DAYS)).isoformat()
@@ -636,6 +646,9 @@ def _before_request_logging():
             hits = _scanner_hits[ip]['count']
         remaining = _SCANNER_THRESHOLD - hits
         _web_log('Security', f'Scanner {label} #{hits} from {ip}: {reason_path} UA={ua[:60]} ({remaining} left before ban)')
+        if _is_private_ip:
+            _web_log('Security', f'SUSPICIOUS local/private IP {ip} — scanner activity detected but not banned')
+            return None
         if hits >= _SCANNER_THRESHOLD:
             now_utc    = datetime.now(timezone.utc)
             banned_at  = now_utc.isoformat()

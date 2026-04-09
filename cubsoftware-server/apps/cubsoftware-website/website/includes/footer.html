@@ -17,30 +17,212 @@
     </div>
 </footer>
 
-<!-- Cookie Consent Banner -->
+<!-- ===== COOKIE CONSENT SYSTEM ===== -->
+
+<!-- Initial Banner -->
 <div class="cookie-banner" id="cookieBanner" role="dialog" aria-label="Cookie consent">
     <div class="cookie-banner-inner">
         <div class="cookie-banner-text">
-            <p>We use cookies to keep you logged in, remember your preferences, and improve your experience. By clicking <strong>Accept</strong> you agree to our use of cookies as described in our <a href="/privacy">Privacy Policy</a>.</p>
+            <p>We use cookies to keep you logged in, remember your preferences, and improve your experience.</p>
+            <p>By clicking <strong>Accept All</strong> you agree to our use of cookies as described in our <a href="/privacy">Privacy Policy</a>.</p>
         </div>
         <div class="cookie-banner-actions">
-            <button class="cookie-btn-accept" onclick="cookieConsent('accept')">Accept</button>
-            <button class="cookie-btn-decline" onclick="cookieConsent('decline')">Decline</button>
+            <button class="cookie-btn-accept" onclick="CubCookie.acceptAll()">Accept All</button>
+            <button class="cookie-btn-manage" onclick="CubCookie.openModal()">Manage Cookies</button>
+            <button class="cookie-btn-decline" onclick="CubCookie.declineAll()">Decline All</button>
+        </div>
+    </div>
+</div>
+
+<!-- Declined Notice Bar -->
+<div class="cookie-declined-bar" id="cookieDeclinedBar" role="alert">
+    <div class="cookie-declined-bar-inner">
+        <div class="cookie-declined-bar-text">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Cookies declined — some features like staying logged in may not work as expected.
+        </div>
+        <div class="cookie-declined-bar-actions">
+            <button class="btn-reaccept" onclick="CubCookie.acceptAll()">Accept All</button>
+            <button class="btn-manage-small" onclick="CubCookie.openModal()">Manage</button>
+            <button class="btn-dismiss-bar" onclick="CubCookie.dismissBar()" title="Dismiss for this visit">&#x2715;</button>
+        </div>
+    </div>
+</div>
+
+<!-- Floating Settings Button -->
+<button class="cookie-float-btn" id="cookieFloatBtn" onclick="CubCookie.openModal()" title="Cookie Settings" aria-label="Cookie Settings">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+</button>
+
+<!-- Preferences Modal -->
+<div class="cookie-modal-overlay" id="cookieModalOverlay" onclick="CubCookie.closeModal()">
+    <div class="cookie-modal" onclick="event.stopPropagation()" role="dialog" aria-label="Cookie preferences">
+        <div class="cookie-modal-header">
+            <h3>Cookie Settings</h3>
+            <button class="cookie-modal-close" onclick="CubCookie.closeModal()">&#x2715;</button>
+        </div>
+        <div class="cookie-modal-body">
+            <p class="cookie-modal-desc">Choose which cookies you allow. Your choice is saved and can be changed at any time using the settings button on every page.</p>
+
+            <div class="cookie-toggle-row">
+                <div class="cookie-toggle-info">
+                    <div class="cookie-toggle-name">Essential</div>
+                    <div class="cookie-toggle-desc">Keeps you logged in, secures your session, and allows tools like the affiliate dashboard and account page to work. <span id="cookieEssentialWarning" style="display:none;color:rgba(245,158,11,0.9);font-weight:600;">Warning: turning this off will sign you out immediately. You can still log in, but you won't stay signed in between visits.</span><span id="cookieEssentialNormal">Disabling means you must sign in again every time you open the site.</span></div>
+                </div>
+                <label class="cookie-switch">
+                    <input type="checkbox" id="cookieEssential" onchange="CubCookie.onEssentialChange(this)">
+                    <span class="cookie-switch-slider"></span>
+                </label>
+            </div>
+
+            <div class="cookie-toggle-row">
+                <div class="cookie-toggle-info">
+                    <div class="cookie-toggle-name">Functional</div>
+                    <div class="cookie-toggle-desc">Saves things like your saved settings, UI preferences, and other choices so you don't have to re-configure them every visit. Disabling this means preferences reset when you close the tab.</div>
+                </div>
+                <label class="cookie-switch">
+                    <input type="checkbox" id="cookieFunctional">
+                    <span class="cookie-switch-slider"></span>
+                </label>
+            </div>
+
+            <div class="cookie-toggle-row">
+                <div class="cookie-toggle-info">
+                    <div class="cookie-toggle-name">Analytics &amp; Tracking</div>
+                    <div class="cookie-toggle-desc">Used for affiliate referral tracking (the <code style="font-size:0.75rem;background:rgba(255,255,255,0.07);padding:1px 4px;border-radius:4px;">__cub_vid</code> visitor cookie) and understanding how tools are used so we can improve them. No data is sold or shared with third parties. Disabling this means affiliate links won't track your visit.</div>
+                </div>
+                <label class="cookie-switch">
+                    <input type="checkbox" id="cookieAnalytics">
+                    <span class="cookie-switch-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="cookie-modal-footer">
+            <button class="cookie-btn-decline" onclick="CubCookie.closeModal()">Cancel</button>
+            <button class="cookie-btn-manage" onclick="CubCookie.savePrefs()">Save Preferences</button>
+            <button class="cookie-btn-accept" onclick="CubCookie.acceptAll()">Accept All</button>
         </div>
     </div>
 </div>
 
 <script>
 (function () {
-    var KEY = 'cub_cookie_consent';
-    var banner = document.getElementById('cookieBanner');
-    if (!banner) return;
-    if (!localStorage.getItem(KEY)) {
-        setTimeout(function () { banner.classList.add('visible'); }, 300);
+    var KEY = 'cub_cookie_prefs';
+
+    // Move all elements to body so position:fixed works regardless of parent transforms
+    ['cookieBanner','cookieDeclinedBar','cookieFloatBtn','cookieModalOverlay'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) document.body.appendChild(el);
+    });
+
+    var banner       = document.getElementById('cookieBanner');
+    var declinedBar  = document.getElementById('cookieDeclinedBar');
+    var floatBtn     = document.getElementById('cookieFloatBtn');
+    var modalOverlay = document.getElementById('cookieModalOverlay');
+
+    function getPrefs() {
+        try { return JSON.parse(localStorage.getItem(KEY)); } catch(e) { return null; }
     }
-    window.cookieConsent = function (choice) {
-        localStorage.setItem(KEY, choice);
-        banner.classList.remove('visible');
+
+    function savePrefs(prefs) {
+        try { localStorage.setItem(KEY, JSON.stringify(prefs)); } catch(e) {}
+    }
+
+    function hideBanner()      { banner.classList.remove('visible'); }
+    function showDeclinedBar() { declinedBar.classList.add('visible'); }
+    function hideDeclinedBar() { declinedBar.classList.remove('visible'); }
+    function showFloatBtn()    { floatBtn.classList.add('visible'); }
+
+    function init() {
+        var prefs = getPrefs();
+        if (!prefs) {
+            // First visit — show banner after short delay
+            setTimeout(function() { banner.classList.add('visible'); }, 400);
+        } else if (prefs.status === 'declined') {
+            showDeclinedBar();
+            showFloatBtn();
+        } else {
+            // Accepted (all or custom) — just show the float button
+            showFloatBtn();
+        }
+    }
+
+    window.CubCookie = {
+        acceptAll: function() {
+            savePrefs({ status: 'all', functional: true, analytics: true });
+            hideBanner();
+            hideDeclinedBar();
+            modalOverlay.classList.remove('visible');
+            showFloatBtn();
+        },
+
+        declineAll: function() {
+            // Store only the consent decision — no functional/analytics storage
+            savePrefs({ status: 'declined', functional: false, analytics: false });
+            hideBanner();
+            modalOverlay.classList.remove('visible');
+            showDeclinedBar();
+            showFloatBtn();
+        },
+
+        onEssentialChange: function(checkbox) {
+            var warn = document.getElementById('cookieEssentialWarning');
+            var norm = document.getElementById('cookieEssentialNormal');
+            if (warn) warn.style.display = checkbox.checked ? 'none' : 'inline';
+            if (norm) norm.style.display = checkbox.checked ? 'inline' : 'none';
+        },
+
+        openModal: function() {
+            var prefs = getPrefs() || {};
+            var essentialOn = prefs.status !== 'declined' && prefs.essential !== false;
+            var essentialChk = document.getElementById('cookieEssential');
+            essentialChk.checked = essentialOn;
+            document.getElementById('cookieFunctional').checked = prefs.functional !== false;
+            document.getElementById('cookieAnalytics').checked  = prefs.analytics  !== false;
+            // Sync warning state
+            var warn = document.getElementById('cookieEssentialWarning');
+            var norm = document.getElementById('cookieEssentialNormal');
+            if (warn) warn.style.display = essentialOn ? 'none' : 'inline';
+            if (norm) norm.style.display = essentialOn ? 'inline' : 'none';
+            modalOverlay.classList.add('visible');
+        },
+
+        closeModal: function() {
+            modalOverlay.classList.remove('visible');
+        },
+
+        dismissBar: function() {
+            // Hides the bar for this page session only — preference unchanged, reappears on refresh
+            hideDeclinedBar();
+        },
+
+        savePrefs: function() {
+            var essential  = document.getElementById('cookieEssential').checked;
+            var functional = document.getElementById('cookieFunctional').checked;
+            var analytics  = document.getElementById('cookieAnalytics').checked;
+            var declined   = !essential && !functional && !analytics;
+            savePrefs({
+                status:     declined ? 'declined' : (essential && functional && analytics ? 'all' : 'custom'),
+                essential:  essential,
+                functional: functional,
+                analytics:  analytics
+            });
+            modalOverlay.classList.remove('visible');
+            hideBanner();
+            if (!essential) {
+                // Sign the user out — session cookies will no longer persist
+                fetch('/logout', { method: 'GET', credentials: 'same-origin' }).catch(function(){});
+                fetch('/affiliate/auth/logout', { method: 'GET', credentials: 'same-origin' }).catch(function(){});
+                showDeclinedBar();
+            } else if (declined) {
+                showDeclinedBar();
+            } else {
+                hideDeclinedBar();
+            }
+            showFloatBtn();
+        }
     };
+
+    init();
 })();
 </script>

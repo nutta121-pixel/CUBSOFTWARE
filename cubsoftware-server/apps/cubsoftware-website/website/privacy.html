@@ -126,7 +126,7 @@
                 <h2>6. Authentication (Discord &amp; Twitch OAuth)</h2>
                 <p>CUB SOFTWARE uses a unified login system supporting both Discord and Twitch OAuth. When you log in:</p>
                 <ul>
-                    <li>We store a session cookie to keep you authenticated across visits</li>
+                    <li>We store a session cookie to keep you authenticated across visits (only if Essential cookies are enabled in your cookie preferences)</li>
                     <li>We store your provider (Discord or Twitch), user ID, display name, and avatar URL in your session</li>
                     <li>You may link a second account (e.g. link Twitch to your Discord login); both accounts' identifiers are then associated in your session</li>
                     <li>We do not store your OAuth access tokens beyond the current session, except where a Twitch token is required for live chat functionality (Multi-Twitch)</li>
@@ -205,20 +205,14 @@
                 <p>When you share content via these services, you accept that the content becomes accessible to anyone with the link.</p>
 
                 <h2>10. Cookies and Tracking Technologies</h2>
-                <p>We use cookies and similar technologies to:</p>
+                <p>We use cookies and similar browser storage technologies to maintain your session, remember your preferences, and understand how our Services are used. When you first visit CUB SOFTWARE, a cookie consent banner is shown that lets you choose exactly which categories of cookies you allow.</p>
+                <p>We use three categories of cookies:</p>
                 <ul>
-                    <li>Maintain your session and authentication state</li>
-                    <li>Remember your preferences and settings</li>
-                    <li>Analyze Service usage and performance</li>
-                    <li>Prevent fraud and abuse</li>
+                    <li><strong>Essential Cookies (optional):</strong> Required for core functionality including session management, login authentication, and security. Two cookies are used: <code>session</code> (current session state) and <code>cub_remember</code> (persistent login token, set on each login, valid for up to 30 days, deleted on logout). If disabled, you can still use the site and log in, but you will not remain signed in between visits — your session clears when you close the browser.</li>
+                    <li><strong>Functional Cookies (optional):</strong> Remember your preferences and settings across sessions to improve your experience. Only set if you have accepted this category.</li>
+                    <li><strong>Analytics &amp; Tracking Cookies (optional):</strong> Help us understand how users interact with our Services. Also powers affiliate referral click tracking via the <code>__cub_vid</code> visitor identifier cookie. Only set if you have accepted this category.</li>
                 </ul>
-                <p>Types of cookies we use:</p>
-                <ul>
-                    <li><strong>Essential Cookies:</strong> Required for basic functionality (session management, authentication)</li>
-                    <li><strong>Functional Cookies:</strong> Remember your preferences and settings</li>
-                    <li><strong>Analytics Cookies:</strong> Help us understand how users interact with our Services</li>
-                </ul>
-                <p>You can control cookie settings through your browser preferences. Disabling cookies may affect Service functionality.</p>
+                <p>Your consent choice is stored in your browser's <code>localStorage</code> under the key <code>cub_cookie_prefs</code>. All three categories are optional — if you disable Essential cookies, your session will not persist between visits (you will need to sign in each time). You can change your preferences at any time using the cookie settings button that appears on every page after making an initial choice.</p>
 
                 <h2>11. Data Retention</h2>
                 <p>We retain data for the following periods:</p>
@@ -271,7 +265,7 @@
                     <li><strong>Deletion:</strong> Request deletion of your data (subject to legal and operational requirements)</li>
                     <li><strong>Portability:</strong> Request a copy of your data in a portable format</li>
                     <li><strong>Opt-Out:</strong> Opt out of certain data collection where applicable</li>
-                    <li><strong>Cookie Control:</strong> Manage cookie preferences through your browser</li>
+                    <li><strong>Cookie Control:</strong> Manage cookie preferences at any time using the cookie settings button visible on every page, or through your browser settings</li>
                 </ul>
                 <p>To exercise these rights, contact us at <a href="mailto:cubsoftware@outlook.com">cubsoftware@outlook.com</a>.</p>
 
@@ -283,7 +277,7 @@
                 <p>Our Services are operated from servers that may be located in various countries. By using our Services, you consent to the transfer of your information to countries that may have different data protection laws than your jurisdiction.</p>
 
                 <h2>18. Do Not Track Signals</h2>
-                <p>Some browsers have a "Do Not Track" feature. Our Services do not currently respond to Do Not Track signals. However, you can manage tracking through your browser settings and cookie preferences.</p>
+                <p>Some browsers have a "Do Not Track" feature. Our Services do not currently respond to Do Not Track signals. However, you can manage tracking at any time through our built-in cookie preferences panel (accessible via the settings button on every page) or through your browser settings.</p>
 
                 <h2>19. Changes to This Privacy Policy</h2>
                 <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated revision date. We encourage you to review this Privacy Policy periodically.</p>

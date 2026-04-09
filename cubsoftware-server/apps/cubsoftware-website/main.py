@@ -817,15 +817,45 @@ def _add_security_headers(response):
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     # Content Security Policy — allow our own assets + Google Fonts + Discord CDN for avatars
     if not request.path.startswith('/static/'):
-        response.headers['Content-Security-Policy'] = (
-            "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-            "font-src 'self' https://fonts.gstatic.com; "
-            "img-src 'self' data: https://cdn.discordapp.com https://static-cdn.jtvnw.net https://cubsoftware.site; "
-            "connect-src 'self'; "
-            "frame-ancestors 'none';"
-        )
+        _path = request.path.rstrip('/')
+        if _path == '/apps/multi-twitch':
+            # Multi-Twitch needs Twitch player iframes and chat
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https://player.twitch.tv "
+                    "https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'self' https://fonts.gstatic.com; "
+                "img-src 'self' data: https://cdn.discordapp.com https://static-cdn.jtvnw.net https://cubsoftware.site; "
+                "frame-src https://player.twitch.tv https://www.twitch.tv; "
+                "connect-src 'self' https://api.twitch.tv wss://irc-ws.chat.twitch.tv; "
+                "worker-src 'self' blob:; "
+                "frame-ancestors 'none';"
+            )
+        elif _path == '/apps/video-compressor':
+            # ffmpeg.js runs inside a Web Worker loaded from unpkg via blob: URL
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https://unpkg.com; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'self' https://fonts.gstatic.com; "
+                "img-src 'self' data: https://cdn.discordapp.com https://cubsoftware.site; "
+                "connect-src 'self' https://unpkg.com; "
+                "worker-src 'self' blob:; "
+                "frame-ancestors 'none';"
+            )
+        else:
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' "
+                    "https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'self' https://fonts.gstatic.com; "
+                "img-src 'self' data: https://cdn.discordapp.com https://static-cdn.jtvnw.net https://cubsoftware.site; "
+                "connect-src 'self' https://api.github.com; "
+                "worker-src 'self' blob:; "
+                "frame-ancestors 'none';"
+            )
     return response
 
 @app.after_request

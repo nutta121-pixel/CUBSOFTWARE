@@ -400,28 +400,36 @@ if _startup_bans:
         print(f'[Security] Reconstructed {len(_banned_subnets)} subnet bans from persistent data', flush=True)
 
 _LOG_COLOURS = {
-    # Security — reds/oranges (high visibility)
-    'Security':  '\033[91m',   # bright red
-    'RateLimit': '\033[93m',   # bright yellow
-    'Error':     '\033[91m',   # bright red
-    'Slow':      '\033[33m',   # yellow
-    # Good activity — greens/blues
-    'Crawler':   '\033[96m',   # cyan
-    'IP':        '\033[94m',   # blue
-    'Auth':      '\033[92m',   # green
-    # Normal traffic
-    'Request':   '\033[37m',   # light grey
-    'API':       '\033[36m',   # cyan
+    # Critical security — white text on red background, very hard to miss
+    'Security':  '\033[41;97m',  # red background + bright white text
+    'RateLimit': '\033[43;30m',  # yellow background + black text
+    'Error':     '\033[91m',     # bright red
+    'Slow':      '\033[33m',     # dark yellow/orange
+    # Crawler — bright green so it's clearly distinct from API/Request
+    'Crawler':   '\033[92m',     # bright green
+    # Normal activity
+    'IP':        '\033[94m',     # bright blue
+    'Auth':      '\033[32m',     # dark green (different shade from Crawler)
+    'Request':   '\033[37m',     # light grey
+    'API':       '\033[36m',     # dark cyan
     # System
-    'Startup':   '\033[95m',   # magenta
-    'Info':      '\033[97m',   # white
+    'Stats':     '\033[35m',     # magenta
+    'Startup':   '\033[95m',     # bright magenta
+    'Info':      '\033[97m',     # white
 }
 _LOG_RESET = '\033[0m'
 _LOG_BOLD  = '\033[1m'
 
+# Tags that should use a full background colour — bold only on the tag, not the message body
+_LOG_BG_TAGS = frozenset({'Security', 'RateLimit'})
+
 def _web_log(tag, msg):
     colour = _LOG_COLOURS.get(tag, '\033[37m')
-    print(f'{_LOG_BOLD}{colour}[{tag}]{_LOG_RESET}{colour} {msg}{_LOG_RESET}', flush=True)
+    if tag in _LOG_BG_TAGS:
+        # Background-colour tags: bold + bg-coloured tag, then plain message in same colour
+        print(f'{_LOG_BOLD}{colour} [{tag}] {_LOG_RESET} {colour}{msg}{_LOG_RESET}', flush=True)
+    else:
+        print(f'{_LOG_BOLD}{colour}[{tag}]{_LOG_RESET}{colour} {msg}{_LOG_RESET}', flush=True)
 
 def _format_uptime():
     sec = int(time.time() - _WEB_START_TIME)

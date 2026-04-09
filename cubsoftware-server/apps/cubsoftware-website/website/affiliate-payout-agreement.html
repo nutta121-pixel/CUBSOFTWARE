@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Payout Agreement - CUB SOFTWARE Affiliate</title>
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/login.css?v={{ v }}">
+    <style>
+        .agreement-wrap {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem 6rem;
+        }
+        .agreement-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .agreement-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #009dff;
+            background: rgba(0,157,255,0.1);
+            border: 1px solid rgba(0,157,255,0.25);
+            padding: 0.35rem 1rem;
+            border-radius: 20px;
+            margin-bottom: 1.25rem;
+        }
+        .agreement-title {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            font-weight: 900;
+            color: #ffffff;
+            -webkit-text-fill-color: #ffffff;
+            background: none;
+            text-shadow: 0 0 18px rgba(129,140,248,0.85), 0 0 48px rgba(88,101,242,0.48), 0 2px 6px rgba(0,0,0,0.60);
+            margin-bottom: 0.75rem;
+        }
+        .agreement-sub {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.60);
+            line-height: 1.6;
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 0.875rem 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .user-pill img {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 2px solid rgba(88, 101, 242, 0.3);
+        }
+        .user-pill-name {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.95rem;
+        }
+        .user-pill-role {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .agreement-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            max-height: 340px;
+            overflow-y: auto;
+        }
+        .agreement-card::-webkit-scrollbar {
+            width: 6px;
+        }
+        .agreement-card::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.04);
+            border-radius: 3px;
+        }
+        .agreement-card::-webkit-scrollbar-thumb {
+            background: rgba(88,101,242,0.4);
+            border-radius: 3px;
+        }
+        .agreement-section {
+            margin-bottom: 1.5rem;
+        }
+        .agreement-section:last-child {
+            margin-bottom: 0;
+        }
+        .agreement-section h3 {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #009dff;
+            margin-bottom: 0.6rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid rgba(0,157,255,0.2);
+        }
+        .agreement-section p,
+        .agreement-section li {
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.65);
+            line-height: 1.7;
+        }
+        .agreement-section ul {
+            padding-left: 1.25rem;
+            margin-top: 0.5rem;
+        }
+        .agreement-section li {
+            margin-bottom: 0.3rem;
+        }
+        .agreement-section strong {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .accept-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .btn-accept {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.9rem 2.5rem;
+            background: linear-gradient(135deg, #009dff, #7c3aed);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            text-decoration: none;
+        }
+        .btn-accept:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0,157,255,0.35);
+            opacity: 0.95;
+        }
+        .accept-note {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.4);
+            text-align: center;
+            line-height: 1.5;
+            max-width: 420px;
+        }
+        .accept-note a {
+            color: rgba(0, 157, 255, 0.8);
+            text-decoration: none;
+        }
+        .accept-note a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        {% include 'header.html' %}
+
+        <div class="agreement-wrap">
+            <div class="agreement-header">
+                <div class="agreement-eyebrow">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    One-time Step
+                </div>
+                <h1 class="agreement-title">Payout Agreement</h1>
+                <p class="agreement-sub">Please read and accept the affiliate payout terms before accessing your dashboard.</p>
+            </div>
+
+            <!-- Signed-in user -->
+            <div class="user-pill">
+                <img src="{{ user.avatar }}" alt="{{ user.username }}">
+                <div>
+                    <div class="user-pill-name">{{ user.username }}</div>
+                    <div class="user-pill-role">Affiliate &mdash; /r/{{ affiliate.code }}</div>
+                </div>
+            </div>
+
+            <!-- Agreement terms -->
+            <div class="agreement-card">
+
+                <div class="agreement-section">
+                    <h3>1. Payout Currency &amp; Method</h3>
+                    <p>All payouts are made in <strong>New Zealand Dollars (NZD)</strong> via <strong>PayPal</strong>. You are responsible for any currency conversion fees charged by PayPal or your bank. CUB SOFTWARE does not cover third-party transaction fees.</p>
+                </div>
+
+                <div class="agreement-section">
+                    <h3>2. Minimum Payout Threshold</h3>
+                    <p>A minimum balance of <strong>NZ$20.00</strong> must be accumulated before a withdrawal request can be submitted. Balances below this threshold will roll over to the next period.</p>
+                </div>
+
+                <div class="agreement-section">
+                    <h3>3. Commission Structure</h3>
+                    <p>Earnings are calculated on a <strong>per unique click</strong> basis at the rate agreed upon when your account was created. Rates may be reviewed and updated with 14 days' notice. Click attribution is based on a 24-hour unique-visitor window.</p>
+                </div>
+
+                <div class="agreement-section">
+                    <h3>4. Payment Processing Time</h3>
+                    <p>Once a withdrawal request is approved, payment will be processed within <strong>7–14 business days</strong>. Processing times may vary during public holidays or periods of high volume.</p>
+                </div>
+
+                <div class="agreement-section">
+                    <h3>5. Prohibited Activity</h3>
+                    <p>The following will result in immediate account termination and forfeiture of pending earnings:</p>
+                    <ul>
+                        <li>Click fraud, self-referral, or artificial traffic inflation</li>
+                        <li>Misrepresentation of CUB SOFTWARE products or services</li>
+                        <li>Sharing your affiliate link in spam, unsolicited messages, or misleading contexts</li>
+                        <li>Violating CUB SOFTWARE's <a href="/terms" target="_blank">Terms of Service</a></li>
+                    </ul>
+                </div>
+
+                <div class="agreement-section">
+                    <h3>6. Account Termination</h3>
+                    <p>CUB SOFTWARE reserves the right to suspend or terminate any affiliate account at its discretion. In cases of termination due to policy violation, pending earnings may be forfeited. In cases of good-standing termination, any balance above the minimum threshold will be paid out.</p>
+                </div>
+
+                <div class="agreement-section">
+                    <h3>7. Tax Responsibility</h3>
+                    <p>You are solely responsible for reporting and paying any taxes on affiliate earnings in your jurisdiction. CUB SOFTWARE does not withhold tax on behalf of affiliates.</p>
+                </div>
+
+                <div class="agreement-section">
+                    <h3>8. Agreement Updates</h3>
+                    <p>CUB SOFTWARE may update these terms at any time. Continued use of the affiliate dashboard after notice of changes constitutes acceptance of the updated terms.</p>
+                </div>
+
+            </div>
+
+            <!-- Accept form -->
+            <form class="accept-form" method="POST" action="/affiliate/payout-agreement/accept">
+                <button type="submit" class="btn-accept">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    I Accept &amp; Continue
+                </button>
+                <p class="accept-note">
+                    By clicking <strong>I Accept &amp; Continue</strong> you confirm you have read and agree to the affiliate payout terms above. This acceptance is recorded against your account. Questions? <a href="/contact">Contact us</a>.
+                </p>
+            </form>
+
+        </div>
+
+        {% include 'footer.html' %}
+    </div>
+</body>
+</html>

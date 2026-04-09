@@ -17783,8 +17783,41 @@ def affiliate_auth_required(f):
             return render_template('affiliate-login.html', user=user, not_registered=True)
         if not aff.get('enabled', True):
             return render_template('affiliate-login.html', user=user, disabled=True)
+        if not aff.get('accepted_payout_terms'):
+            return redirect('/affiliate/payout-agreement')
         return f(*args, **kwargs)
     return decorated_function
+
+# Payout Agreement — shown on first dashboard login before full access
+@app.route('/affiliate/payout-agreement', methods=['GET'])
+def affiliate_payout_agreement():
+    user = session.get('affiliate_user')
+    if not user:
+        return redirect('/login')
+    aff = get_affiliate_by_discord_id(user['id'])
+    if not aff:
+        return render_template('affiliate-login.html', user=user, not_registered=True)
+    if not aff.get('enabled', True):
+        return render_template('affiliate-login.html', user=user, disabled=True)
+    if aff.get('accepted_payout_terms'):
+        return redirect('/affiliate/dashboard')
+    return render_template('affiliate-payout-agreement.html', user=user, affiliate=aff)
+
+@app.route('/affiliate/payout-agreement/accept', methods=['POST'])
+def affiliate_payout_agreement_accept():
+    user = session.get('affiliate_user')
+    if not user:
+        return redirect('/login')
+    aff = get_affiliate_by_discord_id(user['id'])
+    if not aff:
+        return redirect('/affiliate/payout-agreement')
+    data = load_affiliates()
+    aff_id = aff.get('id')
+    if aff_id and aff_id in data['affiliates']:
+        data['affiliates'][aff_id]['accepted_payout_terms'] = True
+        data['affiliates'][aff_id]['accepted_payout_terms_at'] = int(time.time())
+        save_affiliates(data)
+    return redirect('/affiliate/dashboard')
 
 # Affiliate program landing page
 @app.route('/affiliate')

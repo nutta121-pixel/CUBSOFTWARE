@@ -96,10 +96,10 @@ body {
     font-size: 1.75rem;
     text-align: center;
     margin-bottom: 6px;
-    background: linear-gradient(135deg, #ffffff 0%, #c7d0ff 50%, #5865f2 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #ffffff;
+    -webkit-text-fill-color: #ffffff;
+    background: none;
+    text-shadow: 0 0 18px rgba(129,140,248,0.85), 0 0 48px rgba(88,101,242,0.48), 0 2px 6px rgba(0,0,0,0.60);
     letter-spacing: -0.02em;
 }
 

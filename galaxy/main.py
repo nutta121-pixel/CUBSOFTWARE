@@ -442,7 +442,7 @@ async def vinvite(ctx, member:discord.Member):
             channel = ctx.author.voice.channel
             if "'s Private Channel" in channel.name:
                 await channel.set_permissions(member, connect=True, speak=True, view_channel=True)
-                await ctx.rely(f"Done! {member.name} can now see your private channel!!", ephemeral=True)
+                await ctx.reply(f"Done! {member.name} can now see your private channel!!", ephemeral=True)
                 await asyncio.sleep(0.5)
                 await ctx.message.delete()
             else:

@@ -87,10 +87,15 @@ _auto_banned_ips = set()
 _ban_details     = {}
 _404_hits        = {}   # ip → [timestamps] — directory-fuzzing 404 flood tracking
 
-_SCANNER_THRESHOLD = 3      # probes before auto-ban
-_BAN_TTL_DAYS      = 30
-_404_WINDOW        = 60     # seconds to track 404 flood
-_404_THRESHOLD     = 15     # 404s within window before counting as a probe hit
+_SCANNER_THRESHOLD  = 2      # probes before auto-ban (reduced from 3)
+_BAN_TTL_DAYS       = 30
+_404_WINDOW         = 60    # seconds to track 404 flood
+_404_THRESHOLD      = 8     # 404s within window before probe hit (reduced from 15)
+_403_BAN_THRESHOLD  = 8     # repeated 403s before auto-ban
+_429_BAN_THRESHOLD  = 20    # repeated 429s before auto-ban (rate limit hammering)
+_MAX_PATH_LENGTH    = 1000  # paths longer than this are instant probe hits
+_MAX_QS_LENGTH      = 2000  # query strings longer than this are instant probe hits
+_MAX_BODY_SIZE      = 512000  # 512KB — above this, count as a probe hit
 
 _BAN_FILE = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'scanner_bans.json'))
 
@@ -144,6 +149,76 @@ _SCANNER_EXACT = frozenset([
     '/ws', '/socket',               # Blind WebSocket probe
     '/trace', '/TRACE',
 ])
+
+# ── Honeypot paths — instant ban any IP that hits these (no legit reason to) ─
+# These paths are advertised nowhere on CUB SOFTWARE. Any direct hit = scanner.
+_HONEYPOT_PATHS = frozenset([
+    '/wp-admin', '/wp-admin/', '/wp-login.php', '/wp-config.php', '/wp-cron.php',
+    '/phpmyadmin', '/phpmyadmin/', '/pma', '/pma/', '/myadmin', '/myadmin/',
+    '/console', '/jmx-console', '/web-console', '/admin-console', '/h2-console',
+    '/actuator', '/actuator/env', '/actuator/heapdump', '/actuator/logfile',
+    '/panel', '/cpanel', '/whm', '/webmin', '/webmin/',
+    '/plesk', '/plesk/', '/backend', '/backend/',
+    '/administrator', '/administrator/',
+    '/manager', '/manager/',
+    '/old', '/old/', '/backup', '/backup/',
+    '/test', '/test/', '/dev', '/dev/',
+    '/_vti_bin', '/_vti_inf',   # SharePoint
+    '/elmah.axd', '/trace.axd', # ASP.NET diagnostics
+    '/telescope', '/horizon',   # Laravel
+    '/adminer', '/adminer/',
+    '/login/admin', '/user/admin',
+    '/auth/admin', '/secure/admin',
+])
+
+# ── Subnet banning — ban the /24 when enough IPs from it are auto-banned ─────
+_banned_subnets    = set()   # banned /24 prefixes e.g. '1.2.3'
+_subnet_ip_counts  = {}      # /24 prefix → set of banned IPs in that range
+_SUBNET_BAN_THRESHOLD = 5   # IPs from same /24 before subnet ban
+
+def _get_subnet_24(ip_str: str) -> str:
+    """Return the /24 prefix for an IPv4 address (e.g. '1.2.3' for '1.2.3.4')."""
+    try:
+        parts = ip_str.split('.')
+        if len(parts) == 4 and all(p.isdigit() for p in parts):
+            return '.'.join(parts[:3])
+    except Exception:
+        pass
+    return ''
+
+def _check_and_apply_subnet_ban(new_ip: str):
+    """Call after banning new_ip. Checks if /24 subnet threshold is exceeded."""
+    subnet = _get_subnet_24(new_ip)
+    if not subnet:
+        return
+    # Skip private/loopback ranges
+    if subnet.startswith(('10.', '172.', '192.168.', '127.')):
+        return
+    if subnet not in _subnet_ip_counts:
+        _subnet_ip_counts[subnet] = set()
+    _subnet_ip_counts[subnet].add(new_ip)
+    count = len(_subnet_ip_counts[subnet])
+    if count >= _SUBNET_BAN_THRESHOLD and subnet not in _banned_subnets:
+        _banned_subnets.add(subnet)
+        _web_log('Security', f'SUBNET BAN: {subnet}.0/24 — {count} IPs auto-banned from this range')
+        def _send_subnet_embed():
+            try:
+                embed = {
+                    'title': '🌐 Subnet Auto-Banned',
+                    'description': f'**{count}** IPs from the same /24 subnet have been auto-banned.',
+                    'color': 0xFF6600,
+                    'fields': [
+                        {'name': '📡 Subnet',      'value': f'`{subnet}.0/24`', 'inline': True},
+                        {'name': '🔢 Banned IPs', 'value': str(count),          'inline': True},
+                        {'name': '🚫 IPs',         'value': '\n'.join(f'`{ip}`' for ip in sorted(_subnet_ip_counts.get(subnet, set()))[:20]), 'inline': False},
+                    ],
+                    'footer': {'text': 'CUB SOFTWARE Security Monitor • cubsoftware.site'},
+                    'timestamp': datetime.now(timezone.utc).isoformat(),
+                }
+                cp_enqueue_action({'type': 'send_embed', 'channel_id': _SECURITY_CHANNEL_ID, 'embed': embed})
+            except Exception:
+                pass
+        threading.Thread(target=_send_subnet_embed, daemon=True).start()
 
 # ── Paths / patterns that trigger IMMEDIATE ban (no 3-strike grace) ──────────
 _INSTANT_BAN_EXACT = frozenset([
@@ -311,9 +386,42 @@ _auto_banned_ips.update(_startup_bans.keys())
 _ban_details.update(_startup_bans)
 if _startup_bans:
     print(f'[Security] Loaded {len(_startup_bans)} persistent scanner bans', flush=True)
+    # Rebuild subnet ban state from loaded bans
+    for _sip in _startup_bans.keys():
+        _sn = _get_subnet_24(_sip)
+        if _sn and not _sn.startswith(('10.', '172.', '192.168.', '127.')):
+            if _sn not in _subnet_ip_counts:
+                _subnet_ip_counts[_sn] = set()
+            _subnet_ip_counts[_sn].add(_sip)
+    for _sn, _ips in _subnet_ip_counts.items():
+        if len(_ips) >= _SUBNET_BAN_THRESHOLD:
+            _banned_subnets.add(_sn)
+    if _banned_subnets:
+        print(f'[Security] Reconstructed {len(_banned_subnets)} subnet bans from persistent data', flush=True)
+
+_LOG_COLOURS = {
+    # Security — reds/oranges (high visibility)
+    'Security':  '\033[91m',   # bright red
+    'RateLimit': '\033[93m',   # bright yellow
+    'Error':     '\033[91m',   # bright red
+    'Slow':      '\033[33m',   # yellow
+    # Good activity — greens/blues
+    'Crawler':   '\033[96m',   # cyan
+    'IP':        '\033[94m',   # blue
+    'Auth':      '\033[92m',   # green
+    # Normal traffic
+    'Request':   '\033[37m',   # light grey
+    'API':       '\033[36m',   # cyan
+    # System
+    'Startup':   '\033[95m',   # magenta
+    'Info':      '\033[97m',   # white
+}
+_LOG_RESET = '\033[0m'
+_LOG_BOLD  = '\033[1m'
 
 def _web_log(tag, msg):
-    print(f'[{tag}] {msg}', flush=True)
+    colour = _LOG_COLOURS.get(tag, '\033[37m')
+    print(f'{_LOG_BOLD}{colour}[{tag}]{_LOG_RESET}{colour} {msg}{_LOG_RESET}', flush=True)
 
 def _format_uptime():
     sec = int(time.time() - _WEB_START_TIME)
@@ -434,11 +542,64 @@ def _before_request_logging():
                 ip=ip, banned_ts=banned_ts, expires_ts=expires_ts,
                 ban_days=_BAN_TTL_DAYS, probes=ban_info.get('probes', []),
             ), 403)
+
+    # ── Subnet ban check — block IPs from ranges with 5+ banned hosts ────────
+    if ip:
+        _ip_subnet = _get_subnet_24(ip)
+        if _ip_subnet and _ip_subnet in _banned_subnets:
+            _web_log('Security', f'Blocked subnet-banned IP {ip} ({_ip_subnet}.0/24) → {request.method} {request.path}')
+            return make_response(render_template('banned.html',
+                ip=ip, banned_ts=0, expires_ts=0,
+                ban_days=_BAN_TTL_DAYS, probes=[f'[subnet ban] {_ip_subnet}.0/24'],
+            ), 403)
     ua = request.headers.get('User-Agent', '') or ''
     path_lower    = request.path.lower()
     ua_lower      = ua.lower()
     qs_lower      = request.query_string.decode('utf-8', errors='replace').lower()
     full_url_lower = (path_lower + '?' + qs_lower) if qs_lower else path_lower
+
+    # ── Trusted legitimate crawlers — skip ALL probe detection ───────────────
+    # These UAs belong to search engines and well-known bots we want to allow.
+    # Note: UA spoofing is possible but rare for these strings; attackers using
+    # real attack tools (sqlmap, nikto etc.) are caught by _BAD_UA_SUBSTRINGS
+    # before this check would matter anyway.
+    _TRUSTED_CRAWLERS = (
+        'googlebot',           # Google Search
+        'googleother',         # Google other crawlers
+        'google-inspectiontool',  # Google Search Console
+        'bingbot',             # Microsoft Bing
+        'slurp',               # Yahoo
+        'duckduckbot',         # DuckDuckGo
+        'baiduspider',         # Baidu
+        'yandexbot',           # Yandex
+        'sogou',               # Sogou
+        'exabot',              # Exalead
+        'facebot',             # Facebook
+        'ia_archiver',         # Wayback Machine / Archive.org
+        'semrushbot',          # SEMRush SEO crawler
+        'ahrefsbot',           # Ahrefs SEO crawler
+        'mj12bot',             # Majestic SEO
+        'dotbot',              # OpenSite Explorer
+        'rogerbot',            # Moz
+        'screaming frog',      # Screaming Frog SEO Spider
+        'applebot',            # Apple
+        'twitterbot',          # Twitter card preview
+        'discordbot',          # Discord link preview
+        'linkedinbot',         # LinkedIn preview
+        'slackbot',            # Slack preview
+        'whatsapp',            # WhatsApp preview
+        'telegrambot',         # Telegram preview
+    )
+    is_trusted_crawler = any(crawler in ua_lower for crawler in _TRUSTED_CRAWLERS)
+    if is_trusted_crawler:
+        _web_log('Crawler', f'{ip} → {request.method} {request.path} UA={ua[:80]}')
+        # Still block critical exploit patterns even for crawler UAs (spoofing protection)
+        for pattern in _INSTANT_BAN_CONTAINS:
+            if pattern in full_url_lower:
+                return _do_instant_ban(request.path + ('?' + qs_lower[:80] if qs_lower else ''))
+        if request.path in _INSTANT_BAN_EXACT:
+            return _do_instant_ban(request.path)
+        return None  # legitimate crawler — skip all other checks
 
     # ── Helper: execute a ban immediately (no 3-strike grace) ────────────────
     def _do_instant_ban(reason_path):
@@ -450,6 +611,7 @@ def _before_request_logging():
         _auto_banned_ips.add(ip)
         _ban_details[ip] = ban_info
         _save_scanner_ban(ip, ban_info)
+        _check_and_apply_subnet_ban(ip)
         _web_log('Security', f'INSTANT-BANNED {ip} — critical probe: {reason_path}')
         threading.Thread(target=_send_scanner_ban_embed, args=(ip, probes, ua, banned_at, expires_at), daemon=True).start()
         b_ts = int(datetime.fromisoformat(banned_at).timestamp())
@@ -475,6 +637,7 @@ def _before_request_logging():
             _auto_banned_ips.add(ip)
             _ban_details[ip] = ban_info
             _save_scanner_ban(ip, ban_info)
+            _check_and_apply_subnet_ban(ip)
             _web_log('Security', f'Auto-banned {ip} after {hits} probes — expires {expires_at}')
             threading.Thread(target=_send_scanner_ban_embed, args=(ip, probes, ua, banned_at, expires_at), daemon=True).start()
             b_ts = int(datetime.fromisoformat(banned_at).timestamp())
@@ -483,6 +646,11 @@ def _before_request_logging():
         else:
             return make_response(render_template('scanner_warning.html', ip=ip, probed_path=reason_path, hits=hits, threshold=_SCANNER_THRESHOLD, remaining=remaining), 403)
 
+    # ── 0. HONEYPOT PATHS — instant ban on first hit, no grace ──────────────
+    if request.path in _HONEYPOT_PATHS or request.path.rstrip('/') in _HONEYPOT_PATHS:
+        _web_log('Security', f'HONEYPOT triggered from {ip}: {request.path}')
+        return _do_instant_ban(f'[honeypot] {request.path}')
+
     # ── 1. INSTANT BAN — critical exploits / credential files ────────────────
     if request.path in _INSTANT_BAN_EXACT:
         return _do_instant_ban(request.path)
@@ -490,18 +658,33 @@ def _before_request_logging():
         if pattern in full_url_lower:
             return _do_instant_ban(request.path + ('?' + qs_lower[:80] if qs_lower else ''))
 
-    # ── 2. KNOWN ATTACK TOOL USER-AGENTS → immediate probe hit ───────────────
+    # ── 2. KNOWN ATTACK TOOL USER-AGENTS → instant ban ───────────────────────
     if any(bad in ua_lower for bad in _BAD_UA_SUBSTRINGS):
-        return _record_probe_hit(request.path, label='bad-ua')
+        _web_log('Security', f'Attack tool UA detected from {ip}: {ua[:80]}')
+        return _do_instant_ban(request.path)
 
-    # ── 3. ATTACK PATTERNS IN QUERY STRING / URL ──────────────────────────────
+    # ── 3. OVERSIZED PATH or QUERY STRING — buffer overflow / fuzzer ─────────
+    if len(request.path) > _MAX_PATH_LENGTH:
+        _web_log('Security', f'Oversized path ({len(request.path)} chars) from {ip}')
+        return _do_instant_ban(request.path[:80] + '...[truncated]')
+    if len(qs_lower) > _MAX_QS_LENGTH:
+        _web_log('Security', f'Oversized query string ({len(qs_lower)} chars) from {ip}')
+        return _record_probe_hit(request.path, label='oversized-qs')
+
+    # ── 4. OVERSIZED BODY — potential DoS or exploit payload ─────────────────
+    content_length = request.content_length or 0
+    if content_length > _MAX_BODY_SIZE and not request.path.startswith('/api/'):
+        _web_log('Security', f'Oversized body {content_length} bytes from {ip}: {request.path}')
+        return _record_probe_hit(request.path, label='large-body')
+
+    # ── 5. ATTACK PATTERNS IN QUERY STRING / URL ──────────────────────────────
     if qs_lower:
         for pattern in _ATTACK_QUERY_PATTERNS:
             if pattern in full_url_lower:
-                _web_log('Security', f'Attack pattern "{pattern}" in request from {ip}: {request.path}?{qs_lower[:120]}')
+                _web_log('Security', f'Attack pattern "{pattern}" in QS from {ip}: {request.path}?{qs_lower[:120]}')
                 return _record_probe_hit(request.path, label='attack-qs')
 
-    # ── 4. STANDARD SCANNER PATH DETECTION ───────────────────────────────────
+    # ── 6. STANDARD SCANNER PATH DETECTION ───────────────────────────────────
     is_scanner_probe = (
         any(path_lower.startswith(p) for p in _SCANNER_PATH_PREFIXES) or
         any(s in path_lower for s in _SCANNER_PATH_CONTAINS) or
@@ -512,8 +695,8 @@ def _before_request_logging():
     if is_scanner_probe:
         return _record_probe_hit(request.path)
 
-    # ── 5. NO USER-AGENT → count as a probe hit (bots always have no UA) ─────
-    if not ua and request.method not in ('GET', 'HEAD'):
+    # ── 7. NO USER-AGENT on any request → probe hit ───────────────────────────
+    if not ua:
         return _record_probe_hit(request.path, label='no-ua')
 
 @app.after_request
@@ -543,17 +726,43 @@ def _after_request_logging(response):
             if len(_endpoint_times[key]) > 100:
                 _endpoint_times[key] = _endpoint_times[key][-100:]
 
-        # Security: 403 abuse tracking
+        # Security: 403 abuse tracking → auto-ban on repeated hits
         if status == 403:
-            _failed_logins[ip] = _failed_logins.get(ip, 0) + 1
-            count = _failed_logins[ip]
+            with _req_lock:
+                _failed_logins[ip] = _failed_logins.get(ip, 0) + 1
+                count = _failed_logins[ip]
             _web_log('Security', f'403 from {ip}: {request.method} {path} (total: {count})')
-            if count >= 5:
-                _web_log('Security', f'Repeated 403s from {ip} — {count} attempts')
+            if count >= _403_BAN_THRESHOLD and ip not in _auto_banned_ips:
+                _web_log('Security', f'Auto-banning {ip} — {count} repeated 403s (access abuse)')
+                now_utc   = datetime.now(timezone.utc)
+                banned_at  = now_utc.isoformat()
+                expires_at = (now_utc + timedelta(days=_BAN_TTL_DAYS)).isoformat()
+                probes = [f'[403-abuse:{count}x] {path}']
+                ban_info = {'banned_at': banned_at, 'expires_at': expires_at, 'probes': probes, 'ua': request.headers.get('User-Agent',''), 'reason': '403_abuse'}
+                _auto_banned_ips.add(ip)
+                _ban_details[ip] = ban_info
+                _save_scanner_ban(ip, ban_info)
+                _check_and_apply_subnet_ban(ip)
+                threading.Thread(target=_send_scanner_ban_embed, args=(ip, probes, ban_info['ua'], banned_at, expires_at), daemon=True).start()
 
-        # Rate limit responses
+        # Rate limit responses → auto-ban on repeated hammering
         if status == 429 and not is_static:
             _web_log('RateLimit', f'429 returned to {ip}: {request.method} {path}')
+            with _req_lock:
+                _failed_logins[ip] = _failed_logins.get(ip, 0) + 1
+                count = _failed_logins[ip]
+            if count >= _429_BAN_THRESHOLD and ip not in _auto_banned_ips:
+                _web_log('Security', f'Auto-banning {ip} — {count} rate limit hits (hammering)')
+                now_utc   = datetime.now(timezone.utc)
+                banned_at  = now_utc.isoformat()
+                expires_at = (now_utc + timedelta(days=_BAN_TTL_DAYS)).isoformat()
+                probes = [f'[rate-limit-abuse:{count}x] {path}']
+                ban_info = {'banned_at': banned_at, 'expires_at': expires_at, 'probes': probes, 'ua': request.headers.get('User-Agent',''), 'reason': 'rate_limit_abuse'}
+                _auto_banned_ips.add(ip)
+                _ban_details[ip] = ban_info
+                _save_scanner_ban(ip, ban_info)
+                _check_and_apply_subnet_ban(ip)
+                threading.Thread(target=_send_scanner_ban_embed, args=(ip, probes, ban_info['ua'], banned_at, expires_at), daemon=True).start()
 
         # 4xx/5xx errors (excluding 429 which is logged above)
         if status >= 400 and status != 429 and not is_static:
@@ -595,6 +804,9 @@ def _add_security_headers(response):
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     # Restrict what browser features can be used
     response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=(), payment=()'
+    # Force HTTPS for 1 year — browsers will refuse plain HTTP after visiting once
+    if not IS_DEV:
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     # Content Security Policy — allow our own assets + Google Fonts + Discord CDN for avatars
     if not request.path.startswith('/static/'):
         response.headers['Content-Security-Policy'] = (
@@ -918,13 +1130,15 @@ def get_features_status():
 # Global rate limiting storage
 rate_limits = {}  # ip -> {feature -> [timestamps]}
 RATE_LIMIT_CONFIGS = {
-    'default': {'requests': 60, 'window': 60},  # 60 requests per minute
-    'api': {'requests': 30, 'window': 60},  # 30 API requests per minute
-    'download': {'requests': 10, 'window': 60},  # 10 downloads per minute
-    'shorten': {'requests': 10, 'window': 60},  # 10 shortens per minute
-    'report': {'requests': 3, 'window': 300},  # 3 reports per 5 minutes to prevent spam
-    'oauth': {'requests': 20, 'window': 60},       # 20 OAuth attempts per minute per IP
-    'dashboard': {'requests': 120, 'window': 60},  # 120 dashboard API requests per minute per IP (2/sec)
+    'default':   {'requests': 45,  'window': 60},   # 45 req/min (down from 60)
+    'api':       {'requests': 20,  'window': 60},   # 20 API req/min (down from 30)
+    'download':  {'requests': 5,   'window': 60},   # 5 downloads/min (down from 10)
+    'shorten':   {'requests': 5,   'window': 60},   # 5 shortens/min (down from 10)
+    'report':    {'requests': 2,   'window': 300},  # 2 reports per 5 min (down from 3)
+    'oauth':     {'requests': 10,  'window': 60},   # 10 OAuth attempts/min (down from 20)
+    'dashboard': {'requests': 80,  'window': 60},   # 80 dashboard req/min (down from 120)
+    'affiliate': {'requests': 30,  'window': 60},   # affiliate API calls
+    'affiliate_apply': {'requests': 2, 'window': 300},  # 2 applications per 5 min
 }
 
 def check_rate_limit(ip, feature='default'):
@@ -1829,6 +2043,58 @@ Disallow: /countdown-view/
 Disallow: /resume-view/
 
 Sitemap: https://cubsoftware.site/sitemap.xml
+
+# ── AI training crawlers — do not scrape our content ──────────────────────────
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: peer39_crawler
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: YouBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: magpie-crawler
+Disallow: /
 """
     return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
@@ -18819,6 +19085,16 @@ def admin_fetch_affiliate_avatar(aff_id):
 def page_not_found(e):
     """Handle 404 errors - serve custom 404 page"""
     return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    """Handle 500 errors — never expose stack traces to users"""
+    try:
+        ip = getattr(request, '_client_ip', request.remote_addr or 'unknown')
+        _web_log('Error', f'500 Internal Server Error from {ip}: {request.method} {request.path} — {e}')
+    except Exception:
+        pass
+    return render_template('500.html'), 500
 
 @app.route('/apps/<path:subpath>')
 def apps_catch_all(subpath):

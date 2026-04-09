@@ -83,16 +83,19 @@ body.home-page::after {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(88, 101, 242, 0.12);
-    border: 1px solid rgba(88, 101, 242, 0.35);
+    background: rgba(88, 101, 242, 0.20);
+    border: 1px solid rgba(88, 101, 242, 0.50);
     border-radius: 999px;
     padding: 5px 14px;
     font-size: 0.72rem;
     font-weight: 700;
-    color: #818cf8;
+    color: #c7d0ff;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 1.5rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 12px rgba(88, 101, 242, 0.25);
 }
 
 .hero-badge-dot {
@@ -122,12 +125,13 @@ body.home-page::after {
 }
 
 .hero-description {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.82);
     font-size: clamp(0.95rem, 2.2vw, 1.15rem);
     max-width: 560px;
     margin: 0 auto 2.25rem;
     line-height: 1.75;
     font-weight: 400;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 }
 
 /* CTA Buttons in hero */
@@ -243,6 +247,11 @@ body.home-page::after {
 .about-section {
     padding: 70px 24px 80px;
     width: 100%;
+    background: rgba(4, 5, 20, 0.65);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-top: 1px solid rgba(88, 101, 242, 0.12);
+    border-bottom: 1px solid rgba(88, 101, 242, 0.08);
 }
 
 .about-section > .container {
@@ -274,7 +283,7 @@ body.home-page::after {
 
 .section-description {
     text-align: center;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.75);
     font-size: 1rem;
     max-width: 600px;
     margin: 0 auto 3rem;
@@ -304,7 +313,7 @@ body.home-page::after {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.80);
     position: relative;
     display: flex;
     justify-content: center;
@@ -352,8 +361,8 @@ body.home-page::after {
 
 /* ==================== FEATURE CARD ==================== */
 .feature-card {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(6, 8, 28, 0.82);
+    border: 1px solid rgba(88, 101, 242, 0.22);
     border-radius: 16px;
     padding: 1.5rem 1.25rem;
     transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
@@ -363,13 +372,16 @@ body.home-page::after {
     gap: 0.5rem;
     position: relative;
     overflow: hidden;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .feature-card::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(88, 101, 242, 0.06), rgba(124, 58, 237, 0.03));
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.08), rgba(124, 58, 237, 0.04));
     opacity: 0;
     transition: opacity 0.25s ease;
     pointer-events: none;
@@ -377,9 +389,9 @@ body.home-page::after {
 
 .feature-card:hover {
     transform: translateY(-4px);
-    border-color: rgba(88, 101, 242, 0.4);
-    background: rgba(255, 255, 255, 0.05);
-    box-shadow: 0 8px 32px rgba(88, 101, 242, 0.15);
+    border-color: rgba(88, 101, 242, 0.50);
+    background: rgba(10, 12, 40, 0.90);
+    box-shadow: 0 8px 36px rgba(88, 101, 242, 0.22), 0 2px 12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.07);
 }
 
 .feature-card:hover::before { opacity: 1; }
@@ -394,7 +406,7 @@ body.home-page::after {
 }
 
 .feature-card p {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.70);
     font-size: 0.82rem;
     line-height: 1.6;
     margin: 0;

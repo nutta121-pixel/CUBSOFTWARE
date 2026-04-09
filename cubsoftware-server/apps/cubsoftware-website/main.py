@@ -81,44 +81,119 @@ _req_count_min = [0]
 _active_sessions = {}      # session_id → start_time
 _req_lock = threading.Lock()
 
-# Scanner auto-ban: track sensitive path probes and auto-ban after threshold
-_scanner_hits = {}         # ip → {'count': N, 'paths': [...], 'ua': str}
-_auto_banned_ips = set()   # IPs banned this session
-_ban_details = {}          # ip → ban_info dict (in-memory cache, avoids file I/O per request)
-_SCANNER_THRESHOLD = 3     # probes before auto-ban
-_BAN_TTL_DAYS = 30
+# ── Scanner auto-ban: track sensitive path probes, auto-ban after threshold ───
+_scanner_hits    = {}   # ip → {'count': N, 'paths': [...], 'ua': str}
+_auto_banned_ips = set()
+_ban_details     = {}
+_404_hits        = {}   # ip → [timestamps] — directory-fuzzing 404 flood tracking
+
+_SCANNER_THRESHOLD = 3      # probes before auto-ban
+_BAN_TTL_DAYS      = 30
+_404_WINDOW        = 60     # seconds to track 404 flood
+_404_THRESHOLD     = 15     # 404s within window before counting as a probe hit
 
 _BAN_FILE = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'scanner_bans.json'))
 
-# Paths/patterns that only automated scanners request
+# ── Paths that score 1 probe hit (3 hits = ban) ───────────────────────────────
 _SCANNER_PATH_PREFIXES = (
-    '/.env', '/.git', '/.ht', '/.ds_store', '/.aws', '/.ssh',
-    '/wp-', '/wordpress', '/drupal', '/joomla', '/typo3',
-    '/laravel', '/symfony', '/yii', '/cake',
+    '/.env', '/.git', '/.ht', '/.ds_store', '/.aws', '/.ssh', '/.svn', '/.hg', '/.bzr',
+    '/.vscode', '/.idea', '/.circleci', '/.docker', '/.kube', '/.terraform',
+    '/wp-', '/wordpress', '/drupal', '/joomla', '/typo3', '/magento', '/opencart', '/prestashop',
+    '/laravel', '/symfony', '/yii', '/cake', '/codeigniter', '/zend', '/rails',
+    '/cgi-bin/', '/CGI-BIN/', '/scripts/', '/bin/', '/etc/',
+    '/solr/', '/jenkins/', '/hudson/', '/grafana/', '/kibana/', '/elasticsearch/', '/actuator/',
+    '/phpmyadmin', '/mysqladmin', '/myadmin', '/pma/', '/dbadmin/',
+    '/vendor/', '/node_modules/',
+    '/manager/', '/host-manager/',   # Tomcat
 )
 _SCANNER_PATH_CONTAINS = (
     'docker-compose', 'wp-login', 'wp-admin', 'wp-includes', 'wp-content',
-    'xmlrpc', 'phpmyadmin', '/pma/', 'adminer', 'web.config',
-    '/administrator/', '/admin/login', '/user/login',
-    'shell.php', 'webshell', 'c99', 'r57', 'b374k',
-    'phpinfo', '/info.php', '/test.php', 'setup.php', 'install.php',
-    'terraform.tfvars', '.tfstate', 'secrets.yml', 'database.yml', 'aws.yml',
-    '/.well-known/security', 'passwd', '/etc/shadow',
+    'xmlrpc', 'phpmyadmin', 'adminer', 'web.config', 'webconfig',
+    '/administrator/', '/admin/login', '/user/login', '/manager/html',
+    'shell.php', 'webshell', 'c99', 'r57', 'b374k', 'cmd.php', 'eval.php',
+    'phpinfo', '/info.php', '/test.php', 'setup.php', 'install.php', 'installer.php',
+    'terraform.tfvars', '.tfstate', 'secrets.yml', 'database.yml', 'aws.yml', 'credentials.yml',
+    'passwd', '/etc/shadow', '/etc/hosts', '/proc/self',
     'config/database', 'app/config', 'application/config',
+    '.git/config', '.git/HEAD', '.git/objects', '.svn/entries',
+    'awsconfig', 'aws_config', 'boto.cfg',
+    'sftp-config.json', 'ftpsync.settings', 'deployment.yml',
+    'backup.tar', 'backup.zip', 'backup.gz', 'dump.tar',
+    '/autodiscover', '/ews/', '/mapi/', '/oab/',   # Exchange probes
+    '${jndi', 'jndi:ldap', 'jndi:rmi',            # Log4Shell
+    '/cgi-bin/', '/fcgi-bin/',
+    'owa/auth', 'ecp/default',                      # Outlook Web Access
 )
-_SCANNER_EXTENSIONS = ('.php', '.asp', '.aspx', '.cgi', '.cfm', '.pl', '.jsp', '.jspx')
+_SCANNER_EXTENSIONS = ('.php', '.asp', '.aspx', '.cgi', '.cfm', '.pl', '.jsp', '.jspx', '.shtml', '.phtml')
 _SCANNER_EXACT = frozenset([
     '/config.json', '/app.config.json', '/settings.json', '/appsettings.json',
-    '/server.js', '/index.php', '/config.php', '/database.php',
-    '/Thumbs.db', '/.htpasswd', '/admin.php', '/login.php',
-    '/backup.sql', '/dump.sql', '/database.sql',
-    '/id_rsa', '/id_rsa.pub', '/authorized_keys',
-    '/composer.json', '/composer.lock', '/package.json',
-    '/Makefile', '/Dockerfile', '/Procfile',
+    '/appsettings.development.json', '/appsettings.production.json',
+    '/server.js', '/index.php', '/config.php', '/database.php', '/db.php', '/connection.php',
+    '/Thumbs.db', '/.htpasswd', '/admin.php', '/login.php', '/panel.php',
+    '/backup.sql', '/dump.sql', '/database.sql', '/db.sql', '/data.sql',
+    '/id_rsa', '/id_rsa.pub', '/authorized_keys', '/known_hosts',
+    '/composer.json', '/composer.lock', '/package.json', '/package-lock.json', '/yarn.lock',
+    '/Makefile', '/Dockerfile', '/docker-compose.yml', '/Procfile',
     '/CHANGELOG.txt', '/README.md', '/LICENSE',
     '/robots.txt.bak', '/sitemap.xml.bak',
     '/web.config', '/applicationHost.config',
+    '/.npmrc', '/.pypirc', '/.netrc', '/.bash_history', '/.bashrc', '/.profile', '/.zshrc',
+    '/server-status', '/server-info',
+    '/_all_docs', '/_config',       # CouchDB
+    '/v2/_catalog',                 # Docker registry
+    '/ws', '/socket',               # Blind WebSocket probe
+    '/trace', '/TRACE',
 ])
+
+# ── Paths / patterns that trigger IMMEDIATE ban (no 3-strike grace) ──────────
+_INSTANT_BAN_EXACT = frozenset([
+    '/etc/passwd', '/etc/shadow', '/etc/hosts', '/proc/self/environ',
+    '/id_rsa', '/id_dsa', '/id_ecdsa', '/id_ed25519',
+    '/.env.production', '/.env.local', '/.env.backup', '/.env.prod', '/.env.staging',
+])
+_INSTANT_BAN_CONTAINS = (
+    '${jndi:', '${${::-j}',         # Log4Shell — zero tolerance
+    '/etc/passwd', '/etc/shadow', '/proc/self/environ',
+    'cmd.exe', '/bin/sh', '/bin/bash', '/bin/zsh',
+    '../../../', '..%2f..%2f..%2f', '....//....//..../', # Deep path traversal
+    '\x00', '%00',                   # Null byte injection
+)
+
+# ── Known malicious User-Agent substrings → instant probe hit / ban ──────────
+_BAD_UA_SUBSTRINGS = (
+    'sqlmap', 'nikto', 'nmap', 'masscan', 'zgrab', 'nuclei',
+    'dirbuster', 'gobuster', 'wfuzz', 'ffuf', 'feroxbuster', 'dirb',
+    'acunetix', 'netsparker', 'w3af', 'openvas', 'havij', 'pangolin',
+    'appscan', 'webinspect', 'burpsuite', 'burp suite',
+    'hydra', 'medusa', 'ncrack', 'patator',
+    'metasploit', 'msfpayload', 'msfconsole',
+    'python-nmap', 'nessus',
+    'jbrofuzz', 'paros', 'webscarab', 'skipfish', 'arachni', 'vega',
+    'grabber', 'zap/', 'owasp zap',
+)
+
+# ── Attack patterns in query strings / URL (instant probe hit) ───────────────
+_ATTACK_QUERY_PATTERNS = (
+    # Path traversal
+    '../', '..\\', '%2e%2e%2f', '%252e', '..../',
+    # SQL injection
+    'union select', 'union+select', 'union%20select',
+    "' or '1'='1", ' or 1=1', "or '1'='1",
+    'drop table', 'drop+table', "'; drop",
+    'sleep(', 'benchmark(', 'waitfor delay',
+    'xp_cmdshell', 'exec xp_',
+    'information_schema', 'sys.tables', 'sysobjects',
+    # Command injection
+    '; ls ', '; cat ', '| whoami', '&& whoami', '$(id)', '`id`', '`whoami`',
+    # Log4Shell in query strings
+    '${jndi:', '${${::-j}',
+    # XSS probes in query strings
+    '<script>', 'javascript:', 'onerror=alert', 'onload=alert',
+    # XXE
+    '<!entity', '<!doctype',
+    # SSTI
+    '{{7*7}}', '${7*7}', '<%=7*7%>',
+)
 
 def _load_scanner_bans():
     try:
@@ -359,8 +434,74 @@ def _before_request_logging():
                 ip=ip, banned_ts=banned_ts, expires_ts=expires_ts,
                 ban_days=_BAN_TTL_DAYS, probes=ban_info.get('probes', []),
             ), 403)
-    # Auto-ban: detect sensitive path probes or WebDAV method scanners
-    path_lower = request.path.lower()
+    ua = request.headers.get('User-Agent', '') or ''
+    path_lower    = request.path.lower()
+    ua_lower      = ua.lower()
+    qs_lower      = request.query_string.decode('utf-8', errors='replace').lower()
+    full_url_lower = (path_lower + '?' + qs_lower) if qs_lower else path_lower
+
+    # ── Helper: execute a ban immediately (no 3-strike grace) ────────────────
+    def _do_instant_ban(reason_path):
+        now_utc    = datetime.now(timezone.utc)
+        banned_at  = now_utc.isoformat()
+        expires_at = (now_utc + timedelta(days=_BAN_TTL_DAYS)).isoformat()
+        probes     = _scanner_hits.get(ip, {}).get('paths', []) + [reason_path]
+        ban_info   = {'banned_at': banned_at, 'expires_at': expires_at, 'probes': probes, 'ua': ua, 'reason': 'instant_ban'}
+        _auto_banned_ips.add(ip)
+        _ban_details[ip] = ban_info
+        _save_scanner_ban(ip, ban_info)
+        _web_log('Security', f'INSTANT-BANNED {ip} — critical probe: {reason_path}')
+        threading.Thread(target=_send_scanner_ban_embed, args=(ip, probes, ua, banned_at, expires_at), daemon=True).start()
+        b_ts = int(datetime.fromisoformat(banned_at).timestamp())
+        e_ts = int(datetime.fromisoformat(expires_at).timestamp())
+        return make_response(render_template('banned.html', ip=ip, banned_ts=b_ts, expires_ts=e_ts, ban_days=_BAN_TTL_DAYS, probes=probes), 403)
+
+    # ── Helper: record a probe hit and ban/warn as appropriate ────────────────
+    def _record_probe_hit(reason_path, label='probe'):
+        with _req_lock:
+            if ip not in _scanner_hits:
+                _scanner_hits[ip] = {'count': 0, 'paths': [], 'ua': ua}
+            _scanner_hits[ip]['count'] += 1
+            _scanner_hits[ip]['paths'].append(reason_path)
+            hits = _scanner_hits[ip]['count']
+        remaining = _SCANNER_THRESHOLD - hits
+        _web_log('Security', f'Scanner {label} #{hits} from {ip}: {reason_path} UA={ua[:60]} ({remaining} left before ban)')
+        if hits >= _SCANNER_THRESHOLD:
+            now_utc    = datetime.now(timezone.utc)
+            banned_at  = now_utc.isoformat()
+            expires_at = (now_utc + timedelta(days=_BAN_TTL_DAYS)).isoformat()
+            probes = _scanner_hits[ip]['paths']
+            ban_info = {'banned_at': banned_at, 'expires_at': expires_at, 'probes': probes, 'ua': ua}
+            _auto_banned_ips.add(ip)
+            _ban_details[ip] = ban_info
+            _save_scanner_ban(ip, ban_info)
+            _web_log('Security', f'Auto-banned {ip} after {hits} probes — expires {expires_at}')
+            threading.Thread(target=_send_scanner_ban_embed, args=(ip, probes, ua, banned_at, expires_at), daemon=True).start()
+            b_ts = int(datetime.fromisoformat(banned_at).timestamp())
+            e_ts = int(datetime.fromisoformat(expires_at).timestamp())
+            return make_response(render_template('banned.html', ip=ip, banned_ts=b_ts, expires_ts=e_ts, ban_days=_BAN_TTL_DAYS, probes=probes), 403)
+        else:
+            return make_response(render_template('scanner_warning.html', ip=ip, probed_path=reason_path, hits=hits, threshold=_SCANNER_THRESHOLD, remaining=remaining), 403)
+
+    # ── 1. INSTANT BAN — critical exploits / credential files ────────────────
+    if request.path in _INSTANT_BAN_EXACT:
+        return _do_instant_ban(request.path)
+    for pattern in _INSTANT_BAN_CONTAINS:
+        if pattern in full_url_lower:
+            return _do_instant_ban(request.path + ('?' + qs_lower[:80] if qs_lower else ''))
+
+    # ── 2. KNOWN ATTACK TOOL USER-AGENTS → immediate probe hit ───────────────
+    if any(bad in ua_lower for bad in _BAD_UA_SUBSTRINGS):
+        return _record_probe_hit(request.path, label='bad-ua')
+
+    # ── 3. ATTACK PATTERNS IN QUERY STRING / URL ──────────────────────────────
+    if qs_lower:
+        for pattern in _ATTACK_QUERY_PATTERNS:
+            if pattern in full_url_lower:
+                _web_log('Security', f'Attack pattern "{pattern}" in request from {ip}: {request.path}?{qs_lower[:120]}')
+                return _record_probe_hit(request.path, label='attack-qs')
+
+    # ── 4. STANDARD SCANNER PATH DETECTION ───────────────────────────────────
     is_scanner_probe = (
         any(path_lower.startswith(p) for p in _SCANNER_PATH_PREFIXES) or
         any(s in path_lower for s in _SCANNER_PATH_CONTAINS) or
@@ -369,44 +510,11 @@ def _before_request_logging():
         request.method in ('PROPFIND', 'MKCOL', 'COPY', 'MOVE', 'LOCK', 'UNLOCK', 'SEARCH', 'TRACE')
     )
     if is_scanner_probe:
-        ua = request.headers.get('User-Agent', '')
-        with _req_lock:
-            if ip not in _scanner_hits:
-                _scanner_hits[ip] = {'count': 0, 'paths': [], 'ua': ua}
-            _scanner_hits[ip]['count'] += 1
-            _scanner_hits[ip]['paths'].append(request.path)
-            hits = _scanner_hits[ip]['count']
-        remaining = _SCANNER_THRESHOLD - hits
-        _web_log('Security', f'Scanner probe #{hits} from {ip}: {request.path} ({remaining} left before ban)')
-        if hits >= _SCANNER_THRESHOLD:
-            _auto_banned_ips.add(ip)
-            banned_at = datetime.now(timezone.utc).isoformat()
-            expires_at = (datetime.now(timezone.utc) + timedelta(days=_BAN_TTL_DAYS)).isoformat()
-            probes = _scanner_hits[ip]['paths']
-            ban_info = {'banned_at': banned_at, 'expires_at': expires_at, 'probes': probes, 'ua': ua}
-            _ban_details[ip] = ban_info
-            _save_scanner_ban(ip, ban_info)
-            _web_log('Security', f'Auto-banned scanner {ip} after {hits} probes — expires {expires_at}')
-            threading.Thread(
-                target=_send_scanner_ban_embed,
-                args=(ip, probes, ua, banned_at, expires_at),
-                daemon=True
-            ).start()
-            banned_ts = int(datetime.fromisoformat(banned_at).timestamp())
-            expires_ts = int(datetime.fromisoformat(expires_at).timestamp())
-            return make_response(render_template('banned.html',
-                ip=ip, banned_ts=banned_ts, expires_ts=expires_ts,
-                ban_days=_BAN_TTL_DAYS, probes=probes,
-            ), 403)
-        else:
-            # Warning page — show before ban threshold is reached
-            return make_response(render_template('scanner_warning.html',
-                ip=ip,
-                probed_path=request.path,
-                hits=hits,
-                threshold=_SCANNER_THRESHOLD,
-                remaining=remaining,
-            ), 403)
+        return _record_probe_hit(request.path)
+
+    # ── 5. NO USER-AGENT → count as a probe hit (bots always have no UA) ─────
+    if not ua and request.method not in ('GET', 'HEAD'):
+        return _record_probe_hit(request.path, label='no-ua')
 
 @app.after_request
 def _after_request_logging(response):
@@ -452,8 +560,52 @@ def _after_request_logging(response):
             user_id = session.get('user', {}).get('id', 'anon') if 'user' in session else 'anon'
             _web_log('Error', f'HTTP {status} from {ip} (user:{user_id}): {request.method} {path}')
 
+        # ── 404 flood detection — directory fuzzing (gobuster/ffuf style) ────
+        if status == 404 and not is_static and ip:
+            now_ts = time.time()
+            with _req_lock:
+                hits = _404_hits.get(ip, [])
+                hits = [t for t in hits if now_ts - t < _404_WINDOW]
+                hits.append(now_ts)
+                _404_hits[ip] = hits
+                count_404 = len(hits)
+            if count_404 >= _404_THRESHOLD and ip not in _auto_banned_ips:
+                _web_log('Security', f'404 flood from {ip} — {count_404} in {_404_WINDOW}s (dir fuzzing suspected)')
+                with _req_lock:
+                    if ip not in _scanner_hits:
+                        _scanner_hits[ip] = {'count': 0, 'paths': [], 'ua': request.headers.get('User-Agent', '')}
+                    _scanner_hits[ip]['count'] += 1
+                    _scanner_hits[ip]['paths'].append(f'[404-flood:{count_404}x] {path}')
+                    _404_hits[ip] = []  # reset flood window after registering hit
+
     except Exception:
         pass
+    return response
+
+@app.after_request
+def _add_security_headers(response):
+    """Add security headers to every response."""
+    # Prevent browsers from MIME-sniffing
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    # Deny framing (clickjacking protection)
+    response.headers['X-Frame-Options'] = 'DENY'
+    # Disable legacy XSS filter (modern approach: use CSP)
+    response.headers['X-XSS-Protection'] = '0'
+    # Don't send Referer to third-party sites
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    # Restrict what browser features can be used
+    response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=(), payment=()'
+    # Content Security Policy — allow our own assets + Google Fonts + Discord CDN for avatars
+    if not request.path.startswith('/static/'):
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "img-src 'self' data: https://cdn.discordapp.com https://static-cdn.jtvnw.net https://cubsoftware.site; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none';"
+        )
     return response
 
 @app.after_request
@@ -1500,6 +1652,175 @@ def serve_images(filename):
 def favicon():
     """Serve favicon"""
     return send_from_directory('website/static/images', 'company-logo.png', mimetype='image/png')
+
+@app.route('/sitemap.xml')
+def sitemap_xml():
+    """Dynamic sitemap — all public indexable pages."""
+    base = 'https://cubsoftware.site'
+    pages = [
+        # Priority 1.0 — homepage
+        ('/',                          '1.0', 'daily'),
+        # Priority 0.9 — product/landing pages
+        ('/affiliate',                 '0.9', 'weekly'),
+        ('/cubpresence',               '0.9', 'weekly'),
+        ('/cubpresence-download',      '0.9', 'weekly'),
+        ('/cubpresence-extension',     '0.9', 'weekly'),
+        ('/cubpresence-wiki',          '0.9', 'weekly'),
+        ('/multi-twitch',              '0.9', 'weekly'),
+        ('/cleanme',                   '0.9', 'weekly'),
+        ('/cub-protector',             '0.9', 'weekly'),
+        ('/roadmap',                   '0.8', 'weekly'),
+        # Priority 0.8 — tools
+        ('/social-media-saver',        '0.8', 'monthly'),
+        ('/file-converter',            '0.8', 'monthly'),
+        ('/image-editor',              '0.8', 'monthly'),
+        ('/pdf-tools',                 '0.8', 'monthly'),
+        ('/video-compressor',          '0.8', 'monthly'),
+        ('/audio-trimmer',             '0.8', 'monthly'),
+        ('/resume-builder',            '0.8', 'monthly'),
+        ('/invoice-generator',         '0.8', 'monthly'),
+        ('/markdown-editor',           '0.8', 'monthly'),
+        ('/notepad',                   '0.8', 'monthly'),
+        ('/sticky-board',              '0.8', 'monthly'),
+        ('/link-shortener',            '0.8', 'monthly'),
+        ('/qr-generator',              '0.8', 'monthly'),
+        ('/password-generator',        '0.8', 'monthly'),
+        ('/color-picker',              '0.8', 'monthly'),
+        ('/text-tools',                '0.8', 'monthly'),
+        ('/json-formatter',            '0.8', 'monthly'),
+        ('/code-minifier',             '0.8', 'monthly'),
+        ('/diff-checker',              '0.8', 'monthly'),
+        ('/regex-tester',              '0.8', 'monthly'),
+        ('/unit-converter',            '0.8', 'monthly'),
+        ('/currency-converter',        '0.8', 'monthly'),
+        ('/timestamp-converter',       '0.8', 'monthly'),
+        ('/timestamp-generator',       '0.8', 'monthly'),
+        ('/calculator-suite',          '0.8', 'monthly'),
+        ('/timer-tools',               '0.8', 'monthly'),
+        ('/world-clock',               '0.8', 'monthly'),
+        ('/countdown-maker',           '0.8', 'monthly'),
+        ('/random-picker',             '0.8', 'monthly'),
+        ('/wheel-spinner',             '0.8', 'monthly'),
+        ('/encoding-tools',            '0.8', 'monthly'),
+        ('/webhook-sender',            '0.8', 'monthly'),
+        ('/permission-calculator',     '0.8', 'monthly'),
+        # Priority 0.5 — legal / support
+        ('/terms',                     '0.5', 'monthly'),
+        ('/privacy',                   '0.5', 'monthly'),
+        ('/copyright',                 '0.5', 'monthly'),
+        ('/contact',                   '0.5', 'monthly'),
+        ('/press',                     '0.5', 'monthly'),
+        ('/status',                    '0.5', 'daily'),
+        ('/report',                    '0.5', 'monthly'),
+    ]
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>',
+             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for path, priority, freq in pages:
+        lines.append(f'  <url>')
+        lines.append(f'    <loc>{base}{path}</loc>')
+        lines.append(f'    <lastmod>{today}</lastmod>')
+        lines.append(f'    <changefreq>{freq}</changefreq>')
+        lines.append(f'    <priority>{priority}</priority>')
+        lines.append(f'  </url>')
+    lines.append('</urlset>')
+    return '\n'.join(lines), 200, {'Content-Type': 'application/xml; charset=utf-8'}
+
+@app.route('/robots.txt')
+def robots_txt():
+    """
+    robots.txt — tells legitimate search engine crawlers what to index.
+    NOTE: This is a public file. Do NOT list sensitive paths here —
+    that would advertise them to attackers. Real security comes from auth.
+    """
+    content = """User-agent: *
+# Public pages — index these
+Allow: /$
+Allow: /affiliate$
+Allow: /affiliate/
+Allow: /terms$
+Allow: /privacy$
+Allow: /copyright$
+Allow: /contact$
+Allow: /press$
+Allow: /status$
+Allow: /report$
+Allow: /roadmap$
+Allow: /static/images/
+Allow: /static/css/
+Allow: /r/
+
+# Tools — allow indexing
+Allow: /social-media-saver
+Allow: /file-converter
+Allow: /image-editor
+Allow: /pdf-tools
+Allow: /video-compressor
+Allow: /audio-trimmer
+Allow: /resume-builder
+Allow: /invoice-generator
+Allow: /markdown-editor
+Allow: /notepad
+Allow: /sticky-board
+Allow: /link-shortener
+Allow: /qr-generator
+Allow: /password-generator
+Allow: /color-picker
+Allow: /text-tools
+Allow: /json-formatter
+Allow: /code-minifier
+Allow: /diff-checker
+Allow: /regex-tester
+Allow: /unit-converter
+Allow: /currency-converter
+Allow: /timestamp-converter
+Allow: /timestamp-generator
+Allow: /calculator-suite
+Allow: /timer-tools
+Allow: /world-clock
+Allow: /countdown-maker
+Allow: /random-picker
+Allow: /wheel-spinner
+Allow: /encoding-tools
+Allow: /webhook-sender
+Allow: /permission-calculator
+
+# CUB products
+Allow: /cubpresence
+Allow: /cubpresence-download
+Allow: /cubpresence-extension
+Allow: /cubpresence-wiki
+Allow: /multi-twitch
+Allow: /cleanme
+Allow: /cub-protector
+
+# Disallow everything else (dashboards, APIs, auth, admin)
+Disallow: /api/
+Disallow: /login
+Disallow: /logout
+Disallow: /dashboard
+Disallow: /affiliate/dashboard
+Disallow: /affiliate/login
+Disallow: /affiliate/apply
+Disallow: /affiliate/payout-agreement
+Disallow: /account
+Disallow: /bot-dashboard
+Disallow: /cleanme/dashboard
+Disallow: /cleanme/edit
+Disallow: /cleanme/submit
+Disallow: /cub-protector/dashboard
+Disallow: /apps/
+Disallow: /banned
+Disallow: /ip-ban-appeal
+Disallow: /ban-appeal
+Disallow: /scanner_warning
+Disallow: /vanity/
+Disallow: /countdown-view/
+Disallow: /resume-view/
+
+Sitemap: https://cubsoftware.site/sitemap.xml
+"""
+    return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
 # ==================== STREAMERBOT COMMANDS ====================
 

@@ -1659,59 +1659,63 @@ def sitemap_xml():
     base = 'https://cubsoftware.site'
     pages = [
         # Priority 1.0 — homepage
-        ('/',                          '1.0', 'daily'),
-        # Priority 0.9 — product/landing pages
-        ('/affiliate',                 '0.9', 'weekly'),
-        ('/cubpresence',               '0.9', 'weekly'),
-        ('/cubpresence-download',      '0.9', 'weekly'),
-        ('/cubpresence-extension',     '0.9', 'weekly'),
-        ('/cubpresence-wiki',          '0.9', 'weekly'),
-        ('/multi-twitch',              '0.9', 'weekly'),
-        ('/cleanme',                   '0.9', 'weekly'),
-        ('/cub-protector',             '0.9', 'weekly'),
-        ('/roadmap',                   '0.8', 'weekly'),
+        ('/',                                  '1.0', 'daily'),
+        # Priority 0.9 — products & platforms
+        ('/affiliate',                         '0.9', 'weekly'),
+        ('/apps/cubpresence',                  '0.9', 'weekly'),
+        ('/apps/cubpresence/download',         '0.9', 'weekly'),
+        ('/apps/cubpresence/extension',        '0.9', 'weekly'),
+        ('/cubpresence-wiki',                  '0.9', 'weekly'),
+        ('/apps/cubreactive',                  '0.9', 'weekly'),
+        ('/apps/multi-twitch',                 '0.9', 'weekly'),
+        ('/streamavatars',                     '0.9', 'weekly'),
+        ('/cleanme',                           '0.9', 'weekly'),
+        ('/cleanme/browse',                    '0.8', 'daily'),
+        ('/cub-protector',                     '0.9', 'weekly'),
+        ('/apps/cubvault',                     '0.9', 'weekly'),
+        ('/apps/streamerbot-commands',         '0.8', 'weekly'),
         # Priority 0.8 — tools
-        ('/social-media-saver',        '0.8', 'monthly'),
-        ('/file-converter',            '0.8', 'monthly'),
-        ('/image-editor',              '0.8', 'monthly'),
-        ('/pdf-tools',                 '0.8', 'monthly'),
-        ('/video-compressor',          '0.8', 'monthly'),
-        ('/audio-trimmer',             '0.8', 'monthly'),
-        ('/resume-builder',            '0.8', 'monthly'),
-        ('/invoice-generator',         '0.8', 'monthly'),
-        ('/markdown-editor',           '0.8', 'monthly'),
-        ('/notepad',                   '0.8', 'monthly'),
-        ('/sticky-board',              '0.8', 'monthly'),
-        ('/link-shortener',            '0.8', 'monthly'),
-        ('/qr-generator',              '0.8', 'monthly'),
-        ('/password-generator',        '0.8', 'monthly'),
-        ('/color-picker',              '0.8', 'monthly'),
-        ('/text-tools',                '0.8', 'monthly'),
-        ('/json-formatter',            '0.8', 'monthly'),
-        ('/code-minifier',             '0.8', 'monthly'),
-        ('/diff-checker',              '0.8', 'monthly'),
-        ('/regex-tester',              '0.8', 'monthly'),
-        ('/unit-converter',            '0.8', 'monthly'),
-        ('/currency-converter',        '0.8', 'monthly'),
-        ('/timestamp-converter',       '0.8', 'monthly'),
-        ('/timestamp-generator',       '0.8', 'monthly'),
-        ('/calculator-suite',          '0.8', 'monthly'),
-        ('/timer-tools',               '0.8', 'monthly'),
-        ('/world-clock',               '0.8', 'monthly'),
-        ('/countdown-maker',           '0.8', 'monthly'),
-        ('/random-picker',             '0.8', 'monthly'),
-        ('/wheel-spinner',             '0.8', 'monthly'),
-        ('/encoding-tools',            '0.8', 'monthly'),
-        ('/webhook-sender',            '0.8', 'monthly'),
-        ('/permission-calculator',     '0.8', 'monthly'),
+        ('/apps/file-converter',               '0.8', 'monthly'),
+        ('/apps/image-editor',                 '0.8', 'monthly'),
+        ('/apps/pdf-tools',                    '0.8', 'monthly'),
+        ('/apps/video-compressor',             '0.8', 'monthly'),
+        ('/apps/audio-trimmer',                '0.8', 'monthly'),
+        ('/apps/resume-builder',               '0.8', 'monthly'),
+        ('/apps/invoice-generator',            '0.8', 'monthly'),
+        ('/apps/markdown-editor',              '0.8', 'monthly'),
+        ('/apps/notepad',                      '0.8', 'monthly'),
+        ('/apps/sticky-board',                 '0.8', 'monthly'),
+        ('/apps/link-shortener',               '0.8', 'monthly'),
+        ('/apps/qr-generator',                 '0.8', 'monthly'),
+        ('/apps/password-generator',           '0.8', 'monthly'),
+        ('/apps/color-picker',                 '0.8', 'monthly'),
+        ('/apps/text-tools',                   '0.8', 'monthly'),
+        ('/apps/json-formatter',               '0.8', 'monthly'),
+        ('/apps/code-minifier',                '0.8', 'monthly'),
+        ('/apps/diff-checker',                 '0.8', 'monthly'),
+        ('/apps/regex-tester',                 '0.8', 'monthly'),
+        ('/apps/unit-converter',               '0.8', 'monthly'),
+        ('/apps/currency-converter',           '0.8', 'monthly'),
+        ('/apps/timestamp-converter',          '0.8', 'monthly'),
+        ('/apps/timestamp-generator',          '0.8', 'monthly'),
+        ('/apps/calculator-suite',             '0.8', 'monthly'),
+        ('/apps/timer-tools',                  '0.8', 'monthly'),
+        ('/apps/world-clock',                  '0.8', 'monthly'),
+        ('/apps/countdown-maker',              '0.8', 'monthly'),
+        ('/apps/random-picker',                '0.8', 'monthly'),
+        ('/apps/wheel-spinner',                '0.8', 'monthly'),
+        ('/apps/encoding-tools',               '0.8', 'monthly'),
+        ('/apps/webhook-sender',               '0.8', 'monthly'),
+        ('/apps/permission-calculator',        '0.8', 'monthly'),
+        ('/apps/embed-builder',                '0.8', 'monthly'),
         # Priority 0.5 — legal / support
-        ('/terms',                     '0.5', 'monthly'),
-        ('/privacy',                   '0.5', 'monthly'),
-        ('/copyright',                 '0.5', 'monthly'),
-        ('/contact',                   '0.5', 'monthly'),
-        ('/press',                     '0.5', 'monthly'),
-        ('/status',                    '0.5', 'daily'),
-        ('/report',                    '0.5', 'monthly'),
+        ('/terms',                             '0.5', 'monthly'),
+        ('/privacy',                           '0.5', 'monthly'),
+        ('/copyright',                         '0.5', 'monthly'),
+        ('/contact',                           '0.5', 'monthly'),
+        ('/press',                             '0.5', 'monthly'),
+        ('/status',                            '0.5', 'daily'),
+        ('/report',                            '0.5', 'monthly'),
     ]
     today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
     lines = ['<?xml version="1.0" encoding="UTF-8"?>',
@@ -1745,54 +1749,60 @@ Allow: /contact$
 Allow: /press$
 Allow: /status$
 Allow: /report$
-Allow: /roadmap$
 Allow: /static/images/
 Allow: /static/css/
 Allow: /r/
 
 # Tools — allow indexing
-Allow: /social-media-saver
-Allow: /file-converter
-Allow: /image-editor
-Allow: /pdf-tools
-Allow: /video-compressor
-Allow: /audio-trimmer
-Allow: /resume-builder
-Allow: /invoice-generator
-Allow: /markdown-editor
-Allow: /notepad
-Allow: /sticky-board
-Allow: /link-shortener
-Allow: /qr-generator
-Allow: /password-generator
-Allow: /color-picker
-Allow: /text-tools
-Allow: /json-formatter
-Allow: /code-minifier
-Allow: /diff-checker
-Allow: /regex-tester
-Allow: /unit-converter
-Allow: /currency-converter
-Allow: /timestamp-converter
-Allow: /timestamp-generator
-Allow: /calculator-suite
-Allow: /timer-tools
-Allow: /world-clock
-Allow: /countdown-maker
-Allow: /random-picker
-Allow: /wheel-spinner
-Allow: /encoding-tools
-Allow: /webhook-sender
-Allow: /permission-calculator
+Allow: /apps/file-converter
+Allow: /apps/image-editor
+Allow: /apps/pdf-tools
+Allow: /apps/video-compressor
+Allow: /apps/audio-trimmer
+Allow: /apps/resume-builder
+Allow: /apps/invoice-generator
+Allow: /apps/markdown-editor
+Allow: /apps/notepad
+Allow: /apps/sticky-board
+Allow: /apps/link-shortener
+Allow: /apps/qr-generator
+Allow: /apps/password-generator
+Allow: /apps/color-picker
+Allow: /apps/text-tools
+Allow: /apps/json-formatter
+Allow: /apps/code-minifier
+Allow: /apps/diff-checker
+Allow: /apps/regex-tester
+Allow: /apps/unit-converter
+Allow: /apps/currency-converter
+Allow: /apps/timestamp-converter
+Allow: /apps/timestamp-generator
+Allow: /apps/calculator-suite
+Allow: /apps/timer-tools
+Allow: /apps/world-clock
+Allow: /apps/countdown-maker
+Allow: /apps/random-picker
+Allow: /apps/wheel-spinner
+Allow: /apps/encoding-tools
+Allow: /apps/webhook-sender
+Allow: /apps/permission-calculator
+Allow: /apps/embed-builder
+Allow: /apps/multi-twitch
+Allow: /apps/cubreactive
 
 # CUB products
-Allow: /cubpresence
-Allow: /cubpresence-download
-Allow: /cubpresence-extension
+Allow: /apps/cubpresence
+Allow: /apps/cubpresence/download
+Allow: /apps/cubpresence/extension
 Allow: /cubpresence-wiki
-Allow: /multi-twitch
-Allow: /cleanme
+Allow: /apps/cubreactive
+Allow: /apps/multi-twitch
+Allow: /streamavatars
+Allow: /cleanme$
+Allow: /cleanme/browse
 Allow: /cub-protector
+Allow: /apps/cubvault
+Allow: /apps/streamerbot-commands
 
 # Disallow everything else (dashboards, APIs, auth, admin)
 Disallow: /api/

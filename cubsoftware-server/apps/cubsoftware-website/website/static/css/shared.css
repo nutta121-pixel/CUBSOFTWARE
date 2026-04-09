@@ -1621,7 +1621,7 @@ button {
 }
 
 .page-header-description {
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.72);
     font-size: clamp(0.95rem, 2vw, 1.05rem);
     line-height: 1.75;
     max-width: 560px;
@@ -1671,7 +1671,7 @@ button {
 }
 
 .tool-page-subtitle {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.70);
     font-size: clamp(0.88rem, 2vw, 1rem);
     line-height: 1.7;
     max-width: 520px;
@@ -2246,7 +2246,7 @@ button {
 
 .section-subtext {
     text-align: center;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.68);
     font-size: 1rem;
     max-width: 580px;
     margin: 0 auto 2.5rem;
@@ -2529,7 +2529,7 @@ button {
 .sticky-header p, .random-header p, .wheel-header p, .md-header p,
 .note-header p, .rm-hero > p, .cleanme-hero > p, .cubreactive-hero > p,
 [class$="-header"] > p {
-    color: rgba(255, 255, 255, 0.5) !important;
+    color: rgba(255, 255, 255, 0.70) !important;
     font-size: clamp(0.88rem, 2vw, 1rem) !important;
     line-height: 1.7 !important;
     text-align: center !important;

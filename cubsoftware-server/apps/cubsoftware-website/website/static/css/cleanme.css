@@ -611,7 +611,7 @@
 }
 
 .browse-header p {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.70);
 }
 
 .browse-filters {
@@ -1233,7 +1233,7 @@
 
 .browse-header p,
 .submit-header p {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.70);
 }
 
 .browse-filters {

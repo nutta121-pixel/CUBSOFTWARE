@@ -2113,7 +2113,6 @@ Disallow: /cleanme/dashboard
 Disallow: /cleanme/edit
 Disallow: /cleanme/submit
 Disallow: /cub-protector/dashboard
-Disallow: /apps/
 Disallow: /banned
 Disallow: /ip-ban-appeal
 Disallow: /ban-appeal

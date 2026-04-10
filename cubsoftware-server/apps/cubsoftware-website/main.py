@@ -605,9 +605,38 @@ def _before_request_logging():
         'whatsapp',            # WhatsApp preview
         'telegrambot',         # Telegram preview
     )
-    is_trusted_crawler = any(crawler in ua_lower for crawler in _TRUSTED_CRAWLERS)
+    _CRAWLER_NAMES = {
+        'googlebot':              'Google',
+        'googleother':            'Google',
+        'google-inspectiontool':  'Google Search Console',
+        'bingbot':                'Bing',
+        'slurp':                  'Yahoo',
+        'duckduckbot':            'DuckDuckGo',
+        'baiduspider':            'Baidu',
+        'yandexbot':              'Yandex',
+        'sogou':                  'Sogou',
+        'exabot':                 'Exalead',
+        'facebot':                'Facebook',
+        'ia_archiver':            'Wayback Machine',
+        'semrushbot':             'SEMRush',
+        'ahrefsbot':              'Ahrefs',
+        'mj12bot':                'Majestic',
+        'dotbot':                 'OpenSite Explorer',
+        'rogerbot':               'Moz',
+        'screaming frog':         'Screaming Frog',
+        'applebot':               'Apple',
+        'twitterbot':             'Twitter',
+        'discordbot':             'Discord',
+        'linkedinbot':            'LinkedIn',
+        'slackbot':               'Slack',
+        'whatsapp':               'WhatsApp',
+        'telegrambot':            'Telegram',
+    }
+    matched_crawler = next((crawler for crawler in _TRUSTED_CRAWLERS if crawler in ua_lower), None)
+    is_trusted_crawler = matched_crawler is not None
     if is_trusted_crawler:
-        _web_log('Crawler', f'{ip} → {request.method} {request.path} UA={ua[:80]}')
+        crawler_name = _CRAWLER_NAMES.get(matched_crawler, matched_crawler)
+        _web_log('Crawler', f'{crawler_name} ({ip}) → {request.method} {request.path}')
         # Still block critical exploit patterns even for crawler UAs (spoofing protection)
         for pattern in _INSTANT_BAN_CONTAINS:
             if pattern in full_url_lower:

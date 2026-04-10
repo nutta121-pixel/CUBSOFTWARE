@@ -10851,9 +10851,9 @@ client.once('clientReady', async () => {
     // Apply saved presence (custom bot mode only)
     applyBotPresence();
 
-    // Poll for presence changes every 30 seconds (custom bot mode only)
+    // Poll for presence changes every 60 seconds (custom bot mode only)
     if (CUSTOM_GUILD_ID) {
-        setInterval(applyBotPresence, 30 * 1000);
+        setInterval(applyBotPresence, 60 * 1000);
     }
 
     // ── Restore self-roles panels on startup ──────────────────────────────────
@@ -11049,7 +11049,7 @@ client.once('clientReady', async () => {
             presIdx = (presIdx + 1) % presences.length;
             client.user.setPresence(presences[presIdx]);
             logPresence(presences[presIdx]);
-        }, 20000);
+        }, 60000);
     }
 
     // ── Daily cleanup of tmp_cubai_* files at midnight ────────────────────────

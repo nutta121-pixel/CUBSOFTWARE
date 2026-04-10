@@ -51,8 +51,8 @@ module.exports = {
         // Set initial presence
         updatePresence(client);
 
-        // Cycle through commands every 2 minutes (120000ms)
-        setInterval(() => updatePresence(client), 2 * 60 * 1000);
+        // Cycle through commands every 60 seconds
+        setInterval(() => updatePresence(client), 60 * 1000);
 
         await updateGuildStats(client);
         await updateUserDisplayNames(client);

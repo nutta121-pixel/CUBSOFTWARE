@@ -223,9 +223,9 @@ client.once('ready', async () => {
     // Deploy commands on startup
     await deployCommands();
 
-    // Start presence rotation (every 30 seconds)
+    // Start presence rotation (every 60 seconds)
     updatePresence();
-    setInterval(updatePresence, 30000);
+    setInterval(updatePresence, 60000);
 
     console.log(`[Ready] Commands registered: ${commands.length}`);
 

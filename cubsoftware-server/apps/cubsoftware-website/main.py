@@ -13398,7 +13398,7 @@ def cub_protector_welcome_test(guild_id):
 def cub_protector_channels(guild_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
-    channels = _guild_bot_request(guild_id, f'/guilds/{guild_id}/channels', bypass_cache=True)
+    channels = _guild_bot_request(guild_id, f'/guilds/{guild_id}/channels')
     if not channels:
         return jsonify({'channels': []})
     return jsonify({'channels': [{'id': c['id'], 'name': c['name'], 'type': c.get('type', 0)} for c in channels]})
@@ -13408,7 +13408,7 @@ def cub_protector_channels(guild_id):
 def cub_protector_roles(guild_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
-    roles = _guild_bot_request(guild_id, f'/guilds/{guild_id}/roles', bypass_cache=True)
+    roles = _guild_bot_request(guild_id, f'/guilds/{guild_id}/roles')
     if not roles:
         return jsonify({'roles': []})
     # Filter out @everyone and managed/bot roles, sort by position descending

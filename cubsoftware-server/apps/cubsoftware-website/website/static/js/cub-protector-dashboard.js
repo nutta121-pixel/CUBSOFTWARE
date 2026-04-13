@@ -200,8 +200,8 @@
         cachedRolesTTL = 0;
         channelsLoading = null;
         rolesLoading = null;
-        fetchGuildChannels();
-        fetchGuildRoles();
+        // Channels and roles are fetched lazily by the section that needs them,
+        // not pre-fetched here — avoids firing 3+ Discord API calls simultaneously.
 
         // Update sidebar server info
         const icon = guild.icon

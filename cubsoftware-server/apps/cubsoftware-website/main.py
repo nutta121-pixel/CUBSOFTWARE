@@ -827,8 +827,9 @@ def _after_request_logging(response):
                 _check_and_apply_subnet_ban(ip)
                 threading.Thread(target=_send_scanner_ban_embed, args=(ip, probes, ban_info['ua'], banned_at, expires_at), daemon=True).start()
 
-        # Rate limit responses → auto-ban on repeated hammering
-        if status == 429 and not is_static:
+        # Rate limit responses → auto-ban on repeated hammering (skip for private/trusted IPs)
+        _is_local = ip and any(ip.startswith(p) for p in ('127.', '::1', '10.', '192.168.', '172.16.', '172.17.', '172.18.', '172.19.', '172.20.', '172.21.', '172.22.', '172.23.', '172.24.', '172.25.', '172.26.', '172.27.', '172.28.', '172.29.', '172.30.', '172.31.'))
+        if status == 429 and not is_static and not _is_local and ip not in _TRUSTED_IPS:
             _web_log('RateLimit', f'429 returned to {ip}: {request.method} {path}')
             with _req_lock:
                 _failed_logins[ip] = _failed_logins.get(ip, 0) + 1

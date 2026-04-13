@@ -12422,6 +12422,37 @@ def get_user_bot_guilds(user_guilds):
 
     return shared_guilds
 
+
+def get_user_setup_guilds(user_guilds, covered_guild_ids):
+    """
+    Returns guilds where the user is owner/admin but the bot isn't installed.
+    Capped at 100 entries — highly unlikely anyone admins more than that.
+    """
+    setup_guilds = []
+    for guild in user_guilds:
+        if guild['id'] in covered_guild_ids:
+            continue  # bot already present
+
+        permissions = int(guild.get('permissions', 0))
+        is_owner = guild.get('owner', False)
+        is_admin = (permissions & 0x8) == 0x8 or (permissions & 0x20) == 0x20
+
+        if not (is_owner or is_admin):
+            continue  # not eligible to add the bot
+
+        setup_guilds.append({
+            'id': guild['id'],
+            'name': guild['name'],
+            'icon': guild.get('icon'),
+            'owner': is_owner,
+        })
+
+        if len(setup_guilds) >= 100:
+            break  # safety cap — Discord max is 200 guilds per user anyway
+
+    return setup_guilds
+
+
 # CUB PROTECTOR OAuth — unified login handles everything
 @app.route('/cub-protector/auth/discord')
 def cub_protector_auth():
@@ -12486,18 +12517,19 @@ def cub_protector_overview():
 @app.route('/api/cub-protector/guilds')
 @cub_protector_auth_required
 def cub_protector_guilds():
-    """Get guilds where both the user and bot are present"""
+    """Get guilds where both the user and bot are present, plus setup guilds"""
     user_guilds = session.get('cub_protector_user_guilds', [])
     shared_guilds = get_user_bot_guilds(user_guilds)
 
     # Cache shared guild IDs in session for fast access checks
-    session['cub_protector_shared_guild_ids'] = [g['id'] for g in shared_guilds]
+    covered_ids = {g['id'] for g in shared_guilds}
+    session['cub_protector_shared_guild_ids'] = list(covered_ids)
     session['cub_protector_guild_cache_time'] = time.time()
 
-    # Member counts are fetched individually via the overview endpoint when a guild is selected.
-    # Fetching them for every guild here would make one Discord API call per guild on every list load.
+    # Guilds where user is owner/admin but bot isn't installed — shown as "Setup"
+    setup_guilds = get_user_setup_guilds(user_guilds, covered_ids)
 
-    return jsonify({'guilds': shared_guilds})
+    return jsonify({'guilds': shared_guilds, 'setup_guilds': setup_guilds})
 
 @app.route('/api/cub-protector/guilds/<guild_id>/hubs')
 @cub_protector_auth_required

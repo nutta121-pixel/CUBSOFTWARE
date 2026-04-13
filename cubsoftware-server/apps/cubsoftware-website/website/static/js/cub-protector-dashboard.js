@@ -6,6 +6,7 @@
     let currentSection = 'overview';
     let selectedGuild = null;  // full guild object
     let guilds = [];
+    let setupGuilds = [];  // guilds where user is admin/owner but bot isn't installed
     let cachedChannels = null;   // cached channels for selected guild
     let cachedChannelsTTL = 0;   // expiry timestamp for channel cache
     let cachedRoles = null;      // cached roles for selected guild
@@ -110,6 +111,42 @@
     }
 
     // ==================== SERVER PICKER ====================
+    const BOT_INVITE_URL = 'https://discord.com/oauth2/authorize?client_id=1044032842352574554&permissions=1109107535350&scope=bot%20applications.commands';
+
+    function renderServerCard(g) {
+        const icon = g.icon
+            ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.${g.icon.startsWith('a_') ? 'gif' : 'png'}?size=128`
+            : '/static/images/default-avatar.png';
+        const customBotBadge = g.has_custom_bot
+            ? `<span class="server-custom-bot-badge" title="Running a custom bot">Custom Bot</span>`
+            : '';
+        return `
+            <div class="server-picker-card" onclick="window.cpSelectServer('${g.id}')">
+                <img src="${icon}" alt="" class="server-picker-icon" onerror="this.src='/static/images/default-avatar.png'">
+                <div class="server-picker-info">
+                    <div class="server-picker-name">${escapeHtml(g.name)}</div>
+                    <div class="server-picker-meta">${g.member_count || '?'} members${customBotBadge}</div>
+                </div>
+                <span class="server-role ${g.role_class}">${g.role_label}</span>
+            </div>`;
+    }
+
+    function renderSetupCard(g) {
+        const icon = g.icon
+            ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.${g.icon.startsWith('a_') ? 'gif' : 'png'}?size=128`
+            : '/static/images/default-avatar.png';
+        const inviteUrl = `${BOT_INVITE_URL}&guild_id=${g.id}`;
+        return `
+            <div class="server-picker-card setup-card">
+                <img src="${icon}" alt="" class="server-picker-icon" onerror="this.src='/static/images/default-avatar.png'">
+                <div class="server-picker-info">
+                    <div class="server-picker-name">${escapeHtml(g.name)}</div>
+                    <div class="server-picker-meta">${g.owner ? 'Owner' : 'Admin'}</div>
+                </div>
+                <a href="${inviteUrl}" target="_blank" class="server-picker-setup-btn" onclick="event.stopPropagation()">+ Setup</a>
+            </div>`;
+    }
+
     async function loadServers() {
         try {
             const res = await fetch('/api/cub-protector/guilds');
@@ -121,35 +158,32 @@
             }
 
             guilds = data.guilds || [];
+            setupGuilds = data.setup_guilds || [];
 
-            if (guilds.length === 0) {
+            let html = '';
+
+            if (guilds.length === 0 && setupGuilds.length === 0) {
                 elements.pickerGrid.innerHTML = `
                     <div class="server-picker-empty">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="48" height="48" style="color: var(--text-muted); margin-bottom: 1rem;"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
-                        <h3>No Shared Servers</h3>
-                        <p>CUB PROTECTOR isn't in any of your servers yet.</p>
-                        <a href="https://discord.com/oauth2/authorize?client_id=1044032842352574554&permissions=1109107535350&scope=bot%20applications.commands" target="_blank" class="control-btn primary" style="margin-top: 1rem;">Add to Server</a>
+                        <h3>No Servers Found</h3>
+                        <p>You need to own or admin a server to use CUB PROTECTOR.</p>
+                        <a href="${BOT_INVITE_URL}" target="_blank" class="control-btn primary" style="margin-top: 1rem;">Add to Server</a>
                     </div>`;
                 return;
             }
 
-            elements.pickerGrid.innerHTML = guilds.map(g => {
-                const icon = g.icon
-                    ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.${g.icon.startsWith('a_') ? 'gif' : 'png'}?size=128`
-                    : '/static/images/default-avatar.png';
-                const customBotBadge = g.has_custom_bot
-                    ? `<span class="server-custom-bot-badge" title="Running a custom bot">Custom Bot</span>`
-                    : '';
-                return `
-                    <div class="server-picker-card" onclick="window.cpSelectServer('${g.id}')">
-                        <img src="${icon}" alt="" class="server-picker-icon" onerror="this.src='/static/images/default-avatar.png'">
-                        <div class="server-picker-info">
-                            <div class="server-picker-name">${escapeHtml(g.name)}</div>
-                            <div class="server-picker-meta">${g.member_count || '?'} members${customBotBadge}</div>
-                        </div>
-                        <span class="server-role ${g.role_class}">${g.role_label}</span>
-                    </div>`;
-            }).join('');
+            if (guilds.length > 0) {
+                html += `<div class="server-picker-section-heading">Your Servers</div>`;
+                html += guilds.map(renderServerCard).join('');
+            }
+
+            if (setupGuilds.length > 0) {
+                html += `<div class="server-picker-section-heading">Add CUB PROTECTOR</div>`;
+                html += setupGuilds.map(renderSetupCard).join('');
+            }
+
+            elements.pickerGrid.innerHTML = html;
 
         } catch (e) {
             console.error('Failed to load servers:', e);
@@ -187,7 +221,9 @@
         // Update mobile title
         document.getElementById('mobileTitle').textContent = guild.name;
 
-        // Switch from picker to dashboard
+        // Switch from picker to dashboard (hide site header — sidebar replaces nav)
+        const siteHeader = document.querySelector('.site-header');
+        if (siteHeader) siteHeader.style.display = 'none';
         elements.pickerScreen.style.display = 'none';
         elements.dashboardLayout.style.display = '';
 
@@ -199,6 +235,9 @@
         selectedGuild = null;
         elements.dashboardLayout.style.display = 'none';
         elements.pickerScreen.style.display = '';
+        // Restore site header on the server picker screen
+        const siteHeader = document.querySelector('.site-header');
+        if (siteHeader) siteHeader.style.display = '';
         closeMobileSidebar();
         window.clearNavSearch();
     };

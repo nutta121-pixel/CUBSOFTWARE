@@ -478,11 +478,21 @@ function updateSharedChatSelect() {
 
 function updateSharedChatEmbed() {
     const select = document.getElementById('sharedChatSelect');
-    const iframe = document.getElementById('sharedChatIframe');
-    if (!iframe) return;
+    const old = document.getElementById('sharedChatIframe');
+    if (!old) return;
     const channel = (select && select.value) || state.channels[0];
-    if (!channel) { iframe.src = 'about:blank'; return; }
-    iframe.src = `https://www.twitch.tv/embed/${encodeURIComponent(channel)}/chat?parent=${PARENT_DOMAIN}&darkpopout`;
+
+    // Replace the iframe entirely instead of changing src — avoids Twitch's
+    // "chatting is disabled / observed by another viewer" message that fires
+    // when the same iframe element is reused across channel switches.
+    const fresh = document.createElement('iframe');
+    fresh.id = 'sharedChatIframe';
+    fresh.frameBorder = '0';
+    fresh.setAttribute('allowtransparency', 'true');
+    fresh.src = channel
+        ? `https://www.twitch.tv/embed/${encodeURIComponent(channel)}/chat?parent=${PARENT_DOMAIN}&darkpopout`
+        : 'about:blank';
+    old.replaceWith(fresh);
 }
 
 /* ─── URL Sync ─── */

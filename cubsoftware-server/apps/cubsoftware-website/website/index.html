@@ -693,15 +693,15 @@
                         wrap.closest('.community-section').style.display = 'none';
                         return;
                     }
-                    const pills = members.map(m => `
-                        <span class="community-member-pill">
+                    const cards = members.map(m => `
+                        <div class="community-member-card">
                             <img class="community-member-avatar" src="${m.avatar}" alt=""
                                  onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
                             <span class="community-member-name">${m.name}</span>
-                        </span>`).join('');
+                        </div>`).join('');
                     // Duplicate for seamless loop
-                    trackA.innerHTML = pills;
-                    trackB.innerHTML = pills;
+                    trackA.innerHTML = cards;
+                    trackB.innerHTML = cards;
                 })
                 .catch(() => {
                     wrap.closest('.community-section').style.display = 'none';

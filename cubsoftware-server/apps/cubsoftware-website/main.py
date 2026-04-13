@@ -1119,7 +1119,37 @@ _TEAM_MEMBERS = [
         'badge': 'dev',
     },
 ]
-_team_cache = {'data': None, 'ts': 0}
+_team_cache = {'data': None, 'ts': 0}  # ts=0 forces refresh on first request
+
+@app.route('/api/proxy-image')
+def proxy_image():
+    """Server-side image proxy — bypasses hotlink protection on external image hosts."""
+    from urllib.parse import urlparse, quote
+    url = request.args.get('url', '').strip()
+    if not url:
+        return '', 404
+    _ALLOWED_HOSTS = (
+        'i.pinimg.com', 'preview.redd.it', 'i.redd.it',
+        'cdn.discordapp.com', 'media.discordapp.net', 'i.imgur.com',
+    )
+    try:
+        parsed = urlparse(url)
+        if not any(parsed.netloc == h or parsed.netloc.endswith('.' + h) for h in _ALLOWED_HOSTS):
+            return '', 403
+        r = requests.get(url, timeout=8,
+                         headers={'User-Agent': 'Mozilla/5.0 (compatible; CUBSOFTWAREBot/1.0)',
+                                  'Referer': parsed.scheme + '://' + parsed.netloc + '/'})
+        if r.status_code != 200:
+            return '', 502
+        content_type = r.headers.get('Content-Type', 'image/jpeg').split(';')[0].strip()
+        if not content_type.startswith('image/'):
+            return '', 415
+        resp = make_response(r.content)
+        resp.headers['Content-Type'] = content_type
+        resp.headers['Cache-Control'] = 'public, max-age=86400'
+        return resp
+    except Exception:
+        return '', 502
 
 @app.route('/api/team')
 def team_api():
@@ -1152,7 +1182,10 @@ def team_api():
                 except Exception:
                     entry['avatar'] = 'https://cdn.discordapp.com/embed/avatars/0.png'
             else:
-                entry['avatar'] = m.get('avatar', '')
+                # Route external URLs through our proxy so hotlink protection doesn't block them
+                from urllib.parse import quote as _uq
+                raw = m.get('avatar', '')
+                entry['avatar'] = f'/api/proxy-image?url={_uq(raw, safe="")}' if raw else ''
             members.append(entry)
         _team_cache['data'] = members
         _team_cache['ts'] = now

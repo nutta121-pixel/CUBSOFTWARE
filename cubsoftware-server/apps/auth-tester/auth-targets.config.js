@@ -18,6 +18,7 @@ module.exports = [
     {
         name:          'CUB SOFTWARE Website',
         baseUrl:       process.env.CUBSOFTWARE_URL || 'http://localhost:3000',
+        prodUrl:       'https://cubsoftware.site',
         protectedPath: '/api/protected',
         authMode:      'internal-key',   // supports INTERNAL_TEST_SECRET bearer check
         disabled:      false,
@@ -25,6 +26,7 @@ module.exports = [
     {
         name:          'QuestCord Dashboard',
         baseUrl:       process.env.QUESTCORD_URL || 'http://localhost:3003',
+        prodUrl:       'https://questcord.fun',
         protectedPath: '/auth/me',
         authMode:      'session',        // session-only — rejection tests only
         disabled:      false,

@@ -9,9 +9,16 @@ const _SCANNER_THRESHOLD = 3;
 const _BAN_TTL_DAYS = 30;
 const _SECURITY_CHANNEL_ID = '1466190584372003092';
 
+// IPs that are completely exempt from scanner detection and banning (comma-separated in env)
+const _TRUSTED_IPS = new Set(
+    (process.env.TRUSTED_IPS || '').split(',').map(s => s.trim()).filter(Boolean)
+);
+
 // Path to cub-protector bot queue (same server, shared file)
+// __dirname = .../cubsoftware-server/apps/questcord/src/web/middleware
+// ..×4 reaches .../cubsoftware-server/apps → then cub-protector/data/...
 const _CP_QUEUE_FILE = path.normalize(
-    path.join(__dirname, '..', '..', '..', '..', '..', 'cub-protector', 'data', 'bot_actions_queue.json')
+    path.join(__dirname, '..', '..', '..', '..', 'cub-protector', 'data', 'bot_actions_queue.json')
 );
 
 // ── Scanner detection patterns ────────────────────────────────────────────────
@@ -41,6 +48,16 @@ const _SCANNER_EXACT = new Set([
 const _SCANNER_METHODS = new Set(['PROPFIND', 'MKCOL', 'COPY', 'MOVE', 'LOCK', 'UNLOCK', 'SEARCH', 'TRACE']);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function isPrivateIP(ip) {
+    if (!ip) return true;
+    if (ip === '127.0.0.1' || ip === '::1' || ip === 'localhost') return true;
+    if (ip.startsWith('10.')) return true;
+    if (ip.startsWith('192.168.')) return true;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return true;
+    return false;
+}
+
 function getClientIP(req) {
     return (
         req.headers['cf-connecting-ip'] ||
@@ -145,6 +162,9 @@ async function sendBanEmbed(ip, probes, ua, bannedAt, expiresAt) {
 function checkIPBan(req, res, next) {
     const ip = getClientIP(req);
     req.clientIP = ip;
+
+    // Skip all scanner/ban logic for localhost, private IPs, and trusted IPs
+    if (isPrivateIP(ip) || _TRUSTED_IPS.has(ip)) return next();
 
     // Whitelist: appeal route must always be accessible
     if (req.path === '/ip-ban-appeal') return next();

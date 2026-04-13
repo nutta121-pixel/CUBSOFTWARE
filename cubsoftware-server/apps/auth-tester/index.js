@@ -24,9 +24,10 @@ const axios = require('axios');
 const jwt   = require('jsonwebtoken');
 const http  = require('http');
 
-const TARGETS                = require('./auth-targets.config');
-const { runBruteForceTests } = require('./brute-force-tests');
-const { reportToDiscord }    = require('./discord-reporter');
+const TARGETS                        = require('./auth-targets.config');
+const { runBruteForceTests }         = require('./brute-force-tests');
+const { runSecurityChecks }          = require('./security-checks');
+const { clearChannel, reportToDiscord } = require('./discord-reporter');
 const ENABLED         = process.env.AUTH_TESTER_ENABLED !== 'false';
 const INTERNAL_SECRET = process.env.INTERNAL_TEST_SECRET || '';
 const TIMEOUT_MS      = 8000;
@@ -174,13 +175,20 @@ async function runAllChecks() {
     _running = true;
 
     const timestamp = Date.now();
-    log('=== Hourly auth security check started ===');
+    log('=== Security check started ===');
+
+    // Clear the Discord channel now (before tests run) so it is empty while
+    // the scan is in progress. For scheduled runs the pre-clear cron fires
+    // 5 min earlier; this handles manual triggers and acts as a safety net.
+    try { await clearChannel(); } catch (e) { log(`Pre-scan channel clear failed: ${e.message}`); }
 
     const activeTargets = TARGETS.filter(t => !t.disabled);
     const allAuthResults = {};   // target.name → results
     const allBfResults   = {};   // target.name → results
+    const allSecResults  = {};   // target.name → results
     let totalPass = 0, totalFail = 0;
     let bfPass = 0, bfFail = 0;
+    let secPass = 0, secFail = 0;
 
     // ── Auth tests ────────────────────────────────────────────────────────────
     for (const target of activeTargets) {
@@ -213,14 +221,30 @@ async function runAllChecks() {
         }
     }
 
-    log(`\n=== Full check done: auth ${totalPass}P/${totalFail}F | brute-force ${bfPass}P/${bfFail}F ===`);
+    // ── Security checks ───────────────────────────────────────────────────────
+    log('\n=== Starting extended security checks ===');
+    for (const target of activeTargets) {
+        try {
+            const results = await runSecurityChecks(target);
+            allSecResults[target.name] = results;
+            const anyFailed = Object.values(results).some(r => !r.skipped && !r.ok);
+            anyFailed ? secFail++ : secPass++;
+        } catch (err) {
+            log(`ERROR in security checks for ${target.name}: ${err.message}`);
+            allSecResults[target.name] = { error: { ok: false, error: err.message } };
+            secFail++;
+        }
+    }
 
-    // ── Discord report (clears channel first, then posts embeds) ──────────────
+    log(`\n=== Full check done: auth ${totalPass}P/${totalFail}F | brute-force ${bfPass}P/${bfFail}F | security ${secPass}P/${secFail}F ===`);
+
+    // ── Discord report ────────────────────────────────────────────────────────
     try {
         await reportToDiscord({
             targets: activeTargets,
             authResults: allAuthResults,
             bfResults: allBfResults,
+            secResults: allSecResults,
             timestamp,
         });
     } catch (err) {
@@ -276,10 +300,17 @@ triggerServer.listen(TRIGGER_PORT, '127.0.0.1', () => {
 // Run once immediately on startup (so you see results right away in PM2 logs)
 runAllChecks();
 
-// Every 6 hours: 00:00, 06:00, 12:00, 18:00 UTC
-cron.schedule('0 */6 * * *', () => {
-    log('Cron fired — 6-hour scheduled scan');
-    runAllChecks();
-}, { timezone: 'UTC' });
+// Clear the channel 5 minutes before each scheduled scan (23:55, 05:55, 11:55, 17:55 NZST/NZDT)
+// so the channel is already empty when the scan starts.
+cron.schedule('55 23,5,11,17 * * *', () => {
+    log('Pre-scan cron fired — clearing Discord channel 5 min before scan');
+    clearChannel().catch(e => log(`Pre-scan clear failed: ${e.message}`));
+}, { timezone: 'Pacific/Auckland' });
 
-log(`Auth tester running. Schedule: every 6 hours (UTC). Trigger port: ${TRIGGER_PORT}. Startup run in progress...`);
+// Scans at 00:00, 06:00, 12:00, 18:00 New Zealand time (Pacific/Auckland)
+cron.schedule('0 0,6,12,18 * * *', () => {
+    log('Cron fired — scheduled scan (NZ time)');
+    runAllChecks();
+}, { timezone: 'Pacific/Auckland' });
+
+log(`Auth tester running. Schedule: 00:00/06:00/12:00/18:00 NZT. Trigger port: ${TRIGGER_PORT}. Startup run in progress...`);

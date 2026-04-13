@@ -175,6 +175,7 @@ module.exports = {
                 SESSION_SECRET: s('QUESTCORD_SESSION_SECRET'),
                 DISCORD_CALLBACK_URL: 'https://questcord.fun/auth/discord/callback',
                 DISCORD_BASE_URL: 'https://questcord.fun',
+                TRUSTED_IPS: s('TRUSTED_IPS'),
             },
             env_development: {
                 NODE_ENV: 'development'

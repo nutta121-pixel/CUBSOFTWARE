@@ -272,8 +272,8 @@ async function testOversizedBody(target) {
 
 // ── Runner ────────────────────────────────────────────────────────────────────
 
-/** Delay between individual test types — spreads the full scan over ~30 minutes */
-const TEST_GAP_MS = 3 * 60 * 1000; // 3 minutes
+/** Delay between individual test types — gives the server a breath between each test */
+const TEST_GAP_MS = 30 * 1000; // 30 seconds
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -284,19 +284,19 @@ async function runBruteForceTests(target) {
     const results = {};
 
     try { results.rate_limit_burst  = await testRateLimitBurst(target);  } catch (e) { results.rate_limit_burst  = { ok: false, error: e.message }; }
-    log(`  [gap] waiting ${TEST_GAP_MS / 60000}m before next test...`);
+    log(`  [gap] waiting ${TEST_GAP_MS / 1000}s before next test...`);
     await sleep(TEST_GAP_MS);
 
     try { results.auth_flood        = await testAuthFlood(target);        } catch (e) { results.auth_flood        = { ok: false, error: e.message }; }
-    log(`  [gap] waiting ${TEST_GAP_MS / 60000}m before next test...`);
+    log(`  [gap] waiting ${TEST_GAP_MS / 1000}s before next test...`);
     await sleep(TEST_GAP_MS);
 
     try { results.path_probing      = await testPathProbing(target);      } catch (e) { results.path_probing      = { ok: false, error: e.message }; }
-    log(`  [gap] waiting ${TEST_GAP_MS / 60000}m before next test...`);
+    log(`  [gap] waiting ${TEST_GAP_MS / 1000}s before next test...`);
     await sleep(TEST_GAP_MS);
 
     try { results.header_injection  = await testHeaderInjection(target);  } catch (e) { results.header_injection  = { ok: false, error: e.message }; }
-    log(`  [gap] waiting ${TEST_GAP_MS / 60000}m before next test...`);
+    log(`  [gap] waiting ${TEST_GAP_MS / 1000}s before next test...`);
     await sleep(TEST_GAP_MS);
 
     try { results.oversized_body    = await testOversizedBody(target);    } catch (e) { results.oversized_body    = { ok: false, error: e.message }; }

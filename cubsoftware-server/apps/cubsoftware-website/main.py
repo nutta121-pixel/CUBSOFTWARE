@@ -548,6 +548,10 @@ def _before_request_logging():
                          '172.31.')
     _is_private_ip = ip and any(ip.startswith(p) for p in _PRIVATE_PREFIXES)
 
+    # Localhost — skip ALL scanner logic entirely (auth-tester runs from here)
+    if _is_private_ip:
+        return None
+
     # Auto-ban: block already-banned scanner IPs immediately
     if ip in _auto_banned_ips:
         # Re-validate against persistent storage — allows external removals (bot /ip unban,
@@ -834,7 +838,9 @@ def _after_request_logging(response):
                 threading.Thread(target=_send_scanner_ban_embed, args=(ip, probes, ban_info['ua'], banned_at, expires_at), daemon=True).start()
 
         # 4xx/5xx errors (excluding 429 which is logged above)
-        if status >= 400 and status != 429 and not is_static:
+        # Skip 4xx from localhost — those are the auth-tester doing its job
+        _is_localhost = ip in ('127.0.0.1', '::1')
+        if status >= 400 and status != 429 and not is_static and not _is_localhost:
             user_id = session.get('user', {}).get('id', 'anon') if 'user' in session else 'anon'
             _web_log('Error', f'HTTP {status} from {ip} (user:{user_id}): {request.method} {path}')
 

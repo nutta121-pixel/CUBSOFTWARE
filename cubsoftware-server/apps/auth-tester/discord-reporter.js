@@ -148,14 +148,39 @@ function buildBruteForceEmbed(target, results) {
 }
 
 /**
+ * Build an embed for one target's security check results.
+ */
+function buildSecurityEmbed(target, results) {
+    const fields = Object.entries(results).map(([check, result]) => ({
+        name: check,
+        value: result.skipped
+            ? `⏭️ Skipped: ${result.reason}`
+            : result.ok
+                ? `✅ PASS`
+                : `❌ FAIL — ${result.error || result.detail || 'see logs'}`,
+        inline: true,
+    }));
+
+    const anyFailed = Object.values(results).some(r => !r.skipped && !r.ok);
+
+    return {
+        title: `🔍 Security Checks — ${target.name}`,
+        description: `\`${target.baseUrl}\``,
+        color: overallColor(!anyFailed),
+        fields,
+        footer: { text: `Auth Tester • ${new Date().toUTCString()}` },
+    };
+}
+
+/**
  * Build the summary embed shown at the top of each run.
  */
-function buildSummaryEmbed(timestamp, authSummary, bfSummary) {
-    const allPass = authSummary.failed === 0 && bfSummary.failed === 0;
+function buildSummaryEmbed(timestamp, authSummary, bfSummary, secSummary) {
+    const allPass = authSummary.failed === 0 && bfSummary.failed === 0 && secSummary.failed === 0;
     return {
         title: allPass
-            ? '✅ Hourly Security Check — ALL PASS'
-            : '❌ Hourly Security Check — ISSUES FOUND',
+            ? '✅ Security Check — ALL PASS'
+            : '❌ Security Check — ISSUES FOUND',
         color: overallColor(allPass),
         fields: [
             {
@@ -166,6 +191,11 @@ function buildSummaryEmbed(timestamp, authSummary, bfSummary) {
             {
                 name: '🛡️ Brute-Force Tests',
                 value: `✅ ${bfSummary.passed} passed   ❌ ${bfSummary.failed} failed`,
+                inline: true,
+            },
+            {
+                name: '🔍 Security Checks',
+                value: `✅ ${secSummary.passed} passed   ❌ ${secSummary.failed} failed`,
                 inline: true,
             },
         ],
@@ -198,23 +228,23 @@ async function sendEmbed(embed) {
 // ── Main export ───────────────────────────────────────────────────────────────
 
 /**
- * Called once per hourly run with all results.
- * 1. Clears the channel
- * 2. Posts a summary embed
- * 3. Posts one auth embed per target
- * 4. Posts one brute-force embed per target
+ * Called once per run with all results.
+ * Note: clearChannel() is called from index.js BEFORE the scan starts (not here).
+ * 1. Posts a summary embed
+ * 2. Posts one auth embed per target
+ * 3. Posts one brute-force embed per target
+ * 4. Posts one security checks embed per target
  */
-async function reportToDiscord({ targets, authResults, bfResults, timestamp }) {
+async function reportToDiscord({ targets, authResults, bfResults, secResults, timestamp }) {
     if (!BOT_TOKEN) {
         log('SECURITY_BOT_TOKEN not set — Discord reporting disabled');
         return;
     }
 
-    await clearChannel();
-
     // Compute summary counts
     const authSummary = { passed: 0, failed: 0 };
     const bfSummary   = { passed: 0, failed: 0 };
+    const secSummary  = { passed: 0, failed: 0 };
 
     for (const [, res] of Object.entries(authResults)) {
         const failed = Object.values(res).some(r => !r.skipped && !r.ok);
@@ -224,9 +254,13 @@ async function reportToDiscord({ targets, authResults, bfResults, timestamp }) {
         const failed = Object.values(res).some(r => !r.ok);
         failed ? bfSummary.failed++ : bfSummary.passed++;
     }
+    for (const [, res] of Object.entries(secResults || {})) {
+        const failed = Object.values(res).some(r => !r.skipped && !r.ok);
+        failed ? secSummary.failed++ : secSummary.passed++;
+    }
 
     // 1. Summary
-    await sendEmbed(buildSummaryEmbed(timestamp, authSummary, bfSummary));
+    await sendEmbed(buildSummaryEmbed(timestamp, authSummary, bfSummary, secSummary));
 
     // 2. Auth embeds
     for (const target of targets) {
@@ -240,7 +274,15 @@ async function reportToDiscord({ targets, authResults, bfResults, timestamp }) {
         if (res) await sendEmbed(buildBruteForceEmbed(target, res));
     }
 
-    log(`Discord report sent: ${targets.length} app(s), summary + auth + brute-force embeds`);
+    // 4. Security check embeds
+    if (secResults) {
+        for (const target of targets) {
+            const res = secResults[target.name];
+            if (res) await sendEmbed(buildSecurityEmbed(target, res));
+        }
+    }
+
+    log(`Discord report sent: ${targets.length} app(s), summary + auth + brute-force + security embeds`);
 }
 
 module.exports = { clearChannel, reportToDiscord };

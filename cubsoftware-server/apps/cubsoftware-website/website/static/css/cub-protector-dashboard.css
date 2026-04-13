@@ -32,7 +32,7 @@
 
 .server-picker-container {
     width: 100%;
-    max-width: 560px;
+    max-width: 900px;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -127,91 +127,139 @@
 
 .server-picker-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
     overflow-y: auto;
     flex: 1;
     min-height: 0;
+    align-content: start;
     padding-right: 4px;
     scrollbar-width: thin;
     scrollbar-color: rgba(88,101,242,0.4) transparent;
 }
 
+/* ── Card shell ─────────────────────────────────────────────────── */
 .server-picker-card {
     display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    padding: 0.85rem 1rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 10px;
+    flex-direction: column;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    overflow: hidden;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: border-color 0.2s, transform 0.15s;
 }
 
 .server-picker-card:hover {
-    border-color: rgba(88, 101, 242, 0.4);
-    background: rgba(88, 101, 242, 0.08);
+    border-color: rgba(88,101,242,0.45);
+    transform: translateY(-2px);
+}
+
+/* ── Banner + icon ──────────────────────────────────────────────── */
+.server-picker-card-top {
+    position: relative;
+    height: 80px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+/* blurred banner — CSS custom property set inline */
+.server-picker-card-top::before {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    background-image: var(--icon-url);
+    background-size: cover;
+    background-position: center;
+    filter: blur(12px) brightness(0.35) saturate(1.8);
 }
 
 .server-picker-icon {
-    width: 42px;
-    height: 42px;
+    position: absolute;
+    bottom: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
-    flex-shrink: 0;
+    border: 3px solid #0d0d1e;
+    z-index: 1;
+    object-fit: cover;
 }
 
-.server-picker-info {
+/* ── Card body ──────────────────────────────────────────────────── */
+.server-picker-body {
+    padding: 1.5rem 0.85rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.2rem;
     flex: 1;
-    min-width: 0;
 }
 
 .server-picker-name {
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
+    color: #fff;
 }
 
 .server-picker-meta {
-    font-size: 0.75rem;
-    color: rgba(255,255,255,0.35);
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.38);
+    margin-bottom: 0.5rem;
 }
 
-.server-role {
-    font-size: 0.65rem;
+/* ── Buttons ────────────────────────────────────────────────────── */
+.server-picker-go-btn {
+    width: 100%;
+    padding: 0.42rem 0;
+    border: none;
+    border-radius: 7px;
+    background: #5865f2;
+    color: #fff;
+    font-size: 0.82rem;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 0.2rem 0.55rem;
-    border-radius: 4px;
-    flex-shrink: 0;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: inherit;
 }
 
-.server-role.owner {
-    color: #f59e0b;
-    background: rgba(245,158,11,0.12);
+.server-picker-go-btn:hover { background: #4752c4; }
+
+.server-picker-setup-btn {
+    display: block;
+    width: 100%;
+    padding: 0.42rem 0;
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 7px;
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.6);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    transition: all 0.2s;
+    box-sizing: border-box;
 }
 
-.server-role.admin {
-    color: #ef4444;
-    background: rgba(239,68,68,0.12);
-}
-
-.server-role.member {
-    color: #5865f2;
-    background: rgba(88,101,242,0.12);
+.server-picker-setup-btn:hover {
+    background: rgba(255,255,255,0.11);
+    color: #fff;
 }
 
 .server-custom-bot-badge {
     display: inline-block;
-    margin-left: 6px;
-    font-size: 0.62rem;
+    margin-left: 4px;
+    font-size: 0.6rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.4px;
-    padding: 0.1rem 0.4rem;
+    padding: 0.1rem 0.35rem;
     border-radius: 3px;
     color: #a78bfa;
     background: rgba(167,139,250,0.12);
@@ -1210,6 +1258,9 @@ input[type="color"] {
         gap: 0.75rem;
         align-items: flex-start;
     }
+    .server-picker-grid {
+        grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+    }
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -1747,47 +1798,4 @@ input[type="color"] {
             color: rgba(255, 255, 255, 0.5);
         }
 
-/* ==================== SERVER PICKER SECTIONS ==================== */
-.server-picker-section-heading {
-    font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: rgba(255,255,255,0.3);
-    padding: 0.5rem 0 0.35rem;
-    margin-top: 0.25rem;
-}
-.server-picker-section-heading:first-child {
-    margin-top: 0;
-}
-
-/* Setup cards — servers where the bot isn't installed yet */
-.server-picker-card.setup-card {
-    opacity: 0.7;
-    cursor: default;
-}
-.server-picker-card.setup-card:hover {
-    border-color: rgba(88,101,242,0.25);
-    background: rgba(88,101,242,0.04);
-    opacity: 0.9;
-}
-.server-picker-setup-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-size: 0.72rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 0.3rem 0.7rem;
-    border-radius: 6px;
-    color: #fff;
-    background: #5865f2;
-    text-decoration: none;
-    flex-shrink: 0;
-    transition: background 0.2s;
-}
-.server-picker-setup-btn:hover {
-    background: #4752c4;
-}
     

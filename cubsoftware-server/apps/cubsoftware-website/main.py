@@ -1760,6 +1760,18 @@ def cub_login_discord_callback():
                     user_id in bot_masters_data.get(g['id'], [])
                 )
             ]
+            # Servers where user is owner/admin but bot isn't installed yet
+            setup_guilds_login = [
+                {'id': g['id'], 'name': g['name'], 'icon': g.get('icon'),
+                 'owner': g.get('owner', False)}
+                for g in raw_guilds
+                if g['id'] not in all_covered and (
+                    g.get('owner') or
+                    (int(g.get('permissions', 0)) & 0x8) == 0x8 or
+                    (int(g.get('permissions', 0)) & 0x20) == 0x20
+                )
+            ]
+            session['cub_protector_setup_guilds'] = setup_guilds_login
         except Exception:
             pass
         # Check for existing linked Twitch account
@@ -12468,6 +12480,7 @@ def cub_protector_logout():
     session.pop('cub_protector_user', None)
     session.pop('cub_protector_user_guilds', None)
     session.pop('cub_protector_shared_guild_ids', None)
+    session.pop('cub_protector_setup_guilds', None)
     return redirect('/logout')
 
 # CUB PROTECTOR Landing Page + Dashboard
@@ -12526,8 +12539,8 @@ def cub_protector_guilds():
     session['cub_protector_shared_guild_ids'] = list(covered_ids)
     session['cub_protector_guild_cache_time'] = time.time()
 
-    # Guilds where user is owner/admin but bot isn't installed — shown as "Setup"
-    setup_guilds = get_user_setup_guilds(user_guilds, covered_ids)
+    # Guilds where user is owner/admin but bot isn't installed — computed at login
+    setup_guilds = session.get('cub_protector_setup_guilds', [])
 
     return jsonify({'guilds': shared_guilds, 'setup_guilds': setup_guilds})
 

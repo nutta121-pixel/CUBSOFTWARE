@@ -1135,6 +1135,7 @@ const MAIN_BOT_ONLY_COMMANDS = new Set([
     'link-find', 'link-ban', 'link-unban', 'link-bans', 'link-delete',
     'ip',
     'keraplast-password', 'feature',
+    'scan-security',
 ]);
 
 // ============================================================

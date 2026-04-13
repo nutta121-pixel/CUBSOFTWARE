@@ -19589,6 +19589,48 @@ def _schedule_security_checks():
     t.daemon = True
     t.start()
 
+def _auto_launch_custom_bots():
+    """On startup, re-launch all enabled custom bots that aren't already running."""
+    try:
+        cb_data = _load_custom_bots()
+        guilds = cb_data.get('guilds', {})
+        if not guilds:
+            return
+        # Get currently running PM2 process names so we don't double-start
+        import json as _json
+        r = subprocess.run(['pm2', 'jlist'], capture_output=True, text=True)
+        running = set()
+        if r.returncode == 0:
+            for p in _json.loads(r.stdout or '[]'):
+                running.add(p.get('name', ''))
+        started, skipped, failed = 0, 0, 0
+        for guild_id, entry in guilds.items():
+            if not entry.get('enabled') or not entry.get('token'):
+                continue
+            process_name = f'100-cp-custom-{guild_id}'
+            if process_name in running:
+                skipped += 1
+                continue
+            wrapper_file = os.path.join(CUB_PROTECTOR_DIR, f'custom_bot_{guild_id}.js')
+            if not os.path.exists(wrapper_file):
+                print(f'[CustomBot] Skipping {guild_id} — wrapper file missing', flush=True)
+                failed += 1
+                continue
+            result = subprocess.run(
+                ['pm2', 'start', wrapper_file, '--name', process_name],
+                capture_output=True, text=True, cwd=CUB_PROTECTOR_DIR
+            )
+            if result.returncode == 0:
+                started += 1
+            else:
+                print(f'[CustomBot] Failed to start {process_name}: {result.stderr.strip()}', flush=True)
+                failed += 1
+        if started:
+            subprocess.run(['pm2', 'save'], capture_output=True)
+        print(f'[CustomBot] Auto-launch complete: {started} started, {skipped} already running, {failed} failed', flush=True)
+    except Exception as e:
+        print(f'[CustomBot] Auto-launch error: {e}', flush=True)
+
 # ==================== SERVER STARTUP ====================
 
 if __name__ == '__main__':
@@ -19642,6 +19684,12 @@ if __name__ == '__main__':
     _sec_timer.daemon = True
     _sec_timer.start()
     print('[Security] Hourly OAuth/security checks scheduled (first run in 30s)', flush=True)
+
+    # Auto-launch custom bots — 15s delay lets PM2 finish starting other processes first
+    _cb_timer = threading.Timer(15, _auto_launch_custom_bots)
+    _cb_timer.daemon = True
+    _cb_timer.start()
+    print('[CustomBot] Auto-launch scheduled (in 15s)', flush=True)
 
     # Run production server with Waitress
     # 16 threads: allows SSE connections (each holds a thread) + regular requests simultaneously

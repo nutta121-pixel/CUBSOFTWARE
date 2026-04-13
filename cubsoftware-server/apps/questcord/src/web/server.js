@@ -47,9 +47,19 @@ async function startWebServer(client) {
         crossOriginResourcePolicy: false
     }));
 
+    const ALLOWED_ORIGINS = [
+        'https://questcord.fun',
+        'https://cubsoftware.site',
+        'http://localhost:3003',
+        'http://localhost:3000',
+    ];
     app.use(cors({
-        origin: true,
-        credentials: true
+        origin: (origin, cb) => {
+            // Allow same-origin requests (no Origin header) and whitelisted origins
+            if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+            cb(null, false);
+        },
+        credentials: true,
     }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
@@ -281,6 +291,9 @@ async function startWebServer(client) {
     app.use((err, req, res, next) => {
         if (err.type === 'entity.too.large') {
             return res.status(413).json({ error: 'Request too large' });
+        }
+        if (err.status === 400 && err.type === 'entity.parse.failed') {
+            return res.status(400).json({ error: 'Invalid request body' });
         }
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_SERVER_ERROR_114 — Server error:', err);
         res.status(500).render('404', {

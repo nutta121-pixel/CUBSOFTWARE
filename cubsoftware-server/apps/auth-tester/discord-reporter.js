@@ -151,15 +151,20 @@ function buildBruteForceEmbed(target, results) {
  * Build an embed for one target's security check results.
  */
 function buildSecurityEmbed(target, results) {
-    const fields = Object.entries(results).map(([check, result]) => ({
-        name: check,
-        value: result.skipped
-            ? `⏭️ Skipped: ${result.reason}`
-            : result.ok
-                ? `✅ PASS`
-                : `❌ FAIL — ${result.error || result.detail || 'see logs'}`,
-        inline: true,
-    }));
+    const fields = Object.entries(results).map(([check, result]) => {
+        let value;
+        if (result.skipped) {
+            value = `⏭️ Skipped: ${result.reason}`;
+        } else if (result.ok) {
+            value = '✅ PASS';
+        } else {
+            const detail = result.error
+                ? result.error
+                : JSON.stringify(result.detail ?? {}).slice(0, 200);
+            value = `❌ FAIL — ${detail}`;
+        }
+        return { name: check, value, inline: true };
+    });
 
     const anyFailed = Object.values(results).some(r => !r.skipped && !r.ok);
 

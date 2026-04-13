@@ -537,6 +537,15 @@ def _before_request_logging():
     if request.path in ('/ip-ban-appeal', '/api/ip-ban-appeal'):
         return None
 
+    # Global rate limit — applied before IP exemptions so auth-tester can verify it works
+    if ip:
+        _allowed, _retry = check_rate_limit(ip, 'global')
+        if not _allowed:
+            _resp = jsonify({'error': 'Too many requests', 'retry_after': int(_retry)})
+            _resp.status_code = 429
+            _resp.headers['Retry-After'] = str(int(_retry))
+            return _resp
+
     # Trusted IPs — server owner IPs, never banned under any circumstances
     if ip and ip in _TRUSTED_IPS:
         return None
@@ -1257,6 +1266,7 @@ def get_features_status():
 # Global rate limiting storage
 rate_limits = {}  # ip -> {feature -> [timestamps]}
 RATE_LIMIT_CONFIGS = {
+    'global':    {'requests': 500, 'window': 60},   # 500 req/min global per-IP ceiling
     'default':   {'requests': 45,  'window': 60},   # 45 req/min (down from 60)
     'api':       {'requests': 20,  'window': 60},   # 20 API req/min (down from 30)
     'download':  {'requests': 5,   'window': 60},   # 5 downloads/min (down from 10)

@@ -298,8 +298,12 @@ function injectMetaTags(html, title, description, url, image = 'https://questcor
     return html.replace('</head>', `${metaTags}\n  </head>`);
 }
 
-// Dashboard page
+// Dashboard page — requires authentication
 router.get('/dashboard', (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.redirect('/auth/discord');
+    }
+
     const appPath = path.join(__dirname, '../../../public/app/index.html');
     if (!fs.existsSync(appPath)) {
         return res.status(404).send('Dashboard app not found. Please run: cd src/web/client && npm run build');

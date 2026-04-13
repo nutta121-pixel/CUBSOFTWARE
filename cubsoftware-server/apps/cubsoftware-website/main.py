@@ -6102,7 +6102,7 @@ def pm2_launch_all_custom_bots():
         # Delete stale PM2 entry if it exists, then start fresh from the wrapper file
         subprocess.run(['pm2', 'delete', process_name], capture_output=True)
         result = subprocess.run(
-            ['pm2', 'start', wrapper_file, '--name', process_name],
+            ['pm2', 'start', wrapper_file, '--name', process_name, '--node-args=--max-old-space-size=256', '--max-memory-restart=256M'],
             capture_output=True, text=True, cwd=CUB_PROTECTOR_DIR
         )
         if result.returncode == 0:
@@ -6126,7 +6126,7 @@ def pm2_launch_custom_bot(guild_id):
         return jsonify({'error': 'Wrapper file missing — re-activate via CUB PROTECTOR dashboard'}), 404
     subprocess.run(['pm2', 'delete', process_name], capture_output=True)
     result = subprocess.run(
-        ['pm2', 'start', wrapper_file, '--name', process_name],
+        ['pm2', 'start', wrapper_file, '--name', process_name, '--node-args=--max-old-space-size=256', '--max-memory-restart=256M'],
         capture_output=True, text=True, cwd=CUB_PROTECTOR_DIR
     )
     subprocess.run(['pm2', 'save'], capture_output=True)
@@ -15086,7 +15086,7 @@ require('./index');
     # Stop existing process if running, then start from the wrapper script
     subprocess.run(['pm2', 'delete', process_name], capture_output=True)
     result = subprocess.run(
-        ['pm2', 'start', wrapper_file, '--name', process_name],
+        ['pm2', 'start', wrapper_file, '--name', process_name, '--node-args=--max-old-space-size=256', '--max-memory-restart=256M'],
         capture_output=True, text=True, cwd=CUB_PROTECTOR_DIR
     )
 
@@ -19635,7 +19635,7 @@ def _auto_launch_custom_bots():
                 failed += 1
                 continue
             result = subprocess.run(
-                ['pm2', 'start', wrapper_file, '--name', process_name],
+                ['pm2', 'start', wrapper_file, '--name', process_name, '--node-args=--max-old-space-size=256', '--max-memory-restart=256M'],
                 capture_output=True, text=True, cwd=CUB_PROTECTOR_DIR
             )
             if result.returncode == 0:

@@ -189,7 +189,7 @@ module.exports = {
         // CleanMe Bot (Discord Bot)
         // ============================================
         {
-            name: '4-cleanme-bot',
+            name: '3-cleanme-bot',
             script: 'index.js',
             cwd: './apps/cleanme-bot',
             interpreter: 'node',
@@ -218,10 +218,38 @@ module.exports = {
         },
 
         // ============================================
+        // Auth Tester (Security self-test, every 6h)
+        // ============================================
+        {
+            name: '4-auth-tester',
+            script: 'index.js',
+            cwd: './apps/auth-tester',
+            interpreter: 'node',
+            watch: false,
+            autorestart: true,
+            max_restarts: 5,
+            restart_delay: 10000,
+            env: {
+                NODE_ENV: 'production',
+                AUTH_TESTER_ENABLED: s('AUTH_TESTER_ENABLED', 'true'),
+                INTERNAL_TEST_SECRET: s('INTERNAL_TEST_SECRET'),
+                AUTH_TESTER_PORT: s('AUTH_TESTER_PORT', '3849'),
+                CUBSOFTWARE_URL: 'http://localhost:3000',
+                QUESTCORD_URL: 'http://localhost:3003',
+                SECURITY_BOT_TOKEN: s('SECURITY_BOT_TOKEN') || s('CUB_PROTECTOR_TOKEN'),
+                SECURITY_CHANNEL_ID: s('SECURITY_CHANNEL_ID', '1493106273116356761'),
+            },
+            error_file: './logs/auth-tester-error.log',
+            out_file: './logs/auth-tester-out.log',
+            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+            merge_logs: true
+        },
+
+        // ============================================
         // The Onion Bot (Solibot - Discord Bot)
         // ============================================
         {
-            name: '20-onion-bot',
+            name: '5-onion-bot',
             script: 'index.js',
             cwd: '../The Onion Bot',
             interpreter: 'node',
@@ -254,7 +282,7 @@ module.exports = {
         // Galaxy Bot (Discord Bot - Python)
         // ============================================
         {
-            name: '21-galaxy-bot',
+            name: '6-galaxy-bot',
             script: 'start.sh',
             cwd: '../galaxy',
             interpreter: 'bash',
@@ -271,34 +299,6 @@ module.exports = {
             },
             error_file: './logs/galaxy-bot-error.log',
             out_file: './logs/galaxy-bot-out.log',
-            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-            merge_logs: true
-        },
-
-        // ============================================
-        // Auth Tester (Hourly security self-test)
-        // ============================================
-        {
-            name: '10-auth-tester',
-            script: 'index.js',
-            cwd: './apps/auth-tester',
-            interpreter: 'node',
-            watch: false,
-            autorestart: true,
-            max_restarts: 5,
-            restart_delay: 10000,
-            env: {
-                NODE_ENV: 'production',
-                AUTH_TESTER_ENABLED: s('AUTH_TESTER_ENABLED', 'true'),
-                INTERNAL_TEST_SECRET: s('INTERNAL_TEST_SECRET'),
-                AUTH_TESTER_PORT: s('AUTH_TESTER_PORT', '3849'),
-                CUBSOFTWARE_URL: 'http://localhost:3000',
-                QUESTCORD_URL: 'http://localhost:3003',
-                SECURITY_BOT_TOKEN: s('SECURITY_BOT_TOKEN') || s('CUB_PROTECTOR_TOKEN'),
-                SECURITY_CHANNEL_ID: s('SECURITY_CHANNEL_ID', '1493106273116356761'),
-            },
-            error_file: './logs/auth-tester-error.log',
-            out_file: './logs/auth-tester-out.log',
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
             merge_logs: true
         },

@@ -60,7 +60,7 @@ async function startWebServer(client) {
     class SqliteSessionStore extends session.Store {
         constructor() {
             super();
-            const dbPath = path.join(__dirname, '../../../data/sessions.db');
+            const dbPath = path.join(__dirname, '../../data/sessions.db');
             this._db = new BetterSqlite3(dbPath);
             this._db.exec(`CREATE TABLE IF NOT EXISTS sessions (
                 sid TEXT PRIMARY KEY,
@@ -99,6 +99,8 @@ async function startWebServer(client) {
         saveUninitialized: false,
         cookie: {
             secure: process.env.NODE_ENV === 'production', // HTTPS only in production
+            httpOnly: true,      // JS cannot read the cookie (XSS resistance)
+            sameSite: 'lax',     // 'strict' breaks OAuth redirects; 'lax' blocks CSRF while allowing OAuth callbacks
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         }
     }));
@@ -107,6 +109,27 @@ async function startWebServer(client) {
     initializeDiscordOAuth();
     app.use(passport.initialize());
     app.use(passport.session());
+
+    // Session fingerprinting — bind each session to the browser that created it.
+    // If the User-Agent changes mid-session the cookie has been stolen and used
+    // on a different machine/browser. Destroy the session immediately.
+    const crypto = require('crypto');
+    app.use((req, res, next) => {
+        if (!req.session || !req.session.passport?.user) return next();
+        const ua  = req.headers['user-agent'] || '';
+        const fp  = crypto.createHash('sha256').update(ua).digest('hex').slice(0, 16);
+        if (!req.session._fp) {
+            req.session._fp = fp; // record fingerprint on first authenticated request
+        } else if (req.session._fp !== fp) {
+            const ip = getClientIP(req);
+            console.warn(`[Security] Session fingerprint mismatch from ${ip} — UA changed, destroying session (possible cookie theft)`);
+            return req.session.destroy(() => {
+                res.clearCookie('connect.sid');
+                res.status(401).json({ error: 'Session invalid — please log in again' });
+            });
+        }
+        next();
+    });
 
     // Register EventBus WebSocket broadcaster
     EventBus.registerWebSocketBroadcaster((data) => {

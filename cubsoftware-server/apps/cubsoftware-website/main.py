@@ -1965,7 +1965,7 @@ def api_protected():
         return jsonify({'error': 'Invalid token'}), 401
 
     cub = session.get('cub_user')
-    now = _dt.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    now = _dt.datetime.now(_dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     is_https = request.is_secure or request.headers.get('X-Forwarded-Proto') == 'https'
 
@@ -19603,7 +19603,7 @@ def _run_security_check():
     Logs a full PASS/FAIL report to PM2 stdout.
     """
     import datetime as _dt
-    now = _dt.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    now = _dt.datetime.now(_dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     results = {}
 
     # 1. Flask session cookie flags (server config)

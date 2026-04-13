@@ -110,7 +110,7 @@ function buildAuthEmbed(target, results) {
 
     return {
         title: `🔐 Auth Tests — ${target.name}`,
-        description: `\`${target.baseUrl + target.protectedPath}\``,
+        description: `\`${(target.prodUrl || target.baseUrl) + target.protectedPath}\``,
         color: overallColor(!anyFailed),
         fields,
         footer: { text: `Auth Tester • ${new Date().toUTCString()}` },
@@ -142,7 +142,7 @@ function buildBruteForceEmbed(target, results) {
 
     return {
         title: `🛡️ Brute-Force Resilience — ${target.name}`,
-        description: `\`${target.baseUrl}\``,
+        description: `\`${target.prodUrl || target.baseUrl}\``,
         color: overallColor(!anyFailed),
         fields,
         footer: { text: `Auth Tester • ${new Date().toUTCString()}` },
@@ -172,7 +172,7 @@ function buildSecurityEmbed(target, results) {
 
     return {
         title: `🔍 Security Checks — ${target.name}`,
-        description: `\`${target.baseUrl}\``,
+        description: `\`${target.prodUrl || target.baseUrl}\``,
         color: overallColor(!anyFailed),
         fields,
         footer: { text: `Auth Tester • ${new Date().toUTCString()}` },

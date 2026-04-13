@@ -1096,6 +1096,130 @@ def space_members_api():
     resp.headers['Cache-Control'] = 'public, max-age=300'
     return resp
 
+# ── Team members ─────────────────────────────────────────────────────────────
+_TEAM_MEMBERS = [
+    {
+        'discord_id': '378501056008683530',
+        'name': 'CUB',
+        'role': 'Founder & Developer',
+        'badge': 'owner',
+    },
+    {
+        'discord_id': None,
+        'name': 'Lucas',
+        'avatar': 'https://i.pinimg.com/originals/39/2e/0f/392e0f462c42eff5c04a836ef86fa3ca.jpg',
+        'role': 'Backend Engineer',
+        'badge': 'dev',
+    },
+    {
+        'discord_id': None,
+        'name': 'Noah',
+        'avatar': 'https://preview.redd.it/random-discord-logo-i-made-because-i-had-nothing-better-to-v0-msifhk1w0qb61.png?auto=webp&s=d660b840aa885401e15e9e380c4aa48a0ebf2220',
+        'role': 'Developer',
+        'badge': 'dev',
+    },
+]
+_team_cache = {'data': None, 'ts': 0}
+
+@app.route('/api/team')
+def team_api():
+    """Return team members with resolved Discord avatars."""
+    global _team_cache
+    now = time.time()
+    if now - _team_cache['ts'] > 3600:  # refresh avatars hourly
+        token = get_cub_protector_token()
+        members = []
+        for m in _TEAM_MEMBERS:
+            entry = {'name': m['name'], 'role': m['role'], 'badge': m['badge']}
+            if m.get('discord_id') and token:
+                try:
+                    r = requests.get(
+                        f'https://discord.com/api/v10/users/{m["discord_id"]}',
+                        headers={'Authorization': f'Bot {token}'},
+                        timeout=5,
+                    )
+                    if r.status_code == 200:
+                        data = r.json()
+                        avatar_hash = data.get('avatar')
+                        uid = m['discord_id']
+                        entry['avatar'] = (
+                            f'https://cdn.discordapp.com/avatars/{uid}/{avatar_hash}.png?size=256'
+                            if avatar_hash else
+                            f'https://cdn.discordapp.com/embed/avatars/0.png'
+                        )
+                    else:
+                        entry['avatar'] = 'https://cdn.discordapp.com/embed/avatars/0.png'
+                except Exception:
+                    entry['avatar'] = 'https://cdn.discordapp.com/embed/avatars/0.png'
+            else:
+                entry['avatar'] = m.get('avatar', '')
+            members.append(entry)
+        _team_cache['data'] = members
+        _team_cache['ts'] = now
+    resp = jsonify(_team_cache['data'] or [])
+    resp.headers['Cache-Control'] = 'public, max-age=3600'
+    return resp
+
+# ── Community members scroll (all non-bot members, with avatars) ──────────────
+_community_members_cache = {'data': [], 'ts': 0}
+_COMMUNITY_MEMBERS_TTL = 600  # 10 minutes
+
+@app.route('/api/community-members')
+def community_members_api():
+    """Return [{name, avatar}] for members with the community role in the CUB SOFTWARE Discord."""
+    import random as _random
+    global _community_members_cache
+    now = time.time()
+    if now - _community_members_cache['ts'] > _COMMUNITY_MEMBERS_TTL:
+        token = get_cub_protector_token()
+        if token:
+            try:
+                headers = {'Authorization': f'Bot {token}'}
+                members, after = [], None
+                while True:
+                    url = f'https://discord.com/api/v10/guilds/{_SPACE_GUILD_ID}/members?limit=1000'
+                    if after:
+                        url += f'&after={after}'
+                    r = requests.get(url, headers=headers, timeout=10)
+                    if r.status_code != 200:
+                        break
+                    batch = r.json()
+                    if not batch:
+                        break
+                    for m in batch:
+                        user = m.get('user', {})
+                        if user.get('bot'):
+                            continue
+                        # Only include members with the community role
+                        if _SPACE_ROLE_ID not in m.get('roles', []):
+                            continue
+                        user_id = user.get('id', '')
+                        name = (m.get('nick') or user.get('global_name') or user.get('username', ''))
+                        if not name:
+                            continue
+                        guild_avatar = m.get('avatar')
+                        global_avatar = user.get('avatar')
+                        if guild_avatar:
+                            avatar = f'https://cdn.discordapp.com/guilds/{_SPACE_GUILD_ID}/users/{user_id}/avatars/{guild_avatar}.png?size=64'
+                        elif global_avatar:
+                            avatar = f'https://cdn.discordapp.com/avatars/{user_id}/{global_avatar}.png?size=64'
+                        else:
+                            idx = (int(user_id) >> 22) % 6 if user_id.isdigit() else 0
+                            avatar = f'https://cdn.discordapp.com/embed/avatars/{idx}.png'
+                        members.append({'name': name[:24], 'avatar': avatar})
+                    if len(batch) < 1000:
+                        break
+                    after = batch[-1]['user']['id']
+                if members:
+                    _random.shuffle(members)
+                    _community_members_cache['data'] = members
+                    _community_members_cache['ts'] = now
+            except Exception as e:
+                app.logger.warning(f'[CommunityMembers] {e}')
+    resp = jsonify(_community_members_cache['data'])
+    resp.headers['Cache-Control'] = 'public, max-age=600'
+    return resp
+
 # StreamerBot docs path — normpath removes the '..' so Werkzeug safe_join doesn't 500
 STREAMERBOT_DOCS_PATH = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'streamerbot-docs'))
 
@@ -12465,6 +12589,76 @@ def get_user_setup_guilds(user_guilds, covered_guild_ids):
     return setup_guilds
 
 
+_CP_GUILDS_REFRESH_INTERVAL = 300  # seconds — re-fetch user guilds every 5 min
+
+def _refresh_user_guild_lists():
+    """
+    Re-fetch the user's Discord guild list using their stored OAuth token and
+    recompute cub_protector_user_guilds + cub_protector_setup_guilds in the session.
+    Called automatically by /api/cub-protector/guilds when data is stale.
+    Silent on failure — existing session data is kept if the refresh fails.
+    """
+    cub_user = session.get('cub_user', {})
+    access_token = cub_user.get('access_token', '')
+    if not access_token:
+        return  # Logged in via remember cookie without token — can't refresh
+
+    try:
+        guilds_resp = requests.get(
+            'https://discord.com/api/users/@me/guilds',
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=10,
+        )
+        if guilds_resp.status_code != 200:
+            return  # Token expired or revoked — leave existing session data
+
+        raw_guilds = guilds_resp.json()
+
+        # Bot + custom bot coverage (use file cache so we don't call Discord twice)
+        bot_guilds = _file_cache_get('bot_guild_list', ttl=300)
+        if bot_guilds is None:
+            bot_guilds = cub_protector_bot_request('/users/@me/guilds?with_counts=true') or []
+            if bot_guilds:
+                _file_cache_set('bot_guild_list', bot_guilds)
+
+        custom_bots_data = _load_custom_bots()
+        all_covered = {g['id'] for g in bot_guilds} | {
+            gid for gid, e in custom_bots_data.get('guilds', {}).items()
+            if e.get('enabled') and e.get('token')
+        }
+        bot_masters_data = load_bot_masters()
+        user_id = cub_user.get('id', '')
+
+        protector_guilds = [
+            {'id': g['id'], 'name': g['name'], 'icon': g.get('icon'),
+             'owner': g.get('owner', False), 'permissions': g.get('permissions', '0')}
+            for g in raw_guilds
+            if g['id'] in all_covered and (
+                g.get('owner') or
+                (int(g.get('permissions', 0)) & 0x8) == 0x8 or
+                (int(g.get('permissions', 0)) & 0x20) == 0x20 or
+                user_id in bot_masters_data.get(g['id'], [])
+            )
+        ]
+        setup_guilds = [
+            {'id': g['id'], 'name': g['name'], 'icon': g.get('icon'),
+             'owner': g.get('owner', False)}
+            for g in raw_guilds
+            if g['id'] not in all_covered and (
+                g.get('owner') or
+                (int(g.get('permissions', 0)) & 0x8) == 0x8 or
+                (int(g.get('permissions', 0)) & 0x20) == 0x20
+            )
+        ]
+
+        session['cub_protector_user_guilds'] = protector_guilds
+        session['cub_protector_setup_guilds'] = setup_guilds
+        session['cub_protector_guilds_refreshed_at'] = time.time()
+
+    except Exception as e:
+        app.logger.warning(f'Guild list refresh failed: {e}')
+
+
 # CUB PROTECTOR OAuth — unified login handles everything
 @app.route('/cub-protector/auth/discord')
 def cub_protector_auth():
@@ -12530,7 +12724,15 @@ def cub_protector_overview():
 @app.route('/api/cub-protector/guilds')
 @cub_protector_auth_required
 def cub_protector_guilds():
-    """Get guilds where both the user and bot are present, plus setup guilds"""
+    """Get guilds where both the user and bot are present, plus setup guilds.
+    Automatically refreshes the user's guild list from Discord every 5 minutes
+    so new servers (or newly added bots) appear without requiring a re-login.
+    """
+    # Refresh if stale
+    last_refresh = session.get('cub_protector_guilds_refreshed_at', 0)
+    if time.time() - last_refresh > _CP_GUILDS_REFRESH_INTERVAL:
+        _refresh_user_guild_lists()
+
     user_guilds = session.get('cub_protector_user_guilds', [])
     shared_guilds = get_user_bot_guilds(user_guilds)
 
@@ -12539,7 +12741,6 @@ def cub_protector_guilds():
     session['cub_protector_shared_guild_ids'] = list(covered_ids)
     session['cub_protector_guild_cache_time'] = time.time()
 
-    # Guilds where user is owner/admin but bot isn't installed — computed at login
     setup_guilds = session.get('cub_protector_setup_guilds', [])
 
     return jsonify({'guilds': shared_guilds, 'setup_guilds': setup_guilds})

@@ -562,6 +562,30 @@
                     <p>We don't run ads, sell your data, or monetise your attention. Clean software, full stop.</p>
                 </div>
             </div>
+
+            <!-- Team — inside the same about-section so background/borders match -->
+            <div class="team-divider"></div>
+            <p class="section-eyebrow">The people behind it</p>
+            <h2 class="section-title">Meet the Team</h2>
+            <div class="team-grid" id="teamGrid">
+                <div class="team-card-skeleton"></div>
+                <div class="team-card-skeleton"></div>
+                <div class="team-card-skeleton"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Community Scroll Section -->
+    <div class="community-section">
+        <div class="container">
+            <p class="section-eyebrow">Our community</p>
+            <h2 class="section-title">Who's in our Discord</h2>
+        </div>
+        <div class="community-scroll-wrap">
+            <div class="community-scroll-track" id="communityTrack">
+                <div class="community-scroll-inner" id="communityScrollA"></div>
+                <div class="community-scroll-inner" id="communityScrollB"></div>
+            </div>
         </div>
     </div>
 
@@ -635,5 +659,54 @@
         })();
     </script>
     <script src="/static/js/space-bg.js?v={{ v }}"></script>
+
+    <script>
+        // ── Team section ──────────────────────────────────────────────────────
+        (function() {
+            const grid = document.getElementById('teamGrid');
+            fetch('/api/team')
+                .then(r => r.json())
+                .then(members => {
+                    grid.innerHTML = members.map(m => `
+                        <div class="team-card">
+                            <img class="team-avatar" src="${m.avatar}" alt="${m.name}"
+                                 onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                            <div class="team-name">${m.name}</div>
+                            <div class="team-role">${m.role}</div>
+                            <span class="team-badge ${m.badge}">${m.badge === 'owner' ? 'Founder' : 'Developer'}</span>
+                        </div>`).join('');
+                })
+                .catch(() => { grid.innerHTML = ''; });
+        })();
+
+        // ── Community scroll ──────────────────────────────────────────────────
+        (function() {
+            const trackA = document.getElementById('communityScrollA');
+            const trackB = document.getElementById('communityScrollB');
+            const wrap   = document.getElementById('communityTrack');
+            if (!trackA || !trackB) return;
+
+            fetch('/api/community-members')
+                .then(r => r.json())
+                .then(members => {
+                    if (!members.length) {
+                        wrap.closest('.community-section').style.display = 'none';
+                        return;
+                    }
+                    const pills = members.map(m => `
+                        <span class="community-member-pill">
+                            <img class="community-member-avatar" src="${m.avatar}" alt=""
+                                 onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                            <span class="community-member-name">${m.name}</span>
+                        </span>`).join('');
+                    // Duplicate for seamless loop
+                    trackA.innerHTML = pills;
+                    trackB.innerHTML = pills;
+                })
+                .catch(() => {
+                    wrap.closest('.community-section').style.display = 'none';
+                });
+        })();
+    </script>
 </body>
 </html>

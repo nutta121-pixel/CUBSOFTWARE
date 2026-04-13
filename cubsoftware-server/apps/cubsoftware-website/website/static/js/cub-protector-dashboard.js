@@ -126,10 +126,9 @@
             : '';
         return `
             <div class="server-picker-card" onclick="window.cpSelectServer('${g.id}')">
-                <div class="server-picker-card-top" style="--icon-url: url('${icon}')">
-                    <img src="${icon}" alt="" class="server-picker-icon" onerror="this.src='/static/images/default-avatar.png'">
-                </div>
+                <div class="server-picker-card-top" style="--icon-url: url('${icon}')"></div>
                 <div class="server-picker-body">
+                    <img src="${icon}" alt="" class="server-picker-icon" onerror="this.src='/static/images/default-avatar.png'">
                     <div class="server-picker-name">${escapeHtml(g.name)}</div>
                     <div class="server-picker-meta">${escapeHtml(g.role_label)}${customBotBadge}</div>
                     <button class="server-picker-go-btn">Go</button>
@@ -143,10 +142,9 @@
         const roleLabel = g.owner ? 'Owner' : 'Admin';
         return `
             <div class="server-picker-card">
-                <div class="server-picker-card-top" style="--icon-url: url('${icon}')">
-                    <img src="${icon}" alt="" class="server-picker-icon" onerror="this.src='/static/images/default-avatar.png'">
-                </div>
+                <div class="server-picker-card-top" style="--icon-url: url('${icon}')"></div>
                 <div class="server-picker-body">
+                    <img src="${icon}" alt="" class="server-picker-icon" onerror="this.src='/static/images/default-avatar.png'">
                     <div class="server-picker-name">${escapeHtml(g.name)}</div>
                     <div class="server-picker-meta">${roleLabel}</div>
                     <a href="${inviteUrl}" target="_blank" class="server-picker-setup-btn" onclick="event.stopPropagation()">Setup</a>

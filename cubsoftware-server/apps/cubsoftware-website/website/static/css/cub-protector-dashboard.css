@@ -155,12 +155,12 @@
     transform: translateY(-2px);
 }
 
-/* ── Banner + icon ──────────────────────────────────────────────── */
+/* ── Banner ─────────────────────────────────────────────────────── */
 .server-picker-card-top {
-    position: relative;
     height: 80px;
     flex-shrink: 0;
     overflow: hidden;
+    position: relative;
 }
 
 /* blurred banner — CSS custom property set inline */
@@ -174,28 +174,29 @@
     filter: blur(12px) brightness(0.35) saturate(1.8);
 }
 
-.server-picker-icon {
-    position: absolute;
-    bottom: -18px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    border: 3px solid #0d0d1e;
-    z-index: 1;
-    object-fit: cover;
-}
-
-/* ── Card body ──────────────────────────────────────────────────── */
+/* ── Card body (icon lives here so it's not clipped by card-top) ── */
 .server-picker-body {
-    padding: 1.5rem 0.85rem 0.85rem;
+    padding: 0 0.85rem 0.85rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
     gap: 0.2rem;
     flex: 1;
+}
+
+/* Icon pulled up into the banner via negative margin */
+.server-picker-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 3px solid #0d0d1e;
+    object-fit: cover;
+    margin-top: -26px;
+    margin-bottom: 0.3rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
 }
 
 .server-picker-name {

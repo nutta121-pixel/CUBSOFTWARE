@@ -123,7 +123,9 @@ function buildAuthEmbed(target, results) {
 function buildBruteForceEmbed(target, results) {
     const fields = Object.entries(results).map(([check, result]) => {
         let value;
-        if (result.error) {
+        if (result.skipped) {
+            value = `⏭️ Skipped: ${result.reason}`;
+        } else if (result.error) {
             value = `❌ ERROR: ${result.error}`;
         } else if (!result.ok) {
             value = `❌ FAIL\n\`\`\`${JSON.stringify(result.detail ?? {}, null, 2).slice(0, 300)}\`\`\``;

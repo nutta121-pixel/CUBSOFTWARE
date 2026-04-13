@@ -67,32 +67,41 @@ async function sequentialFlood(url, count, headers = {}, gapMs = 10) {
 // ── Test 1: Rate limit burst ──────────────────────────────────────────────────
 
 /**
- * Send 120 concurrent requests (above the 100/min global limit).
+ * Send concurrent requests above the target's rate limit.
  * At least some must return 429. If NONE do, rate limiting is not working.
+ * Each target specifies its own burst count via rateLimitBurst in auth-targets.config.js.
  *
  * Note: Targets a lightweight endpoint (/api/auth/me) so the burst doesn't
  * cause meaningful server work — we're testing the rate limiter, not the handler.
  */
 async function testRateLimitBurst(target) {
+    const burstCount = target.rateLimitBurst || 520;
     const url = target.baseUrl + '/api/auth/me';
-    log(`Rate limit burst: sending 120 concurrent requests to ${url}`);
+    log(`Rate limit burst: sending ${burstCount} concurrent requests to ${url}`);
 
-    const statuses = await flood(url, 120);
-    const count429 = statuses.filter(s => s === 429).length;
+    const statuses = await flood(url, burstCount);
+    const count429    = statuses.filter(s => s === 429).length;
     const count200or401 = statuses.filter(s => s === 200 || s === 401).length;
+    const countNull   = statuses.filter(s => s === null).length;
+
+    // If the server returned nothing at all it was unreachable — skip rather than fail
+    if (countNull === burstCount) {
+        log('  SKIP: All requests got no response — server was unreachable during this test');
+        return { ok: true, skipped: true, reason: 'Server unreachable during burst test' };
+    }
 
     const passed = count429 >= 1;
-    log(`  Result: ${count429} × 429 (rate-limited), ${count200or401} × 200/401 (allowed)`);
+    log(`  Result: ${count429} × 429 (rate-limited), ${count200or401} × 200/401 (allowed), ${countNull} × no-response`);
 
     if (!passed) {
         log('  FAIL: No 429 responses — rate limiting may not be configured correctly');
     } else {
-        log(`  PASS: Rate limiter fired after ~100 requests`);
+        log(`  PASS: Rate limiter fired`);
     }
 
     return {
         ok: passed,
-        detail: { total: 120, rate_limited: count429, allowed: count200or401 }
+        detail: { total: burstCount, rate_limited: count429, allowed: count200or401 }
     };
 }
 

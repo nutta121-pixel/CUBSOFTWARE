@@ -297,8 +297,15 @@ triggerServer.listen(TRIGGER_PORT, '127.0.0.1', () => {
     log(`Trigger endpoint listening on 127.0.0.1:${TRIGGER_PORT}`);
 });
 
-// Run once immediately on startup (so you see results right away in PM2 logs)
-runAllChecks();
+// Delay the startup scan by 5 minutes so all other services (QuestCord etc.)
+// have time to fully start up before we probe them.
+// Use the manual trigger (curl / /scan-security) for an immediate scan if needed.
+const STARTUP_DELAY_MS = 5 * 60 * 1000;
+log(`Startup scan will begin in ${STARTUP_DELAY_MS / 60000} min (waiting for all services to come up)`);
+setTimeout(() => {
+    log('Startup scan starting now');
+    runAllChecks();
+}, STARTUP_DELAY_MS);
 
 // Clear the channel 5 minutes before each scheduled scan (23:55, 05:55, 11:55, 17:55 NZST/NZDT)
 // so the channel is already empty when the scan starts.

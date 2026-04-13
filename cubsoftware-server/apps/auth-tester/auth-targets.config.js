@@ -16,19 +16,21 @@
  */
 module.exports = [
     {
-        name:          'CUB SOFTWARE Website',
-        baseUrl:       process.env.CUBSOFTWARE_URL || 'http://localhost:3000',
-        prodUrl:       'https://cubsoftware.site',
-        protectedPath: '/api/protected',
-        authMode:      'internal-key',   // supports INTERNAL_TEST_SECRET bearer check
-        disabled:      false,
+        name:             'CUB SOFTWARE Website',
+        baseUrl:          process.env.CUBSOFTWARE_URL || 'http://localhost:3000',
+        prodUrl:          'https://cubsoftware.site',
+        protectedPath:    '/api/protected',
+        authMode:         'internal-key',   // supports INTERNAL_TEST_SECRET bearer check
+        rateLimitBurst:   120,              // Flask/Waitress: ~100 req limit, 120 burst is enough to trigger it
+        disabled:         false,
     },
     {
-        name:          'QuestCord Dashboard',
-        baseUrl:       process.env.QUESTCORD_URL || 'http://localhost:3003',
-        prodUrl:       'https://questcord.fun',
-        protectedPath: '/auth/me',
-        authMode:      'session',        // session-only — rejection tests only
-        disabled:      false,
+        name:             'QuestCord Dashboard',
+        baseUrl:          process.env.QUESTCORD_URL || 'http://localhost:3003',
+        prodUrl:          'https://questcord.fun',
+        protectedPath:    '/auth/me',
+        authMode:         'session',        // session-only — rejection tests only
+        rateLimitBurst:   520,              // Node.js: 500 req/min limit, needs 520 to trigger it
+        disabled:         false,
     },
 ];

@@ -80,7 +80,7 @@ async function handleForceOptin(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[SERVER-ADMIN] Force opted in by ${interaction.user.username}: ${serverId}`);
     } catch (error) {
-        console.error('Error force opting in:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force opting in:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -110,7 +110,7 @@ async function handleForceOptout(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[SERVER-ADMIN] Force opted out by ${interaction.user.username}: ${serverId}`);
     } catch (error) {
-        console.error('Error force opting out:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force opting out:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }

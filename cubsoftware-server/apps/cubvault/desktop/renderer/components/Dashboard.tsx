@@ -59,7 +59,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLock, onCopy, showNotification 
             const vaultStats = vaultDatabase.getStatistics();
             setStats(vaultStats);
         } catch (error) {
-            console.error('Failed to get stats:', error);
+            console.error('CUBSOFTWARE_ERROR_CUBVAULT_VAULT_STATS_200 — Failed to get stats:', error);
         }
     };
 

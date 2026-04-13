@@ -24,7 +24,7 @@ function loadCommands(dir) {
                     commands.push(command.data.toJSON());
                 }
             } catch (error) {
-                console.error(`Error loading command ${item.name}:`, error.message);
+                console.error(`CUBSOFTWARE_ERROR_QUESTCORD_DEPLOY_COMMANDS_127 — Error loading command ${item.name}:`, error.message);
             }
         }
     }
@@ -43,12 +43,12 @@ async function deployCommands() {
 
         if (duplicates.length > 0) {
             const uniqueDuplicates = [...new Set(duplicates)];
-            console.error('\n❌ DUPLICATE COMMAND NAMES FOUND:');
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_DEPLOY_COMMANDS_127 — \n❌ DUPLICATE COMMAND NAMES FOUND:');
             uniqueDuplicates.forEach(dupName => {
-                console.error(`   - "${dupName}" appears multiple times`);
+                console.error(`CUBSOFTWARE_ERROR_QUESTCORD_DEPLOY_COMMANDS_127 —    - "${dupName}" appears multiple times`);
             });
-            console.error('\nAll commands being loaded:');
-            commands.forEach((cmd, i) => console.error(`   ${i}. ${cmd.name}`));
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_DEPLOY_COMMANDS_127 — \nAll commands being loaded:');
+            commands.forEach((cmd, i) => console.error(`CUBSOFTWARE_ERROR_QUESTCORD_DEPLOY_COMMANDS_127 —    ${i}. ${cmd.name}`));
             throw new Error(`Duplicate command names: ${uniqueDuplicates.join(', ')}`);
         }
 
@@ -66,7 +66,7 @@ async function deployCommands() {
         console.log(`[Commands] Successfully reloaded ${data.length} slash commands`);
         return data.length;
     } catch (error) {
-        console.error('Error deploying commands:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_DEPLOY_COMMANDS_127 — Error deploying commands:', error);
         throw error;
     }
 }

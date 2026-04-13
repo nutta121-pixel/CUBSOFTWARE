@@ -14,7 +14,7 @@ async function isStaff(interaction) {
 
         return hasDevRole || hasStaffRole;
     } catch (error) {
-        console.error('Error checking staff status:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_PERMISSIONS_133 — Error checking staff status:', error);
         return false;
     }
 }
@@ -29,7 +29,7 @@ async function isDeveloper(interaction) {
 
         return member.roles.cache.has(config.supportServer.roles.developer);
     } catch (error) {
-        console.error('Error checking developer status:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_PERMISSIONS_133 — Error checking developer status:', error);
         return false;
     }
 }

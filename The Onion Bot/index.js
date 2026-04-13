@@ -2,6 +2,12 @@ const { Client, GatewayIntentBits, Collection, REST, Routes } = require('discord
 
 // Magenta [Tag] labels in PM2 log output
 { const _l = console.log.bind(console); console.log = (...a) => { if (typeof a[0] === 'string') a[0] = a[0].replace(/\[([A-Za-z][A-Za-z0-9 _-]*)\]/g, '\x1b[35m[$1]\x1b[0m'); _l(...a); }; }
+
+let _errorReporterModule = null;
+try { _errorReporterModule = require('../cubsoftware-server/shared/cub-error-reporter'); } catch (e) { console.warn('[ErrorReporter] cub-error-reporter not available:', e.message); }
+const ERRORS = _errorReporterModule?.ERRORS || {};
+let errorReporter = null;
+
 const fs = require('fs');
 const path = require('path');
 const config = require('./config');
@@ -35,7 +41,7 @@ async function deployCommands() {
         await rest.put(Routes.applicationCommands(config.clientId), { body: commands });
         console.log(`[DEPLOY] Successfully registered ${commands.length} global commands`);
     } catch (error) {
-        console.error('[DEPLOY] Failed to deploy commands:', error.message);
+        console.error(`${ERRORS.ONIONBOT?.DEPLOY_FAILED || 'CUBSOFTWARE_ERROR_ONIONBOT_DEPLOY_FAILED_170'} — [DEPLOY] Failed to deploy commands:`, error.message);
     }
 }
 
@@ -107,9 +113,7 @@ client.tempConfinementData = new Map();
 
     // Then login
     client.login(config.token).catch(error => {
-        console.error('[ERROR] Failed to login to Discord:');
-        console.error(error.message);
-        console.error('\nPlease check your DISCORD_TOKEN in the .env file.');
+        console.error(`${ERRORS.ONIONBOT?.LOGIN_FAILED || 'CUBSOFTWARE_ERROR_ONIONBOT_LOGIN_FAILED_169'} — [ERROR] Failed to login to Discord:`, error.message, '\nPlease check your DISCORD_TOKEN in the .env file.');
         process.exit(1);
     });
 })();
@@ -128,6 +132,11 @@ client.once('clientReady', () => {
         systemCommands: false,
     });
     terminal.init();
+
+    if (_errorReporterModule) {
+        errorReporter = _errorReporterModule.createErrorReporter(client, 'Onion Bot');
+        errorReporter.hookConsoleError();
+    }
 });
 
 // Guild join/leave tracking
@@ -148,11 +157,11 @@ const shutdown = async (signal) => {
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('uncaughtException', async (error) => {
-    console.error('[FATAL] Uncaught Exception:', error);
+    console.error(`${ERRORS.ONIONBOT?.FATAL_EXCEPTION || 'CUBSOFTWARE_ERROR_ONIONBOT_FATAL_EXCEPTION_171'} — [FATAL] Uncaught Exception:`, error);
     if (terminal) await terminal.logEvent(`Uncaught Exception: ${error.message}`, 'error');
     setTimeout(() => process.exit(1), 2000);
 });
 process.on('unhandledRejection', (reason) => {
-    console.error('[ERROR] Unhandled Rejection:', reason);
+    console.error(`${ERRORS.ONIONBOT?.FATAL_REJECTION || 'CUBSOFTWARE_ERROR_ONIONBOT_FATAL_REJECTION_172'} — [ERROR] Unhandled Rejection:`, reason);
     if (terminal) terminal.logEvent(`Unhandled Rejection: ${reason}`, 'error');
 });

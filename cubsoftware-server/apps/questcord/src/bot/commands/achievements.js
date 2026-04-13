@@ -168,7 +168,7 @@ module.exports = {
             });
 
         } catch (error) {
-            console.error('Error displaying achievements:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ACHIEVEMENTS_124 — Error displaying achievements:', error);
             await interaction.reply({
                 content: 'An error occurred while fetching achievements.',
                 ephemeral: true

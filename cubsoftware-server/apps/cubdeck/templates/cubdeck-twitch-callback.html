@@ -20,6 +20,7 @@
 </div>
 <script>
     const MODE = {{ mode | tojson }};
+    const RETURN_URL = {{ return_url | tojson }};
     const hash = window.location.hash.substring(1);
     const params = Object.fromEntries(new URLSearchParams(hash));
     const token = params.access_token;
@@ -33,7 +34,7 @@
     if (!token) {
         fail(params.error_description || 'No token received.');
     } else if (MODE === 'chat') {
-        // Chat token mode — fetch user info then post token + login back to parent
+        // Chat token mode — fetch user info, then either postMessage (popup) or save server-side (redirect)
         document.getElementById('sub').textContent = 'Fetching your profile…';
         fetch('https://api.twitch.tv/helix/users', {
             headers: {
@@ -46,6 +47,7 @@
             const user = data.data && data.data[0];
             if (!user) return fail('Could not fetch Twitch profile.');
             if (window.opener) {
+                // Popup mode — pass token back to the deck page
                 window.opener.postMessage({
                     type: 'cubdeck_twitch_token',
                     token,
@@ -56,7 +58,25 @@
                 document.getElementById('sub').textContent = 'You can close this window.';
                 setTimeout(() => window.close(), 1500);
             } else {
-                fail('No parent window found.');
+                // Redirect mode — save token server-side then return to deck
+                document.getElementById('sub').textContent = 'Saving your connection…';
+                fetch('/cubdeck/auth/twitch/save-chat-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token, login: user.login })
+                })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.ok) {
+                        document.getElementById('icon').textContent = '✅';
+                        document.getElementById('msg').textContent = 'Connected as ' + user.display_name;
+                        document.getElementById('sub').textContent = 'Returning to your deck…';
+                        setTimeout(() => { window.location.href = d.redirect || RETURN_URL; }, 800);
+                    } else {
+                        fail('Could not save connection. Please try again.');
+                    }
+                })
+                .catch(() => fail('Network error. Please try again.'));
             }
         })
         .catch(() => fail('Could not fetch Twitch profile.'));

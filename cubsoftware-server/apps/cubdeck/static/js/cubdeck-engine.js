@@ -745,6 +745,10 @@ const CubDeck = (() => {
         }
         document.getElementById('twitchChannel').value = config.twitch_channel || '';
         document.getElementById('twitchOauth').value = config.twitch_oauth || '';
+        const _hasTwitch = !!(config.twitch_oauth && config.twitch_channel);
+        document.getElementById('twitchConnectedRow').style.display = _hasTwitch ? 'flex' : 'none';
+        document.getElementById('twitchDisconnectedRow').style.display = _hasTwitch ? 'none' : 'flex';
+        if (_hasTwitch) document.getElementById('twitchConnectedName').textContent = config.twitch_channel;
         document.getElementById('gridRows').value = config.grid?.rows || 3;
         document.getElementById('gridCols').value = config.grid?.cols || 5;
         document.getElementById('settingsModal').classList.add('open');
@@ -903,25 +907,7 @@ const CubDeck = (() => {
         });
 
         document.getElementById('twitchConnectBtn').addEventListener('click', () => {
-            const popup = window.open('/cubdeck/auth/twitch?mode=chat', 'twitch_auth',
-                'width=500,height=700,scrollbars=yes');
-            if (!popup) {
-                document.getElementById('twitchConnectStatus').textContent =
-                    'Pop-up blocked — allow pop-ups for this site and try again.';
-            }
-        });
-
-        window.addEventListener('message', (ev) => {
-            if (ev.data && ev.data.type === 'cubdeck_twitch_token') {
-                document.getElementById('twitchOauth').value = 'oauth:' + ev.data.token;
-                if (ev.data.login) {
-                    const ch = document.getElementById('twitchChannel');
-                    if (!ch.value) ch.value = ev.data.login;
-                }
-                document.getElementById('twitchConnectStatus').textContent =
-                    '✓ Twitch connected! Click Save to apply.';
-                document.getElementById('twitchConnectStatus').style.color = '#4ade80';
-            }
+            window.location.href = '/cubdeck/auth/twitch?mode=chat&return=' + encodeURIComponent(window.location.pathname);
         });
 
         document.getElementById('pluginsClose').addEventListener('click', () => {

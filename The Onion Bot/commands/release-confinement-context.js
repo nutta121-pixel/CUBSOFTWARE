@@ -38,7 +38,7 @@ module.exports = {
                 debug('[RELEASE] Channel name:', channelName);
             }
         } catch (error) {
-            console.error('[ERROR] Failed to fetch channel:', error.message);
+            console.error('CUBSOFTWARE_ERROR_ONIONBOT_RELEASE_176 — [ERROR] Failed to fetch channel:', error.message);
         }
 
         const remainingTime = confinementData.endTime ?
@@ -64,7 +64,7 @@ module.exports = {
                 debug('[RELEASE] User is not server muted');
             }
         } catch (error) {
-            console.error('[ERROR] Failed to unmute user on release:', error.message);
+            console.error('CUBSOFTWARE_ERROR_ONIONBOT_RELEASE_176 — [ERROR] Failed to unmute user on release:', error.message);
         }
 
         // Remove confinement

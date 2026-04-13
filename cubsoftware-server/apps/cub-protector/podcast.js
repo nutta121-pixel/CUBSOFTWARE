@@ -311,8 +311,8 @@ function createAudioResourceFromUrl(audioUrl, speed = 1.0, seekSeconds = 0, volu
 
     const ff = spawn('ffmpeg', args);
     ff.stdin.on('error', () => {});
-    ff.stderr.on('data', (d) => console.error('[PODCAST] ffmpeg:', d.toString().trim()));
-    ff.on('error', (err) => console.error('[PODCAST] ffmpeg error:', err.message));
+    ff.stderr.on('data', (d) => console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_FFMPEG_096 — [PODCAST] ffmpeg:', d.toString().trim()));
+    ff.on('error', (err) => console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_FFMPEG_096 — [PODCAST] ffmpeg error:', err.message));
 
     return createAudioResource(ff.stdout, { inputType: StreamType.OggOpus });
 }
@@ -357,7 +357,7 @@ function createSession(guildId, voiceChannel, textChannel, guild, client) {
 
     connection.on(VoiceConnectionStatus.Destroyed, () => sessions.delete(guildId));
     connection.on('error', (err) => {
-        console.error('[PODCAST] Connection error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_CONNECTION_097 — [PODCAST] Connection error:', err.message);
         sessions.delete(guildId);
     });
 
@@ -402,7 +402,7 @@ function createSession(guildId, voiceChannel, textChannel, guild, client) {
                     return;
                 }
             } catch (err) {
-                console.error('[PODCAST] Auto-play next error:', err.message);
+                console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_AUTOPLAY_098 — [PODCAST] Auto-play next error:', err.message);
             }
         }
 
@@ -413,7 +413,7 @@ function createSession(guildId, voiceChannel, textChannel, guild, client) {
     });
 
     player.on('error', (err) => {
-        console.error('[PODCAST] Player error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_PLAYER_099 — [PODCAST] Player error:', err.message);
         const s = sessions.get(guildId);
         if (s?.textChannel) s.textChannel.send(`⚠️ Playback error: ${err.message}`).catch(() => {});
     });
@@ -545,7 +545,7 @@ async function playEpisodeInSession(guildId, episode, podcast, seekSeconds = 0) 
         session.player.play(resource);
     } catch (err) {
         session.loading = false;
-        console.error('[PODCAST] Play error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_PLAY_100 — [PODCAST] Play error:', err.message);
         if (session.textChannel) session.textChannel.send(`⚠️ Could not play this episode: ${err.message}`).catch(() => {});
         return;
     }
@@ -655,7 +655,7 @@ async function podcastPlay(interaction) {
         await playEpisodeInSession(interaction.guildId, episode, podcast, 0);
         return interaction.editReply(`▶️ Starting **${podcast.name}** — Episode ${episodeNum}: ${episode.title}`);
     } catch (err) {
-        console.error('[PODCAST] podcastPlay error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_PODPLAY_101 — [PODCAST] podcastPlay error:', err.message);
         return interaction.editReply(`⚠️ Error: ${err.message}`);
     }
 }
@@ -696,7 +696,7 @@ async function podcastSearch(interaction) {
 
         return interaction.editReply({ embeds: [embed], components: [new ActionRowBuilder().addComponents(select)] });
     } catch (err) {
-        console.error('[PODCAST] podcastSearch error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_SEARCH_102 — [PODCAST] podcastSearch error:', err.message);
         return interaction.editReply(`⚠️ Search failed: ${err.message}`);
     }
 }
@@ -739,7 +739,7 @@ async function podcastBrowse(interaction) {
 
         return interaction.editReply({ embeds: [embed], components: [new ActionRowBuilder().addComponents(select)] });
     } catch (err) {
-        console.error('[PODCAST] podcastBrowse error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_BROWSE_103 — [PODCAST] podcastBrowse error:', err.message);
         return interaction.editReply(`⚠️ Browse failed: ${err.message}`);
     }
 }
@@ -785,7 +785,7 @@ async function podcastEpisodes(interaction) {
 
         return interaction.editReply({ embeds: [embed] });
     } catch (err) {
-        console.error('[PODCAST] podcastEpisodes error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_EPISODES_104 — [PODCAST] podcastEpisodes error:', err.message);
         return interaction.editReply(`⚠️ Error: ${err.message}`);
     }
 }
@@ -872,7 +872,7 @@ async function podcastSkip(interaction) {
                 return interaction.editReply(`⏭️ Episode ${epNum}: **${episodes[nextIdx].title}**`);
             }
         } catch (err) {
-            console.error('[PODCAST] Skip fetch error:', err.message);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_SKIP_105 — [PODCAST] Skip fetch error:', err.message);
         }
     }
 
@@ -929,7 +929,7 @@ async function podcastSpeed(interaction) {
             session.startedAt = Date.now() - (elapsed * 1000);
             session.player.play(resource);
         } catch (err) {
-            console.error('[PODCAST] Speed change error:', err.message);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_SPEED_106 — [PODCAST] Speed change error:', err.message);
         }
     } else {
         await interaction.reply({ content: `⚡ Speed set to **${speed}x** for next episode.`, ephemeral: true });
@@ -956,7 +956,7 @@ async function podcastVolume(interaction) {
             session.startedAt = Date.now() - (elapsed * 1000);
             session.player.play(resource);
         } catch (err) {
-            console.error('[PODCAST] Volume restart error:', err.message);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_VOLUME_107 — [PODCAST] Volume restart error:', err.message);
         }
     } else {
         await interaction.reply({ content: `🔊 Volume set to **${level}%** — will apply to next episode.`, ephemeral: true });
@@ -990,7 +990,7 @@ async function podcastSeek(interaction) {
         session.startedAt = Date.now() - (targetSeconds * 1000);
         session.player.play(resource);
     } catch (err) {
-        console.error('[PODCAST] Seek error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_SEEK_108 — [PODCAST] Seek error:', err.message);
     }
 }
 
@@ -1107,7 +1107,7 @@ async function podcastTrending(interaction) {
 
         return interaction.editReply({ embeds: [embed], components: [new ActionRowBuilder().addComponents(select)] });
     } catch (err) {
-        console.error('[PODCAST] podcastTrending error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_TRENDING_109 — [PODCAST] podcastTrending error:', err.message);
         return interaction.editReply(`⚠️ Error: ${err.message}`);
     }
 }
@@ -1208,7 +1208,7 @@ async function podcastContinue(interaction) {
 
         await playEpisodeInSession(interaction.guildId, episode, podcast, bm.seekSeconds);
     } catch (err) {
-        console.error('[PODCAST] podcastContinue error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_CONTINUE_110 — [PODCAST] podcastContinue error:', err.message);
         return interaction.editReply(`⚠️ Error resuming bookmark: ${err.message}`);
     }
 }
@@ -1257,7 +1257,7 @@ async function handlePodcastInteraction(interaction) {
             await playEpisodeInSession(interaction.guildId, episode, podcast, 0);
             await interaction.followUp({ content: `▶️ Playing **${podcast.name}** — ${episode.title}` });
         } catch (err) {
-            console.error('[PODCAST] select handler error:', err.message);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_SELECT_111 — [PODCAST] select handler error:', err.message);
             await interaction.followUp({ content: `⚠️ Error: ${err.message}`, ephemeral: true });
         }
         return;

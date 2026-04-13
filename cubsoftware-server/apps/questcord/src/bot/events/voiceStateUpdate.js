@@ -39,13 +39,13 @@ module.exports = {
                         await newState.member.voice.setChannel(confinementChannel, 'Solitary confinement enforcement');
                         console.log(`[Confinement] Moved ${newState.member.user.tag} back to confinement channel in ${newState.guild.name}`);
                     } catch (error) {
-                        console.error('Error enforcing confinement:', error);
+                        console.error('CUBSOFTWARE_ERROR_QUESTCORD_EVENT_VOICE_130 — Error enforcing confinement:', error);
                     }
                 }
             }
 
         } catch (error) {
-            console.error('Error checking confinement:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_EVENT_VOICE_130 — Error checking confinement:', error);
         }
     }
 };

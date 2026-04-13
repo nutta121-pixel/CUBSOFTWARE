@@ -28,7 +28,7 @@ if (needsInstall()) {
         execSync('npm install --legacy-peer-deps', { cwd: botDir, stdio: 'inherit' });
         console.log('[Startup] Dependencies installed successfully!');
     } catch (error) {
-        console.error('[Startup] Failed to install dependencies:', error.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_STARTUP_DEPS_112 — [Startup] Failed to install dependencies:', error.message);
         process.exit(1);
     }
 } else {

@@ -35,7 +35,7 @@ class ReportingSystem {
             const channel = await guild.channels.fetch(this.reportChannelId);
             return channel;
         } catch (error) {
-            console.error('[Reporting] Failed to get report channel:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_REPORTING_143 — [Reporting] Failed to get report channel:', error);
             return null;
         }
     }
@@ -61,7 +61,7 @@ class ReportingSystem {
         try {
             await channel.send({ embeds: [embed] });
         } catch (error) {
-            console.error('[Reporting] Failed to send startup report:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_REPORTING_143 — [Reporting] Failed to send startup report:', error);
         }
     }
 
@@ -91,7 +91,7 @@ class ReportingSystem {
         try {
             await channel.send({ embeds: [embed] });
         } catch (error) {
-            console.error('[Reporting] Failed to send status report:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_REPORTING_143 — [Reporting] Failed to send status report:', error);
         }
     }
 
@@ -116,7 +116,7 @@ class ReportingSystem {
         try {
             await channel.send({ embeds: [embed] });
         } catch (err) {
-            console.error('[Reporting] Failed to send error report:', err);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_REPORTING_143 — [Reporting] Failed to send error report:', err);
         }
     }
 
@@ -139,7 +139,7 @@ class ReportingSystem {
         try {
             await channel.send({ embeds: [embed] });
         } catch (error) {
-            console.error('[Reporting] Failed to send shutdown report:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_REPORTING_143 — [Reporting] Failed to send shutdown report:', error);
         }
     }
 
@@ -163,7 +163,7 @@ class ReportingSystem {
         try {
             await channel.send({ embeds: [embed] });
         } catch (error) {
-            console.error('[Reporting] Failed to send metric update:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_REPORTING_143 — [Reporting] Failed to send metric update:', error);
         }
     }
 
@@ -224,7 +224,7 @@ class ReportingSystem {
             this.errorCount = 0;
             this.commandsExecuted = 0;
         } catch (error) {
-            console.error('[Reporting] Failed to send daily summary:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_REPORTING_143 — [Reporting] Failed to send daily summary:', error);
         }
     }
 

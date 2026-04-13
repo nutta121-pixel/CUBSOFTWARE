@@ -117,7 +117,7 @@ module.exports = {
                 try {
                     await member.voice.setChannel(targetChannel, `Solitary confinement by ${interaction.user.tag}`);
                 } catch (error) {
-                    console.error('Error moving user to confinement channel:', error);
+                    console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_GENERAL_126 — Error moving user to confinement channel:', error);
                 }
             }
 
@@ -138,7 +138,7 @@ module.exports = {
             await interaction.editReply({ embeds: [embed] });
 
         } catch (error) {
-            console.error('Error creating solitary confinement:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_GENERAL_126 — Error creating solitary confinement:', error);
             return interaction.editReply({
                 content: '❌ An error occurred while creating the confinement.',
                 ephemeral: true

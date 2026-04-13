@@ -61,7 +61,7 @@ module.exports = {
             await interaction.editReply({ embeds: [embed] });
 
         } catch (error) {
-            console.error('Error releasing from confinement:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_GENERAL_126 — Error releasing from confinement:', error);
             return interaction.editReply({
                 content: '❌ An error occurred while releasing from confinement.',
                 ephemeral: true

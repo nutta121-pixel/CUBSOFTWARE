@@ -8,7 +8,7 @@ router.get('/bans', checkStaffRole, (req, res) => {
         const bans = BannedIPModel.getAll();
         res.json(bans);
     } catch (error) {
-        console.error('Error fetching bans:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_ADMIN_147 — Error fetching bans:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -37,7 +37,7 @@ router.post('/ban', checkStaffRole, (req, res) => {
 
         res.json({ success: true, message: 'IP banned successfully' });
     } catch (error) {
-        console.error('Error banning IP:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_ADMIN_147 — Error banning IP:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -52,7 +52,7 @@ router.delete('/ban/:ip', checkStaffRole, (req, res) => {
 
         res.json({ success: true, message: 'IP unbanned successfully' });
     } catch (error) {
-        console.error('Error unbanning IP:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_ADMIN_147 — Error unbanning IP:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

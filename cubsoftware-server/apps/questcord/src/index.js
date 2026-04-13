@@ -2,6 +2,11 @@ require('dotenv').config();
 
 // Cyan [Tag] labels in PM2 log output
 { const _l = console.log.bind(console); console.log = (...a) => { if (typeof a[0] === 'string') a[0] = a[0].replace(/\[([A-Za-z][A-Za-z0-9 _-]*)\]/g, '\x1b[36m[$1]\x1b[0m'); _l(...a); }; }
+
+let _errorReporterModule = null;
+try { _errorReporterModule = require('../../../shared/cub-error-reporter'); } catch (e) { console.warn('[ErrorReporter] cub-error-reporter not available:', e.message); }
+const ERRORS = _errorReporterModule?.ERRORS || {};
+let errorReporter = null;
 const { BotClient } = require('./bot/index');
 const { initializeDatabase } = require('./database/schema');
 const { DatabaseMaintenance } = require('./database/maintenance');
@@ -133,18 +138,24 @@ async function main() {
             await startWebServer(client);
             console.log('[Web] Web server started successfully');
         } catch (webError) {
-            console.error('[ERROR] Web server failed to start:', webError);
+            console.error(`${ERRORS.QUESTCORD?.SERVER_START || 'CUBSOFTWARE_ERROR_QUESTCORD_SERVER_START_113'} — [ERROR] Web server failed to start:`, webError);
             throw webError;
         }
 
         console.log('[Ready] QuestCord initialized successfully');
+
+        // ── Error Reporter ──────────────────────────────────────────────────
+        if (_errorReporterModule) {
+            errorReporter = _errorReporterModule.createErrorReporter(client, 'QuestCord');
+            errorReporter.hookConsoleError();
+        }
 
         // Signal PM2 that the app is ready
         if (process.send) {
             process.send('ready');
         }
     } catch (error) {
-        console.error('Failed to initialize QuestCord:', error);
+        console.error(`[FATAL] ${ERRORS.QUESTCORD?.LOGIN_FAILED || 'CUBSOFTWARE_ERROR_QUESTCORD_LOGIN_FAILED_017'} — Failed to initialize QuestCord:`, error);
         if (terminal) {
             await terminal.log(`Initialization failure: ${error.message}`, 'error');
         }
@@ -152,13 +163,14 @@ async function main() {
     }
 }
 
-process.on('unhandledRejection', error => {
-    console.error('Unhandled promise rejection:', error);
-    if (terminal) terminal.logEvent(`Unhandled rejection: ${error.message}`, 'error');
+process.on('unhandledRejection', async (error) => {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error(`[FATAL] ${ERRORS.QUESTCORD?.FATAL_REJECTION || 'CUBSOFTWARE_ERROR_QUESTCORD_FATAL_REJECTION_015'} — Unhandled Promise Rejection:`, error);
+    if (terminal) terminal.logEvent(`Unhandled rejection: ${err.message}`, 'error');
 });
 
-process.on('uncaughtException', error => {
-    console.error('Uncaught exception:', error);
+process.on('uncaughtException', async (error) => {
+    console.error(`[FATAL] ${ERRORS.QUESTCORD?.FATAL_EXCEPTION || 'CUBSOFTWARE_ERROR_QUESTCORD_FATAL_EXCEPTION_016'} — Uncaught Exception:`, error);
     if (terminal) {
         terminal.logEvent(`Uncaught exception: ${error.message}`, 'error').then(() => process.exit(1));
     } else {

@@ -76,7 +76,7 @@ class BaseService {
      * @returns {Object} Formatted error response
      */
     static handleError(error, context) {
-        console.error(`[${this.name}] Error in ${context}:`, error);
+        console.error(`CUBSOFTWARE_ERROR_QUESTCORD_GAME_BASE_139 — [${this.name}] Error in ${context}:`, error);
 
         if (error instanceof ValidationError) {
             return {

@@ -34,7 +34,7 @@ router.get('/stats', (req, res) => {
 
         res.json(data);
     } catch (error) {
-        console.error('Error fetching stats:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_API_148 — Error fetching stats:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -57,7 +57,7 @@ router.get('/leaderboard', (req, res) => {
 
         res.json(data);
     } catch (error) {
-        console.error('Error fetching leaderboard:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_API_148 — Error fetching leaderboard:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -73,7 +73,7 @@ router.get('/activity', (req, res) => {
 
         res.json(data);
     } catch (error) {
-        console.error('Error fetching activity:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_API_148 — Error fetching activity:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -83,7 +83,7 @@ router.get('/staff', (req, res) => {
         const staff = StaffModel.getAll();
         res.json(staff);
     } catch (error) {
-        console.error('Error fetching staff:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_API_148 — Error fetching staff:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -127,7 +127,7 @@ router.post('/ip-ban-appeal', (req, res) => {
         console.log(`[Security] IP ban appeal submitted for ${ip} by ${submitterIp}`);
         res.json({ ok: true });
     } catch (e) {
-        console.error('[Security] Appeal submission error:', e.message);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_API_148 — [Security] Appeal submission error:', e.message);
         res.status(500).json({ ok: false, error: 'Failed to submit appeal.' });
     }
 });

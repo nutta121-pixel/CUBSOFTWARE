@@ -69,7 +69,7 @@ router.get('/logout', (req, res) => {
 
     req.logout((err) => {
         if (err) {
-            console.error('Error during logout:', err);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_AUTH_149 — Error during logout:', err);
             return res.status(500).json({
                 success: false,
                 error: 'Logout failed'
@@ -78,7 +78,7 @@ router.get('/logout', (req, res) => {
 
         req.session.destroy((err) => {
             if (err) {
-                console.error('Error destroying session:', err);
+                console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_AUTH_149 — Error destroying session:', err);
             }
 
             console.log(`[Auth] User logged out: ${username}`);

@@ -34,7 +34,7 @@ class QuestController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in getActiveQuests:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_QUEST_121 — Error in getActiveQuests:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -76,7 +76,7 @@ class QuestController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in getUserQuests:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_QUEST_121 — Error in getUserQuests:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -136,7 +136,7 @@ class QuestController {
                 quest: quest
             });
         } catch (error) {
-            console.error('Error in acceptQuest:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_QUEST_121 — Error in acceptQuest:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -214,7 +214,7 @@ class QuestController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in completeQuest:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_QUEST_121 — Error in completeQuest:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -249,7 +249,7 @@ class QuestController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in failQuest:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_QUEST_121 — Error in failQuest:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'

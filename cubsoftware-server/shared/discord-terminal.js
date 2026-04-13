@@ -97,7 +97,7 @@ class DiscordTerminal {
             fs.mkdirSync(path.dirname(TERMINAL_USERS_FILE), { recursive: true });
             fs.writeFileSync(TERMINAL_USERS_FILE, JSON.stringify([...this._terminalUsers], null, 2));
         } catch (err) {
-            console.error(`[${this.botName}] Failed to save terminal users:`, err.message);
+            console.error(`[${this.botName}] CUBSOFTWARE_ERROR_SHARED_TERMINAL_SAVE_USERS_186 — Failed to save terminal users:`, err.message);
         }
     }
 
@@ -109,7 +109,7 @@ class DiscordTerminal {
         try {
             const channel = await this.client.channels.fetch(this.channelId).catch(() => null);
             if (channel) await channel.send({ embeds: [this._buildLogEmbed(message, type)] });
-        } catch (err) { console.error(`[${this.botName}] log() failed:`, err.message); }
+        } catch (err) { console.error(`[${this.botName}] CUBSOFTWARE_ERROR_SHARED_TERMINAL_LOG_187 — log() failed:`, err.message); }
     }
 
     /** Send to events channel (startup, crashes, restarts, alerts) */
@@ -119,7 +119,7 @@ class DiscordTerminal {
         try {
             const channel = await this.client.channels.fetch(targetId).catch(() => null);
             if (channel) await channel.send({ embeds: [this._buildEventEmbed(message, type)] });
-        } catch (err) { console.error(`[${this.botName}] logEvent() failed:`, err.message); }
+        } catch (err) { console.error(`[${this.botName}] CUBSOFTWARE_ERROR_SHARED_TERMINAL_LOG_EVENT_188 — logEvent() failed:`, err.message); }
     }
 
     // ── Embed builders ────────────────────────────────────────────────────────
@@ -179,7 +179,7 @@ class DiscordTerminal {
             while (deleted.size > 0 && total < 500);
             console.log(`[${this.botName}] Terminal cleared: ${total} messages`);
             await this.log(`Terminal cleared (${total} messages) — **${this.botName}** ready`, 'success');
-        } catch (err) { console.error(`[${this.botName}] Clear failed:`, err.message); }
+        } catch (err) { console.error(`[${this.botName}] CUBSOFTWARE_ERROR_SHARED_TERMINAL_CLEAR_189 — Clear failed:`, err.message); }
     }
 
     // ── Backup helper (used by restart/stop/deploy) ───────────────────────────
@@ -246,7 +246,7 @@ class DiscordTerminal {
             if (result === null || result === undefined) return;
             await message.channel.send({ embeds: [this._responseEmbed(result, commandName)] });
         } catch (error) {
-            console.error(`[${this.botName}] Terminal error in >${commandName}:`, error);
+            console.error(`[${this.botName}] CUBSOFTWARE_ERROR_SHARED_TERMINAL_CMD_ERROR_190 — Terminal error in >${commandName}:`, error);
             await message.reply({ embeds: [this._buildLogEmbed(`Error in \`>${commandName}\`:\n\`\`\`${error.message}\`\`\``, 'error')] });
         }
     }

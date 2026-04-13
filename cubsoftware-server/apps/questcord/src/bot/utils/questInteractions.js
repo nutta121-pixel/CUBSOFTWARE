@@ -213,7 +213,7 @@ async function startGatheringQuest(interaction, quest, user) {
         try {
             await completeQuest(interaction, quest, user, true);
         } catch (error) {
-            console.error('Error completing gathering quest:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_QUEST_INTERACTIONS_134 — Error completing gathering quest:', error);
         }
     }, waitTime * 1000);
 }
@@ -309,7 +309,7 @@ async function startDeliveryQuest(interaction, quest, user) {
         try {
             await completeQuest(interaction, quest, user, true);
         } catch (error) {
-            console.error('Error completing delivery quest:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_QUEST_INTERACTIONS_134 — Error completing delivery quest:', error);
         }
     }, deliveryTime * 1000);
 }
@@ -414,7 +414,7 @@ async function completeQuest(interaction, quest, user, isFollowUp = false) {
         try {
             await interaction.followUp({ embeds: [embed], ephemeral: true });
         } catch (error) {
-            console.error('Error sending quest completion follow-up:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_QUEST_INTERACTIONS_134 — Error sending quest completion follow-up:', error);
         }
     } else {
         // For interactive quests, update the original message
@@ -461,7 +461,7 @@ async function startChallengeQuest(interaction, quest, user) {
                     }
                 }, challenge.timeLimit * 1000);
             } catch (error) {
-                console.error('Error updating reaction test:', error);
+                console.error('CUBSOFTWARE_ERROR_QUESTCORD_QUEST_INTERACTIONS_134 — Error updating reaction test:', error);
             }
         }, challenge.delay);
 
@@ -505,7 +505,7 @@ async function startChallengeQuest(interaction, quest, user) {
                     }
                 });
             } catch (error) {
-                console.error('Error in memory game:', error);
+                console.error('CUBSOFTWARE_ERROR_QUESTCORD_QUEST_INTERACTIONS_134 — Error in memory game:', error);
             }
         }, 5000);
 
@@ -601,7 +601,7 @@ async function failQuest(interaction, quest, user, isFollowUp) {
         try {
             await interaction.followUp({ embeds: [embed], ephemeral: true });
         } catch (error) {
-            console.error('Error sending quest failure follow-up:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_QUEST_INTERACTIONS_134 — Error sending quest failure follow-up:', error);
         }
     } else {
         await interaction.update({ embeds: [embed], components: [] });

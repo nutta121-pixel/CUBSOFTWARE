@@ -141,7 +141,7 @@ async function handleEnable(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Web dashboard whitelist enabled by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error enabling whitelist:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error enabling whitelist:', error);
         await interaction.reply({
             content: '❌ An error occurred while enabling the whitelist.',
             ephemeral: true
@@ -185,7 +185,7 @@ async function handleDisable(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Web dashboard whitelist disabled by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error disabling whitelist:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error disabling whitelist:', error);
         await interaction.reply({
             content: '❌ An error occurred while disabling the whitelist.',
             ephemeral: true
@@ -247,7 +247,7 @@ async function handleAdd(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] ${targetUser.username} (${targetUser.id}) added to web dashboard whitelist by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error adding to whitelist:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error adding to whitelist:', error);
         await interaction.reply({
             content: '❌ An error occurred while adding the user to the whitelist.',
             ephemeral: true
@@ -305,7 +305,7 @@ async function handleRemove(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] ${targetUser.username} (${targetUser.id}) removed from web dashboard whitelist by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error removing from whitelist:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error removing from whitelist:', error);
         await interaction.reply({
             content: '❌ An error occurred while removing the user from the whitelist.',
             ephemeral: true
@@ -342,7 +342,7 @@ async function handleList(interaction) {
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-        console.error('Error listing whitelist:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error listing whitelist:', error);
         await interaction.reply({
             content: '❌ An error occurred while listing the whitelist.',
             ephemeral: true
@@ -392,7 +392,7 @@ async function handleStatus(interaction) {
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-        console.error('Error getting whitelist status:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error getting whitelist status:', error);
         await interaction.reply({
             content: '❌ An error occurred while getting the whitelist status.',
             ephemeral: true

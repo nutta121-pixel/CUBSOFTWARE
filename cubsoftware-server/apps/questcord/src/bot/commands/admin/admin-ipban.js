@@ -145,7 +145,7 @@ async function handleAddBan(interaction) {
 
         console.log(`[IP BAN] ${ip} banned by ${interaction.user.username}: ${reason}`);
     } catch (error) {
-        console.error('Error banning IP:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error banning IP:', error);
         await interaction.reply({
             content: 'An error occurred while banning the IP address.',
             ephemeral: true
@@ -185,7 +185,7 @@ async function handleRemoveBan(interaction) {
 
         console.log(`[IP UNBAN] ${ip} unbanned by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error unbanning IP:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error unbanning IP:', error);
         await interaction.reply({
             content: 'An error occurred while unbanning the IP address.',
             ephemeral: true
@@ -220,7 +220,7 @@ async function handleListBans(interaction) {
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-        console.error('Error listing bans:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error listing bans:', error);
         await interaction.reply({
             content: 'An error occurred while fetching the ban list.',
             ephemeral: true
@@ -273,7 +273,7 @@ async function handleCheckBan(interaction) {
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-        console.error('Error checking ban:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error checking ban:', error);
         await interaction.reply({
             content: 'An error occurred while checking the ban status.',
             ephemeral: true

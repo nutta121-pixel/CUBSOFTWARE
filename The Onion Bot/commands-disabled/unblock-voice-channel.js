@@ -38,7 +38,7 @@ module.exports = {
                     );
                 }
             } catch (error) {
-                console.error('[ERROR] Failed to fetch channel:', error.message);
+                console.error('CUBSOFTWARE_ERROR_ONIONBOT_VOICE_UNBLOCK_183 — [ERROR] Failed to fetch channel:', error.message);
             }
         }
 

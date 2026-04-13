@@ -69,7 +69,7 @@ module.exports = {
 
             console.log(`[VERIFY] ${targetUser.username} (${targetUser.id}) ${verifiedStatus ? 'verified' : 'unverified'} by ${interaction.user.username}`);
         } catch (error) {
-            console.error('Error verifying user:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_GENERAL_126 — Error verifying user:', error);
             await interaction.reply({
                 content: 'An error occurred while updating verification status.',
                 ephemeral: true

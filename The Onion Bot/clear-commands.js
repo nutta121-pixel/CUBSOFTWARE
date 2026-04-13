@@ -24,6 +24,6 @@ const rest = new REST({ version: '10' }).setToken(config.token);
         console.log('[SUCCESS] Cleared all global commands');
 
     } catch (error) {
-        console.error('[ERROR] Failed to clear commands:', error);
+        console.error('CUBSOFTWARE_ERROR_ONIONBOT_DEPLOY_COMMANDS_179 — [ERROR] Failed to clear commands:', error);
     }
 })();

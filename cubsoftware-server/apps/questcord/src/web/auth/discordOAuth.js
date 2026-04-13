@@ -64,7 +64,7 @@ function initializeDiscordOAuth() {
 
             return done(null, userData);
         } catch (error) {
-            console.error('Error in Discord OAuth callback:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_OAUTH_144 — Error in Discord OAuth callback:', error);
             return done(error, null);
         }
     }));
@@ -113,7 +113,7 @@ function verifyJWT(token) {
     try {
         return jwt.verify(token, process.env.SESSION_SECRET || 'default-secret');
     } catch (error) {
-        console.error('JWT verification failed:', error.message);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_OAUTH_144 — JWT verification failed:', error.message);
         return null;
     }
 }
@@ -194,7 +194,7 @@ function isWhitelisted(req, res, next) {
         const configData = fs.readFileSync(configPath, 'utf8');
         config = JSON.parse(configData);
     } catch (error) {
-        console.error('Error reading config file:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_OAUTH_144 — Error reading config file:', error);
         return res.status(500).json({
             success: false,
             error: 'Server Error',

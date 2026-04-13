@@ -105,6 +105,7 @@
                     html += `<div class="api-card">
                         <div>
                             <div class="service-name">${api.name}</div>
+                            ${api.desc ? `<div class="service-desc">${api.desc}</div>` : ''}
                             <div class="api-path">${api.path}</div>
                         </div>
                         <div class="service-status">

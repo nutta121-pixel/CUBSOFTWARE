@@ -92,7 +92,7 @@ async function updateStaffRoles(client, broadcastCallback) {
         safeLog('[Roles] Staff roles updated successfully');
         return allStaff;
     } catch (error) {
-        safeError('Error updating staff roles:', error);
+        safeError('CUBSOFTWARE_ERROR_QUESTCORD_WEB_AUTH_145 — Error updating staff roles:', error);
         return null;
     }
 }

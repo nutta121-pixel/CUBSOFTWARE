@@ -16,7 +16,7 @@ module.exports = {
                     await newState.disconnect('Blocked from this voice channel');
                     console.log(`[VOICE BLOCK] Disconnected ${newState.member.user.tag} from blocked channel ${newState.channel.name}`);
                 } catch (error) {
-                    console.error(`[ERROR] Failed to disconnect blocked user:`, error.message);
+                    console.error(`CUBSOFTWARE_ERROR_ONIONBOT_VOICE_STATE_174 — [ERROR] Failed to disconnect blocked user:`, error.message);
                 }
                 return; // Don't check other restrictions if blocked
             }
@@ -42,7 +42,7 @@ module.exports = {
 
                     console.log(`[CONFINEMENT] Moved ${newState.member.user.tag} back to confinement channel${remaining}`);
                 } catch (error) {
-                    console.error(`[ERROR] Failed to move confined user:`, error.message);
+                    console.error(`CUBSOFTWARE_ERROR_ONIONBOT_VOICE_STATE_174 — [ERROR] Failed to move confined user:`, error.message);
                 }
                 return; // Don't check mute if confined
             }
@@ -79,7 +79,7 @@ module.exports = {
                     if (error.code === 40032) {
                         console.log(`[INFO] User ${newState.member.user.tag} left voice while muted`);
                     } else {
-                        console.error(`[ERROR] Failed to re-apply mute:`, error.message);
+                        console.error(`CUBSOFTWARE_ERROR_ONIONBOT_VOICE_STATE_174 — [ERROR] Failed to re-apply mute:`, error.message);
                     }
                 }
             }

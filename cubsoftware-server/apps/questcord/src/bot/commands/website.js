@@ -268,7 +268,7 @@ async function handleFeature(interaction) {
 
         console.log(`[WEBSITE] ${prettyName} ${state === 'on' ? 'enabled' : 'disabled'} by ${interaction.user.username} (${interaction.user.id})`);
     } catch (error) {
-        console.error('Error updating website feature:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_GENERAL_126 — Error updating website feature:', error);
         await interaction.reply({
             content: '❌ An error occurred while updating the feature.',
             ephemeral: true
@@ -337,7 +337,7 @@ async function handleMaintenance(interaction) {
 
         console.log(`[MAINTENANCE] Maintenance mode ${state === 'on' ? 'enabled' : 'disabled'} by ${interaction.user.username} (${interaction.user.id})`);
     } catch (error) {
-        console.error('Error updating maintenance mode:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_GENERAL_126 — Error updating maintenance mode:', error);
         await interaction.reply({
             content: '❌ An error occurred while updating maintenance mode.',
             ephemeral: true

@@ -25,7 +25,7 @@ class AchievementController {
                 data: achievements
             });
         } catch (error) {
-            console.error('Error fetching user achievements:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_ACHIEVEMENT_117 — Error fetching user achievements:', error);
             return res.status(500).json({
                 success: false,
                 message: 'Failed to fetch achievements'
@@ -56,7 +56,7 @@ class AchievementController {
                 data: stats
             });
         } catch (error) {
-            console.error('Error fetching achievement stats:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_ACHIEVEMENT_117 — Error fetching achievement stats:', error);
             return res.status(500).json({
                 success: false,
                 message: 'Failed to fetch achievement statistics'
@@ -88,7 +88,7 @@ class AchievementController {
                 data: achievements
             });
         } catch (error) {
-            console.error('Error fetching achievements by category:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_ACHIEVEMENT_117 — Error fetching achievements by category:', error);
             return res.status(500).json({
                 success: false,
                 message: 'Failed to fetch achievements'
@@ -120,7 +120,7 @@ class AchievementController {
                 data: achievements
             });
         } catch (error) {
-            console.error('Error fetching recently unlocked achievements:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_ACHIEVEMENT_117 — Error fetching recently unlocked achievements:', error);
             return res.status(500).json({
                 success: false,
                 message: 'Failed to fetch achievements'

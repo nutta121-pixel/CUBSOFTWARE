@@ -35,7 +35,7 @@ class LeaderboardScheduler {
 
             console.log(`Monthly leaderboard reset completed. Top ${topPlayers.length} players rewarded.`);
         } catch (error) {
-            console.error('Error processing monthly leaderboard reset:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_LEADERBOARD_142 — Error processing monthly leaderboard reset:', error);
         }
     }
 }

@@ -6,6 +6,10 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 const DiscordTerminal = require('../../shared/discord-terminal');
+let _errorReporterModule = null;
+try { _errorReporterModule = require('../../shared/cub-error-reporter'); } catch (e) { console.warn('[ErrorReporter] cub-error-reporter not available:', e.message); }
+const ERRORS = _errorReporterModule?.ERRORS || {};
+let errorReporter = null;
 
 const terminalConfig = {
     ownerIds: (process.env.OWNER_IDS || '378501056008683530,738723658352296017').split(',').map(id => id.trim()),
@@ -80,7 +84,7 @@ async function deployCommands() {
 
         console.log(`[Commands] Deployed ${data.length} slash commands`);
     } catch (error) {
-        console.error('Error deploying commands:', error);
+        console.error('CUBSOFTWARE_ERROR_CLEANME_DEPLOY_COMMANDS_151 — Error deploying commands:', error);
     }
 }
 
@@ -156,6 +160,12 @@ client.once('ready', async () => {
         systemCommands: false,
     });
     terminal.init();
+
+    // ── Error Reporter ────────────────────────────────────────────────────────
+    if (_errorReporterModule) {
+        errorReporter = _errorReporterModule.createErrorReporter(client, 'CleanMe');
+        errorReporter.hookConsoleError();
+    }
 
     // Add custom terminal commands
     terminal.addCommand('saves', {
@@ -306,7 +316,7 @@ client.on('interactionCreate', async (interaction) => {
     const _cmdMs = Date.now() - _cmdStart;
     if (_cmdMs > 2000) console.log(`[Slow] /${commandName} took ${_cmdMs}ms in ${interaction.guild?.name || 'DM'}`);
     } catch (err) {
-        console.error(`[Error] /${commandName} threw: ${err.message}`);
+        console.error(`CUBSOFTWARE_ERROR_CLEANME_CMD_HANDLER_152 — [Error] /${commandName} threw: ${err.message}`);
         if (!interaction.replied && !interaction.deferred) {
             interaction.reply({ content: '❌ An error occurred.', ephemeral: true }).catch(() => {});
         }
@@ -515,7 +525,7 @@ async function performSave(interaction, isOverride = false) {
         await interaction.editReply({ embeds: [embed], components: [publishRow] });
 
     } catch (error) {
-        console.error('Save error:', error);
+        console.error('CUBSOFTWARE_ERROR_CLEANME_SAVE_ERROR_153 — Save error:', error);
         await interaction.editReply({
             content: `❌ Error saving server: ${error.message}`,
             components: []
@@ -1082,7 +1092,7 @@ async function performCopy(interaction, sourceServerId) {
             statusMessage = await statusChannel.send({ embeds: [initialEmbed] });
 
         } catch (e) {
-            console.error('Failed to create status channel:', e);
+            console.error('CUBSOFTWARE_ERROR_CLEANME_STATUS_CHANNEL_154 — Failed to create status channel:', e);
             await interaction.editReply({
                 content: `❌ **Error:** Could not create status channel. Make sure the bot has permission to create channels.\nError: ${e.message}`,
                 embeds: [],
@@ -1318,7 +1328,7 @@ async function performCopy(interaction, sourceServerId) {
         await cleanupStatusChannel(30000);
 
     } catch (error) {
-        console.error('Copy error:', error);
+        console.error('CUBSOFTWARE_ERROR_CLEANME_COPY_ERROR_155 — Copy error:', error);
 
         // Notify owner about error
         await sendOwnerDM(client, BOT_OWNER_ID, '❌ Server Copy Failed',
@@ -1475,7 +1485,7 @@ async function performClean(interaction) {
         await generalChannel.send({ embeds: [doneEmbed] });
 
     } catch (error) {
-        console.error(`[Error] Clean failed in "${guild.name}": ${error.message}`);
+        console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Clean failed in "${guild.name}": ${error.message}`);
     }
 }
 
@@ -1706,7 +1716,7 @@ async function handleCleanMePublish(interaction, guildId) {
         await interaction.editReply({ embeds: [embed] });
 
     } catch (err) {
-        console.error('CleanMe publish error:', err);
+        console.error('CUBSOFTWARE_ERROR_CLEANME_PUBLISH_ERROR_157 — CleanMe publish error:', err);
         await interaction.editReply({
             content: `❌ Failed to reach CleanMe website. Is the server online?\n\`${err.message}\``
         });
@@ -1837,13 +1847,14 @@ client.on('guildDelete', (guild) => {
 });
 
 // Process handlers for logging
-process.on('unhandledRejection', (error) => {
-    console.error('Unhandled rejection:', error);
-    if (terminal) terminal.logEvent(`Unhandled rejection: ${error}`, 'error');
+process.on('unhandledRejection', async (error) => {
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error(`[FATAL] ${ERRORS.CLEANME?.FATAL_REJECTION || 'CUBSOFTWARE_ERROR_CLEANME_FATAL_REJECTION_021'} — Unhandled Promise Rejection:`, error);
+    if (terminal) terminal.logEvent(`Unhandled rejection: ${err.message}`, 'error');
 });
 
 process.on('uncaughtException', async (error) => {
-    console.error('Uncaught exception:', error);
+    console.error(`[FATAL] ${ERRORS.CLEANME?.FATAL_EXCEPTION || 'CUBSOFTWARE_ERROR_CLEANME_FATAL_EXCEPTION_022'} — Uncaught Exception:`, error);
     if (terminal) await terminal.logEvent(`Uncaught exception: ${error.message}`, 'error');
     process.exit(1);
 });

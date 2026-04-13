@@ -103,7 +103,7 @@ router.get('/api/insult', (req, res) => {
 
         res.json({ insult: randomInsult });
     } catch (error) {
-        console.error('Error fetching insult:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_WEB_150 — Error fetching insult:', error);
         res.json({ insult: 'Error loading insult. Check server logs.' });
     }
 });
@@ -161,7 +161,7 @@ router.get('/', checkMaintenanceMode, async (req, res) => {
                         });
                     }
                 } catch (error) {
-                    console.error(`Error fetching peasant user ${userId}:`, error);
+                    console.error(`CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_WEB_150 — Error fetching peasant user ${userId}:`, error);
                 }
             }
         }
@@ -199,7 +199,7 @@ router.get('/', checkMaintenanceMode, async (req, res) => {
             websiteEffects
         });
     } catch (error) {
-        console.error('Error rendering index:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_WEB_150 — Error rendering index:', error);
         res.status(500).send('Internal server error');
     }
 });
@@ -272,7 +272,7 @@ router.get('/profile/:userId', (req, res) => {
 
         res.send(html);
     } catch (error) {
-        console.error('Error serving profile page:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_WEB_150 — Error serving profile page:', error);
         res.sendFile(appPath);
     }
 });
@@ -316,7 +316,7 @@ router.get('/dashboard', (req, res) => {
         html = injectMetaTags(html, title, description, url);
         res.send(html);
     } catch (error) {
-        console.error('Error serving dashboard:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_WEB_150 — Error serving dashboard:', error);
         res.sendFile(appPath);
     }
 });
@@ -338,7 +338,7 @@ router.get('/quests', (req, res) => {
         html = injectMetaTags(html, title, description, url);
         res.send(html);
     } catch (error) {
-        console.error('Error serving quests page:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_WEB_150 — Error serving quests page:', error);
         res.sendFile(appPath);
     }
 });
@@ -360,7 +360,7 @@ router.get('/bosses', (req, res) => {
         html = injectMetaTags(html, title, description, url);
         res.send(html);
     } catch (error) {
-        console.error('Error serving bosses page:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_WEB_150 — Error serving bosses page:', error);
         res.sendFile(appPath);
     }
 });
@@ -382,7 +382,7 @@ router.get('/daily', (req, res) => {
         html = injectMetaTags(html, title, description, url);
         res.send(html);
     } catch (error) {
-        console.error('Error serving daily page:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_WEB_150 — Error serving daily page:', error);
         res.sendFile(appPath);
     }
 });
@@ -405,7 +405,7 @@ router.get(['/profile', '/login', '/'], (req, res) => {
         html = injectMetaTags(html, title, description, url);
         res.send(html);
     } catch (error) {
-        console.error('Error serving page:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_ROUTES_WEB_150 — Error serving page:', error);
         res.sendFile(appPath);
     }
 });

@@ -106,7 +106,7 @@ async function updateGuildStats(client) {
         const channels = client.guilds.cache.reduce((a, g) => a + g.channels.cache.size, 0);
         console.log(`[Stats] ${guilds.size} servers | ${totalMembers} members | ${channels} channels | ping: ${client.ws.ping}ms | mem: ${mem}MB | uptime: ${h}h${m}m${s}s`);
     } catch (error) {
-        console.error('Error updating guild stats:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_EVENT_READY_129 — Error updating guild stats:', error);
     }
 }
 
@@ -136,12 +136,12 @@ async function updateUserDisplayNames(client) {
                     }
                 }
             } catch (err) {
-                console.error(`Error updating members for guild ${guild.name}:`, err);
+                console.error(`CUBSOFTWARE_ERROR_QUESTCORD_EVENT_READY_129 — Error updating members for guild ${guild.name}:`, err);
             }
         }
 
         console.log(`[Display Names] Updated ${updatedCount} user display names`);
     } catch (error) {
-        console.error('Error updating user display names:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_EVENT_READY_129 — Error updating user display names:', error);
     }
 }

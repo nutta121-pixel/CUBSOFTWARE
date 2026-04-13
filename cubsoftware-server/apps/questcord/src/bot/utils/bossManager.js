@@ -97,7 +97,7 @@ class BossManager {
 
             setTimeout(() => this.scheduleNextBoss(), config.boss.spawnDuration + config.boss.cooldownDuration);
         } catch (error) {
-            console.error('Error spawning boss:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_BOSS_MANAGER_132 — Error spawning boss:', error);
             this.scheduleNextBoss();
         }
     }
@@ -110,7 +110,7 @@ class BossManager {
 
             const announcementChannel = this.client.channels.cache.get(ANNOUNCEMENT_CHANNEL_ID);
             if (!announcementChannel) {
-                console.error('Boss announcement channel not found');
+                console.error('CUBSOFTWARE_ERROR_QUESTCORD_BOSS_MANAGER_132 — Boss announcement channel not found');
                 return;
             }
 
@@ -176,7 +176,7 @@ class BossManager {
 
             console.log(`Boss announcement sent to channel ${ANNOUNCEMENT_CHANNEL_ID}`);
         } catch (error) {
-            console.error('Error announcing boss spawn:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_BOSS_MANAGER_132 — Error announcing boss spawn:', error);
         }
     }
 
@@ -260,7 +260,7 @@ class BossManager {
             await message.edit({ embeds: [embed] });
             console.log(`[Boss] Notification updated for ${boss.boss_name}`);
         } catch (error) {
-            console.error('Error updating boss notification:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_BOSS_MANAGER_132 — Error updating boss notification:', error);
         }
     }
 
@@ -345,11 +345,11 @@ class BossManager {
                     await message.delete();
                     console.log(`Boss defeat notification deleted for ${boss.boss_name}`);
                 } catch (err) {
-                    console.error('Error deleting boss defeat notification:', err);
+                    console.error('CUBSOFTWARE_ERROR_QUESTCORD_BOSS_MANAGER_132 — Error deleting boss defeat notification:', err);
                 }
             }, 5 * 60 * 1000);
         } catch (error) {
-            console.error('Error announcing boss defeat:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_BOSS_MANAGER_132 — Error announcing boss defeat:', error);
         }
     }
 
@@ -449,11 +449,11 @@ class BossManager {
                     await message.delete();
                     console.log(`Boss despawn notification deleted for ${boss.boss_name}`);
                 } catch (err) {
-                    console.error('Error deleting boss despawn notification:', err);
+                    console.error('CUBSOFTWARE_ERROR_QUESTCORD_BOSS_MANAGER_132 — Error deleting boss despawn notification:', err);
                 }
             }, 5 * 60 * 1000);
         } catch (error) {
-            console.error('Error announcing boss despawn:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_BOSS_MANAGER_132 — Error announcing boss despawn:', error);
         }
     }
 
@@ -507,7 +507,7 @@ class BossManager {
                 }
             }
         } catch (error) {
-            console.error('Error cleaning up old boss notifications:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_BOSS_MANAGER_132 — Error cleaning up old boss notifications:', error);
         }
     }
 }

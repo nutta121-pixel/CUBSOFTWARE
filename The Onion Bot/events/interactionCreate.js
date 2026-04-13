@@ -9,7 +9,7 @@ module.exports = {
             console.log(`[Command] /${interaction.commandName} by ${interaction.user.username} in ${interaction.guild?.name || 'DM'}`);
 
             if (!command) {
-                console.error(`[Error] No command matching /${interaction.commandName}`);
+                console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] No command matching /${interaction.commandName}`);
                 return;
             }
 
@@ -18,7 +18,7 @@ module.exports = {
                 const ms = Date.now() - _start;
                 if (ms > 2000) console.log(`[Slow] /${interaction.commandName} took ${ms}ms in ${interaction.guild?.name || 'DM'}`);
             } catch (error) {
-                console.error(`[Error] /${interaction.commandName} threw: ${error.message}`);
+                console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] /${interaction.commandName} threw: ${error.message}`);
                 const errorMessage = { content: 'There was an error while executing this command!', ephemeral: true };
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp(errorMessage);
@@ -33,14 +33,14 @@ module.exports = {
             console.log(`[Command] Context menu "${interaction.commandName}" by ${interaction.user.username} on ${interaction.targetUser?.tag || 'unknown'}`);
 
             if (!command) {
-                console.error(`[Error] No context menu command matching "${interaction.commandName}"`);
+                console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] No context menu command matching "${interaction.commandName}"`);
                 return;
             }
 
             try {
                 await command.execute(interaction);
             } catch (error) {
-                console.error(`[Error] Context menu "${interaction.commandName}" threw: ${error.message}`);
+                console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] Context menu "${interaction.commandName}" threw: ${error.message}`);
                 const errorMessage = { content: 'There was an error while executing this command!', ephemeral: true };
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp(errorMessage);
@@ -68,7 +68,7 @@ module.exports = {
                 try {
                     await command.handleButton(interaction);
                 } catch (error) {
-                    console.error(`[Error] Button "${interaction.customId}" threw: ${error.message}`);
+                    console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] Button "${interaction.customId}" threw: ${error.message}`);
                     const errorMessage = { content: 'There was an error while processing this interaction!', ephemeral: true };
 
                     if (interaction.replied || interaction.deferred) {
@@ -95,7 +95,7 @@ module.exports = {
                 try {
                     await command.handleChannelSelect(interaction);
                 } catch (error) {
-                    console.error(`[Error] Channel select "${interaction.customId}" threw: ${error.message}`);
+                    console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] Channel select "${interaction.customId}" threw: ${error.message}`);
                     const errorMessage = { content: 'There was an error while processing this interaction!', ephemeral: true };
 
                     if (interaction.replied || interaction.deferred) {
@@ -122,7 +122,7 @@ module.exports = {
                 try {
                     await command.handleStringSelect(interaction);
                 } catch (error) {
-                    console.error(`[Error] String select "${interaction.customId}" threw: ${error.message}`);
+                    console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] String select "${interaction.customId}" threw: ${error.message}`);
                     const errorMessage = { content: 'There was an error while processing this interaction!', ephemeral: true };
 
                     if (interaction.replied || interaction.deferred) {

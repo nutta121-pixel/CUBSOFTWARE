@@ -155,7 +155,7 @@ router.post('/travel', requireAuth, async (req, res) => {
             message: 'Travel started successfully'
         });
     } catch (error) {
-        console.error('Error starting travel:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_ROUTES_123 — Error starting travel:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to start travel'

@@ -16,6 +16,9 @@ const axios = require('axios');
 const WebSocket = require('ws');
 let DiscordTerminal = null;
 try { DiscordTerminal = require('../../shared/discord-terminal'); } catch (e) { console.warn('[Terminal] discord-terminal not available:', e.message); }
+let _errorReporterModule = null;
+try { _errorReporterModule = require('../../shared/cub-error-reporter'); } catch (e) { console.warn('[ErrorReporter] cub-error-reporter not available:', e.message); }
+const ERRORS = _errorReporterModule?.ERRORS || {};
 let generateRankCard = null;
 try { generateRankCard = require('./rankCard').generateRankCard; } catch (e) { console.warn('[RankCard] @napi-rs/canvas not available — run npm install'); }
 
@@ -95,7 +98,7 @@ function _refreshCbCache() {
             ...[...prevGuilds].filter(g => !_cbGuildsCache.has(g)), // custom bot just disabled
         ];
         for (const gid of changed) {
-            syncGuildCommands(gid).catch(e => console.error(`[Commands] Auto-sync failed for ${gid}:`, e.message));
+            syncGuildCommands(gid).catch(e => console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_CMDSYNC_GUILD_033 — [Commands] Auto-sync failed for ${gid}:`, e.message));
         }
     }
 }
@@ -230,7 +233,7 @@ function loadTempVoiceData() {
             return JSON.parse(fs.readFileSync(TEMP_VOICE_FILE, 'utf8'));
         }
     } catch (e) {
-        console.error('Failed to load temp voice data:', e);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_TEMPVC_DATALOAD_034 — Failed to load temp voice data:', e);
     }
     return { guilds: {} };
 }
@@ -239,7 +242,7 @@ function saveTempVoiceData(data) {
     try {
         fs.writeFileSync(TEMP_VOICE_FILE, JSON.stringify(data, null, 2));
     } catch (e) {
-        console.error('Failed to save temp voice data:', e);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_TEMPVC_DATASAVE_035 — Failed to save temp voice data:', e);
     }
 }
 
@@ -259,7 +262,7 @@ function loadModData() {
             return JSON.parse(fs.readFileSync(MODERATION_FILE, 'utf8'));
         }
     } catch (e) {
-        console.error('Failed to load moderation data:', e);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_MOD_DATALOAD_036 — Failed to load moderation data:', e);
     }
     return { guilds: {} };
 }
@@ -268,7 +271,7 @@ function saveModData(data) {
     try {
         fs.writeFileSync(MODERATION_FILE, JSON.stringify(data, null, 2));
     } catch (e) {
-        console.error('Failed to save moderation data:', e);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_MOD_DATASAVE_037 — Failed to save moderation data:', e);
     }
 }
 
@@ -283,13 +286,13 @@ function getModGuild(data, guildId) {
 function loadJsonFile(filePath, defaultData = { guilds: {} }) {
     try {
         if (fs.existsSync(filePath)) return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    } catch (e) { console.error(`Failed to load ${filePath}:`, e); }
+    } catch (e) { console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_FILE_LOAD_038 — Failed to load ${filePath}:`, e); }
     return JSON.parse(JSON.stringify(defaultData));
 }
 
 function saveJsonFile(filePath, data) {
     try { fs.writeFileSync(filePath, JSON.stringify(data, null, 2)); }
-    catch (e) { console.error(`Failed to save ${filePath}:`, e); }
+    catch (e) { console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_FILE_SAVE_039 — Failed to save ${filePath}:`, e); }
 }
 
 function loadSlowmodeConfig() {
@@ -1893,7 +1896,7 @@ async function syncGuildCommands(guildId) {
         await rest.put(Routes.applicationGuildCommands(CLIENT_ID, guildId), { body });
         console.log(`[Commands] Guild ${guildId}: registered ${body.length} commands`);
     } catch (e) {
-        console.error(`[Commands] Failed to sync guild ${guildId}:`, e.message);
+        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_CMDSYNC_FAILED_041 — [Commands] Failed to sync guild ${guildId}:`, e.message);
     }
 }
 
@@ -1921,7 +1924,7 @@ async function registerCommands() {
             console.log('[Commands] Per-guild command registration complete.');
         }
     } catch (error) {
-        console.error('Failed to register commands:', error);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CMDREG_FAILED_040 — Failed to register commands:', error);
     }
 }
 
@@ -2023,7 +2026,7 @@ function startKeepAliveTimer(channelId, keepAliveMinutes, guild) {
                 }
             }
         } catch (e) {
-            console.error('Keep-alive timer error:', e);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_KEEPALIVE_TIMER_042 — Keep-alive timer error:', e);
         }
     }, ms);
 
@@ -2283,7 +2286,7 @@ async function crJoinChannel(channelId, guildId) {
         const initNet = Reflect.get(connection.state, 'networking');
         if (initNet) wireWs(initNet);
     } catch (e) {
-        console.error(`[CubReactive] Failed to join ${channelId}:`, e.message);
+        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBREACTIVE_JOIN_043 — [CubReactive] Failed to join ${channelId}:`, e.message);
         crActiveVoiceConns.delete(channelId);
     }
 }
@@ -2378,7 +2381,7 @@ function startCubReactiveWebSocket() {
                     } else { ws.send(JSON.stringify({ type: 'NOT_IN_VOICE', userId: data.userId })); }
                 }
                 if (data.type === 'PING') ws.send(JSON.stringify({ type: 'PONG' }));
-            } catch (e) { console.error('[CubReactive] msg error:', e); }
+            } catch (e) { console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBREACTIVE_MSG_044 — [CubReactive] msg error:', e); }
         });
         ws.on('close', () => {
             if (ws.isBotPeer && ws.botGuildId) { crBotPeers.delete(ws.botGuildId); return; }
@@ -2451,7 +2454,7 @@ async function crBotJoinChannel(channelId, guildId) {
         if (initNet) wireWs2(initNet);
         console.log(`[CubReactive] Custom bot joined voice ${channelId}`);
     } catch (e) {
-        console.error(`[CubReactive] Custom bot failed to join ${channelId}:`, e.message);
+        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBREACTIVE_BOTJOIN_045 — [CubReactive] Custom bot failed to join ${channelId}:`, e.message);
         crBotActiveVoiceConns.delete(channelId);
     }
 }
@@ -2470,7 +2473,7 @@ function startCrBotPeer() {
                     const st = crBotActiveVoiceConns.get(data.channelId);
                     if (st) { try { st.connection.destroy(); } catch (_) {} crBotActiveVoiceConns.delete(data.channelId); }
                 }
-            } catch (e) { console.error('[CubReactive] Bot peer msg error:', e); }
+            } catch (e) { console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBREACTIVE_PEER_046 — [CubReactive] Bot peer msg error:', e); }
         });
         crBotPeerWs.on('close', () => {
             console.warn('[CubReactive] Bot peer WS disconnected, reconnecting in 15s...');
@@ -2478,7 +2481,7 @@ function startCrBotPeer() {
         });
         crBotPeerWs.on('error', (e) => { console.warn('[CubReactive] Bot peer WS error:', e.message); });
     } catch (e) {
-        console.error('[CubReactive] startCrBotPeer failed:', e.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBREACTIVE_BOTPEER_047 — [CubReactive] startCrBotPeer failed:', e.message);
         setTimeout(startCrBotPeer, 15000);
     }
 }
@@ -2579,6 +2582,7 @@ function startLogServer() {
 // Discord Terminal Setup (Admin Commands via Discord Channel)
 // ============================================================
 let terminal = null;
+let errorReporter = null;
 if (DiscordTerminal) {
     terminal = new DiscordTerminal(client, {
         prefix: '>',
@@ -2783,6 +2787,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             }
 
             // Create the temp voice channel in the same category
+            console.log(`[TempVC] Creating private channel "${channelName}" for ${member.user.tag} (${member.id})`);
             const tempChannel = await guild.channels.create({
                 name: channelName,
                 type: ChannelType.GuildVoice,
@@ -2791,9 +2796,48 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 bitrate: (hub.bitrate || 64) * 1000,
                 permissionOverwrites: permOverwrites,
             });
+            console.log(`[TempVC] Channel created: "${tempChannel.name}" (${tempChannel.id})`);
+
+            // Race-condition guard: confirm user is still in the hub before moving
+            const freshMember = await guild.members.fetch(member.id).catch(() => null);
+            if (!freshMember?.voice?.channelId) {
+                // User disconnected during channel creation — clean up immediately
+                console.warn(`[TempVC] User ${member.user.tag} left before move — deleting orphan "${tempChannel.name}"`);
+                await tempChannel.delete('User disconnected before move').catch(() => {});
+                if (errorReporter) {
+                    await errorReporter.report(
+                        ERRORS.CUBPROTECTOR?.TEMPVC_ORPHAN,
+                        `User disconnected before move — orphan channel deleted`,
+                        { user: member.user.tag, userId: member.id, channel: tempChannel.name, channelId: tempChannel.id, guild: guild.name }
+                    );
+                }
+                return;
+            }
 
             // Move the user to the temp channel
-            await member.voice.setChannel(tempChannel).catch(() => {});
+            let moveFailed = false;
+            try {
+                await member.voice.setChannel(tempChannel);
+                console.log(`[TempVC] Moved ${member.user.tag} → "${tempChannel.name}"`);
+            } catch (moveErr) {
+                moveFailed = true;
+                console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TEMPVC_MOVE_002 — [TempVC] Failed to move ${member.user.tag} to "${tempChannel.name}":`, moveErr.message);
+
+                // Delete the orphaned channel
+                await tempChannel.delete('Failed to move user').catch(() => {});
+                console.warn(`[TempVC] Deleted orphan "${tempChannel.name}" after failed move`);
+
+                if (errorReporter) {
+                    await errorReporter.report(
+                        ERRORS.CUBPROTECTOR?.TEMPVC_MOVE,
+                        `Failed to move user to private channel`,
+                        { user: member.user.tag, userId: member.id, channel: tempChannel.name, channelId: tempChannel.id, guild: guild.name },
+                        moveErr
+                    );
+                }
+            }
+
+            if (moveFailed) return;
 
             // Track the channel
             if (!guildData.active_channels) guildData.active_channels = {};
@@ -2809,9 +2853,17 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             };
             saveTempVoiceData(data);
 
-            console.log(`[TempVC] Created "${channelName}" for ${member.user.tag}`);
+            console.log(`[TempVC] Created and tracked "${channelName}" for ${member.user.tag}`);
         } catch (e) {
-            console.error('Failed to create temp voice channel:', e);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_TEMPVC_CREATE_001 — Failed to create temp voice channel:', e);
+            if (errorReporter) {
+                await errorReporter.report(
+                    ERRORS.CUBPROTECTOR?.TEMPVC_CREATE,
+                    `Exception during temp VC creation`,
+                    { user: member.user.tag, userId: member.id, hub: newState.channelId, guild: guild.name },
+                    e
+                );
+            }
         }
     }
 
@@ -3062,7 +3114,7 @@ client.on('messageCreate', async (message) => {
                     }
                 }
             } catch (e) {
-                console.error('Modmail DM relay error:', e);
+                console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_MODMAIL_DM_048 — Modmail DM relay error:', e);
             }
             return;
         }
@@ -3125,7 +3177,7 @@ client.on('messageCreate', async (message) => {
                     await message.react('📨').catch(() => {});
                 }
             } catch (e) {
-                console.error('Modmail staff relay error:', e);
+                console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_MODMAIL_STAFF_049 — Modmail staff relay error:', e);
             }
             return; // Don't process modmail channel messages as regular messages
         }
@@ -3729,7 +3781,7 @@ client.on('guildMemberAdd', async (member) => {
                     for (const _rid of _arGuildW.welcome.auto_roles) {
                         await _m.roles.add(_rid)
                             .then(() => console.log(`[AutoRole] ✓ added role ${_rid} to ${_m.id}`))
-                            .catch(e => console.error(`[AutoRole] ✗ failed role ${_rid} to ${_m.id}: ${e.message}`));
+                            .catch(e => console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_AUTOROLE_ASSIGN_052 — [AutoRole] ✗ failed role ${_rid} to ${_m.id}: ${e.message}`));
                     }
                 };
                 if (_delay > 0) setTimeout(_assignWelcomeRoles, _delay);
@@ -3768,7 +3820,7 @@ client.on('guildMemberAdd', async (member) => {
                 }
             }
         } catch (e) {
-            console.error('[AutoRole] guildMemberAdd error:', e.message);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_AUTOROLE_EVENT_053 — [AutoRole] guildMemberAdd error:', e.message);
         }
     }
 
@@ -4519,7 +4571,7 @@ client.on('messageReactionAdd', async (reaction, user) => {
                     if (roleEntry) {
                         const member = await _srGuild.members.fetch(user.id).catch(() => null);
                         if (member) {
-                            await member.roles.add(roleEntry.role_id).catch(e => console.error('[SR] add failed:',e.message));
+                            await member.roles.add(roleEntry.role_id).catch(e => console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_SELFROLE_ADD_054 — [SR] add failed:',e.message));
                             console.log(`[SR] added ${roleEntry.role_id} to ${user.id}`);
                             // Exclusive: max_select=1 removes all other roles and reactions in this category
                             if ((matchCat.max_select || 0) === 1) {
@@ -5385,7 +5437,7 @@ client.on('interactionCreate', async (interaction) => {
             console.log(`[Moderation] Ban: ${targetUser.tag} by ${member.user.tag} in "${guild.name}" — ${reason}${durationStr ? ` (${durationStr})` : ''}`);
             await interaction.editReply({ embeds: [embed] });
         } catch (e) {
-            console.error(`[Error] Ban failed for ${targetUser?.tag} in "${guild.name}": ${e.message}`);
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_BAN_FAILED_055 — [Error] Ban failed for ${targetUser?.tag} in "${guild.name}": ${e.message}`);
             await interaction.editReply({ content: `Failed to ban: ${e.message}` });
         }
     }
@@ -5459,7 +5511,7 @@ client.on('interactionCreate', async (interaction) => {
             console.log(`[Moderation] Kick: ${targetUser.tag} by ${member.user.tag} in "${guild.name}" — ${reason}`);
             await interaction.editReply({ embeds: [embed] });
         } catch (e) {
-            console.error(`[Error] Kick failed for ${targetUser?.tag} in "${guild.name}": ${e.message}`);
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_KICK_FAILED_056 — [Error] Kick failed for ${targetUser?.tag} in "${guild.name}": ${e.message}`);
             await interaction.editReply({ content: `Failed to kick: ${e.message}` });
         }
     }
@@ -5514,7 +5566,7 @@ client.on('interactionCreate', async (interaction) => {
             console.log(`[Moderation] Mute: ${targetUser.tag} by ${member.user.tag} in "${guild.name}" for ${formatDuration(durationMs)} — ${reason}`);
             await interaction.editReply({ embeds: [embed] });
         } catch (e) {
-            console.error(`[Error] Mute failed for ${targetUser?.tag} in "${guild.name}": ${e.message}`);
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_MUTE_FAILED_057 — [Error] Mute failed for ${targetUser?.tag} in "${guild.name}": ${e.message}`);
             await interaction.editReply({ content: `Failed to mute: ${e.message}` });
         }
     }
@@ -6145,7 +6197,7 @@ client.on('interactionCreate', async (interaction) => {
             const attachment = new AttachmentBuilder(imgBuffer, { name: 'rank.png' });
             await interaction.editReply({ files: [attachment] });
         } catch (err) {
-            console.error('[RankCard] Error generating card:', err);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_RANKCARD_GEN_058 — [RankCard] Error generating card:', err);
             await interaction.editReply({ content: 'Failed to generate rank card.' });
         }
     }
@@ -6206,7 +6258,7 @@ client.on('interactionCreate', async (interaction) => {
             const attachment = new AttachmentBuilder(imgBuffer, { name: 'rank-preview.png' });
             await interaction.editReply({ content: '✅ Theme updated! Here\'s a preview:', files: [attachment] });
         } catch (err) {
-            console.error('[RankCard] Preview error:', err);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_RANKCARD_PREVIEW_059 — [RankCard] Preview error:', err);
             await interaction.editReply({ content: '✅ Theme saved!' });
         }
     }
@@ -7029,7 +7081,7 @@ client.on('interactionCreate', async (interaction) => {
                 return;
             }
         } catch (err) {
-            console.error('[CUB AI] Handler error:', err);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_HANDLER_060 — [CUB AI] Handler error:', err);
             if (!interaction.replied && !interaction.deferred) {
                 await interaction.reply({ content: `⚠️ CUB AI error: ${err.message}`, ephemeral: true }).catch(() => {});
             }
@@ -8385,7 +8437,7 @@ client.on('interactionCreate', async (interaction) => {
 
             await interaction.reply({ content: 'Your modmail thread has been created! Check your DMs to communicate with staff.', ephemeral: true });
         } catch (e) {
-            console.error('Modmail contact error:', e);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_MODMAIL_CONTACT_050 — Modmail contact error:', e);
             await interaction.reply({ content: 'Failed to create modmail thread. Please try again later.', ephemeral: true }).catch(() => {});
         }
     }
@@ -8466,7 +8518,7 @@ client.on('interactionCreate', async (interaction) => {
                 if (interaction.channel) await interaction.channel.delete().catch(() => {});
             }, 10000);
         } catch (e) {
-            console.error('Modmail close error:', e);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_MODMAIL_CLOSE_051 — Modmail close error:', e);
             await interaction.reply({ content: 'Failed to close modmail thread.', ephemeral: true }).catch(() => {});
         }
     }
@@ -8517,7 +8569,7 @@ client.on('interactionCreate', async (interaction) => {
                 try {
                     await interaction.guild.members.unban(userId, 'Ban appeal approved');
                 } catch (e) {
-                    console.error('Failed to unban:', e);
+                    console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_UNBAN_FAILED_061 — Failed to unban:', e);
                 }
 
                 // DM the user
@@ -8560,7 +8612,7 @@ client.on('interactionCreate', async (interaction) => {
                 await interaction.update({ embeds: [declinedEmbed], components: [] });
             }
         } catch (e) {
-            console.error('Appeal review error:', e);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_APPEAL_REVIEW_062 — Appeal review error:', e);
             await interaction.reply({ content: 'Failed to process appeal.', ephemeral: true }).catch(() => {});
         }
     }
@@ -10293,7 +10345,7 @@ client.on('guildDelete', async (guild) => {
             console.log(`[CustomBot] Marked guild ${CUSTOM_GUILD_ID} as disabled in custom_bots.json`);
         }
     } catch (e) {
-        console.error('[CustomBot] Failed to update custom_bots.json on guildDelete:', e.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUSTOMBOT_FILE_063 — [CustomBot] Failed to update custom_bots.json on guildDelete:', e.message);
     }
 });
 
@@ -10830,13 +10882,13 @@ client.once('clientReady', async () => {
                                     if (ch) {
                                         await ch.messages.fetch(streamer.alert_message_id)
                                             .then(m => m.delete().then(() => console.log(`[live-alerts] Deleted alert for ${streamer.username} in guild ${gId}`)))
-                                            .catch(e => console.error(`[live-alerts] Failed to delete alert for ${streamer.username} in guild ${gId}:`, e?.code, e?.message));
+                                            .catch(e => console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_ALERTS_DELETE_064 — [live-alerts] Failed to delete alert for ${streamer.username} in guild ${gId}:`, e?.code, e?.message));
                                     } else {
-                                        console.error(`[live-alerts] Could not fetch alert channel ${streamer.alert_channel_id} for ${streamer.username} in guild ${gId}`);
+                                        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_ALERTS_CHANNEL_065 — [live-alerts] Could not fetch alert channel ${streamer.alert_channel_id} for ${streamer.username} in guild ${gId}`);
                                     }
                                 }
                             } catch (e) {
-                                console.error('[live-alerts] Unexpected error during auto-delete:', e?.message);
+                                console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_ALERTS_UNEXPECTED_066 — [live-alerts] Unexpected error during auto-delete:', e?.message);
                             }
                             streamer.alert_message_id = null;
                             streamer.alert_channel_id = null;
@@ -10896,7 +10948,7 @@ client.once('clientReady', async () => {
                     // Rate limit: Discord allows ~5 message edits/s per channel
                     await new Promise(r => setTimeout(r, 500));
                 } catch (e) {
-                    console.error(`[SelfRoles] Failed to restore category "${category.name}" in guild ${gId}:`, e.message);
+                    console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_SELFROLES_RESTORE_067 — [SelfRoles] Failed to restore category "${category.name}" in guild ${gId}:`, e.message);
                 }
             }
             if (changed) saveRoleMenusData(rmData);
@@ -11021,6 +11073,12 @@ client.once('clientReady', async () => {
         if (changed) saveFeedsData(fData);
     }, 60 * 60 * 1000);
 
+    // ── Error Reporter ────────────────────────────────────────────────────────
+    if (_errorReporterModule) {
+        errorReporter = _errorReporterModule.createErrorReporter(client, 'CUB PROTECTOR');
+        errorReporter.hookConsoleError(); // forward all console.error → Discord incident channel
+    }
+
     // ── Terminal, CubReactive, Log Server (main bot only) ─────────────────────
     if (terminal) terminal.init();
     if (!CUSTOM_GUILD_ID) {
@@ -11067,9 +11125,9 @@ client.once('clientReady', async () => {
                 try {
                     execSync('git add .', { cwd: __dirname });
                     console.log('[CubAI] git add . complete');
-                } catch (e) { console.error('[CubAI] git add error:', e.message); }
+                } catch (e) { console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_GIT_CLEANUP_068 — [CubAI] git add error:', e.message); }
             }
-        } catch (e) { console.error('[CubAI] Cleanup error:', e.message); }
+        } catch (e) { console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_GIT_CLEANUP_068 — [CubAI] Cleanup error:', e.message); }
     }
     function scheduleMidnightCleanup() {
         const now = new Date();
@@ -11165,7 +11223,7 @@ client.once('clientReady', async () => {
                     }
                 }
             } catch (e) {
-                console.error(`[Suggestions] Queue action failed (${action.type}):`, e.message);
+                console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_SUGGESTIONS_QUEUE_069 — [Suggestions] Queue action failed (${action.type}):`, e.message);
                 remaining.push(action); // retry next cycle on error
             }
         }
@@ -11180,13 +11238,30 @@ client.once('clientReady', async () => {
 // ============================================================
 // Error handlers — ensure crashes appear in PM2 logs
 // ============================================================
-process.on('unhandledRejection', (reason) => {
-    console.error('[FATAL] Unhandled Promise Rejection:', reason);
+process.on('unhandledRejection', async (reason) => {
+    const err = reason instanceof Error ? reason : new Error(String(reason));
+    console.error(`[FATAL] ${ERRORS.CUBPROTECTOR?.FATAL_REJECTION || 'CUBSOFTWARE_ERROR_CUBPROTECTOR_FATAL_REJECTION_008'} — Unhandled Promise Rejection:`, reason);
     if (terminal) terminal.logEvent(`Unhandled rejection: ${reason}`, 'error');
+    if (errorReporter) {
+        await errorReporter.report(
+            ERRORS.CUBPROTECTOR?.FATAL_REJECTION,
+            'Unhandled Promise Rejection',
+            { reason: String(reason).substring(0, 500) },
+            err
+        ).catch(() => {});
+    }
 });
-process.on('uncaughtException', (err) => {
-    console.error('[FATAL] Uncaught Exception:', err);
+process.on('uncaughtException', async (err) => {
+    console.error(`[FATAL] ${ERRORS.CUBPROTECTOR?.FATAL_EXCEPTION || 'CUBSOFTWARE_ERROR_CUBPROTECTOR_FATAL_EXCEPTION_009'} — Uncaught Exception:`, err);
     if (terminal) terminal.logEvent(`Uncaught exception: ${err.message}`, 'error');
+    if (errorReporter) {
+        await errorReporter.report(
+            ERRORS.CUBPROTECTOR?.FATAL_EXCEPTION,
+            `Uncaught Exception — process exiting`,
+            { message: err.message },
+            err
+        ).catch(() => {});
+    }
     process.exit(1);
 });
 
@@ -11194,7 +11269,7 @@ process.on('uncaughtException', (err) => {
 // Login
 // ============================================================
 client.login(TOKEN).catch(err => {
-    console.error('[FATAL] client.login() failed:', err.message);
-    console.error('TOKEN present:', !!TOKEN, '| CLIENT_ID:', CLIENT_ID, '| CUSTOM_GUILD_ID:', CUSTOM_GUILD_ID);
+    console.error(`[FATAL] ${ERRORS.CUBPROTECTOR?.LOGIN_FAILED || 'CUBSOFTWARE_ERROR_CUBPROTECTOR_LOGIN_FAILED_010'} — client.login() failed:`, err.message);
+    console.log('TOKEN present:', !!TOKEN, '| CLIENT_ID:', CLIENT_ID, '| CUSTOM_GUILD_ID:', CUSTOM_GUILD_ID);
     process.exit(1);
 });

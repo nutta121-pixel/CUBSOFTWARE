@@ -84,7 +84,7 @@ function seedItems() {
 
         console.log(`Items seeded: ${inserted} inserted, ${skipped} skipped (already exist)`);
     } catch (error) {
-        console.error('Error seeding items:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_DB_SEED_137 — Error seeding items:', error);
     }
 }
 

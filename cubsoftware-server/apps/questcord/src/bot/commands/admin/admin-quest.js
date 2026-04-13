@@ -104,7 +104,7 @@ async function handleForceComplete(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[QUEST-ADMIN] Force completed by ${interaction.user.username}: ${quest.quest_name} for ${targetUser.username}`);
     } catch (error) {
-        console.error('Error force completing quest:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force completing quest:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -136,7 +136,7 @@ async function handleRemove(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[QUEST-ADMIN] Removed by ${interaction.user.username}: ${quest.quest_name} (ID: ${questId})`);
     } catch (error) {
-        console.error('Error removing quest:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error removing quest:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }

@@ -217,7 +217,7 @@ async function startWebServer(client) {
     });
 
     app.use((err, req, res, next) => {
-        console.error('Server error:', err);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_SERVER_ERROR_114 — Server error:', err);
         res.status(500).render('404', {
             path: req.path,
             threatLevel: 'none',
@@ -232,6 +232,11 @@ async function startWebServer(client) {
         debugLogger.info('WEBSOCKET', 'New WebSocket connection established', {
             ip: clientIp,
             connectedClients: wss.clients.size
+        });
+
+        ws.on('error', (err) => {
+            console.error(`CUBSOFTWARE_ERROR_QUESTCORD_WS_CLIENT_ERROR_011 — WebSocket client error from ${clientIp}: ${err.message}`);
+            ws.terminate();
         });
 
         ws.on('close', () => {
@@ -266,11 +271,11 @@ async function startWebServer(client) {
     });
 
     server.on('error', (error) => {
-        console.error('[WEB SERVER] Failed to start:', error.message);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_SERVER_START_113 — [WEB SERVER] Failed to start:', error.message);
         if (error.code === 'EADDRINUSE') {
-            console.error(`[WEB SERVER] Port ${port} is already in use. Run: fuser -k ${port}/tcp`);
+            console.error(`CUBSOFTWARE_ERROR_QUESTCORD_SERVER_PORT_BUSY_115 — [WEB SERVER] Port ${port} is already in use. Run: fuser -k ${port}/tcp`);
         } else if (error.code === 'EACCES') {
-            console.error(`[WEB SERVER] Permission denied. Port ${port} requires elevated privileges.`);
+            console.error(`CUBSOFTWARE_ERROR_QUESTCORD_SERVER_PORT_PERMS_116 — [WEB SERVER] Permission denied. Port ${port} requires elevated privileges.`);
         }
         throw error;
     });

@@ -39,7 +39,7 @@ class GuildController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in createGuild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in createGuild:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -80,7 +80,7 @@ class GuildController {
                 data: enrichedGuilds
             });
         } catch (error) {
-            console.error('Error in getGuilds:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in getGuilds:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -108,7 +108,7 @@ class GuildController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in getGuild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in getGuild:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -150,7 +150,7 @@ class GuildController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in getMyGuild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in getMyGuild:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -185,7 +185,7 @@ class GuildController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in inviteUser:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in inviteUser:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -220,7 +220,7 @@ class GuildController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in joinGuild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in joinGuild:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -248,7 +248,7 @@ class GuildController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in joinPublicGuild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in joinPublicGuild:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -270,7 +270,7 @@ class GuildController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in leaveGuild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in leaveGuild:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -306,7 +306,7 @@ class GuildController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in contribute:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in contribute:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -335,7 +335,7 @@ class GuildController {
                 data: invites
             });
         } catch (error) {
-            console.error('Error in getInvites:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in getInvites:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -357,7 +357,7 @@ class GuildController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in upgradeSlots:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in upgradeSlots:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -379,7 +379,7 @@ class GuildController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in upgradeLevel:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in upgradeLevel:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -419,7 +419,7 @@ class GuildController {
                 }
             });
         } catch (error) {
-            console.error('Error in getLeaderboard:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in getLeaderboard:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -443,7 +443,7 @@ class GuildController {
                 }
             });
         } catch (error) {
-            console.error('Error in getGuildRank:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_GUILD_119 — Error in getGuildRank:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'

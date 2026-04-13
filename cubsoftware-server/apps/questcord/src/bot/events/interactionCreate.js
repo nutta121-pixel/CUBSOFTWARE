@@ -315,13 +315,13 @@ module.exports = {
 
                         await interaction.editReply({ embeds: [embed] });
                     } catch (err) {
-                        console.error('Error loading profile:', err);
+                        console.error('CUBSOFTWARE_ERROR_QUESTCORD_EVENT_INTERACTION_128 — Error loading profile:', err);
                         await interaction.editReply({ content: 'Failed to load profile.', flags: MessageFlags.Ephemeral });
                     }
                     return;
                 }
             } catch (error) {
-                console.error('Error handling button interaction:', error);
+                console.error('CUBSOFTWARE_ERROR_QUESTCORD_EVENT_INTERACTION_128 — Error handling button interaction:', error);
                 const reporting = getReportingInstance();
                 if (reporting) {
                     reporting.sendErrorReport(error, `Button interaction: ${interaction.customId}`);
@@ -348,7 +348,7 @@ module.exports = {
             try {
                 await command.autocomplete(interaction);
             } catch (error) {
-                console.error('Error handling autocomplete:', error);
+                console.error('CUBSOFTWARE_ERROR_QUESTCORD_EVENT_INTERACTION_128 — Error handling autocomplete:', error);
             }
             return;
         }
@@ -358,7 +358,7 @@ module.exports = {
         const command = interaction.client.commands.get(interaction.commandName);
 
         if (!command) {
-            console.error(`Command not found: ${interaction.commandName}`);
+            console.error(`CUBSOFTWARE_ERROR_QUESTCORD_EVENT_INTERACTION_128 — Command not found: ${interaction.commandName}`);
             return;
         }
 
@@ -444,7 +444,7 @@ module.exports = {
             const _cmdMs = Date.now() - _cmdStart;
             if (_cmdMs > 2000) console.log(`[Slow] /${interaction.commandName} took ${_cmdMs}ms in ${interaction.guild?.name || 'DM'}`);
         } catch (error) {
-            console.error(`[Error] /${interaction.commandName} threw: ${error.message}`);
+            console.error(`CUBSOFTWARE_ERROR_QUESTCORD_EVENT_INTERACTION_128 — [Error] /${interaction.commandName} threw: ${error.message}`);
 
             // Log to debug channel
             await debugLogger.error('COMMAND', error, {

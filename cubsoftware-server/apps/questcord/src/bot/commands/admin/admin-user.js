@@ -217,7 +217,7 @@ async function handleHeal(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[USER-ADMIN] User healed by ${interaction.user.username}: ${targetUser.username}`);
     } catch (error) {
-        console.error('Error healing user:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error healing user:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -247,7 +247,7 @@ async function handleSetAttack(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[USER-ADMIN] Attack modified by ${interaction.user.username}: ${targetUser.username} ${oldAttack} -> ${attack}`);
     } catch (error) {
-        console.error('Error setting attack:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting attack:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -277,7 +277,7 @@ async function handleSetDefense(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[USER-ADMIN] Defense modified by ${interaction.user.username}: ${targetUser.username} ${oldDefense} -> ${defense}`);
     } catch (error) {
-        console.error('Error setting defense:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting defense:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -307,7 +307,7 @@ async function handleClearInventory(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[USER-ADMIN] Inventory cleared by ${interaction.user.username}: ${targetUser.username} (${result.changes} items)`);
     } catch (error) {
-        console.error('Error clearing inventory:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error clearing inventory:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -334,7 +334,7 @@ async function handleCancelTravel(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[USER-ADMIN] Travel cancelled by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
-        console.error('Error cancelling travel:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error cancelling travel:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -362,7 +362,7 @@ async function handleCompleteTravel(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[USER-ADMIN] Travel completed by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
-        console.error('Error completing travel:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error completing travel:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -389,7 +389,7 @@ async function handleResetPvp(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[USER-ADMIN] PVP reset by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
-        console.error('Error resetting PVP:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting PVP:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -413,7 +413,7 @@ async function handleTogglePvp(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[USER-ADMIN] PVP toggled by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
-        console.error('Error toggling PVP:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error toggling PVP:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -471,7 +471,7 @@ async function handleGiveCurrency(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[USER-ADMIN] Currency given by ${interaction.user.username} to ${targetUser.username}: ${dakari} Dakari, ${gems} gems`);
     } catch (error) {
-        console.error('Error giving currency:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error giving currency:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -532,7 +532,7 @@ async function handleRemoveCurrency(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[USER-ADMIN] Currency removed by ${interaction.user.username} from ${targetUser.username}: ${dakari} Dakari, ${gems} gems`);
     } catch (error) {
-        console.error('Error removing currency:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error removing currency:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }

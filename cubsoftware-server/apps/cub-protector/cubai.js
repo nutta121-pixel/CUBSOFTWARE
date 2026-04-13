@@ -419,12 +419,12 @@ function startWhisperServer() {
             console.log('[CUB AI] Active sessions — restarting Whisper...');
             setTimeout(() => startWhisperServer(), 2000);
         } else if (uptime <= 10000) {
-            console.error('[CUB AI] Whisper crashed on startup — not restarting. Check Python deps.');
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_WHISPER_CRASH_070 — [CUB AI] Whisper crashed on startup — not restarting. Check Python deps.');
         }
     });
 
     whisperProc.on('error', (err) => {
-        console.error('[CUB AI] Whisper process error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_WHISPER_PROCESS_071 — [CUB AI] Whisper process error:', err.message);
     });
 }
 
@@ -538,7 +538,7 @@ async function drainPlayQueue(state) {
                 };
                 const onIdle = () => finish();
                 const onError = (err) => {
-                    console.error('[CUB AI] Player error:', err.message);
+                    console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_PLAYER_072 — [CUB AI] Player error:', err.message);
                     finish();
                 };
                 const t = setTimeout(() => {
@@ -549,7 +549,7 @@ async function drainPlayQueue(state) {
                 state.player.once('error', onError);
             });
         } catch (err) {
-            console.error('[CUB AI] TTS/playback error:', err.message);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_TTS_073 — [CUB AI] TTS/playback error:', err.message);
         } finally {
             fs.unlink(tmpWavOut, () => {});
         }
@@ -565,7 +565,7 @@ function enqueueSpeak(state, text) {
     if (!ttsText) return;
     const lengthScale = state.personality ? state.personality.lengthScale : 0.75;
     state.playQueue.push({ ttsText, responseText: text, displayName: 'CUB AI', lengthScale });
-    drainPlayQueue(state).catch(err => console.error('[CUB AI] drainPlayQueue error:', err));
+    drainPlayQueue(state).catch(err => console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_DRAINQUEUE_074 — [CUB AI] drainPlayQueue error:', err));
 }
 
 function postToChannel(state, text) {
@@ -627,7 +627,7 @@ async function startTrivia(state, askerName) {
         enqueueSpeak(state, `Trivia round ${state.trivia.round}! Here is your question: ${qa.question}`);
         postToChannel(state, `🎯 **Trivia Round ${state.trivia.round}:** ${qa.question}`);
     } catch (err) {
-        console.error('[CUB AI] Trivia start error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_TRIVIA_075 — [CUB AI] Trivia start error:', err.message);
         enqueueSpeak(state, 'Sorry, I had trouble generating a question. Try again.');
     }
 }
@@ -683,7 +683,7 @@ async function roastUser(state, targetName, askerName) {
         enqueueSpeak(state, text);
         postToChannel(state, `🔥 **CUB AI roasts ${targetName}:** ${text}`);
     } catch (err) {
-        console.error('[CUB AI] Roast error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_ROAST_076 — [CUB AI] Roast error:', err.message);
         enqueueSpeak(state, 'I tried to roast them but my roast generator is broken. They got lucky.');
     }
 }
@@ -733,7 +733,7 @@ async function checkWordAssoc(state, userId, userText, displayName) {
             postToChannel(state, `🤖 **CUB AI:** ${botWord}`);
         }
     } catch (err) {
-        console.error('[CUB AI] Word assoc bot reply error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_WORDASSOC_077 — [CUB AI] Word assoc bot reply error:', err.message);
     }
 }
 
@@ -760,7 +760,7 @@ async function startTwentyQ(state, askerName) {
         enqueueSpeak(state, `I am thinking of something. You have 20 questions to figure out what it is. Ask me yes or no questions using the trigger word. Say ${TRIGGER_WORD} I give up to reveal the answer.`);
         postToChannel(state, `🤔 **20 Questions!** I'm thinking of something...\nAsk yes/no questions with the trigger word. You have **20 questions**.\nSay \`${TRIGGER_WORD} I give up\` to reveal the answer.`);
     } catch (err) {
-        console.error('[CUB AI] 20Q start error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_20QSTART_078 — [CUB AI] 20Q start error:', err.message);
         enqueueSpeak(state, 'Sorry, I could not start 20 questions right now.');
     }
 }
@@ -810,7 +810,7 @@ async function handleTwentyQ(state, query, displayName) {
         enqueueSpeak(state, `${answer} ${left} question${left !== 1 ? 's' : ''} remaining.`);
         postToChannel(state, `🤔 **Q${qNum}:** ${query}\n**CUB AI:** ${answer} *(${left} left)*`);
     } catch (err) {
-        console.error('[CUB AI] 20Q answer error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_20QANSWER_079 — [CUB AI] 20Q answer error:', err.message);
         enqueueSpeak(state, `I had trouble with that one. ${left} questions remaining.`);
     }
 }
@@ -854,7 +854,7 @@ async function startImpersonate(state, targetName, askerName) {
         enqueueSpeak(state, `Okay, I will now talk like ${member.displayName}. ${preview} The more they speak, the better I will get at sounding like them. Ask me anything using the trigger word. Say ${TRIGGER_WORD} stop impersonating to go back to normal.`);
         postToChannel(state, `🎭 **CUB AI is now impersonating ${member.displayName}** (${messages.length} text samples)\nThe more they speak, the more accurate the impression becomes.\nSay \`${TRIGGER_WORD} stop impersonating\` to stop.`);
     } catch (err) {
-        console.error('[CUB AI] Impersonate error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_IMPERSONATE_080 — [CUB AI] Impersonate error:', err.message);
         enqueueSpeak(state, 'Sorry, I had trouble loading that person\'s messages.');
     }
 }
@@ -881,7 +881,7 @@ async function rapBattle(state, targetName, askerName) {
         enqueueSpeak(state, text);
         postToChannel(state, `🎤 **CUB AI drops a verse on ${targetName}:**\n> ${text}`);
     } catch (err) {
-        console.error('[CUB AI] Rap battle error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_RAPBATTLE_081 — [CUB AI] Rap battle error:', err.message);
         enqueueSpeak(state, 'My flow got blocked. Technical difficulties, no cap.');
     }
 }
@@ -972,7 +972,7 @@ async function hotTake(state, askerName) {
         enqueueSpeak(state, text);
         postToChannel(state, `🌶️ **CUB AI Hot Take** *(topic: ${topic})*\n> ${text}`);
     } catch (err) {
-        console.error('[CUB AI] Hot take error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_HOTTAKE_082 — [CUB AI] Hot take error:', err.message);
         enqueueSpeak(state, 'My hot take generator melted from the heat. Ironic.');
     }
 }
@@ -990,7 +990,7 @@ async function fakeHoroscope(state, targetName, askerName) {
         enqueueSpeak(state, text);
         postToChannel(state, `🔮 **Horoscope for ${targetName}:**\n> ${text}`);
     } catch (err) {
-        console.error('[CUB AI] Horoscope error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_HOROSCOPE_083 — [CUB AI] Horoscope error:', err.message);
         enqueueSpeak(state, 'The stars are not aligned right now. Try again later.');
     }
 }
@@ -1008,7 +1008,7 @@ async function conspiracyTheory(state, topic, askerName) {
         enqueueSpeak(state, text);
         postToChannel(state, `🕵️ **CUB AI Conspiracy — ${topic}:**\n> ${text}`);
     } catch (err) {
-        console.error('[CUB AI] Conspiracy error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_CONSPIRACY_084 — [CUB AI] Conspiracy error:', err.message);
         enqueueSpeak(state, 'They do not want me to say this one. Try again.');
     }
 }
@@ -1027,7 +1027,7 @@ async function fakeTranslator(state, targetName, askerName) {
         enqueueSpeak(state, text);
         postToChannel(state, `🗣️ **CUB AI Translates ${targetName}:**\n> ${text}`);
     } catch (err) {
-        console.error('[CUB AI] Translator error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_TRANSLATOR_085 — [CUB AI] Translator error:', err.message);
         enqueueSpeak(state, 'Translation failed. Their feelings are untranslatable.');
     }
 }
@@ -1051,7 +1051,7 @@ async function startTwoTruths(state, askerName) {
         enqueueSpeak(state, `Two truths and a lie about ${topic}! Statement one: ${data.s1}. Statement two: ${data.s2}. Statement three: ${data.s3}. Which one is the lie? Say ${TRIGGER_WORD} number one, two, or three!`);
         postToChannel(state, `🤥 **Two Truths & a Lie — ${topic}!**\n1️⃣ ${data.s1}\n2️⃣ ${data.s2}\n3️⃣ ${data.s3}\n\nSay \`${TRIGGER_WORD} number [1/2/3]\` to guess!`);
     } catch (err) {
-        console.error('[CUB AI] Two truths error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_TWOTRUTHS_086 — [CUB AI] Two truths error:', err.message);
         enqueueSpeak(state, 'I could not think of good statements. My brain short-circuited.');
     }
 }
@@ -1086,7 +1086,7 @@ async function courtJudge(state, caseText, askerName) {
         enqueueSpeak(state, text);
         postToChannel(state, `⚖️ **Judge CUB Rules on:** "${caseText}"\n> ${text}`);
     } catch (err) {
-        console.error('[CUB AI] Court judge error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_JUDGE_087 — [CUB AI] Court judge error:', err.message);
         enqueueSpeak(state, 'The court is in recess. Technical difficulties. Contempt of court for everyone.');
     }
 }
@@ -1210,10 +1210,10 @@ async function processUtterance(pcmChunks, state, userId) {
 
         const lengthScale = state.personality ? state.personality.lengthScale : 0.75;
         state.playQueue.push({ ttsText, responseText, displayName, lengthScale });
-        drainPlayQueue(state).catch(err => console.error('[CUB AI] drainPlayQueue error:', err));
+        drainPlayQueue(state).catch(err => console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_DRAINQUEUE_074 — [CUB AI] drainPlayQueue error:', err));
 
     } catch (err) {
-        console.error('[CUB AI] Error processing utterance:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_UTTERANCE_088 — [CUB AI] Error processing utterance:', err.message);
         if (state.textChannel) {
             state.textChannel.send(`⚠️ **CUB AI error:** ${err.message}`).catch(() => {});
         }
@@ -1240,7 +1240,7 @@ async function announceReady(guildId) {
             }
         });
     } catch (e) {
-        console.error('[CUB AI] Failed to undeafen:', e.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_UNDEAFEN_089 — [CUB AI] Failed to undeafen:', e.message);
     }
 
     // Play welcome message via TTS
@@ -1256,7 +1256,7 @@ async function announceReady(guildId) {
             state.player.once('error', resolve);
         });
     } catch (e) {
-        console.error('[CUB AI] Welcome TTS error:', e.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_WELCOMETTS_090 — [CUB AI] Welcome TTS error:', e.message);
     } finally {
         fs.unlink(tmpWav, () => {});
     }
@@ -1339,7 +1339,7 @@ async function cubAiJoin(interaction) {
             state.textChannel.send('⏳ **CUB AI joined!** Loading voice recognition...').catch(() => {});
         }
         // If Whisper already loaded, announce immediately; otherwise wait for it
-        const doAnnounce = () => announceReady(guildId).catch(err => console.error('[CUB AI] announceReady error:', err));
+        const doAnnounce = () => announceReady(guildId).catch(err => console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_ANNOUNCE_091 — [CUB AI] announceReady error:', err));
         if (whisperReady) {
             doAnnounce();
         } else {
@@ -1353,7 +1353,7 @@ async function cubAiJoin(interaction) {
     });
 
     connection.on('error', (err) => {
-        console.error('[CUB AI] Connection error:', err);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_CONNECTION_092 — [CUB AI] Connection error:', err);
         cubAiState.delete(guildId);
     });
 }
@@ -1414,11 +1414,11 @@ function startReceiving(connection, guildId) {
 
             // Process this user's utterance independently — doesn't block others
             processUtterance(pcmChunks, currentState, userId)
-                .catch(err => console.error('[CUB AI] Unhandled utterance error:', err));
+                .catch(err => console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_UNHANDLED_093 — [CUB AI] Unhandled utterance error:', err));
         });
 
         decoder.on('error', (err) => {
-            console.error('[CUB AI] Decoder error:', err.message);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_DECODER_094 — [CUB AI] Decoder error:', err.message);
             activeUsers.delete(userId);
         });
     });
@@ -1515,7 +1515,7 @@ async function cubAiAsk(interaction) {
             enqueueSpeak(voiceState, responseText);
         }
     } catch (err) {
-        console.error('[CUB AI] Ask error:', err.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_ASK_095 — [CUB AI] Ask error:', err.message);
         await interaction.editReply(`⚠️ CUB AI error: ${err.message}`).catch(() => {});
     }
 }

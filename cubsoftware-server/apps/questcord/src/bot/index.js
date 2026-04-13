@@ -52,7 +52,7 @@ class BotClient extends Client {
                         console.warn(`Command at ${itemPath} is missing required "data" or "execute" property`);
                     }
                 } catch (error) {
-                    console.error(`Error loading command ${item.name}:`, error.message);
+                    console.error(`CUBSOFTWARE_ERROR_QUESTCORD_BOT_CORE_131 — Error loading command ${item.name}:`, error.message);
                 }
             }
         }

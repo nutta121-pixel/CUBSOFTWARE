@@ -100,7 +100,7 @@ class DiscordLogger {
 
             await this.sendWebhook({ embeds: [embed] });
         } catch (err) {
-            console.error(`[${this.projectName}] Failed to send Discord log:`, err.message);
+            console.error(`[${this.projectName}] CUBSOFTWARE_ERROR_SHARED_DISCORD_LOGGER_SEND_185 — Failed to send Discord log:`, err.message);
         }
     }
 

@@ -250,6 +250,7 @@
 
             <!-- Accept form -->
             <form class="accept-form" method="POST" action="/affiliate/payout-agreement/accept">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <button type="submit" class="btn-accept">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                     I Accept &amp; Continue

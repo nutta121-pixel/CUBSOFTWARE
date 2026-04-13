@@ -32,7 +32,7 @@ export const useAuthStore = defineStore('auth', () => {
         return false
       }
     } catch (error) {
-      console.error('Auth check failed:', error)
+      console.error('CUBSOFTWARE_ERROR_QUESTCORD_OAUTH_144 — Auth check failed:', error)
       logout()
       return false
     } finally {

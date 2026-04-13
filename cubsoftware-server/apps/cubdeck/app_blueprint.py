@@ -1,10 +1,23 @@
 import os
+import sys
 import re
 import json
 import secrets
 import urllib.parse
 from functools import wraps
 from flask import Blueprint, render_template, request, jsonify, session, redirect, current_app
+
+# Error reporter — uses the same bot token and incident channel as all other apps
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'shared'))
+try:
+    import cub_error_reporter as _err_reporter
+    from cub_error_reporter import report_error as _report_error_raw, ERRORS as ERR_CODES
+    _err_reporter.BOT_TOKEN = os.environ.get('CUB_PROTECTOR_TOKEN', '')
+    def report_error(code, message, ctx=None, err=None):
+        _report_error_raw(code, message, ctx=ctx, err=err, app_name='CubDeck')
+except Exception as _e:
+    def report_error(code, message, ctx=None, err=None): pass
+    ERR_CODES = {}
 
 # In-memory overlay event queue: "{discord_id}/{deck_name}" → [events...]
 _overlay_events = {}
@@ -202,6 +215,7 @@ def auth_twitch_login():
     state = secrets.token_urlsafe(16)
     session['cubdeck_twitch_state'] = state
     session['cubdeck_twitch_mode'] = mode
+    session['cubdeck_twitch_return'] = request.args.get('return', '/cubdeck')
     scopes = 'user:read:email chat:read chat:edit channel:moderate'
     params = {
         'client_id': client_id,
@@ -216,9 +230,29 @@ def auth_twitch_login():
 @cubdeck_bp.route('/auth/twitch/callback')
 def auth_twitch_callback():
     # Token arrives as URL fragment (#access_token=...) — handled client-side JS.
-    # mode is passed via session so the callback page knows what to do.
+    # mode and return_url are passed via session so the callback page knows what to do.
     mode = session.get('cubdeck_twitch_mode', 'login')
-    return render_template('cubdeck-twitch-callback.html', mode=mode)
+    return_url = session.get('cubdeck_twitch_return', '/cubdeck')
+    return render_template('cubdeck-twitch-callback.html', mode=mode, return_url=return_url)
+
+@cubdeck_bp.route('/auth/twitch/save-chat-token', methods=['POST'])
+@cubdeck_auth_required
+def auth_save_chat_token():
+    """Called from the Twitch callback page (redirect mode) to save the chat token."""
+    data = request.get_json(silent=True) or {}
+    token = data.get('token', '')
+    login = data.get('login', '')
+    if not token:
+        return jsonify({'ok': False, 'error': 'Missing token'}), 400
+    user = get_user()
+    deck_name = request.args.get('deck', 'main')
+    cfg = load_deck_config(user['id'], deck_name)
+    cfg['twitch_oauth'] = 'oauth:' + token
+    if login:
+        cfg['twitch_channel'] = login
+    save_deck_config(user['id'], deck_name, cfg)
+    return_url = session.pop('cubdeck_twitch_return', f'/cubdeck/deck/{user["id"]}/main')
+    return jsonify({'ok': True, 'redirect': return_url})
 
 # ─── API ───
 

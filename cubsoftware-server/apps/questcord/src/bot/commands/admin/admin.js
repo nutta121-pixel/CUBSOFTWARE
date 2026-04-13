@@ -436,7 +436,7 @@ async function handleWipeUser(interaction, targetUser, user) {
 
         console.log(`[ADMIN] User data wiped: ${targetUser.username} (${targetUser.id}) by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error wiping user:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error wiping user:', error);
         await interaction.reply({
             content: 'An error occurred while wiping user data.',
             ephemeral: true
@@ -483,7 +483,7 @@ async function handleResetUser(interaction, targetUser, user) {
 
         console.log(`[ADMIN] User reset: ${targetUser.username} (${targetUser.id}) by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error resetting user:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting user:', error);
         await interaction.reply({
             content: 'An error occurred while resetting user data.',
             ephemeral: true
@@ -705,7 +705,7 @@ async function handleResetLeaderboard(interaction, targetUser, user) {
 
         console.log(`[ADMIN] Leaderboard reset for ${targetUser.username} by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error resetting leaderboard:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting leaderboard:', error);
         await interaction.reply({
             content: 'An error occurred while resetting leaderboard points.',
             ephemeral: true
@@ -745,7 +745,7 @@ async function handleResetQuestsGlobal(interaction) {
 
         console.log(`[ADMIN] Global quest reset by ${interaction.user.username} - ${result.changes} quests deleted`);
     } catch (error) {
-        console.error('Error resetting quests globally:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting quests globally:', error);
         await interaction.reply({
             content: 'An error occurred while resetting quests globally.',
             ephemeral: true
@@ -793,7 +793,7 @@ async function handleResetQuestsServer(interaction) {
 
         console.log(`[ADMIN] Server quest reset for ${serverId} by ${interaction.user.username} - ${result.changes} entries deleted`);
     } catch (error) {
-        console.error('Error resetting server quests:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting server quests:', error);
         await interaction.reply({
             content: 'An error occurred while resetting server quests.',
             ephemeral: true
@@ -833,7 +833,7 @@ async function handleResetQuestsUser(interaction, targetUser, user) {
 
         console.log(`[ADMIN] User quest reset for ${targetUser.username} by ${interaction.user.username} - ${result.changes} entries deleted`);
     } catch (error) {
-        console.error('Error resetting user quests:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting user quests:', error);
         await interaction.reply({
             content: 'An error occurred while resetting user quests.',
             ephemeral: true
@@ -921,7 +921,7 @@ async function handleGiveItem(interaction, targetUser, user) {
 
         console.log(`[ADMIN] ${quantity}x ${item.item_name} given to ${targetUser.username} by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error giving item:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error giving item:', error);
         await interaction.reply({
             content: 'An error occurred while giving the item.',
             ephemeral: true
@@ -973,7 +973,7 @@ async function handleDisableCommand(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Command /${commandName} disabled by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error disabling command:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error disabling command:', error);
         await interaction.reply({
             content: 'An error occurred while disabling the command.',
             ephemeral: true
@@ -1015,7 +1015,7 @@ async function handleEnableCommand(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Command /${commandName} enabled by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error enabling command:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error enabling command:', error);
         await interaction.reply({
             content: 'An error occurred while enabling the command.',
             ephemeral: true
@@ -1070,7 +1070,7 @@ async function handleRestrictCommand(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] User ${targetUser.username} whitelisted for /${commandName} by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error restricting command:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error restricting command:', error);
         await interaction.reply({
             content: 'An error occurred while restricting the command.',
             ephemeral: true
@@ -1133,7 +1133,7 @@ async function handleUnrestrictCommand(interaction) {
             console.log(`[ADMIN] All restrictions removed from /${commandName} by ${interaction.user.username}`);
         }
     } catch (error) {
-        console.error('Error unrestricting command:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error unrestricting command:', error);
         await interaction.reply({
             content: 'An error occurred while unrestricting the command.',
             ephemeral: true
@@ -1163,7 +1163,7 @@ async function handleListDisabled(interaction) {
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-        console.error('Error listing disabled commands:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error listing disabled commands:', error);
         await interaction.reply({
             content: 'An error occurred while listing disabled commands.',
             ephemeral: true
@@ -1220,7 +1220,7 @@ async function handleListRestrictions(interaction) {
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-        console.error('Error listing restrictions:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error listing restrictions:', error);
         await interaction.reply({
             content: 'An error occurred while listing restrictions.',
             ephemeral: true
@@ -1309,7 +1309,7 @@ async function handleForceSpawnBoss(interaction) {
         await interaction.editReply({ embeds: [embed] });
         console.log(`[ADMIN] Boss force spawned by ${interaction.user.username}: ${bossTemplate.name} on ${server.name}`);
     } catch (error) {
-        console.error('Error force spawning boss:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force spawning boss:', error);
         await interaction.editReply({
             content: `An error occurred while spawning the boss: ${error.message}`
         });
@@ -1361,7 +1361,7 @@ async function handleSetBossHealth(interaction) {
 
         console.log(`[ADMIN] Boss health modified by ${interaction.user.username}: ${oldHealth} -> ${health}`);
     } catch (error) {
-        console.error('Error setting boss health:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting boss health:', error);
         await interaction.reply({
             content: 'An error occurred while modifying boss health.',
             ephemeral: true
@@ -1402,7 +1402,7 @@ async function handleViewBossParticipants(interaction) {
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-        console.error('Error viewing boss participants:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error viewing boss participants:', error);
         await interaction.reply({
             content: 'An error occurred while viewing participants.',
             ephemeral: true
@@ -1445,7 +1445,7 @@ async function handleClearBoss(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Boss cleared by ${interaction.user.username}: ${boss.boss_name} (ID: ${boss.id})`);
     } catch (error) {
-        console.error('Error clearing boss:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error clearing boss:', error);
         await interaction.reply({
             content: 'An error occurred while clearing the boss.',
             ephemeral: true
@@ -1486,7 +1486,7 @@ async function handleCancelTravel(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Travel cancelled by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
-        console.error('Error cancelling travel:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error cancelling travel:', error);
         await interaction.reply({
             content: 'An error occurred while cancelling travel.',
             ephemeral: true
@@ -1526,7 +1526,7 @@ async function handleForceCompleteTravel(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Travel force completed by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
-        console.error('Error force completing travel:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force completing travel:', error);
         await interaction.reply({
             content: 'An error occurred while completing travel.',
             ephemeral: true
@@ -1572,7 +1572,7 @@ async function handleResetPvpStats(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] PVP stats reset by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
-        console.error('Error resetting PVP stats:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting PVP stats:', error);
         await interaction.reply({
             content: 'An error occurred while resetting PVP stats.',
             ephemeral: true
@@ -1605,7 +1605,7 @@ async function handleTogglePvpForUser(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] PVP ${newStatus ? 'enabled' : 'disabled'} by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
-        console.error('Error toggling PVP:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error toggling PVP:', error);
         await interaction.reply({
             content: 'An error occurred while toggling PVP status.',
             ephemeral: true
@@ -1656,7 +1656,7 @@ async function handleForceOptinServer(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Server force opted in by ${interaction.user.username}: ${serverId}`);
     } catch (error) {
-        console.error('Error force opting in server:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force opting in server:', error);
         await interaction.reply({
             content: 'An error occurred while opting in the server.',
             ephemeral: true
@@ -1699,7 +1699,7 @@ async function handleForceOptoutServer(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Server force opted out by ${interaction.user.username}: ${serverId}`);
     } catch (error) {
-        console.error('Error force opting out server:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force opting out server:', error);
         await interaction.reply({
             content: 'An error occurred while opting out the server.',
             ephemeral: true
@@ -1745,7 +1745,7 @@ async function handleHealUser(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] User healed by ${interaction.user.username}: ${targetUser.username}`);
     } catch (error) {
-        console.error('Error healing user:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error healing user:', error);
         await interaction.reply({
             content: 'An error occurred while healing the user.',
             ephemeral: true
@@ -1792,7 +1792,7 @@ async function handleSetAttack(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Attack stat modified by ${interaction.user.username}: ${targetUser.username} ${oldAttack} -> ${attack}`);
     } catch (error) {
-        console.error('Error setting attack:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting attack:', error);
         await interaction.reply({
             content: 'An error occurred while setting attack stat.',
             ephemeral: true
@@ -1839,7 +1839,7 @@ async function handleSetDefense(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Defense stat modified by ${interaction.user.username}: ${targetUser.username} ${oldDefense} -> ${defense}`);
     } catch (error) {
-        console.error('Error setting defense:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting defense:', error);
         await interaction.reply({
             content: 'An error occurred while setting defense stat.',
             ephemeral: true
@@ -1885,7 +1885,7 @@ async function handleClearInventory(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Inventory cleared by ${interaction.user.username}: ${targetUser.username} (${result.changes} items)`);
     } catch (error) {
-        console.error('Error clearing inventory:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error clearing inventory:', error);
         await interaction.reply({
             content: 'An error occurred while clearing inventory.',
             ephemeral: true
@@ -1958,7 +1958,7 @@ async function handleForceCompleteQuest(interaction, targetUser, user) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Quest force completed by ${interaction.user.username}: ${quest.quest_name} for ${targetUser.username}`);
     } catch (error) {
-        console.error('Error force completing quest:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force completing quest:', error);
         await interaction.reply({
             content: 'An error occurred while completing the quest.',
             ephemeral: true
@@ -2003,7 +2003,7 @@ async function handleRemoveQuest(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[ADMIN] Quest removed by ${interaction.user.username}: ${quest.quest_name} (ID: ${questId})`);
     } catch (error) {
-        console.error('Error removing quest:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error removing quest:', error);
         await interaction.reply({
             content: 'An error occurred while removing the quest.',
             ephemeral: true

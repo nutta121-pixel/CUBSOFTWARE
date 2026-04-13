@@ -24,7 +24,7 @@ class LoginController {
             return res.json(result);
 
         } catch (error) {
-            console.error('[LoginController] Error checking daily reward:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_LOGIN_120 — [LoginController] Error checking daily reward:', error);
             return res.status(500).json({ success: false, error: 'Internal server error' });
         }
     }
@@ -53,7 +53,7 @@ class LoginController {
             return res.json(result);
 
         } catch (error) {
-            console.error('[LoginController] Error claiming daily reward:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_LOGIN_120 — [LoginController] Error claiming daily reward:', error);
             return res.status(500).json({ success: false, error: 'Internal server error' });
         }
     }
@@ -68,7 +68,7 @@ class LoginController {
             return res.json(result);
 
         } catch (error) {
-            console.error('[LoginController] Error getting rewards:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_LOGIN_120 — [LoginController] Error getting rewards:', error);
             return res.status(500).json({ success: false, error: 'Internal server error' });
         }
     }
@@ -92,7 +92,7 @@ class LoginController {
             return res.json(result);
 
         } catch (error) {
-            console.error('[LoginController] Error getting login stats:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_LOGIN_120 — [LoginController] Error getting login stats:', error);
             return res.status(500).json({ success: false, error: 'Internal server error' });
         }
     }

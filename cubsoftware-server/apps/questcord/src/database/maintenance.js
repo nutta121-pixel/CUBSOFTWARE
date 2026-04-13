@@ -10,7 +10,7 @@ class DatabaseMaintenance {
             if (DatabaseUtils.checkIntegrity()) {
                 console.log('[Database] Integrity check passed');
             } else {
-                console.error('[Database] Integrity check FAILED! Manual intervention required.');
+                console.error('CUBSOFTWARE_ERROR_QUESTCORD_DB_MAINTENANCE_136 — [Database] Integrity check FAILED! Manual intervention required.');
             }
 
             DatabaseUtils.createBackup();
@@ -46,7 +46,7 @@ class DatabaseMaintenance {
                 console.log(`[Confinement Cleanup] Deactivated ${result.changes} expired confinement(s)`);
             }
         } catch (error) {
-            console.error('Error cleaning up expired confinements:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_DB_MAINTENANCE_136 — Error cleaning up expired confinements:', error);
         }
     }
 

@@ -16,7 +16,7 @@ class BossController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in getActiveBoss:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_BOSS_118 — Error in getActiveBoss:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -54,7 +54,7 @@ class BossController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in attackBoss:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_BOSS_118 — Error in attackBoss:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -78,7 +78,7 @@ class BossController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in getBossParticipants:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_BOSS_118 — Error in getBossParticipants:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -107,7 +107,7 @@ class BossController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in spawnBoss:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_BOSS_118 — Error in spawnBoss:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'

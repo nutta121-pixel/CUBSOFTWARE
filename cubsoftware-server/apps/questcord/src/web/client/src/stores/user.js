@@ -33,7 +33,7 @@ export const useUserStore = defineStore('user', () => {
         return false
       }
     } catch (err) {
-      console.error('Error fetching profile:', err)
+      console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_USER_122 — Error fetching profile:', err)
       error.value = err.response?.data?.error || 'Failed to fetch profile'
       return false
     } finally {
@@ -56,7 +56,7 @@ export const useUserStore = defineStore('user', () => {
         return false
       }
     } catch (err) {
-      console.error('Error updating profile:', err)
+      console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_USER_122 — Error updating profile:', err)
       error.value = err.response?.data?.error || 'Failed to update profile'
       return false
     } finally {

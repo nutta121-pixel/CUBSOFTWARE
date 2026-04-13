@@ -22,7 +22,7 @@ class UserController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in getProfile:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_USER_122 — Error in getProfile:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -46,7 +46,7 @@ class UserController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in getStats:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_USER_122 — Error in getStats:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -80,7 +80,7 @@ class UserController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in updateProfile:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_USER_122 — Error in updateProfile:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -105,7 +105,7 @@ class UserController {
 
             res.json(result);
         } catch (error) {
-            console.error('Error in getMe:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_USER_122 — Error in getMe:', error);
             res.status(500).json({
                 success: false,
                 error: 'Internal server error'
@@ -153,7 +153,7 @@ class UserController {
                 data: formattedServers
             });
         } catch (error) {
-            console.error('Error fetching user servers:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_API_USER_122 — Error fetching user servers:', error);
             return res.json({
                 success: true,
                 data: []

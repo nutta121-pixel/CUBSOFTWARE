@@ -59,7 +59,7 @@ async function muteUser(client, guild, member, duration) {
         console.log(`[MUTE] Muted ${member.user.tag} in ${guild.name} for ${timeStr} (expires at ${expiresAt})`);
         return true;
     } catch (error) {
-        console.error(`[ERROR] Failed to mute user:`, error);
+        console.error(`CUBSOFTWARE_ERROR_ONIONBOT_MUTE_USER_177 — [ERROR] Failed to mute user:`, error);
         return false;
     }
 }
@@ -96,7 +96,7 @@ async function unmuteUser(client, guild, member) {
         console.log(`[UNMUTE] Unmuted ${member.user.tag} in ${guild.name}`);
         return true;
     } catch (error) {
-        console.error(`[ERROR] Failed to unmute user:`, error);
+        console.error(`CUBSOFTWARE_ERROR_ONIONBOT_MUTE_USER_177 — [ERROR] Failed to unmute user:`, error);
         return false;
     }
 }

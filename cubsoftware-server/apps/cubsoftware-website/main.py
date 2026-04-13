@@ -26,6 +26,14 @@ import io
 # Add shared folder to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'shared'))
 from bot_logger import BotLogger
+import cub_error_reporter as _err_reporter
+from cub_error_reporter import report_error as report_error_raw, ERRORS as ERR_CODES
+
+# Wire the CUB PROTECTOR bot token so Python apps can post to the incident channel
+_err_reporter.BOT_TOKEN = os.environ.get('CUB_PROTECTOR_TOKEN', '')
+
+def report_error(code, message, ctx=None, err=None):
+    report_error_raw(code, message, ctx=ctx, err=err, app_name='Website')
 
 # Initialize bot logger
 logger = BotLogger('cubsoftware-website', os.environ.get('BOT_API_KEY'))
@@ -759,17 +767,20 @@ def _after_request_logging(response):
         status = response.status_code
         is_static = path.startswith('/static/') or path.startswith('/images/')
         is_api = path.startswith('/api/')
+        # High-frequency polling endpoints — suppress from logs to avoid spam
+        is_poll = (path.startswith('/cubdeck/api/overlay/poll/') or
+                   path.startswith('/overlays/source/'))
 
-        if not is_static:
+        if not is_static and not is_poll:
             tag = 'API' if is_api else 'Request'
             _web_log(tag, f'{request.method} {path} → {status} ({ms}ms) from {ip}')
 
-        if ms > 1000 and not is_static:
+        if ms > 1000 and not is_static and not is_poll:
             _web_log('Slow', f'{request.method} {path} took {ms}ms (status: {status})')
 
         # Track per-endpoint average
         key = f'{request.method} {path}'
-        if not is_static:
+        if not is_static and not is_poll:
             if key not in _endpoint_times:
                 _endpoint_times[key] = []
             _endpoint_times[key].append(ms)
@@ -872,6 +883,9 @@ def _add_security_headers(response):
                 "frame-src https://player.twitch.tv https://www.twitch.tv; "
                 "connect-src 'self' https://api.twitch.tv wss://irc-ws.chat.twitch.tv; "
                 "worker-src 'self' blob:; "
+                "object-src 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self'; "
                 "frame-ancestors 'none';"
             )
         elif _path == '/apps/video-compressor':
@@ -884,6 +898,9 @@ def _add_security_headers(response):
                 "img-src 'self' data: https://cdn.discordapp.com https://cubsoftware.site; "
                 "connect-src 'self' https://unpkg.com; "
                 "worker-src 'self' blob:; "
+                "object-src 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self'; "
                 "frame-ancestors 'none';"
             )
         else:
@@ -896,6 +913,9 @@ def _add_security_headers(response):
                 "img-src 'self' data: https://cdn.discordapp.com https://static-cdn.jtvnw.net https://cubsoftware.site; "
                 "connect-src 'self' https://api.github.com; "
                 "worker-src 'self' blob:; "
+                "object-src 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self'; "
                 "frame-ancestors 'none';"
             )
     return response
@@ -944,6 +964,17 @@ def inject_mascot(response):
 def inject_version():
     """Inject cache-busting version into all templates"""
     return {'v': STATIC_VERSION}
+
+# ── CSRF Protection ────────────────────────────────────────────────────────
+def _get_csrf_token() -> str:
+    """Return (and lazily create) a per-session CSRF token."""
+    if '_csrf' not in session:
+        session['_csrf'] = secrets.token_hex(32)
+    return session['_csrf']
+
+@app.context_processor
+def _inject_csrf():
+    return {'csrf_token': _get_csrf_token()}
 
 @app.template_filter('datetime')
 def format_datetime(ts):
@@ -1734,7 +1765,7 @@ def cub_login_discord_callback():
                         httponly=True, samesite='Lax', secure=not IS_DEV)
         return resp
     except Exception as e:
-        app.logger.error(f'Unified Discord login error: {e}')
+        app.logger.error(f'CUBSOFTWARE_ERROR_WEBSITE_DISCORD_LOGIN_158 — Unified Discord login error: {e}')
         return redirect('/login?error=server_error')
 
 # ---- Twitch OAuth ----
@@ -1851,7 +1882,7 @@ def cub_login_twitch_callback():
                         httponly=True, samesite='Lax', secure=not IS_DEV)
         return resp
     except Exception as e:
-        app.logger.error(f'Unified Twitch login error: {e}')
+        app.logger.error(f'CUBSOFTWARE_ERROR_WEBSITE_TWITCH_LOGIN_159 — Unified Twitch login error: {e}')
         return redirect('/login?error=server_error')
 
 # ---- Auth status API ----
@@ -6806,6 +6837,39 @@ def enforce_ip_bans():
                                  expires=expires), 403
 
     return None
+
+# ── CSRF Enforcement ───────────────────────────────────────────────────────
+# Paths called by external services / bots that never carry a browser CSRF token
+_CSRF_EXEMPT_PREFIXES = (
+    '/static/',
+    '/login',
+    '/logout',
+    '/affiliate/auth/',
+    '/overlays/twitch/webhook',
+    '/overlays/auth',
+    '/overlays/source/',
+    '/overlays/alerts/',
+)
+
+@app.before_request
+def _enforce_csrf():
+    """Reject state-changing requests without a valid CSRF token."""
+    if request.method not in ('POST', 'PUT', 'DELETE', 'PATCH'):
+        return
+    if any(request.path.startswith(p) for p in _CSRF_EXEMPT_PREFIXES):
+        return
+    # Bot/service calls authenticated by X-API-Key are exempt (no browser session)
+    if request.headers.get('X-API-Key'):
+        return
+    token = (request.form.get('csrf_token')
+             or request.headers.get('X-CSRF-Token')
+             or request.headers.get('X-CSRFToken'))
+    if not token or token != session.get('_csrf'):
+        ip = getattr(request, '_client_ip', request.remote_addr or 'unknown')
+        _web_log('Security', f'CSRF rejected from {ip}: {request.method} {request.path}')
+        if request.is_json or request.path.startswith('/api/'):
+            return make_response(jsonify({'error': 'CSRF validation failed'}), 403)
+        return make_response('CSRF validation failed', 403)
 
 # Blueprint feature enforcement - block direct URL access when feature is disabled
 @app.before_request
@@ -12061,7 +12125,7 @@ def cub_protector_bot_request(endpoint_or_method, endpoint_or_none=None, method=
     if token is None:
         token = get_cub_protector_token()
     if not token:
-        app.logger.error('CUB PROTECTOR token not found')
+        app.logger.error('CUBSOFTWARE_ERROR_WEBSITE_CUBPROTECTOR_TOKEN_160 — CUB PROTECTOR token not found')
         return None
 
     # Check cache for GET requests (unless bypass_cache is set)
@@ -12127,12 +12191,12 @@ def cub_protector_bot_request(endpoint_or_method, endpoint_or_none=None, method=
                 _time.sleep(wait)
                 continue
             else:
-                app.logger.error(f'CUB PROTECTOR API error {resp.status_code}: {resp.text[:200]}')
+                app.logger.error(f'CUBSOFTWARE_ERROR_WEBSITE_CUBPROTECTOR_API_161 — CUB PROTECTOR API error {resp.status_code}: {resp.text[:200]}')
                 return None
         except Exception as e:
-            app.logger.error(f'CUB PROTECTOR API request failed: {e}')
+            app.logger.error(f'CUBSOFTWARE_ERROR_WEBSITE_CUBPROTECTOR_REQUEST_162 — CUB PROTECTOR API request failed: {e}')
             return None
-    app.logger.error(f'CUB PROTECTOR API rate limited after 5 retries: {actual_endpoint}')
+    app.logger.error(f'CUBSOFTWARE_ERROR_WEBSITE_CUBPROTECTOR_RATELIMIT_163 — CUB PROTECTOR API rate limited after 5 retries: {actual_endpoint}')
     return None
 
 def cub_protector_auth_required(f):
@@ -12409,7 +12473,7 @@ def cub_protector_create_hub(guild_id):
 
         save_cub_protector_data(tv_data)
     except Exception as e:
-        app.logger.error(f'Failed to save hub data: {e} (path: {CUB_PROTECTOR_TEMP_VOICE_FILE})')
+        app.logger.error(f'CUBSOFTWARE_ERROR_WEBSITE_HUB_DATA_SAVE_164 — Failed to save hub data: {e} (path: {CUB_PROTECTOR_TEMP_VOICE_FILE})')
         return jsonify({'success': True, 'hub_id': hub_channel_id, 'warning': f'Channel created but failed to save config: {str(e)}'}), 200
 
     return jsonify({'success': True, 'hub_id': hub_channel_id})
@@ -12856,7 +12920,7 @@ def load_cp_json(filepath):
             with open(filepath, 'r') as f:
                 return json.load(f)
     except Exception as e:
-        app.logger.error(f'Failed to load {filepath}: {e}')
+        app.logger.error(f'CUBSOFTWARE_ERROR_WEBSITE_FILE_LOAD_165 — Failed to load {filepath}: {e}')
     return {'guilds': {}}
 
 def save_cp_json(filepath, data):
@@ -12882,7 +12946,7 @@ def save_cp_json(filepath, data):
             ip, user_id = '', 'system'
         _web_log('Save', f'cub-protector/{section} saved by user:{user_id} from {ip}')
     except Exception as e:
-        app.logger.error(f'Failed to save {filepath}: {e}')
+        app.logger.error(f'CUBSOFTWARE_ERROR_WEBSITE_FILE_SAVE_166 — Failed to save {filepath}: {e}')
 
 def cp_enqueue_action(action):
     """Append an action to the bot actions queue for the cub-protector bot to process."""
@@ -12904,7 +12968,7 @@ def cp_enqueue_action(action):
             raise
         _web_log('Queue', f'Enqueued action: {action.get("type")}' + (f' #{action.get("suggestion_id")}' if action.get("suggestion_id") else ''))
     except Exception as e:
-        app.logger.error(f'Failed to enqueue bot action: {e}')
+        app.logger.error(f'CUBSOFTWARE_ERROR_WEBSITE_BOT_ACTION_ENQUEUE_167 — Failed to enqueue bot action: {e}')
 
 def check_cp_guild_access(guild_id):
     # Use cached shared guild IDs from session with a 5-minute TTL
@@ -17846,11 +17910,30 @@ def api_status():
         'description': 'Discord cleanup/utility bot',
     })
 
-    # API endpoints status
+    # Helper: check a separate local service (different port/process only — never ping self)
+    def _check_service(url):
+        try:
+            r = requests.get(url, timeout=3)
+            return 'online' if r.status_code < 500 else 'errored'
+        except Exception:
+            return 'offline'
+
+    # Same-process Flask endpoints are inherently online if this request is being served.
+    # Only separately-running processes need an actual HTTP check.
+    qc_api_status = 'online' if qc_info.get('status') == 'online' else 'offline'
+
+    cubreactive_port = os.environ.get('LOG_SERVER_PORT', 3847)
+    cubreactive_status = _check_service(f'http://127.0.0.1:{cubreactive_port}/cubreactive/status')
+
     api_endpoints = [
-        {'name': 'Main API', 'path': '/api/status', 'status': 'online'},
-        {'name': 'CUB PROTECTOR API', 'path': '/api/cub-protector/overview', 'status': 'online'},
-        {'name': 'PM2 Dashboard API', 'path': '/api/pm2/status', 'status': 'online'},
+        {'name': 'Auth API',            'path': '/api/auth/me',                      'status': 'online',             'desc': 'Login & session management'},
+        {'name': 'CubDeck API',         'path': '/cubdeck/api/available-plugins',     'status': 'online',             'desc': 'Stream deck plugin registry'},
+        {'name': 'CUB Overlays API',    'path': '/overlays/api',                     'status': 'online',             'desc': 'Stream overlay scenes & config'},
+        {'name': 'QuestCord API',       'path': '/api/v1/',                          'status': qc_api_status,        'desc': 'QuestCord game & guild data'},
+        {'name': 'CUB PROTECTOR API',   'path': '/api/cub-protector/overview',       'status': 'online',             'desc': 'Moderation bot data'},
+        {'name': 'CubReactive API',     'path': '/api/cubreactive/debug-status',     'status': cubreactive_status,   'desc': 'Voice activity detection'},
+        {'name': 'Link Shortener API',  'path': '/api/links',                        'status': 'online',             'desc': 'URL shortener & vanity links'},
+        {'name': 'Dashboard API',       'path': '/api/pm2/processes',                'status': 'online',             'desc': 'Process manager status'},
     ]
 
     # Overall status
@@ -17865,6 +17948,139 @@ def api_status():
         'timestamp': int(_time_mod.time()),
         'server_time': _time_mod.strftime('%Y-%m-%d %H:%M:%S UTC', _time_mod.gmtime()),
     })
+
+# ==================== CODEBASE INFO ====================
+
+_codebase_cache = {'data': None, 'ts': 0}
+
+@app.route('/api/admin/codebase-info')
+@pm2_auth_required
+def api_codebase_info():
+    import sys as _sys
+    now = time.time()
+    if _codebase_cache['data'] and now - _codebase_cache['ts'] < 300:
+        return jsonify(_codebase_cache['data'])
+
+    project_root = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
+
+    EXCLUDE_DIRS = {
+        'node_modules', '.git', '__pycache__', 'venv', '.venv',
+        'dist', 'build', '.next', '.cache', 'coverage', 'migrations_cache',
+    }
+    CODE_EXTENSIONS = {
+        '.py': 'Python', '.js': 'JavaScript', '.html': 'HTML',
+        '.css': 'CSS', '.ts': 'TypeScript', '.vue': 'Vue', '.sh': 'Shell',
+    }
+    COMMENT_STARTS = {
+        '.py':   ('#',),
+        '.js':   ('//', '/*', ' *', '*/'),
+        '.ts':   ('//', '/*', ' *', '*/'),
+        '.html': ('<!--',),
+        '.vue':  ('<!--', '//', '/*', ' *'),
+        '.css':  ('/*', ' *', '*/'),
+        '.sh':   ('#',),
+    }
+
+    total_lines = active_lines = blank_lines = comment_lines = total_files = 0
+    by_type = {}
+
+    for root_dir, dirs, files in os.walk(project_root):
+        dirs[:] = [d for d in dirs if d not in EXCLUDE_DIRS and not d.startswith('.')]
+        for fname in files:
+            ext = os.path.splitext(fname)[1].lower()
+            if ext not in CODE_EXTENSIONS:
+                continue
+            if fname.endswith('.min.js') or fname.endswith('.min.css'):
+                continue
+            try:
+                with open(os.path.join(root_dir, fname), 'r', encoding='utf-8', errors='ignore') as f:
+                    lines = f.readlines()
+            except Exception:
+                continue
+            total_files += 1
+            ft = CODE_EXTENSIONS[ext]
+            bt = by_type.setdefault(ft, {'files': 0, 'total': 0, 'active': 0})
+            bt['files'] += 1
+            prefixes = COMMENT_STARTS.get(ext, ())
+            for line in lines:
+                s = line.strip()
+                total_lines += 1
+                bt['total'] += 1
+                if not s:
+                    blank_lines += 1
+                elif any(s.startswith(p) for p in prefixes):
+                    comment_lines += 1
+                else:
+                    active_lines += 1
+                    bt['active'] += 1
+
+    def _run(cmd):
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+            return (r.stdout.strip() or r.stderr.strip()).lstrip('v')
+        except Exception:
+            return 'unknown'
+
+    try:
+        import flask as _flask
+        flask_ver = _flask.__version__
+    except Exception:
+        flask_ver = 'unknown'
+
+    apps_dir = os.path.join(project_root, 'apps')
+    bot_meta = [
+        ('questcord',           'QuestCord',           'Node.js', 'PM2 + ecosystem.config.js'),
+        ('cub-protector',       'CUB PROTECTOR',        'Node.js', 'PM2 + start.js'),
+        ('cleanme-bot',         'CleanMe Bot',          'Node.js', 'PM2 + index.js'),
+        ('cubsoftware-website', 'CUB SOFTWARE Website', 'Python',  'PM2 + Waitress WSGI'),
+    ]
+    bots = []
+    for bot_dir, label, lang, start_method in bot_meta:
+        pkg_path = os.path.join(apps_dir, bot_dir, 'package.json')
+        version = 'N/A'
+        djs_ver = None
+        if os.path.exists(pkg_path):
+            try:
+                with open(pkg_path) as f:
+                    pkg = json.load(f)
+                version = pkg.get('version', 'N/A')
+                djs = pkg.get('dependencies', {}).get('discord.js', '')
+                if djs:
+                    djs_ver = djs.lstrip('^~>=')
+            except Exception:
+                pass
+        elif lang == 'Python':
+            version = f'{_sys.version_info.major}.{_sys.version_info.minor}.{_sys.version_info.micro} (Python)'
+        bots.append({'name': label, 'version': version, 'lang': lang, 'start': start_method, 'djs': djs_ver})
+
+    result = {
+        'lines': {'total': total_lines, 'active': active_lines, 'blank': blank_lines, 'comments': comment_lines},
+        'files': total_files,
+        'by_type': by_type,
+        'runtimes': {
+            'Python':  f'{_sys.version_info.major}.{_sys.version_info.minor}.{_sys.version_info.micro}',
+            'Node.js': _run(['node', '--version']),
+            'PM2':     _run(['pm2', '--version']),
+            'Flask':   flask_ver,
+            'discord.js': '14.14.1',
+        },
+        'bots': bots,
+        'cached_at': int(now),
+    }
+    _codebase_cache['data'] = result
+    _codebase_cache['ts'] = now
+    return jsonify(result)
+
+# ==================== ERROR CATALOG ====================
+
+@app.route('/api/admin/error-catalog')
+@pm2_auth_required
+def api_error_catalog():
+    try:
+        from cub_error_reporter import ERROR_CATALOG
+        return jsonify({'catalog': ERROR_CATALOG})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ==================== BAN APPEAL SYSTEM ====================
 
@@ -18111,7 +18327,7 @@ def ban_appeal_submit():
         return _ban_appeal_submit_inner()
     except Exception as e:
         import traceback
-        app.logger.error(f'ban_appeal_submit unhandled exception: {e}\n{traceback.format_exc()}')
+        app.logger.error(f'CUBSOFTWARE_ERROR_WEBSITE_BAN_APPEAL_SUBMIT_168 — ban_appeal_submit unhandled exception: {e}\n{traceback.format_exc()}')
         return jsonify({'error': 'An internal error occurred. Please try again.'}), 500
 
 def _ban_appeal_submit_inner():
@@ -19179,6 +19395,32 @@ def internal_server_error(e):
 def apps_catch_all(subpath):
     """Catch-all for undefined /apps/* routes - return 404"""
     return render_template('404.html'), 404
+
+# ==================== GLOBAL ERROR HANDLER ====================
+
+@app.errorhandler(500)
+def handle_500(e):
+    report_error(
+        ERR_CODES['WEBSITE']['FATAL_EXCEPTION'],
+        f'Unhandled 500 error: {str(e)}',
+        ctx={'path': request.path, 'method': request.method},
+        err=e
+    )
+    return jsonify({'error': 'Internal server error'}), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    # Let HTTP exceptions (404, 405, etc.) pass through normally
+    from werkzeug.exceptions import HTTPException
+    if isinstance(e, HTTPException):
+        return e
+    report_error(
+        ERR_CODES['WEBSITE']['API_HANDLER'],
+        f'Unhandled exception in {request.method} {request.path}: {str(e)}',
+        ctx={'path': request.path, 'method': request.method},
+        err=e
+    )
+    return jsonify({'error': 'Internal server error'}), 500
 
 # ==================== SERVER STARTUP ====================
 

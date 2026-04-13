@@ -57,7 +57,7 @@ class QuestManager {
 
             console.log('[Quests] Rotation completed successfully');
         } catch (error) {
-            console.error('Error rotating quests:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_QUEST_MANAGER_135 — Error rotating quests:', error);
         }
     }
 
@@ -95,7 +95,7 @@ class QuestManager {
 
             return QuestModel.getActiveQuestsByServer(serverId);
         } catch (error) {
-            console.error('Error assigning initial quests:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_QUEST_MANAGER_135 — Error assigning initial quests:', error);
             return [];
         }
     }

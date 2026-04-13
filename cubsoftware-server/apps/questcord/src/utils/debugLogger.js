@@ -55,7 +55,7 @@ class DebugLogger {
                 console.log('[DEBUG] Loaded settings from file');
             }
         } catch (err) {
-            console.error('[DEBUG] Failed to load settings:', err.message);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_DEBUG_LOGGER_141 — [DEBUG] Failed to load settings:', err.message);
         }
     }
 
@@ -64,7 +64,7 @@ class DebugLogger {
             const data = { categoryFilters: this.categoryFilters };
             fs.writeFileSync(SETTINGS_FILE, JSON.stringify(data, null, 2), 'utf8');
         } catch (err) {
-            console.error('[DEBUG] Failed to save settings:', err.message);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_DEBUG_LOGGER_141 — [DEBUG] Failed to save settings:', err.message);
         }
     }
 
@@ -109,7 +109,7 @@ class DebugLogger {
                 console.log('[DEBUG] Debug channel fetched successfully');
                 this.flushQueue();
             }).catch(err => {
-                console.error('[DEBUG] Failed to fetch debug channel:', err);
+                console.error('CUBSOFTWARE_ERROR_QUESTCORD_DEBUG_LOGGER_141 — [DEBUG] Failed to fetch debug channel:', err);
             });
         } else {
             this.flushQueue();
@@ -159,7 +159,7 @@ class DebugLogger {
             await this.debugChannel.send({ embeds: [embed] });
             this.messageCount++;
         } catch (error) {
-            console.error('[DEBUG] Failed to send debug message:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_DEBUG_LOGGER_141 — [DEBUG] Failed to send debug message:', error);
         }
     }
 
@@ -182,7 +182,7 @@ class DebugLogger {
                 await this.debugChannel.send({ embeds: [embed] });
                 await new Promise(resolve => setTimeout(resolve, 100));
             } catch (error) {
-                console.error('[DEBUG] Failed to send queued message:', error);
+                console.error('CUBSOFTWARE_ERROR_QUESTCORD_DEBUG_LOGGER_141 — [DEBUG] Failed to send queued message:', error);
             }
         }
 

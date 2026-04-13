@@ -128,7 +128,7 @@ function loadSettings() {
             settings = { ...defaultSettings, ...JSON.parse(data) };
         }
     } catch (e) {
-        console.error('Failed to load settings:', e);
+        console.error('CUBSOFTWARE_ERROR_CUBPRESENCE_SETTINGS_LOAD_191 — Failed to load settings:', e);
         settings = { ...defaultSettings };
     }
     app.setLoginItemSettings({ openAtLogin: settings.runOnStartup, path: app.getPath('exe') });
@@ -140,7 +140,7 @@ function saveSettings() {
         fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
         app.setLoginItemSettings({ openAtLogin: settings.runOnStartup, path: app.getPath('exe') });
     } catch (e) {
-        console.error('Failed to save settings:', e);
+        console.error('CUBSOFTWARE_ERROR_CUBPRESENCE_SETTINGS_SAVE_192 — Failed to save settings:', e);
     }
 }
 

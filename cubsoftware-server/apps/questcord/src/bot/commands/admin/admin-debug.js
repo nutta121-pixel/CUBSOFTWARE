@@ -137,7 +137,7 @@ async function handleStatus(interaction) {
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-        console.error('Error getting debug status:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error getting debug status:', error);
         await interaction.reply({
             content: '❌ An error occurred while getting debug status.',
             ephemeral: true
@@ -176,7 +176,7 @@ async function handleEnable(interaction) {
 
         console.log(`[DEBUG] ${category} logs enabled by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error enabling log category:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error enabling log category:', error);
         await interaction.reply({
             content: '❌ An error occurred while enabling the log category.',
             ephemeral: true
@@ -215,7 +215,7 @@ async function handleDisable(interaction) {
 
         console.log(`[DEBUG] ${category} logs disabled by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error disabling log category:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error disabling log category:', error);
         await interaction.reply({
             content: '❌ An error occurred while disabling the log category.',
             ephemeral: true
@@ -238,7 +238,7 @@ async function handleToggle(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[DEBUG] ${category} logs toggled to ${newState ? 'enabled' : 'disabled'} by ${interaction.user.username}`);
     } catch (error) {
-        console.error('Error toggling log category:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error toggling log category:', error);
         await interaction.reply({
             content: '❌ An error occurred while toggling the log category.',
             ephemeral: true

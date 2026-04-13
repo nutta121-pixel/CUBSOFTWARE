@@ -107,7 +107,7 @@ module.exports = {
                     try {
                         await targetMember.voice.disconnect('Blocked from this voice channel');
                     } catch (error) {
-                        console.error('[ERROR] Failed to disconnect user from blocked channel:', error.message);
+                        console.error('CUBSOFTWARE_ERROR_ONIONBOT_VOICE_BLOCK_182 — [ERROR] Failed to disconnect user from blocked channel:', error.message);
                     }
                 }
 

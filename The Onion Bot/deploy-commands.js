@@ -10,7 +10,7 @@ const commandsPath = path.join(__dirname, 'commands');
 
 // Check if commands directory exists
 if (!fs.existsSync(commandsPath)) {
-    console.error('[ERROR] Commands directory not found!');
+    console.error('CUBSOFTWARE_ERROR_ONIONBOT_DEPLOY_COMMANDS_179 — [ERROR] Commands directory not found!');
     process.exit(1);
 }
 
@@ -55,6 +55,6 @@ const rest = new REST({ version: '10' }).setToken(config.token);
         }
 
     } catch (error) {
-        console.error('[ERROR] Failed to deploy commands:', error);
+        console.error('CUBSOFTWARE_ERROR_ONIONBOT_DEPLOY_COMMANDS_179 — [ERROR] Failed to deploy commands:', error);
     }
 })();

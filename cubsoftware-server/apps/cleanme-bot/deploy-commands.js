@@ -50,6 +50,6 @@ const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
 
         console.log(`Successfully reloaded ${data.length} application (/) commands.`);
     } catch (error) {
-        console.error(error);
+        CUBSOFTWARE_ERROR_CLEANME_DEPLOY_COMMANDS_151 — console.error(error);
     }
 })();

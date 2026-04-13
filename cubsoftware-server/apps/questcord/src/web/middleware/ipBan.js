@@ -71,7 +71,7 @@ function enqueueEmbed(embed) {
         queue.actions.push({ type: 'send_embed', channel_id: _SECURITY_CHANNEL_ID, embed });
         fs.writeFileSync(_CP_QUEUE_FILE, JSON.stringify(queue, null, 2));
     } catch (e) {
-        console.error('[Security] Failed to enqueue ban embed:', e.message);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_IPBAN_146 — [Security] Failed to enqueue ban embed:', e.message);
     }
 }
 
@@ -137,7 +137,7 @@ async function sendBanEmbed(ip, probes, ua, bannedAt, expiresAt) {
 
         enqueueEmbed(embed);
     } catch (e) {
-        console.error('[Security] Failed to send ban embed:', e.message);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_WEB_IPBAN_146 — [Security] Failed to send ban embed:', e.message);
     }
 }
 

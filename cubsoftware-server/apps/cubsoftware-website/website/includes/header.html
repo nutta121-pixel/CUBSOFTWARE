@@ -103,6 +103,28 @@
 </header>
 
 <script>
+// CSRF token — injected once per page, used by the fetch interceptor below
+window._csrfToken = {{ csrf_token | tojson }};
+
+// Patch fetch so all state-changing requests automatically include the CSRF header
+(function() {
+    var _orig = window.fetch;
+    window.fetch = function(url, opts) {
+        opts = opts || {};
+        var method = (opts.method || 'GET').toUpperCase();
+        if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
+            if (opts.headers instanceof Headers) {
+                opts.headers.set('X-CSRF-Token', window._csrfToken);
+            } else {
+                opts.headers = Object.assign({}, opts.headers, {'X-CSRF-Token': window._csrfToken});
+            }
+        }
+        return _orig.call(this, url, opts);
+    };
+})();
+</script>
+
+<script>
 document.addEventListener('DOMContentLoaded', function() {
     const mobileBtn = document.getElementById('mobileMenuBtn');
     const nav = document.getElementById('siteNav');

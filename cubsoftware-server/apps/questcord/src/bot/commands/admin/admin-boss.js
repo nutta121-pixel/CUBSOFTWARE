@@ -130,7 +130,7 @@ async function handleForceSpawn(interaction) {
         await interaction.editReply({ embeds: [embed] });
         console.log(`[BOSS-ADMIN] Boss force spawned by ${interaction.user.username}: ${bossTemplate.name} on ${server.name}`);
     } catch (error) {
-        console.error('Error force spawning boss:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force spawning boss:', error);
         await interaction.editReply({ content: `An error occurred: ${error.message}` });
     }
 }
@@ -166,7 +166,7 @@ async function handleSetHealth(interaction) {
         await BossManager.updateBossNotification();
         console.log(`[BOSS-ADMIN] Boss health modified by ${interaction.user.username}: ${oldHealth} -> ${health}`);
     } catch (error) {
-        console.error('Error setting boss health:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting boss health:', error);
         await interaction.reply({ content: 'An error occurred while modifying boss health.', ephemeral: true });
     }
 }
@@ -198,7 +198,7 @@ async function handleViewParticipants(interaction) {
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
-        console.error('Error viewing boss participants:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error viewing boss participants:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }
@@ -231,7 +231,7 @@ async function handleClear(interaction) {
         await interaction.reply({ embeds: [embed], ephemeral: true });
         console.log(`[BOSS-ADMIN] Boss cleared by ${interaction.user.username}: ${boss.boss_name} (ID: ${boss.id})`);
     } catch (error) {
-        console.error('Error clearing boss:', error);
+        console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error clearing boss:', error);
         await interaction.reply({ content: 'An error occurred.', ephemeral: true });
     }
 }

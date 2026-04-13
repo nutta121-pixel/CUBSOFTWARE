@@ -107,6 +107,21 @@
                         </svg>
                         <span>API Status</span>
                     </a>
+                    <a href="#codebase" class="nav-item" data-section="codebase">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                        <span>Codebase</span>
+                    </a>
+                    <a href="#error-catalog" class="nav-item" data-section="error-catalog">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <span>Error Catalog</span>
+                    </a>
                 </div>
 
                 <div class="nav-section">
@@ -780,6 +795,161 @@
             </section>
 
 
+            <!-- Codebase Section -->
+            <section class="content-section" id="codebaseSection" data-section="codebase">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>Codebase Info</h1>
+                        <p>Lines of code, language breakdown, bot versions and runtime info</p>
+                    </div>
+                    <div class="section-actions">
+                        <span id="codebaseCachedAt" style="font-size:12px;color:#666;margin-right:8px;"></span>
+                        <button class="control-btn primary" onclick="loadCodebase(true)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Line count stat cards -->
+                <div class="pm-stat-grid" id="codebaseStats">
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label">Total Lines</div>
+                        <div class="pm-stat-value" id="cbTotal">—</div>
+                    </div>
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label">Active Lines</div>
+                        <div class="pm-stat-value green" id="cbActive">—</div>
+                    </div>
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label">Comment Lines</div>
+                        <div class="pm-stat-value blue" id="cbComments">—</div>
+                    </div>
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label">Blank Lines</div>
+                        <div class="pm-stat-value" id="cbBlank">—</div>
+                    </div>
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label">Total Files</div>
+                        <div class="pm-stat-value" id="cbFiles">—</div>
+                    </div>
+                </div>
+
+                <!-- Language breakdown -->
+                <div class="pm-glass-panel" style="margin-bottom:1.25rem">
+                    <div class="pm-panel-header"><span class="pm-panel-title">By Language</span></div>
+                    <div class="pm-table-scroll">
+                        <table class="pm-table" id="cbLangTable">
+                            <thead>
+                                <tr>
+                                    <th class="pm-th">Language</th>
+                                    <th class="pm-th">Files</th>
+                                    <th class="pm-th">Total Lines</th>
+                                    <th class="pm-th">Active Lines</th>
+                                    <th class="pm-th">Active %</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cbLangBody"><tr><td colspan="5" class="pm-empty-row-sm">Loading…</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bot versions -->
+                <div class="pm-glass-panel" style="margin-bottom:1.25rem">
+                    <div class="pm-panel-header"><span class="pm-panel-title">Bot &amp; App Versions</span></div>
+                    <div class="pm-table-scroll">
+                        <table class="pm-table" id="cbBotsTable">
+                            <thead>
+                                <tr>
+                                    <th class="pm-th">App</th>
+                                    <th class="pm-th">Version</th>
+                                    <th class="pm-th">Language</th>
+                                    <th class="pm-th">discord.js</th>
+                                    <th class="pm-th">Start Method</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cbBotsBody"><tr><td colspan="5" class="pm-empty-row-sm">Loading…</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Runtime versions -->
+                <div class="pm-glass-panel">
+                    <div class="pm-panel-header"><span class="pm-panel-title">Runtime Versions</span></div>
+                    <div class="pm-table-scroll">
+                        <table class="pm-table" id="cbRuntimeTable">
+                            <thead>
+                                <tr>
+                                    <th class="pm-th">Runtime / Library</th>
+                                    <th class="pm-th">Version</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cbRuntimeBody"><tr><td colspan="2" class="pm-empty-row-sm">Loading…</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Catalog Section -->
+            <section class="content-section" id="errorCatalogSection" data-section="error-catalog">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>Error Catalog</h1>
+                        <p>All CUBSOFTWARE_ERROR_ codes — what they mean and which app produces them</p>
+                    </div>
+                    <div class="section-actions">
+                        <input type="text" id="errCatalogFilter" class="form-input" placeholder="Filter by app or code…"
+                               style="width:220px;font-size:13px" oninput="filterErrorCatalog(this.value)">
+                    </div>
+                </div>
+
+                <!-- Summary cards -->
+                <div class="pm-stat-grid" id="errCatalogStats">
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label">Total Codes</div>
+                        <div class="pm-stat-value" id="errTotal">—</div>
+                    </div>
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label" style="color:#ef4444">Fatal</div>
+                        <div class="pm-stat-value" style="color:#ef4444" id="errFatal">—</div>
+                    </div>
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label" style="color:#f87171">Errors</div>
+                        <div class="pm-stat-value" style="color:#f87171" id="errError">—</div>
+                    </div>
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label" style="color:#fbbf24">Warnings</div>
+                        <div class="pm-stat-value" style="color:#fbbf24" id="errWarning">—</div>
+                    </div>
+                    <div class="stat-card pm-stat-card">
+                        <div class="pm-stat-label">Applications</div>
+                        <div class="pm-stat-value" id="errApps">—</div>
+                    </div>
+                </div>
+
+                <!-- Catalog table -->
+                <div class="pm-glass-panel">
+                    <div class="pm-table-wrap">
+                        <table class="pm-table">
+                            <thead>
+                                <tr>
+                                    <th class="pm-th">Error Code</th>
+                                    <th class="pm-th">App</th>
+                                    <th class="pm-th">Severity</th>
+                                    <th class="pm-th">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody id="errCatalogBody">
+                                <tr><td colspan="4" class="pm-empty-row-sm">Loading…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
@@ -855,5 +1025,138 @@
     <div class="toast" id="toast"></div>
 
     <script src="/static/js/admin-dashboard.js?v={{ v }}"></script>
+    <script>
+    function fmt(n) { return n === undefined ? '—' : n.toLocaleString(); }
+
+    async function loadCodebase(bust) {
+        try {
+            const res = await fetch('/api/admin/codebase-info' + (bust ? '?bust=' + Date.now() : ''));
+            if (!res.ok) return;
+            const d = await res.json();
+
+            document.getElementById('cbTotal').textContent    = fmt(d.lines.total);
+            document.getElementById('cbActive').textContent   = fmt(d.lines.active);
+            document.getElementById('cbComments').textContent = fmt(d.lines.comments);
+            document.getElementById('cbBlank').textContent    = fmt(d.lines.blank);
+            document.getElementById('cbFiles').textContent    = fmt(d.files);
+
+            const ts = new Date(d.cached_at * 1000);
+            document.getElementById('codebaseCachedAt').textContent =
+                'Cached ' + ts.toLocaleTimeString() + ' (5 min cache)';
+
+            // Language table
+            const langRows = Object.entries(d.by_type)
+                .sort((a, b) => b[1].total - a[1].total)
+                .map(([lang, s]) => {
+                    const pct = s.total > 0 ? ((s.active / s.total) * 100).toFixed(1) : '0.0';
+                    return `<tr>
+                        <td class="pm-td"><strong>${lang}</strong></td>
+                        <td class="pm-td">${fmt(s.files)}</td>
+                        <td class="pm-td">${fmt(s.total)}</td>
+                        <td class="pm-td" style="color:#4ade80">${fmt(s.active)}</td>
+                        <td class="pm-td">${pct}%</td>
+                    </tr>`;
+                }).join('');
+            document.getElementById('cbLangBody').innerHTML = langRows || '<tr><td colspan="5" class="pm-empty-row-sm">No data</td></tr>';
+
+            // Bots table
+            const botRows = d.bots.map(b => `<tr>
+                <td class="pm-td"><strong>${b.name}</strong></td>
+                <td class="pm-td"><span style="font-family:monospace;color:#a5b4fc">v${b.version}</span></td>
+                <td class="pm-td">${b.lang}</td>
+                <td class="pm-td">${b.djs ? '<span style="font-family:monospace;color:#c084fc">v' + b.djs + '</span>' : '<span style="color:#555">N/A</span>'}</td>
+                <td class="pm-td" style="font-size:12px;color:#888">${b.start}</td>
+            </tr>`).join('');
+            document.getElementById('cbBotsBody').innerHTML = botRows || '<tr><td colspan="5" class="pm-empty-row-sm">No data</td></tr>';
+
+            // Runtime table
+            const rtRows = Object.entries(d.runtimes).map(([k, v]) => `<tr>
+                <td class="pm-td"><strong>${k}</strong></td>
+                <td class="pm-td"><span style="font-family:monospace;color:#a5b4fc">${v}</span></td>
+            </tr>`).join('');
+            document.getElementById('cbRuntimeBody').innerHTML = rtRows || '<tr><td colspan="2" class="pm-empty-row-sm">No data</td></tr>';
+
+        } catch(e) {
+            console.error('Codebase load error:', e);
+        }
+    }
+
+    // Load when section becomes active
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.nav-item[data-section="codebase"]').forEach(el => {
+            el.addEventListener('click', () => { if (!document.getElementById('cbTotal').textContent || document.getElementById('cbTotal').textContent === '—') loadCodebase(); });
+        });
+        document.querySelectorAll('.nav-item[data-section="error-catalog"]').forEach(el => {
+            el.addEventListener('click', () => {
+                if (!_errCatalogLoaded) loadErrorCatalog();
+            });
+        });
+    });
+
+    let _errCatalogLoaded = false;
+    let _errCatalogData = [];
+
+    const SEVERITY_COLORS_CSS = {
+        fatal:   'color:#ef4444;font-weight:700',
+        error:   'color:#f87171',
+        warning: 'color:#fbbf24',
+        info:    'color:#60a5fa',
+    };
+    const SEVERITY_ICONS = {
+        fatal: '🔴',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️',
+    };
+
+    async function loadErrorCatalog() {
+        try {
+            const res = await fetch('/api/admin/error-catalog');
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const d = await res.json();
+            _errCatalogData = d.catalog || [];
+            _errCatalogLoaded = true;
+
+            document.getElementById('errTotal').textContent   = _errCatalogData.length;
+            document.getElementById('errFatal').textContent   = _errCatalogData.filter(e => e.severity === 'fatal').length;
+            document.getElementById('errError').textContent   = _errCatalogData.filter(e => e.severity === 'error').length;
+            document.getElementById('errWarning').textContent = _errCatalogData.filter(e => e.severity === 'warning').length;
+            const apps = [...new Set(_errCatalogData.map(e => e.app))];
+            document.getElementById('errApps').textContent = apps.length;
+
+            renderErrorCatalog(_errCatalogData);
+        } catch (e) {
+            document.getElementById('errCatalogBody').innerHTML =
+                '<tr><td colspan="4" class="pm-empty-row-sm">Failed to load error catalog</td></tr>';
+        }
+    }
+
+    function renderErrorCatalog(rows) {
+        if (!rows.length) {
+            document.getElementById('errCatalogBody').innerHTML =
+                '<tr><td colspan="4" class="pm-empty-row-sm">No entries found</td></tr>';
+            return;
+        }
+        const html = rows.map(e => `<tr>
+            <td class="pm-td"><code style="font-size:11px;color:#a5b4fc;word-break:break-all">${e.code}</code></td>
+            <td class="pm-td"><strong>${e.app}</strong></td>
+            <td class="pm-td"><span style="${SEVERITY_COLORS_CSS[e.severity] || ''}">${SEVERITY_ICONS[e.severity] || ''} ${e.severity.toUpperCase()}</span></td>
+            <td class="pm-td" style="font-size:13px">${e.desc}</td>
+        </tr>`).join('');
+        document.getElementById('errCatalogBody').innerHTML = html;
+    }
+
+    function filterErrorCatalog(q) {
+        if (!q) { renderErrorCatalog(_errCatalogData); return; }
+        const lq = q.toLowerCase();
+        const filtered = _errCatalogData.filter(e =>
+            e.code.toLowerCase().includes(lq) ||
+            e.app.toLowerCase().includes(lq) ||
+            e.desc.toLowerCase().includes(lq) ||
+            e.severity.toLowerCase().includes(lq)
+        );
+        renderErrorCatalog(filtered);
+    }
+    </script>
 </body>
 </html>

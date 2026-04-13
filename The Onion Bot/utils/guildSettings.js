@@ -22,7 +22,7 @@ function loadSettings() {
             return JSON.parse(data);
         }
     } catch (error) {
-        console.error('[ERROR] Failed to load guild settings:', error.message);
+        console.error('CUBSOFTWARE_ERROR_ONIONBOT_GUILD_SETTINGS_178 — [ERROR] Failed to load guild settings:', error.message);
     }
     return {};
 }
@@ -33,7 +33,7 @@ function saveSettings(settings) {
         fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf8');
         return true;
     } catch (error) {
-        console.error('[ERROR] Failed to save guild settings:', error.message);
+        console.error('CUBSOFTWARE_ERROR_ONIONBOT_GUILD_SETTINGS_178 — [ERROR] Failed to save guild settings:', error.message);
         return false;
     }
 }

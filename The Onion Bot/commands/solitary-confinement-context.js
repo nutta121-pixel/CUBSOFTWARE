@@ -283,7 +283,7 @@ module.exports = {
                 await targetMember.voice.setMute(true, 'Solitary confinement');
                 debug('[SOLITARY] User server muted successfully');
             } catch (error) {
-                console.error('[ERROR] Failed to server mute user:', error.message);
+                console.error('CUBSOFTWARE_ERROR_ONIONBOT_CONFINEMENT_175 — [ERROR] Failed to server mute user:', error.message);
             }
 
             // If user is currently in a voice channel, move them to confinement
@@ -296,7 +296,7 @@ module.exports = {
                         await targetMember.voice.setChannel(selectedChannel, 'Solitary confinement');
                         debug('[SOLITARY] User moved successfully');
                     } catch (error) {
-                        console.error('[ERROR] Failed to move user to confinement:', error.message);
+                        console.error('CUBSOFTWARE_ERROR_ONIONBOT_CONFINEMENT_175 — [ERROR] Failed to move user to confinement:', error.message);
                     }
                 } else {
                     debug('[SOLITARY] User already in confinement channel');
@@ -355,7 +355,7 @@ module.exports = {
                 console.log(`[CONFINEMENT] Unmuted ${member.user.tag}`);
             }
         } catch (error) {
-            console.error('[ERROR] Failed to unmute user on release:', error.message);
+            console.error('CUBSOFTWARE_ERROR_ONIONBOT_CONFINEMENT_175 — [ERROR] Failed to unmute user on release:', error.message);
         }
 
         // Remove confinement

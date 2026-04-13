@@ -27,7 +27,7 @@ class GuildService {
             const bonusPercent = guild.level * 5;
             return 1 + (bonusPercent / 100);
         } catch (error) {
-            console.error('Error getting guild bonus:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error getting guild bonus:', error);
             return 1.0;
         }
     }
@@ -57,7 +57,7 @@ class GuildService {
                 multiplier: 1 + (bonusPercent / 100)
             };
         } catch (error) {
-            console.error('Error getting guild bonus info:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error getting guild bonus info:', error);
             return { hasGuild: false, bonus: 0, multiplier: 1.0 };
         }
     }
@@ -157,7 +157,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error creating guild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error creating guild:', error);
             return {
                 success: false,
                 error: 'Failed to create guild'
@@ -235,7 +235,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error inviting user:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error inviting user:', error);
             return {
                 success: false,
                 error: 'Failed to send invite'
@@ -309,7 +309,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error joining guild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error joining guild:', error);
             return {
                 success: false,
                 error: 'Failed to join guild'
@@ -385,7 +385,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error joining public guild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error joining public guild:', error);
             return {
                 success: false,
                 error: 'Failed to join guild'
@@ -439,7 +439,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error leaving guild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error leaving guild:', error);
             return {
                 success: false,
                 error: 'Failed to leave guild'
@@ -475,7 +475,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error getting guild info:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error getting guild info:', error);
             return {
                 success: false,
                 error: 'Failed to get guild information'
@@ -543,7 +543,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error contributing to guild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error contributing to guild:', error);
             return {
                 success: false,
                 error: 'Failed to contribute to guild'
@@ -615,7 +615,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error upgrading max members:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error upgrading max members:', error);
             return {
                 success: false,
                 error: 'Failed to upgrade member slots'
@@ -705,7 +705,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error upgrading guild level:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error upgrading guild level:', error);
             return {
                 success: false,
                 error: 'Failed to upgrade guild level'
@@ -789,7 +789,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error kicking member:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error kicking member:', error);
             return {
                 success: false,
                 error: 'Failed to kick member'
@@ -873,7 +873,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error promoting member:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error promoting member:', error);
             return {
                 success: false,
                 error: 'Failed to promote member'
@@ -950,7 +950,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error demoting member:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error demoting member:', error);
             return {
                 success: false,
                 error: 'Failed to demote member'
@@ -1038,7 +1038,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error updating guild settings:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error updating guild settings:', error);
             return {
                 success: false,
                 error: 'Failed to update guild settings'
@@ -1097,7 +1097,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error disbanding guild:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error disbanding guild:', error);
             return {
                 success: false,
                 error: 'Failed to disband guild'
@@ -1181,7 +1181,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error transferring leadership:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error transferring leadership:', error);
             return {
                 success: false,
                 error: 'Failed to transfer leadership'
@@ -1206,7 +1206,7 @@ class GuildService {
             `);
             return stmt.all(guildId, limit);
         } catch (error) {
-            console.error('Error getting guild activity:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error getting guild activity:', error);
             return [];
         }
     }
@@ -1227,7 +1227,7 @@ class GuildService {
             `);
             stmt.run(guildId, activityType, description, userId);
         } catch (error) {
-            console.error('Error logging guild activity:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error logging guild activity:', error);
         }
     }
 
@@ -1311,7 +1311,7 @@ class GuildService {
                 }
             };
         } catch (error) {
-            console.error('Error creating announcement:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error creating announcement:', error);
             return {
                 success: false,
                 error: 'Failed to create announcement'
@@ -1340,7 +1340,7 @@ class GuildService {
             `);
             return stmt.all(guildId, limit);
         } catch (error) {
-            console.error('Error getting guild announcements:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error getting guild announcements:', error);
             return [];
         }
     }
@@ -1404,7 +1404,7 @@ class GuildService {
                 message: 'Announcement deleted successfully'
             };
         } catch (error) {
-            console.error('Error deleting announcement:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_GAME_GUILD_140 — Error deleting announcement:', error);
             return {
                 success: false,
                 error: 'Failed to delete announcement'

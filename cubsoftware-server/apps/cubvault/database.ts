@@ -51,7 +51,7 @@ export class VaultDatabase {
             this.startAutoLockTimer();
             return true;
         } catch (error) {
-            console.error('Failed to create vault:', error);
+            console.error('CUBSOFTWARE_ERROR_CUBVAULT_VAULT_CREATE_197 — Failed to create vault:', error);
             return false;
         }
     }
@@ -136,7 +136,7 @@ export class VaultDatabase {
 
             return true;
         } catch (error) {
-            console.error('Failed to unlock vault:', error);
+            console.error('CUBSOFTWARE_ERROR_CUBVAULT_VAULT_UNLOCK_198 — Failed to unlock vault:', error);
             return false;
         }
     }
@@ -409,7 +409,7 @@ export class VaultDatabase {
 
             return true;
         } catch (error) {
-            console.error('Failed to change password:', error);
+            console.error('CUBSOFTWARE_ERROR_CUBVAULT_VAULT_PASSWORD_199 — Failed to change password:', error);
             return false;
         }
     }

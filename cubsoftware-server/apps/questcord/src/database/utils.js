@@ -8,7 +8,7 @@ class DatabaseUtils {
             const result = db.prepare('PRAGMA integrity_check').get();
             return result.integrity_check === 'ok';
         } catch (error) {
-            console.error('Database integrity check failed:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_DB_UTILS_138 — Database integrity check failed:', error);
             return false;
         }
     }
@@ -29,7 +29,7 @@ class DatabaseUtils {
             this.cleanOldBackups(backupDir, 7);
             return backupPath;
         } catch (error) {
-            console.error('Backup failed:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_DB_UTILS_138 — Backup failed:', error);
             return null;
         }
     }
@@ -70,7 +70,7 @@ class DatabaseUtils {
             console.log('[Database] Vacuumed successfully');
             return true;
         } catch (error) {
-            console.error('Vacuum failed:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_DB_UTILS_138 — Vacuum failed:', error);
             return false;
         }
     }
@@ -82,7 +82,7 @@ class DatabaseUtils {
             console.log('[Database] Optimized successfully');
             return true;
         } catch (error) {
-            console.error('Optimization failed:', error);
+            console.error('CUBSOFTWARE_ERROR_QUESTCORD_DB_UTILS_138 — Optimization failed:', error);
             return false;
         }
     }
@@ -141,7 +141,7 @@ class MigrationManager {
                     });
                     console.log(`[Database] Migration ${migrationName} completed`);
                 } catch (error) {
-                    console.error(`Migration ${migrationName} failed:`, error);
+                    console.error(`CUBSOFTWARE_ERROR_QUESTCORD_DB_UTILS_138 — Migration ${migrationName} failed:`, error);
                     throw error;
                 }
             }

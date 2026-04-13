@@ -192,7 +192,7 @@ async function connectRPC() {
 
         await rpc.login({ clientId });
     } catch (error) {
-        console.error('Failed to connect to Discord RPC:', error.message);
+        console.error('CUBSOFTWARE_ERROR_CUBSOFTWARE_APP_DISCORD_RPC_193 — Failed to connect to Discord RPC:', error.message);
         // Retry after delay
         setTimeout(connectRPC, 10000);
     }
@@ -235,7 +235,7 @@ async function fetchPresenceConfig() {
         if (!response.ok) return null;
         return await response.json();
     } catch (error) {
-        console.error('Failed to fetch presence config:', error);
+        console.error('CUBSOFTWARE_ERROR_CUBSOFTWARE_APP_PRESENCE_CONFIG_194 — Failed to fetch presence config:', error);
         return null;
     }
 }
@@ -262,7 +262,7 @@ async function refreshAccessToken() {
         }
         return true;
     } catch (error) {
-        console.error('Failed to refresh token:', error);
+        console.error('CUBSOFTWARE_ERROR_CUBSOFTWARE_APP_TOKEN_REFRESH_195 — Failed to refresh token:', error);
         return false;
     }
 }
@@ -329,7 +329,7 @@ function updatePresence(config) {
         rpc.setActivity(activity);
         console.log('Presence updated:', activity);
     } catch (error) {
-        console.error('Failed to update presence:', error);
+        console.error('CUBSOFTWARE_ERROR_CUBSOFTWARE_APP_PRESENCE_UPDATE_196 — Failed to update presence:', error);
     }
 }
 

@@ -104,132 +104,6 @@ module.exports = {
         },
 
         // ============================================
-        // QuestCord (Discord Bot + Web Dashboard)
-        // ============================================
-        {
-            name: 'questcord',
-            script: 'src/index.js',
-            cwd: './apps/questcord',
-            interpreter: 'node',
-            watch: false,
-            autorestart: true,
-            max_restarts: 10,
-            restart_delay: 5000,
-            node_args: '--max-old-space-size=512',
-            env: {
-                NODE_ENV: 'production',
-                DISCORD_TOKEN: s('QUESTCORD_TOKEN'),
-                DISCORD_CLIENT_ID: s('QUESTCORD_CLIENT_ID'),
-                DISCORD_CLIENT_SECRET: s('QUESTCORD_CLIENT_SECRET'),
-                SUPPORT_SERVER_ID: s('QUESTCORD_SUPPORT_SERVER_ID'),
-                OWNER_ID: s('OWNER_IDS'),
-                OWNER_IDS: s('OWNER_IDS'),
-                TERMINAL_CHANNEL_ID: s('TERMINAL_CHANNEL_ID', '1466190431485427856'),
-                BOT_EVENTS_CHANNEL_ID: s('BOT_EVENTS_CHANNEL_ID', '1466190584372003092'),
-                SESSION_SECRET: s('QUESTCORD_SESSION_SECRET'),
-                DISCORD_CALLBACK_URL: 'https://questcord.fun/auth/discord/callback',
-                DISCORD_BASE_URL: 'https://questcord.fun',
-            },
-            env_development: {
-                NODE_ENV: 'development'
-            },
-            error_file: './logs/questcord-error.log',
-            out_file: './logs/questcord-out.log',
-            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-            merge_logs: true
-        },
-
-        // ============================================
-        // Galaxy Bot (Discord Bot - Python)
-        // ============================================
-        {
-            name: 'galaxy-bot',
-            script: 'start.sh',
-            cwd: '../galaxy',
-            interpreter: 'bash',
-            watch: false,
-            autorestart: true,
-            max_restarts: 10,
-            restart_delay: 5000,
-            env: {
-                OWNER_ID: s('OWNER_IDS'),
-                BOT_TOKEN_ID: s('GALAXY_BOT_TOKEN'),
-            },
-            env_development: {
-                NODE_ENV: 'development'
-            },
-            error_file: './logs/galaxy-bot-error.log',
-            out_file: './logs/galaxy-bot-out.log',
-            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-            merge_logs: true
-        },
-
-        // ============================================
-        // The Onion Bot (Solibot - Discord Bot)
-        // ============================================
-        {
-            name: 'onion-bot',
-            script: 'index.js',
-            cwd: '../The Onion Bot',
-            interpreter: 'node',
-            watch: false,
-            autorestart: true,
-            max_restarts: 10,
-            restart_delay: 5000,
-            node_args: '--max-old-space-size=256',
-            env: {
-                NODE_ENV: 'production',
-                DISCORD_TOKEN: s('ONION_BOT_TOKEN'),
-                CLIENT_ID: s('ONION_BOT_CLIENT_ID'),
-                CLIENT_SECRET: s('ONION_BOT_CLIENT_SECRET'),
-                CREATOR_ID: s('OWNER_IDS'),
-                OWNER_IDS: s('OWNER_IDS'),
-                TERMINAL_CHANNEL_ID: s('TERMINAL_CHANNEL_ID', '1466190431485427856'),
-                BOT_EVENTS_CHANNEL_ID: s('BOT_EVENTS_CHANNEL_ID', '1466190584372003092'),
-            },
-            env_development: {
-                NODE_ENV: 'development',
-                DEBUG: 'true'
-            },
-            error_file: './logs/onion-bot-error.log',
-            out_file: './logs/onion-bot-out.log',
-            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-            merge_logs: true
-        },
-
-        // ============================================
-        // CleanMe Bot (Discord Bot)
-        // ============================================
-        {
-            name: 'cleanme-bot',
-            script: 'index.js',
-            cwd: './apps/cleanme-bot',
-            interpreter: 'node',
-            watch: false,
-            autorestart: true,
-            max_restarts: 10,
-            restart_delay: 5000,
-            node_args: '--max-old-space-size=256',
-            env: {
-                NODE_ENV: 'production',
-                BOT_TOKEN: s('CLEANME_BOT_TOKEN'),
-                CLIENT_ID: s('CLEANME_BOT_CLIENT_ID'),
-                OWNER_IDS: s('OWNER_IDS'),
-                TERMINAL_CHANNEL_ID: s('TERMINAL_CHANNEL_ID', '1466190431485427856'),
-                BOT_EVENTS_CHANNEL_ID: s('BOT_EVENTS_CHANNEL_ID', '1466190584372003092'),
-                CLEANME_WEBSITE_URL: 'https://cubsoftware.site',
-                CLEANME_API_KEY: s('BOT_API_KEY'),
-            },
-            env_development: {
-                NODE_ENV: 'development'
-            },
-            error_file: './logs/cleanme-bot-error.log',
-            out_file: './logs/cleanme-bot-out.log',
-            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-            merge_logs: true
-        },
-
-        // ============================================
         // CUB PROTECTOR (Discord Moderation Bot)
         // ============================================
         {
@@ -268,6 +142,132 @@ module.exports = {
             },
             error_file: './logs/cub-protector-error.log',
             out_file: './logs/cub-protector-out.log',
+            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+            merge_logs: true
+        },
+
+        // ============================================
+        // QuestCord (Discord Bot + Web Dashboard)
+        // ============================================
+        {
+            name: 'questcord-website-and-bot',
+            script: 'src/index.js',
+            cwd: './apps/questcord',
+            interpreter: 'node',
+            watch: false,
+            autorestart: true,
+            max_restarts: 10,
+            restart_delay: 5000,
+            node_args: '--max-old-space-size=512',
+            env: {
+                NODE_ENV: 'production',
+                DISCORD_TOKEN: s('QUESTCORD_TOKEN'),
+                DISCORD_CLIENT_ID: s('QUESTCORD_CLIENT_ID'),
+                DISCORD_CLIENT_SECRET: s('QUESTCORD_CLIENT_SECRET'),
+                SUPPORT_SERVER_ID: s('QUESTCORD_SUPPORT_SERVER_ID'),
+                OWNER_ID: s('OWNER_IDS'),
+                OWNER_IDS: s('OWNER_IDS'),
+                TERMINAL_CHANNEL_ID: s('TERMINAL_CHANNEL_ID', '1466190431485427856'),
+                BOT_EVENTS_CHANNEL_ID: s('BOT_EVENTS_CHANNEL_ID', '1466190584372003092'),
+                SESSION_SECRET: s('QUESTCORD_SESSION_SECRET'),
+                DISCORD_CALLBACK_URL: 'https://questcord.fun/auth/discord/callback',
+                DISCORD_BASE_URL: 'https://questcord.fun',
+            },
+            env_development: {
+                NODE_ENV: 'development'
+            },
+            error_file: './logs/questcord-error.log',
+            out_file: './logs/questcord-out.log',
+            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+            merge_logs: true
+        },
+
+        // ============================================
+        // CleanMe Bot (Discord Bot)
+        // ============================================
+        {
+            name: 'cleanme-bot',
+            script: 'index.js',
+            cwd: './apps/cleanme-bot',
+            interpreter: 'node',
+            watch: false,
+            autorestart: true,
+            max_restarts: 10,
+            restart_delay: 5000,
+            node_args: '--max-old-space-size=256',
+            env: {
+                NODE_ENV: 'production',
+                BOT_TOKEN: s('CLEANME_BOT_TOKEN'),
+                CLIENT_ID: s('CLEANME_BOT_CLIENT_ID'),
+                OWNER_IDS: s('OWNER_IDS'),
+                TERMINAL_CHANNEL_ID: s('TERMINAL_CHANNEL_ID', '1466190431485427856'),
+                BOT_EVENTS_CHANNEL_ID: s('BOT_EVENTS_CHANNEL_ID', '1466190584372003092'),
+                CLEANME_WEBSITE_URL: 'https://cubsoftware.site',
+                CLEANME_API_KEY: s('BOT_API_KEY'),
+            },
+            env_development: {
+                NODE_ENV: 'development'
+            },
+            error_file: './logs/cleanme-bot-error.log',
+            out_file: './logs/cleanme-bot-out.log',
+            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+            merge_logs: true
+        },
+
+        // ============================================
+        // The Onion Bot (Solibot - Discord Bot)
+        // ============================================
+        {
+            name: 'onion-bot',
+            script: 'index.js',
+            cwd: '../The Onion Bot',
+            interpreter: 'node',
+            watch: false,
+            autorestart: true,
+            max_restarts: 10,
+            restart_delay: 5000,
+            node_args: '--max-old-space-size=256',
+            env: {
+                NODE_ENV: 'production',
+                DISCORD_TOKEN: s('ONION_BOT_TOKEN'),
+                CLIENT_ID: s('ONION_BOT_CLIENT_ID'),
+                CLIENT_SECRET: s('ONION_BOT_CLIENT_SECRET'),
+                CREATOR_ID: s('OWNER_IDS'),
+                OWNER_IDS: s('OWNER_IDS'),
+                TERMINAL_CHANNEL_ID: s('TERMINAL_CHANNEL_ID', '1466190431485427856'),
+                BOT_EVENTS_CHANNEL_ID: s('BOT_EVENTS_CHANNEL_ID', '1466190584372003092'),
+            },
+            env_development: {
+                NODE_ENV: 'development',
+                DEBUG: 'true'
+            },
+            error_file: './logs/onion-bot-error.log',
+            out_file: './logs/onion-bot-out.log',
+            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+            merge_logs: true
+        },
+
+        // ============================================
+        // Galaxy Bot (Discord Bot - Python)
+        // ============================================
+        {
+            name: 'galaxy-bot',
+            script: 'start.sh',
+            cwd: '../galaxy',
+            interpreter: 'bash',
+            watch: false,
+            autorestart: true,
+            max_restarts: 10,
+            restart_delay: 5000,
+            env: {
+                OWNER_ID: s('OWNER_IDS'),
+                BOT_TOKEN_ID: s('GALAXY_BOT_TOKEN'),
+            },
+            env_development: {
+                NODE_ENV: 'development'
+            },
+            error_file: './logs/galaxy-bot-error.log',
+            out_file: './logs/galaxy-bot-out.log',
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
             merge_logs: true
         },

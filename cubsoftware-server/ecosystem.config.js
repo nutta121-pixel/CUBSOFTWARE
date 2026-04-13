@@ -86,6 +86,7 @@ module.exports = {
                 CLEANME_REDIRECT_URI: s('CLEANME_REDIRECT_URI'),
                 // Misc
                 LOG_SERVER_PORT: s('LOG_SERVER_PORT', '3847'),
+                TRUSTED_IPS: s('TRUSTED_IPS'),
 
                 CUBSOFTWARE_DATA_DIR: s('CUBSOFTWARE_DATA_DIR', '/var/cubsoftware-data'),
                 BMAC_TOKEN: s('BMAC_TOKEN'),
@@ -136,6 +137,8 @@ module.exports = {
                 CUBAI_API_KEY: s('CUBAI_API_KEY'),
                 CUBAI_TRIGGER: s('CUBAI_TRIGGER', 'cub'),
                 WHISPER_MODEL: s('WHISPER_MODEL', 'base'),
+                INTERNAL_TEST_SECRET: s('INTERNAL_TEST_SECRET'),
+                AUTH_TESTER_PORT: s('AUTH_TESTER_PORT', '3849'),
             },
             env_development: {
                 NODE_ENV: 'development'
@@ -288,6 +291,7 @@ module.exports = {
                 NODE_ENV: 'production',
                 AUTH_TESTER_ENABLED: s('AUTH_TESTER_ENABLED', 'true'),
                 INTERNAL_TEST_SECRET: s('INTERNAL_TEST_SECRET'),
+                AUTH_TESTER_PORT: s('AUTH_TESTER_PORT', '3849'),
                 CUBSOFTWARE_URL: 'http://localhost:3000',
                 QUESTCORD_URL: 'http://localhost:3003',
                 SECURITY_BOT_TOKEN: s('SECURITY_BOT_TOKEN') || s('CUB_PROTECTOR_TOKEN'),

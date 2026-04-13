@@ -1826,6 +1826,11 @@ const commands = [
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     new SlashCommandBuilder()
+        .setName('scan-security')
+        .setDescription('Trigger an immediate security scan of all CUB SOFTWARE apps')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
         .setName('keraplast-password')
         .setDescription('Manage Keraplast calculator passwords')
         .addSubcommand(sub => sub.setName('create').setDescription('Create a password')
@@ -7557,6 +7562,33 @@ client.on('interactionCreate', async (interaction) => {
             const total = bans.global.length + Object.values(bans.features).reduce((s, a) => s + a.length, 0) + active.length + scannerEntries.length;
             if (!total) embed.setDescription('No IPs currently banned.'); else embed.setFooter({ text: `Total: ${total} active bans` });
             return interaction.reply({ embeds: [embed], ephemeral: true });
+        }
+    }
+
+    if (commandName === 'scan-security') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        await interaction.deferReply({ ephemeral: true });
+        const port = process.env.AUTH_TESTER_PORT || '3849';
+        const secret = process.env.INTERNAL_TEST_SECRET || '';
+        if (!secret) return interaction.editReply('❌ `INTERNAL_TEST_SECRET` not set in bot env — cannot trigger scan.');
+        try {
+            const http = require('http');
+            await new Promise((resolve, reject) => {
+                const req = http.request({ hostname: '127.0.0.1', port: parseInt(port), path: '/trigger', method: 'POST', headers: { 'Authorization': `Bearer ${secret}` } }, (res) => {
+                    let body = '';
+                    res.on('data', d => body += d);
+                    res.on('end', () => {
+                        if (res.statusCode === 200) resolve(body);
+                        else if (res.statusCode === 409) reject(new Error('Scan already in progress'));
+                        else reject(new Error(`Auth tester returned HTTP ${res.statusCode}: ${body}`));
+                    });
+                });
+                req.on('error', reject);
+                req.end();
+            });
+            return interaction.editReply({ embeds: [new EmbedBuilder().setColor(0x22c55e).setTitle('Security Scan Triggered').setDescription('The auth tester is now running a full security scan.\nResults will be posted to the security channel when complete (~30 min).').setTimestamp()] });
+        } catch (err) {
+            return interaction.editReply(`❌ Failed to trigger scan: ${err.message}`);
         }
     }
 

@@ -22,6 +22,7 @@
 const cron = require('node-cron');
 const axios = require('axios');
 const jwt   = require('jsonwebtoken');
+const http  = require('http');
 
 const TARGETS                = require('./auth-targets.config');
 const { runBruteForceTests } = require('./brute-force-tests');
@@ -240,14 +241,45 @@ if (!INTERNAL_SECRET) {
     log('WARNING: INTERNAL_TEST_SECRET not set — valid-key tests will be skipped');
 }
 
+// ── HTTP trigger endpoint ─────────────────────────────────────────────────────
+// POST http://localhost:<AUTH_TESTER_PORT>/trigger
+// Authorization: Bearer <INTERNAL_TEST_SECRET>
+// Used by the CUB Protector bot's /scan command to trigger on demand
+
+const TRIGGER_PORT = parseInt(process.env.AUTH_TESTER_PORT || '3849', 10);
+
+const triggerServer = http.createServer((req, res) => {
+    if (req.method !== 'POST' || req.url !== '/trigger') {
+        res.writeHead(404);
+        return res.end('Not found');
+    }
+    const auth = req.headers['authorization'] || '';
+    const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
+    if (!INTERNAL_SECRET || token !== INTERNAL_SECRET) {
+        res.writeHead(401);
+        return res.end('Unauthorized');
+    }
+    if (_running) {
+        res.writeHead(409);
+        return res.end('Scan already in progress');
+    }
+    res.writeHead(200);
+    res.end('Scan triggered');
+    log('Manual scan triggered via HTTP');
+    runAllChecks();
+});
+
+triggerServer.listen(TRIGGER_PORT, '127.0.0.1', () => {
+    log(`Trigger endpoint listening on 127.0.0.1:${TRIGGER_PORT}`);
+});
+
 // Run once immediately on startup (so you see results right away in PM2 logs)
 runAllChecks();
 
-// Then fire at the top of every hour: 1:00, 2:00, 3:00 …
-// Cron: "0 * * * *" = minute 0, every hour, every day
-cron.schedule('0 * * * *', () => {
-    log('Cron fired — top of the hour');
+// Every 6 hours: 00:00, 06:00, 12:00, 18:00 UTC
+cron.schedule('0 */6 * * *', () => {
+    log('Cron fired — 6-hour scheduled scan');
     runAllChecks();
 }, { timezone: 'UTC' });
 
-log('Auth tester running. Schedule: every hour on the hour (UTC). Startup run in progress...');
+log(`Auth tester running. Schedule: every 6 hours (UTC). Trigger port: ${TRIGGER_PORT}. Startup run in progress...`);

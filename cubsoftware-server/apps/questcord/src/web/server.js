@@ -279,6 +279,9 @@ async function startWebServer(client) {
     });
 
     app.use((err, req, res, next) => {
+        if (err.type === 'entity.too.large') {
+            return res.status(413).json({ error: 'Request too large' });
+        }
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_SERVER_ERROR_114 — Server error:', err);
         res.status(500).render('404', {
             path: req.path,

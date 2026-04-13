@@ -95,12 +95,15 @@ _auto_banned_ips = set()
 _ban_details     = {}
 _404_hits        = {}   # ip → [timestamps] — directory-fuzzing 404 flood tracking
 
-_SCANNER_THRESHOLD  = 2      # probes before auto-ban (reduced from 3)
+_SCANNER_THRESHOLD  = 3      # probes before auto-ban
 _BAN_TTL_DAYS       = 30
 _404_WINDOW         = 60    # seconds to track 404 flood
-_404_THRESHOLD      = 8     # 404s within window before probe hit (reduced from 15)
-_403_BAN_THRESHOLD  = 8     # repeated 403s before auto-ban
+_404_THRESHOLD      = 15    # 404s within window before probe hit
+_403_BAN_THRESHOLD  = 15    # repeated 403s before auto-ban
 _429_BAN_THRESHOLD  = 20    # repeated 429s before auto-ban (rate limit hammering)
+
+# ── Trusted IPs — never banned, never treated as scanners (server owner IPs) ─
+_TRUSTED_IPS = set(ip.strip() for ip in os.environ.get('TRUSTED_IPS', '').split(',') if ip.strip())
 _MAX_PATH_LENGTH    = 1000  # paths longer than this are instant probe hits
 _MAX_QS_LENGTH      = 2000  # query strings longer than this are instant probe hits
 _MAX_BODY_SIZE      = 512000  # 512KB — above this, count as a probe hit
@@ -534,6 +537,10 @@ def _before_request_logging():
     if request.path in ('/ip-ban-appeal', '/api/ip-ban-appeal'):
         return None
 
+    # Trusted IPs — server owner IPs, never banned under any circumstances
+    if ip and ip in _TRUSTED_IPS:
+        return None
+
     # Private/localhost IPs — never ban them (would break the server) but still log scanner hits
     _PRIVATE_PREFIXES = ('127.', '::1', '10.', '192.168.', '172.16.', '172.17.', '172.18.',
                          '172.19.', '172.20.', '172.21.', '172.22.', '172.23.', '172.24.',
@@ -951,6 +958,8 @@ MASCOT_EXCLUDED_PREFIXES = (
 @app.after_request
 def inject_mascot(response):
     """Inject the CUB SOFTWARE mascot image into every HTML page"""
+    if response.status_code == 403:
+        return response
     if request.path.startswith(MASCOT_EXCLUDED_PREFIXES):
         return response
     if response.content_type and response.content_type.startswith('text/html') and not response.direct_passthrough:

@@ -272,14 +272,33 @@ async function testOversizedBody(target) {
 
 // ── Runner ────────────────────────────────────────────────────────────────────
 
+/** Delay between individual test types — spreads the full scan over ~30 minutes */
+const TEST_GAP_MS = 3 * 60 * 1000; // 3 minutes
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function runBruteForceTests(target) {
     log(`\n=== Brute-force resilience tests: ${target.name} (${target.baseUrl}) ===`);
     const results = {};
 
     try { results.rate_limit_burst  = await testRateLimitBurst(target);  } catch (e) { results.rate_limit_burst  = { ok: false, error: e.message }; }
+    log(`  [gap] waiting ${TEST_GAP_MS / 60000}m before next test...`);
+    await sleep(TEST_GAP_MS);
+
     try { results.auth_flood        = await testAuthFlood(target);        } catch (e) { results.auth_flood        = { ok: false, error: e.message }; }
+    log(`  [gap] waiting ${TEST_GAP_MS / 60000}m before next test...`);
+    await sleep(TEST_GAP_MS);
+
     try { results.path_probing      = await testPathProbing(target);      } catch (e) { results.path_probing      = { ok: false, error: e.message }; }
+    log(`  [gap] waiting ${TEST_GAP_MS / 60000}m before next test...`);
+    await sleep(TEST_GAP_MS);
+
     try { results.header_injection  = await testHeaderInjection(target);  } catch (e) { results.header_injection  = { ok: false, error: e.message }; }
+    log(`  [gap] waiting ${TEST_GAP_MS / 60000}m before next test...`);
+    await sleep(TEST_GAP_MS);
+
     try { results.oversized_body    = await testOversizedBody(target);    } catch (e) { results.oversized_body    = { ok: false, error: e.message }; }
 
     const failed = Object.values(results).filter(r => !r.ok).length;

@@ -270,7 +270,7 @@ module.exports = {
             out_file: './logs/cub-protector-out.log',
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
             merge_logs: true
-        }
+        },
 
         // ============================================
         // Auth Tester (Hourly security self-test)

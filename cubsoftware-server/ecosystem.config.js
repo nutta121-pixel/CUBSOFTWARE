@@ -43,7 +43,7 @@ module.exports = {
         // CubSoftware Website (Flask/Python)
         // ============================================
         {
-            name: 'cubsoftware-website',
+            name: '0-cubsoftware-website',
             script: 'main.py',
             cwd: './apps/cubsoftware-website',
             interpreter: path.join(__dirname, 'apps/cubsoftware-website/venv/bin/python3'),
@@ -107,7 +107,7 @@ module.exports = {
         // CUB PROTECTOR (Discord Moderation Bot)
         // ============================================
         {
-            name: 'cub-protector',
+            name: '1-cubprotector-bot',
             script: 'start.js',
             cwd: './apps/cub-protector',
             interpreter: 'node',
@@ -150,7 +150,7 @@ module.exports = {
         // QuestCord (Discord Bot + Web Dashboard)
         // ============================================
         {
-            name: 'questcord-website-and-bot',
+            name: '2-questcord-website-and-bot',
             script: 'src/index.js',
             cwd: './apps/questcord',
             interpreter: 'node',
@@ -186,7 +186,7 @@ module.exports = {
         // CleanMe Bot (Discord Bot)
         // ============================================
         {
-            name: 'cleanme-bot',
+            name: '4-cleanme-bot',
             script: 'index.js',
             cwd: './apps/cleanme-bot',
             interpreter: 'node',
@@ -218,7 +218,7 @@ module.exports = {
         // The Onion Bot (Solibot - Discord Bot)
         // ============================================
         {
-            name: 'onion-bot',
+            name: '20-onion-bot',
             script: 'index.js',
             cwd: '../The Onion Bot',
             interpreter: 'node',
@@ -251,7 +251,7 @@ module.exports = {
         // Galaxy Bot (Discord Bot - Python)
         // ============================================
         {
-            name: 'galaxy-bot',
+            name: '21-galaxy-bot',
             script: 'start.sh',
             cwd: '../galaxy',
             interpreter: 'bash',
@@ -276,7 +276,7 @@ module.exports = {
         // Auth Tester (Hourly security self-test)
         // ============================================
         {
-            name: 'auth-tester',
+            name: '10-auth-tester',
             script: 'index.js',
             cwd: './apps/auth-tester',
             interpreter: 'node',
@@ -288,8 +288,8 @@ module.exports = {
                 NODE_ENV: 'production',
                 AUTH_TESTER_ENABLED: s('AUTH_TESTER_ENABLED', 'true'),
                 INTERNAL_TEST_SECRET: s('INTERNAL_TEST_SECRET'),
-                CUBSOFTWARE_URL: 'https://cubsoftware.site',
-                QUESTCORD_URL: 'https://questcord.fun',
+                CUBSOFTWARE_URL: 'http://localhost:3000',
+                QUESTCORD_URL: 'http://localhost:3003',
                 SECURITY_BOT_TOKEN: s('SECURITY_BOT_TOKEN') || s('CUB_PROTECTOR_TOKEN'),
                 SECURITY_CHANNEL_ID: s('SECURITY_CHANNEL_ID', '1493106273116356761'),
             },

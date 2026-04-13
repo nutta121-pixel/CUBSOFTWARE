@@ -235,9 +235,10 @@ async function startWebServer(client) {
         res.send = (body) => {
             if (typeof body === 'string' && body.includes('</body>')) {
                 const mascotHtml = `<style>
-                    .cub-mascot{position:fixed;bottom:0;right:0;width:280px;height:auto;max-width:none!important;pointer-events:none;user-select:none;filter:drop-shadow(0 0 24px rgba(88,101,242,.4));z-index:50;}
-                    @media(max-width:1024px){.cub-mascot{display:none;}}
-                </style><img src="https://cubsoftware.site/static/images/CUB/CUBSOFTWARE%20MASCOT%20-%20TRANSPARENT%20BACKGROUND%202.png" class="cub-mascot" alt="" draggable="false">`;
+                    .cub-mascot{position:fixed;bottom:0;right:0;width:240px;height:auto;max-width:none!important;pointer-events:none;user-select:none;filter:drop-shadow(0 0 24px rgba(88,101,242,.4));z-index:50;}
+                    @media(max-width:1400px){.cub-mascot{width:180px;}}
+                    @media(max-width:1100px){.cub-mascot{display:none;}}
+                </style><img src="https://cubsoftware.site/static/images/CUB/CUBSOFTWARE%20MASCOT%20-%20TRANSPARENT%20BACKGROUND%202.png" class="cub-mascot" alt="" draggable="false" loading="lazy">`;
                 body = body.replace('</body>', mascotHtml + '</body>');
             }
             return originalSend(body);

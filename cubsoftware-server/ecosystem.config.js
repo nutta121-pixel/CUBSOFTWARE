@@ -86,10 +86,11 @@ module.exports = {
                 CLEANME_REDIRECT_URI: s('CLEANME_REDIRECT_URI'),
                 // Misc
                 LOG_SERVER_PORT: s('LOG_SERVER_PORT', '3847'),
-                LINKS_DISCORD_WEBHOOK: s('LINKS_DISCORD_WEBHOOK'),
+
                 CUBSOFTWARE_DATA_DIR: s('CUBSOFTWARE_DATA_DIR', '/var/cubsoftware-data'),
                 BMAC_TOKEN: s('BMAC_TOKEN'),
                 KERAPLAST_ADMIN_PASSWORD: s('KERAPLAST_ADMIN_PASSWORD'),
+                INTERNAL_TEST_SECRET: s('INTERNAL_TEST_SECRET'),
             },
             env_development: {
                 FLASK_ENV: 'development',
@@ -270,6 +271,33 @@ module.exports = {
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
             merge_logs: true
         }
+
+        // ============================================
+        // Auth Tester (Hourly security self-test)
+        // ============================================
+        {
+            name: 'auth-tester',
+            script: 'index.js',
+            cwd: './apps/auth-tester',
+            interpreter: 'node',
+            watch: false,
+            autorestart: true,
+            max_restarts: 5,
+            restart_delay: 10000,
+            env: {
+                NODE_ENV: 'production',
+                AUTH_TESTER_ENABLED: s('AUTH_TESTER_ENABLED', 'true'),
+                INTERNAL_TEST_SECRET: s('INTERNAL_TEST_SECRET'),
+                CUBSOFTWARE_URL: 'https://cubsoftware.site',
+                QUESTCORD_URL: 'https://questcord.fun',
+                SECURITY_BOT_TOKEN: s('SECURITY_BOT_TOKEN') || s('CUB_PROTECTOR_TOKEN'),
+                SECURITY_CHANNEL_ID: s('SECURITY_CHANNEL_ID', '1493106273116356761'),
+            },
+            error_file: './logs/auth-tester-error.log',
+            out_file: './logs/auth-tester-out.log',
+            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+            merge_logs: true
+        },
 
         // ============================================
         // CubVault - Desktop App (NOT included)

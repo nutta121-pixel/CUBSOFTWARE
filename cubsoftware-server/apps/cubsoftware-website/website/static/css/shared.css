@@ -5,7 +5,7 @@
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 800px;
+    width: clamp(300px, 35vw, 600px);
     height: auto;
     max-width: none !important;
     pointer-events: none;
@@ -14,9 +14,8 @@
     filter: drop-shadow(0 0 24px rgba(88, 101, 242, 0.4));
     z-index: 9999;
 }
-@media (max-width: 1024px) {
-    .site-mascot { display: none; }
-}
+@media (max-width: 1280px) { .site-mascot { width: clamp(200px, 25vw, 380px); } }
+@media (max-width: 1100px) { .site-mascot { display: none; } }
 
 * {
     margin: 0;

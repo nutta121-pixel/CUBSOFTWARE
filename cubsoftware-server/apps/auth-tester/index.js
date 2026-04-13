@@ -1,0 +1,253 @@
+/**
+ * CUB SOFTWARE Auth Self-Test Service
+ *
+ * Runs on the hour (1:00, 2:00, 3:00 …) using node-cron.
+ * For each configured app it verifies that:
+ *   - Requests with no auth are rejected (401)
+ *   - Requests with a bad/garbage token are rejected (401)
+ *   - Requests with an expired JWT are rejected (401)
+ *   - Requests with a tampered JWT are rejected (401)
+ *   - Requests with a wrong-issuer JWT are rejected (401)
+ *   - (internal-key mode) Requests with the valid INTERNAL_TEST_SECRET get 200
+ *
+ * DEFENSIVE ONLY — verifies that invalid auth is blocked.
+ * No bypassing, attacking, brute-forcing, or credential stuffing.
+ *
+ * Enable/disable:  AUTH_TESTER_ENABLED=false  (default: true)
+ * Valid-token key: INTERNAL_TEST_SECRET        (must also be set on each app server)
+ */
+
+'use strict';
+
+const cron = require('node-cron');
+const axios = require('axios');
+const jwt   = require('jsonwebtoken');
+
+const TARGETS                = require('./auth-targets.config');
+const { runBruteForceTests } = require('./brute-force-tests');
+const { reportToDiscord }    = require('./discord-reporter');
+const ENABLED         = process.env.AUTH_TESTER_ENABLED !== 'false';
+const INTERNAL_SECRET = process.env.INTERNAL_TEST_SECRET || '';
+const TIMEOUT_MS      = 8000;
+
+// Prevents overlapping runs if a previous check is still going
+let _running = false;
+
+// ── Utilities ────────────────────────────────────────────────────────────────
+
+function log(msg) {
+    process.stdout.write(`[AuthTester] ${new Date().toISOString()} ${msg}\n`);
+}
+
+/**
+ * HTTP GET that never throws — returns { status, ok, error }.
+ * ok = true when status matches expectedStatus.
+ */
+async function probe(url, headers, expectedStatus) {
+    try {
+        const res = await axios.get(url, {
+            headers,
+            timeout: TIMEOUT_MS,
+            validateStatus: () => true, // don't throw on 4xx/5xx
+            maxRedirects: 0,
+        });
+        return { status: res.status, ok: res.status === expectedStatus };
+    } catch (err) {
+        return { status: null, ok: false, error: err.message };
+    }
+}
+
+/**
+ * Build a JWT with custom claims, signed with an intentionally wrong secret
+ * (unless a valid secret is passed explicitly — used only for the valid-token test).
+ */
+function makeJwt(overrides = {}, secret = 'wrong-secret-intentionally') {
+    const now = Math.floor(Date.now() / 1000);
+    return jwt.sign(
+        {
+            sub: 'auth-tester',
+            iss: 'cubsoftware-auth-tester',
+            aud: 'cubsoftware.site',
+            iat: now,
+            exp: now + 3600,
+            ...overrides,
+        },
+        secret,
+        { algorithm: 'HS256' }
+    );
+}
+
+// ── Per-target test suite ────────────────────────────────────────────────────
+
+async function runTargetTests(target) {
+    const url = target.baseUrl + target.protectedPath;
+    const results = {};
+
+    // 1. No auth → must be rejected
+    results.no_auth = await probe(url, {}, 401);
+
+    // 2. Random garbage bearer token → must be rejected
+    results.bad_token = await probe(
+        url,
+        { Authorization: 'Bearer thisisnotavalidtoken123' },
+        401
+    );
+
+    // 3. Expired JWT (exp 1 hour in the past) → must be rejected
+    const expiredToken = makeJwt({ exp: Math.floor(Date.now() / 1000) - 3600 });
+    results.expired_token = await probe(
+        url,
+        { Authorization: `Bearer ${expiredToken}` },
+        401
+    );
+
+    // 4. Tampered JWT (valid header+payload, broken signature) → must be rejected
+    const base = makeJwt({}, 'some-other-secret');
+    const [h, p] = base.split('.');
+    const tampered = `${h}.${p}.thisisaninvalidsignature`;
+    results.tampered_token = await probe(
+        url,
+        { Authorization: `Bearer ${tampered}` },
+        401
+    );
+
+    // 5. Wrong-issuer JWT (signed with wrong secret AND wrong iss) → must be rejected
+    const wrongIssuer = makeJwt({ iss: 'attacker.example.com' }, 'attacker-secret');
+    results.wrong_issuer = await probe(
+        url,
+        { Authorization: `Bearer ${wrongIssuer}` },
+        401
+    );
+
+    // 6. Valid internal-key → must be accepted (internal-key mode only)
+    if (target.authMode === 'internal-key' && INTERNAL_SECRET) {
+        results.valid_internal_key = await probe(
+            url,
+            { Authorization: `Bearer ${INTERNAL_SECRET}` },
+            200
+        );
+    } else {
+        results.valid_internal_key = {
+            skipped: true,
+            reason: target.authMode === 'session'
+                ? 'session-mode app — rejection tests are sufficient'
+                : 'INTERNAL_TEST_SECRET not set',
+        };
+    }
+
+    return results;
+}
+
+// ── Summary output ────────────────────────────────────────────────────────────
+
+function printSummary(target, results) {
+    let passed = 0, failed = 0, skipped = 0;
+
+    for (const [check, result] of Object.entries(results)) {
+        if (result.skipped) {
+            skipped++;
+            log(`  SKIP  ${check}: ${result.reason}`);
+        } else if (result.ok) {
+            passed++;
+            log(`  PASS  ${check} (HTTP ${result.status})`);
+        } else {
+            failed++;
+            const detail = result.error
+                ? `ERROR: ${result.error}`
+                : `got HTTP ${result.status ?? 'timeout'}`;
+            log(`  FAIL  ${check}: ${detail}`);
+        }
+    }
+
+    const overall = failed === 0 ? 'PASS' : 'FAIL';
+    log(`--- ${target.name} → ${overall}  passed:${passed}  failed:${failed}  skipped:${skipped}`);
+}
+
+// ── Main runner ───────────────────────────────────────────────────────────────
+
+async function runAllChecks() {
+    if (_running) {
+        log('Previous run still in progress — skipping this tick to prevent overlap');
+        return;
+    }
+    _running = true;
+
+    const timestamp = Date.now();
+    log('=== Hourly auth security check started ===');
+
+    const activeTargets = TARGETS.filter(t => !t.disabled);
+    const allAuthResults = {};   // target.name → results
+    const allBfResults   = {};   // target.name → results
+    let totalPass = 0, totalFail = 0;
+    let bfPass = 0, bfFail = 0;
+
+    // ── Auth tests ────────────────────────────────────────────────────────────
+    for (const target of activeTargets) {
+        log(`Testing auth: ${target.name} (${target.baseUrl + target.protectedPath})`);
+        try {
+            const results = await runTargetTests(target);
+            allAuthResults[target.name] = results;
+            printSummary(target, results);
+            const anyFailed = Object.values(results).some(r => !r.skipped && !r.ok);
+            anyFailed ? totalFail++ : totalPass++;
+        } catch (err) {
+            log(`ERROR running auth tests for ${target.name}: ${err.message}`);
+            allAuthResults[target.name] = { error: { ok: false, error: err.message } };
+            totalFail++;
+        }
+    }
+
+    // ── Brute-force resilience tests ──────────────────────────────────────────
+    log('\n=== Starting brute-force resilience checks ===');
+    for (const target of activeTargets) {
+        try {
+            const results = await runBruteForceTests(target);
+            allBfResults[target.name] = results;
+            const anyFailed = Object.values(results).some(r => !r.ok);
+            anyFailed ? bfFail++ : bfPass++;
+        } catch (err) {
+            log(`ERROR in brute-force tests for ${target.name}: ${err.message}`);
+            allBfResults[target.name] = { error: { ok: false, error: err.message } };
+            bfFail++;
+        }
+    }
+
+    log(`\n=== Full check done: auth ${totalPass}P/${totalFail}F | brute-force ${bfPass}P/${bfFail}F ===`);
+
+    // ── Discord report (clears channel first, then posts embeds) ──────────────
+    try {
+        await reportToDiscord({
+            targets: activeTargets,
+            authResults: allAuthResults,
+            bfResults: allBfResults,
+            timestamp,
+        });
+    } catch (err) {
+        log(`Discord report failed: ${err.message}`);
+    }
+
+    _running = false;
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+
+if (!ENABLED) {
+    log('AUTH_TESTER_ENABLED=false — service is disabled, exiting');
+    process.exit(0);
+}
+
+if (!INTERNAL_SECRET) {
+    log('WARNING: INTERNAL_TEST_SECRET not set — valid-key tests will be skipped');
+}
+
+// Run once immediately on startup (so you see results right away in PM2 logs)
+runAllChecks();
+
+// Then fire at the top of every hour: 1:00, 2:00, 3:00 …
+// Cron: "0 * * * *" = minute 0, every hour, every day
+cron.schedule('0 * * * *', () => {
+    log('Cron fired — top of the hour');
+    runAllChecks();
+}, { timezone: 'UTC' });
+
+log('Auth tester running. Schedule: every hour on the hour (UTC). Startup run in progress...');

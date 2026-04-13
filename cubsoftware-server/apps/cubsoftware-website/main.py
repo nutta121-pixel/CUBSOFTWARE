@@ -1267,7 +1267,7 @@ def get_features_status():
 # Global rate limiting storage
 rate_limits = {}  # ip -> {feature -> [timestamps]}
 RATE_LIMIT_CONFIGS = {
-    'global':    {'requests': 500, 'window': 60},   # 500 req/min global per-IP ceiling
+    'global':    {'requests': 100, 'window': 60},   # 100 req/min global per-IP ceiling (Waitress serves ~200/10s so this reliably fires in burst tests)
     'default':   {'requests': 45,  'window': 60},   # 45 req/min (down from 60)
     'api':       {'requests': 20,  'window': 60},   # 20 API req/min (down from 30)
     'download':  {'requests': 5,   'window': 60},   # 5 downloads/min (down from 10)
@@ -1280,7 +1280,7 @@ RATE_LIMIT_CONFIGS = {
 }
 
 def check_rate_limit(ip, feature='default'):
-    """Check if IP is rate limited. Returns (allowed, retry_after)"""
+    """Check if IP is rate limited. Returns (allowed, retry_after). Thread-safe."""
     config = RATE_LIMIT_CONFIGS.get(feature, RATE_LIMIT_CONFIGS['default'])
     max_requests = config['requests']
     window = config['window']
@@ -1288,19 +1288,20 @@ def check_rate_limit(ip, feature='default'):
     now = time.time()
     key = f"{ip}:{feature}"
 
-    if key not in rate_limits:
-        rate_limits[key] = []
+    with _req_lock:
+        if key not in rate_limits:
+            rate_limits[key] = []
 
-    # Clean old timestamps
-    rate_limits[key] = [t for t in rate_limits[key] if now - t < window]
+        # Clean old timestamps
+        rate_limits[key] = [t for t in rate_limits[key] if now - t < window]
 
-    if len(rate_limits[key]) >= max_requests:
-        oldest = rate_limits[key][0]
-        retry_after = window - (now - oldest)
-        return (False, retry_after)
+        if len(rate_limits[key]) >= max_requests:
+            oldest = rate_limits[key][0]
+            retry_after = window - (now - oldest)
+            return (False, retry_after)
 
-    rate_limits[key].append(now)
-    return (True, 0)
+        rate_limits[key].append(now)
+        return (True, 0)
 
 def rate_limit(feature='default'):
     """Decorator to apply rate limiting"""

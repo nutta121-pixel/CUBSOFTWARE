@@ -67,7 +67,7 @@ async function sequentialFlood(url, count, headers = {}, gapMs = 10) {
 // ── Test 1: Rate limit burst ──────────────────────────────────────────────────
 
 /**
- * Send 520 concurrent requests (above the 500/min limit).
+ * Send 120 concurrent requests (above the 100/min global limit).
  * At least some must return 429. If NONE do, rate limiting is not working.
  *
  * Note: Targets a lightweight endpoint (/api/auth/me) so the burst doesn't
@@ -75,9 +75,9 @@ async function sequentialFlood(url, count, headers = {}, gapMs = 10) {
  */
 async function testRateLimitBurst(target) {
     const url = target.baseUrl + '/api/auth/me';
-    log(`Rate limit burst: sending 520 concurrent requests to ${url}`);
+    log(`Rate limit burst: sending 120 concurrent requests to ${url}`);
 
-    const statuses = await flood(url, 520);
+    const statuses = await flood(url, 120);
     const count429 = statuses.filter(s => s === 429).length;
     const count200or401 = statuses.filter(s => s === 200 || s === 401).length;
 
@@ -87,12 +87,12 @@ async function testRateLimitBurst(target) {
     if (!passed) {
         log('  FAIL: No 429 responses — rate limiting may not be configured correctly');
     } else {
-        log(`  PASS: Rate limiter fired after ~500 requests`);
+        log(`  PASS: Rate limiter fired after ~100 requests`);
     }
 
     return {
         ok: passed,
-        detail: { total: 520, rate_limited: count429, allowed: count200or401 }
+        detail: { total: 120, rate_limited: count429, allowed: count200or401 }
     };
 }
 

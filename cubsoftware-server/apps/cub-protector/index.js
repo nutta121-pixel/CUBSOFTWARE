@@ -2459,10 +2459,12 @@ async function crBotJoinChannel(channelId, guildId) {
     }
 }
 
+let _crBotPeerDelay = 15000; // exponential backoff: 15s → 30s → 60s → … → 300s max
 function startCrBotPeer() {
     try {
         crBotPeerWs = new WebSocket(`ws://localhost:${CUBREACTIVE_WS_PORT}`);
         crBotPeerWs.on('open', () => {
+            _crBotPeerDelay = 15000; // reset backoff on successful connect
             crBotPeerWs.send(JSON.stringify({ type: 'BOT_REGISTER', guildId: CUSTOM_GUILD_ID }));
         });
         crBotPeerWs.on('message', async (msg) => {
@@ -2476,13 +2478,18 @@ function startCrBotPeer() {
             } catch (e) { console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBREACTIVE_PEER_046 — [CubReactive] Bot peer msg error:', e); }
         });
         crBotPeerWs.on('close', () => {
-            console.warn('[CubReactive] Bot peer WS disconnected, reconnecting in 15s...');
-            setTimeout(startCrBotPeer, 15000);
+            _crBotPeerDelay = Math.min(_crBotPeerDelay * 2, 300000); // double each time, cap at 5 min
+            console.warn(`[CubReactive] Bot peer WS disconnected, reconnecting in ${_crBotPeerDelay / 1000}s...`);
+            setTimeout(startCrBotPeer, _crBotPeerDelay);
         });
-        crBotPeerWs.on('error', (e) => { console.warn('[CubReactive] Bot peer WS error:', e.message); });
+        crBotPeerWs.on('error', (e) => {
+            // ECONNREFUSED just means CubReactive server isn't running yet — not a real error
+            if (e.code !== 'ECONNREFUSED') console.warn('[CubReactive] Bot peer WS error:', e.message);
+        });
     } catch (e) {
         console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBREACTIVE_BOTPEER_047 — [CubReactive] startCrBotPeer failed:', e.message);
-        setTimeout(startCrBotPeer, 15000);
+        _crBotPeerDelay = Math.min(_crBotPeerDelay * 2, 300000);
+        setTimeout(startCrBotPeer, _crBotPeerDelay);
     }
 }
 

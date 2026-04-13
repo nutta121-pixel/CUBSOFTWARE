@@ -54,8 +54,46 @@ async function startWebServer(client) {
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
+    // SQLite-backed session store — eliminates the MemoryStore production warning
+    // Uses the already-installed better-sqlite3, no extra packages needed
+    const BetterSqlite3 = require('better-sqlite3');
+    class SqliteSessionStore extends session.Store {
+        constructor() {
+            super();
+            const dbPath = path.join(__dirname, '../../../data/sessions.db');
+            this._db = new BetterSqlite3(dbPath);
+            this._db.exec(`CREATE TABLE IF NOT EXISTS sessions (
+                sid TEXT PRIMARY KEY,
+                data TEXT NOT NULL,
+                expires INTEGER NOT NULL
+            )`);
+            this._get  = this._db.prepare('SELECT data, expires FROM sessions WHERE sid = ?');
+            this._set  = this._db.prepare('INSERT OR REPLACE INTO sessions (sid, data, expires) VALUES (?, ?, ?)');
+            this._del  = this._db.prepare('DELETE FROM sessions WHERE sid = ?');
+            this._touch = this._db.prepare('UPDATE sessions SET expires = ? WHERE sid = ?');
+            this._prune = this._db.prepare('DELETE FROM sessions WHERE expires < ?');
+            setInterval(() => this._prune.run(Date.now()), 60 * 60 * 1000).unref(); // prune hourly
+        }
+        get(sid, cb) {
+            const row = this._get.get(sid);
+            if (!row || row.expires < Date.now()) { if (row) this._del.run(sid); return cb(null, null); }
+            try { cb(null, JSON.parse(row.data)); } catch (e) { cb(e); }
+        }
+        set(sid, sess, cb) {
+            const exp = sess.cookie?.expires ? new Date(sess.cookie.expires).getTime() : Date.now() + 7 * 24 * 60 * 60 * 1000;
+            this._set.run(sid, JSON.stringify(sess), exp);
+            cb(null);
+        }
+        destroy(sid, cb) { this._del.run(sid); cb(null); }
+        touch(sid, sess, cb) {
+            const exp = sess.cookie?.expires ? new Date(sess.cookie.expires).getTime() : Date.now() + 7 * 24 * 60 * 60 * 1000;
+            this._touch.run(exp, sid); cb(null);
+        }
+    }
+
     // Session middleware for OAuth
     app.use(session({
+        store: new SqliteSessionStore(),
         secret: process.env.SESSION_SECRET || 'default-secret-change-this',
         resave: false,
         saveUninitialized: false,

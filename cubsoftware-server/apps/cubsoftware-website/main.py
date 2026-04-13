@@ -769,7 +769,8 @@ def _after_request_logging(response):
         is_api = path.startswith('/api/')
         # High-frequency polling endpoints — suppress from logs to avoid spam
         is_poll = (path.startswith('/cubdeck/api/overlay/poll/') or
-                   path.startswith('/overlays/source/'))
+                   path.startswith('/overlays/source/') or
+                   (path == '/cubdeck/api/config' and status == 200))
 
         if not is_static and not is_poll:
             tag = 'API' if is_api else 'Request'

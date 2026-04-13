@@ -140,7 +140,7 @@ function updatePresence() {
 }
 
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
     const totalMembers = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
     const totalChannels = client.guilds.cache.reduce((a, g) => a + g.channels.cache.size, 0);
     const totalRoles = client.guilds.cache.reduce((a, g) => a + g.roles.cache.size, 0);

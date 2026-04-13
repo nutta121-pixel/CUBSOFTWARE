@@ -1115,7 +1115,7 @@ _TEAM_MEMBERS = [
         'discord_id': None,
         'name': 'Noah',
         'avatar': 'https://preview.redd.it/random-discord-logo-i-made-because-i-had-nothing-better-to-v0-msifhk1w0qb61.png?auto=webp&s=d660b840aa885401e15e9e380c4aa48a0ebf2220',
-        'role': 'Developer',
+        'role': 'Developer & Design',
         'badge': 'dev',
     },
 ]
@@ -1239,7 +1239,7 @@ def community_members_api():
                         else:
                             idx = (int(user_id) >> 22) % 6 if user_id.isdigit() else 0
                             avatar = f'https://cdn.discordapp.com/embed/avatars/{idx}.png'
-                        members.append({'name': name[:24], 'avatar': avatar})
+                        members.append({'name': name[:24], 'avatar': avatar, 'joinedAt': m.get('joined_at', '')})
                     if len(batch) < 1000:
                         break
                     after = batch[-1]['user']['id']
@@ -1250,7 +1250,7 @@ def community_members_api():
             except Exception as e:
                 app.logger.warning(f'[CommunityMembers] {e}')
     resp = jsonify(_community_members_cache['data'])
-    resp.headers['Cache-Control'] = 'public, max-age=600'
+    resp.headers['Cache-Control'] = 'no-cache'
     return resp
 
 # StreamerBot docs path — normpath removes the '..' so Werkzeug safe_join doesn't 500

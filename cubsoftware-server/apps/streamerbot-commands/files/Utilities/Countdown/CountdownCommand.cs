@@ -58,11 +58,12 @@ public class CPHInline
             if (string.IsNullOrEmpty(user)) user = "Someone";
 
             // ── Detect trigger source ─────────────────────────────
-            // Chat commands always populate "command"; channel point redemptions never do.
-            // Also check rewardId as a secondary signal.
-            CPH.TryGetArg("command",  out string command);
-            CPH.TryGetArg("rewardId", out string rewardId);
-            bool isChannelPoint = string.IsNullOrEmpty(command) || !string.IsNullOrEmpty(rewardId);
+            // rewardName is always present for channel point redemptions.
+            // command is always present for chat command triggers.
+            CPH.TryGetArg("rewardName", out string rewardName);
+            CPH.TryGetArg("rewardId",   out string rewardId);
+            CPH.TryGetArg("command",    out string command);
+            bool isChannelPoint = !string.IsNullOrEmpty(rewardName) || !string.IsNullOrEmpty(rewardId) || string.IsNullOrEmpty(command);
 
             // ── Handle "stop" (command only) ──────────────────────
             if (!isChannelPoint)
@@ -263,7 +264,7 @@ public class CPHInline
         return $"{seconds}s";
     }
 
-    /// <summary>Parse "60" or "5m" → seconds. Returns -1 if unparseable.</summary>
+    /// <summary>Parse "60", "60s", or "5m" → seconds. Returns -1 if unparseable.</summary>
     private int ParseDuration(string input)
     {
         string s = input.Trim().ToLower();
@@ -272,7 +273,12 @@ public class CPHInline
             string numPart = s.Substring(0, s.Length - 1).Trim();
             if (int.TryParse(numPart, out int mins) && mins > 0) return mins * 60;
         }
-        if (int.TryParse(s, out int secs) && secs > 0) return secs;
+        if (s.EndsWith("s"))
+        {
+            string numPart = s.Substring(0, s.Length - 1).Trim();
+            if (int.TryParse(numPart, out int secs) && secs > 0) return secs;
+        }
+        if (int.TryParse(s, out int plain) && plain > 0) return plain;
         return -1;
     }
 

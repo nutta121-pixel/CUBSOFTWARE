@@ -21,6 +21,7 @@ const CubDeck = (() => {
     };
 
     let _localSaveTime = 0; // timestamp of last save from THIS instance
+    const _csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
     // ─── Init ───
     function init(cfg) {
@@ -295,7 +296,7 @@ const CubDeck = (() => {
     function sendToOverlay(effect) {
         fetch('/cubdeck/api/overlay/push' + DECK_API_SUFFIX, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfToken },
             body: JSON.stringify(effect)
         }).catch(() => {});
     }
@@ -834,7 +835,7 @@ const CubDeck = (() => {
         // Persist via API
         fetch('/cubdeck/api/counter/' + btnId + DECK_API_SUFFIX, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfToken },
             body: JSON.stringify({ action: 'set', value: v })
         }).catch(() => {});
     }
@@ -859,7 +860,7 @@ const CubDeck = (() => {
         config._saved_at = _localSaveTime;
         fetch('/cubdeck/api/config' + DECK_API_SUFFIX, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': _csrfToken },
             body: JSON.stringify(config)
         }).then(() => {
             if (!silent) showToast('Saved', 'success');

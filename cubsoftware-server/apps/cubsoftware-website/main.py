@@ -537,8 +537,15 @@ def _before_request_logging():
     if request.path in ('/ip-ban-appeal', '/api/ip-ban-appeal'):
         return None
 
-    # Global rate limit — skip for static files (browser-cached, not exploitable)
-    _is_static_req = '/static/' in request.path or request.path.startswith('/static/')
+    # Global rate limit — skip assets and other non-exploitable paths
+    _p = request.path
+    _is_static_req = (
+        '/static/' in _p or          # /static/ and /cubdeck/static/ etc.
+        _p.startswith('/images/') or  # image directories
+        _p == '/favicon.ico' or
+        _p == '/robots.txt' or
+        _p == '/sitemap.xml'
+    )
     if ip and not _is_static_req:
         _allowed, _retry = check_rate_limit(ip, 'global')
         if not _allowed:
@@ -1446,7 +1453,7 @@ def get_features_status():
 # Global rate limiting storage
 rate_limits = {}  # ip -> {feature -> [timestamps]}
 RATE_LIMIT_CONFIGS = {
-    'global':    {'requests': 150, 'window': 60},   # 150 req/min global per-IP ceiling (static files are exempt; raised to avoid false positives for active users)
+    'global':    {'requests': 500, 'window': 60},   # 500 req/min global ceiling — assets exempt; real protection comes from per-route limits
     'default':   {'requests': 45,  'window': 60},   # 45 req/min (down from 60)
     'api':       {'requests': 20,  'window': 60},   # 20 API req/min (down from 30)
     'download':  {'requests': 5,   'window': 60},   # 5 downloads/min (down from 10)

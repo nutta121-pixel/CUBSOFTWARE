@@ -126,12 +126,17 @@
                 <!-- ── Quick Connect ── -->
                 <div class="cd-obs-quick-card">
                     <p class="cd-obs-quick-hint">
-                        Connect to OBS on this computer. In OBS go to<br>
-                        <em>Tools → WebSocket Server Settings</em> and copy the password.
+                        In OBS: <em>Tools → WebSocket Server Settings</em><br>
+                        ① Enable WebSocket server &nbsp;② Copy the password below
                     </p>
                     <div class="cd-form-row">
-                        <label>OBS Password</label>
-                        <input type="password" id="obsPassword" placeholder="Paste password from OBS (or leave blank)" class="cd-input">
+                        <label>Password</label>
+                        <input type="password" id="obsPassword" placeholder="Paste from OBS (leave blank if none set)" class="cd-input">
+                    </div>
+                    <div class="cd-form-row">
+                        <label>Port</label>
+                        <input type="number" id="obsQuickPort" placeholder="4455" value="4455" class="cd-input cd-input-sm" style="max-width:90px">
+                        <span style="font-size:11px;color:var(--text-sec);margin-left:6px">Default is 4455</span>
                     </div>
                     <div class="cd-form-row cd-form-row-inline">
                         <button class="cd-btn-primary" id="obsQuickConnectBtn" style="flex:1">Connect to OBS</button>

@@ -94,12 +94,15 @@ const CubDeck = (() => {
             dot.className = 'cd-obs-dot';
             label.textContent = 'OBS';
         });
-        obsClient.on('error', () => {
+        obsClient.on('error', (msg) => {
             dot.className = 'cd-obs-dot error';
             label.textContent = 'OBS ✗';
             const s = document.getElementById('obsConnectStatus');
-            if (s && s.textContent === 'Connecting…') {
-                s.textContent = 'Could not connect — is OBS running with WebSocket enabled?';
+            if (s) {
+                const isBlocked = msg && msg.includes('wss://');
+                s.textContent = isBlocked
+                    ? msg
+                    : 'Could not connect — In OBS: Tools → WebSocket Server Settings → Enable WebSocket server';
                 s.style.color = '#f87171';
             }
         });
@@ -746,6 +749,7 @@ const CubDeck = (() => {
         document.getElementById('obsProtocol').value = obs.protocol || 'ws';
         document.getElementById('obsHost').value = obs.host || 'localhost';
         document.getElementById('obsPort').value = obs.port || 4455;
+        document.getElementById('obsQuickPort').value = obs.port || 4455;
         document.getElementById('obsPassword').value = obs.password || '';
         if (location.protocol === 'https:') {
             document.getElementById('obsHttpsWarning').style.display = 'block';
@@ -907,17 +911,21 @@ const CubDeck = (() => {
         obsClient.on('authFail', () => {
             setObsStatus('Wrong password — check OBS WebSocket Server Settings', '#f87171');
         });
+        obsClient.on('scanning', (port) => {
+            setObsStatus('Port failed, trying port ' + port + '…', '#a0aec0');
+        });
 
         document.getElementById('obsQuickConnectBtn').addEventListener('click', () => {
             const pass = document.getElementById('obsPassword').value;
-            // Auto-fill advanced fields so saveSettings() captures the right values
+            const port = parseInt(document.getElementById('obsQuickPort').value) || 4455;
+            // Sync to advanced fields so saveSettings() captures the right values
             document.getElementById('obsHost').value = 'localhost';
-            document.getElementById('obsPort').value = '4455';
+            document.getElementById('obsPort').value = String(port);
             document.getElementById('obsProtocol').value = 'ws';
-            config.obs = { protocol: 'ws', host: 'localhost', port: 4455, password: pass };
+            config.obs = { protocol: 'ws', host: 'localhost', port, password: pass };
             saveConfig(true);
-            setObsStatus('Connecting…', '#a0aec0');
-            obsClient.connect('localhost', 4455, pass, 'ws');
+            setObsStatus('Connecting… (trying port ' + port + ')', '#a0aec0');
+            obsClient.connect('localhost', port, pass, 'ws');
         });
 
         // ── Advanced Connect ──

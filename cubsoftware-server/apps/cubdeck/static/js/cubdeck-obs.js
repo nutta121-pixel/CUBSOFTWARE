@@ -97,19 +97,24 @@ class OBSClient {
             if (alt) {
                 this._triedFallbackPort = true;
                 this._obsPort = alt;
-                console.log(`[OBS] Port failed, trying fallback port ${alt}…`);
+                this.emit('scanning', alt);
                 this.reconnectTimer = setTimeout(() => this._connect(), 1500);
                 return;
             }
         }
 
         this._reconnectAttempts = (this._reconnectAttempts || 0) + 1;
-        // On HTTPS, stop after 3 failed attempts — likely a config issue
-        if (location.protocol === 'https:' && this._reconnectAttempts >= 3) {
+
+        // On HTTPS, stop for non-localhost hosts — they can never work without wss://
+        const h = (this._obsHost || '').toLowerCase();
+        const isLocal = h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
+        if (location.protocol === 'https:' && !isLocal && this._reconnectAttempts >= 3) {
             this.autoReconnect = false;
-            this.emit('error', 'OBS connection failed. Open Settings to check your host/protocol.');
+            this.emit('error', 'Non-localhost hosts require wss:// on HTTPS. Use the OBS Browser Dock URL instead.');
             return;
         }
+
+        // Localhost on HTTPS: keep retrying — OBS WebSocket might just be starting
         // Exponential backoff: 5s, 10s, 20s, capped at 30s
         const delay = Math.min(5000 * Math.pow(2, this._reconnectAttempts - 1), 30000);
         this.reconnectTimer = setTimeout(() => this._connect(), delay);

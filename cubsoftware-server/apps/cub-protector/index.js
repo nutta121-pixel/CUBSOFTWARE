@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AuditLogEvent, AttachmentBuilder, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType, OverwriteType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AuditLogEvent, AttachmentBuilder, ActivityType } = require('discord.js');
 
 
 // Helper: creates an EmbedBuilder pre-loaded with CUB SOFTWARE branding footer
@@ -2718,6 +2718,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 // Hide from everyone by default, but allow speak/VAD so permitted users can talk
                 {
                     id: guild.id,
+                    type: OverwriteType.Role,
                     allow: [
                         PermissionsBitField.Flags.Speak,
                         PermissionsBitField.Flags.UseVAD,
@@ -2727,6 +2728,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 // Owner has full control
                 {
                     id: member.id,
+                    type: OverwriteType.Member,
                     allow: [
                         PermissionsBitField.Flags.ViewChannel,
                         PermissionsBitField.Flags.Connect,
@@ -2742,6 +2744,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 // Bot needs access
                 {
                     id: CLIENT_ID,
+                    type: OverwriteType.Member,
                     allow: [
                         PermissionsBitField.Flags.ViewChannel,
                         PermissionsBitField.Flags.Connect,
@@ -2756,6 +2759,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             for (const roleId of hubModRoles) {
                 permOverwrites.push({
                     id: roleId,
+                    type: OverwriteType.Role,
                     allow: [
                         PermissionsBitField.Flags.ViewChannel,
                         PermissionsBitField.Flags.Connect,
@@ -2772,6 +2776,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 if (!hubModRoles.includes(roleId)) {
                     permOverwrites.push({
                         id: roleId,
+                        type: OverwriteType.Role,
                         allow: [
                             PermissionsBitField.Flags.ViewChannel,
                             PermissionsBitField.Flags.Connect,
@@ -2788,6 +2793,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 if (userId !== member.id) {
                     permOverwrites.push({
                         id: userId,
+                        type: OverwriteType.Member,
                         allow: [
                             PermissionsBitField.Flags.ViewChannel,
                             PermissionsBitField.Flags.Connect,

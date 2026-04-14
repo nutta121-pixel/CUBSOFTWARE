@@ -2,9 +2,13 @@ import os
 import sys
 import re
 import json
+import time
 import secrets
 import urllib.parse
 from functools import wraps
+
+# Incremented when CSS/JS changes are deployed — forces browser cache bust
+_ASSET_VERSION = int(time.time())
 from flask import Blueprint, render_template, request, jsonify, session, redirect, current_app
 
 # Error reporter — uses the same bot token and incident channel as all other apps
@@ -167,7 +171,8 @@ def deck(discord_id, deck_name):
     config = load_deck_config(discord_id, deck_name)
     all_decks = list_user_decks(discord_id)
     return render_template('cubdeck-deck.html', user=user, config=config,
-                           deck_name=safe_deck_name(deck_name), all_decks=all_decks)
+                           deck_name=safe_deck_name(deck_name), all_decks=all_decks,
+                           v=_ASSET_VERSION)
 
 @cubdeck_bp.route('/deck/<discord_id>/<deck_name>/overlay')
 def deck_overlay(discord_id, deck_name):

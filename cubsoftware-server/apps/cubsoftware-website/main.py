@@ -537,8 +537,9 @@ def _before_request_logging():
     if request.path in ('/ip-ban-appeal', '/api/ip-ban-appeal'):
         return None
 
-    # Global rate limit — applied before IP exemptions so auth-tester can verify it works
-    if ip:
+    # Global rate limit — skip for static files (browser-cached, not exploitable)
+    _is_static_req = '/static/' in request.path or request.path.startswith('/static/')
+    if ip and not _is_static_req:
         _allowed, _retry = check_rate_limit(ip, 'global')
         if not _allowed:
             _resp = jsonify({'error': 'Too many requests', 'retry_after': int(_retry)})
@@ -1424,7 +1425,7 @@ def get_features_status():
 # Global rate limiting storage
 rate_limits = {}  # ip -> {feature -> [timestamps]}
 RATE_LIMIT_CONFIGS = {
-    'global':    {'requests': 100, 'window': 60},   # 100 req/min global per-IP ceiling (Waitress serves ~200/10s so this reliably fires in burst tests)
+    'global':    {'requests': 300, 'window': 60},   # 300 req/min global per-IP ceiling (exempts static files; accounts for CubDeck polling + normal browsing)
     'default':   {'requests': 45,  'window': 60},   # 45 req/min (down from 60)
     'api':       {'requests': 20,  'window': 60},   # 20 API req/min (down from 30)
     'download':  {'requests': 5,   'window': 60},   # 5 downloads/min (down from 10)

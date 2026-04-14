@@ -45,7 +45,7 @@ const CubDeck = (() => {
         setTimeout(refreshInstalledPlugins, 100);
 
         // Poll for config changes from other instances (browser ↔ dock sync)
-        setInterval(_pollConfig, 3000);
+        setInterval(_pollConfig, 10000);
     }
 
     function _pollConfig() {

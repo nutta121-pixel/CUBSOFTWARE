@@ -2068,7 +2068,6 @@ function startOwnershipLockTimer(channelId, lockMinutes) {
 }
 
 // Track channel index per hub for {index} template
-const hubChannelIndex = new Map();
 
 // ============================================================
 // Admin Helper Functions (Link/IP/Feature Management)
@@ -2702,10 +2701,11 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
         const hub = guildData.hubs[newState.channelId];
 
-        // Get or increment index
+        // Get or increment index (persisted so it survives bot restarts)
         const indexKey = newState.channelId;
-        const currentIndex = (hubChannelIndex.get(indexKey) || 0) + 1;
-        hubChannelIndex.set(indexKey, currentIndex);
+        if (!guildData.hub_indices) guildData.hub_indices = {};
+        const currentIndex = (guildData.hub_indices[indexKey] || 0) + 1;
+        guildData.hub_indices[indexKey] = currentIndex;
 
         // Build channel name from template
         let channelName = (hub.name_template || '🔊・{username}')
@@ -4735,10 +4735,12 @@ client.on('interactionCreate', async (interaction) => {
                 permissionOverwrites: [
                     {
                         id: guild.id,
+                        type: OverwriteType.Role,
                         allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.Connect],
                     },
                     {
                         id: CLIENT_ID,
+                        type: OverwriteType.Member,
                         allow: [
                             PermissionsBitField.Flags.ViewChannel,
                             PermissionsBitField.Flags.Connect,
@@ -5269,6 +5271,7 @@ client.on('interactionCreate', async (interaction) => {
 
         const oldOwnerId = channelData.owner_id;
         channelData.owner_id = targetUser.id;
+        channelData.banned_users = channelData.banned_users.filter(id => id !== targetUser.id);
         saveTempVoiceData(fullData);
 
         // Update permissions
@@ -5343,6 +5346,10 @@ client.on('interactionCreate', async (interaction) => {
 
         if (!hasVoicePermission(member, channelData, guildData)) {
             return interaction.reply({ content: 'You don\'t have permission to do this.', ephemeral: true });
+        }
+
+        if (channelData.banned_users.includes(targetUser.id)) {
+            return interaction.reply({ content: `<@${targetUser.id}> is banned from this channel. Use /voice-unban first.`, ephemeral: true });
         }
 
         if (!channelData.permitted_users.includes(targetUser.id)) {
@@ -8025,13 +8032,13 @@ client.on('interactionCreate', async (interaction) => {
 
         const ticketId = guildT.next_ticket_id++;
         const permissionOverwrites = [
-            { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-            { id: interaction.user.id, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
-            { id: CLIENT_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageChannels] },
+            { id: interaction.guild.id, type: OverwriteType.Role,   deny: [PermissionsBitField.Flags.ViewChannel] },
+            { id: interaction.user.id,  type: OverwriteType.Member, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] },
+            { id: CLIENT_ID,            type: OverwriteType.Member, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageChannels] },
         ];
 
         if (guildT.support_role) {
-            permissionOverwrites.push({ id: guildT.support_role, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+            permissionOverwrites.push({ id: guildT.support_role, type: OverwriteType.Role, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
         }
 
         // Find category and settings for this ticket type from panel config
@@ -8426,11 +8433,11 @@ client.on('interactionCreate', async (interaction) => {
 
             // Create modmail channel in the configured category
             const permissionOverwrites = [
-                { id: interaction.guild.id, deny: [PermissionsBitField.Flags.ViewChannel] },
-                { id: CLIENT_ID, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageChannels, PermissionsBitField.Flags.EmbedLinks] },
+                { id: interaction.guild.id, type: OverwriteType.Role,   deny: [PermissionsBitField.Flags.ViewChannel] },
+                { id: CLIENT_ID,            type: OverwriteType.Member, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages, PermissionsBitField.Flags.ManageChannels, PermissionsBitField.Flags.EmbedLinks] },
             ];
             if (guildMM.staff_role) {
-                permissionOverwrites.push({ id: guildMM.staff_role, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
+                permissionOverwrites.push({ id: guildMM.staff_role, type: OverwriteType.Role, allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages] });
             }
 
             const createOpts = {
@@ -11309,6 +11316,60 @@ process.on('uncaughtException', async (err) => {
         ).catch(() => {});
     }
     process.exit(1);
+});
+
+// ============================================================
+// Startup — restore temp VC state after bot restart
+// ============================================================
+client.once('ready', async () => {
+    console.log('[TempVC] Running startup cleanup...');
+    const data = loadTempVoiceData();
+    let changed = false;
+
+    for (const [guildId, guildData] of Object.entries(data.guilds)) {
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) continue;
+
+        const activeChannels = guildData.active_channels || {};
+        for (const [channelId, channelInfo] of Object.entries(activeChannels)) {
+            const channel = await guild.channels.fetch(channelId).catch(() => null);
+
+            if (!channel) {
+                // Channel deleted while bot was offline — remove stale entry
+                delete guildData.active_channels[channelId];
+                changed = true;
+                console.log(`[TempVC] Startup: removed stale entry for deleted channel ${channelId}`);
+                continue;
+            }
+
+            if (channel.members.size === 0) {
+                // Empty channel — delete or restart keep-alive
+                const hub = guildData.hubs[channelInfo.hub_id] || {};
+                const keepAlive = hub.keep_alive !== undefined ? hub.keep_alive : 0;
+                if (keepAlive === -1) continue; // configured to never delete
+                if (keepAlive === 0) {
+                    delete guildData.active_channels[channelId];
+                    changed = true;
+                    await channel.delete('Startup cleanup — empty temp VC').catch(() => {});
+                    console.log(`[TempVC] Startup: deleted empty channel "${channel.name}"`);
+                } else {
+                    // Restart timer with full duration (we lost the original start time)
+                    startKeepAliveTimer(channelId, keepAlive, guild);
+                    console.log(`[TempVC] Startup: restarted keep-alive for "${channel.name}"`);
+                }
+            } else {
+                // Channel has members — if owner is absent, make it claimable now
+                if (!channel.members.has(channelInfo.owner_id) && !channelInfo.claimable) {
+                    channelInfo.claimable = true;
+                    changed = true;
+                    console.log(`[TempVC] Startup: marked "${channel.name}" claimable (owner absent)`);
+                }
+            }
+        }
+    }
+
+    if (changed) saveTempVoiceData(data);
+    console.log('[TempVC] Startup cleanup complete');
 });
 
 // ============================================================

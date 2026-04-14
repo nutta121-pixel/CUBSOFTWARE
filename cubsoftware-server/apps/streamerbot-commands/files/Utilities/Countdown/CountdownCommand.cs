@@ -20,6 +20,9 @@
 //   config_countdown_obs_scene              (string) – OBS scene containing the text source
 //   config_countdown_obs_source             (string) – name of the Text GDI+ source to update
 //
+// OBS NOTE: StreamerBot must be connected to OBS WebSocket (Settings → OBS WebSocket in StreamerBot).
+//           The source shows MM:SS while counting and clears to empty when done or cancelled.
+//
 // USAGE:
 //   !countdown 60      → 60-second countdown (must be within min/max range)
 //   !countdown 5m      → 5-minute countdown  (must be within min/max range)
@@ -55,8 +58,11 @@ public class CPHInline
             if (string.IsNullOrEmpty(user)) user = "Someone";
 
             // ── Detect trigger source ─────────────────────────────
+            // Chat commands always populate "command"; channel point redemptions never do.
+            // Also check rewardId as a secondary signal.
+            CPH.TryGetArg("command",  out string command);
             CPH.TryGetArg("rewardId", out string rewardId);
-            bool isChannelPoint = !string.IsNullOrEmpty(rewardId);
+            bool isChannelPoint = string.IsNullOrEmpty(command) || !string.IsNullOrEmpty(rewardId);
 
             // ── Handle "stop" (command only) ──────────────────────
             if (!isChannelPoint)

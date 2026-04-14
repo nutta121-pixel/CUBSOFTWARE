@@ -87,14 +87,21 @@ const CubDeck = (() => {
             dot.className = 'cd-obs-dot connected';
             label.textContent = 'OBS ✓';
             showToast('Connected to OBS', 'success');
+            const s = document.getElementById('obsConnectStatus');
+            if (s) { s.textContent = 'Connected ✓'; s.style.color = '#4ade80'; }
         });
         obsClient.on('disconnected', () => {
             dot.className = 'cd-obs-dot';
             label.textContent = 'OBS';
         });
-        obsClient.on('error', (msg) => {
+        obsClient.on('error', () => {
             dot.className = 'cd-obs-dot error';
             label.textContent = 'OBS ✗';
+            const s = document.getElementById('obsConnectStatus');
+            if (s && s.textContent === 'Connecting…') {
+                s.textContent = 'Could not connect — is OBS running with WebSocket enabled?';
+                s.style.color = '#f87171';
+            }
         });
         obsClient.on('sceneChanged', () => refreshAllButtons());
         obsClient.on('streamStateChanged', () => refreshAllButtons());
@@ -889,21 +896,46 @@ const CubDeck = (() => {
         document.getElementById('settingsCancel').addEventListener('click', () => document.getElementById('settingsModal').classList.remove('open'));
         document.getElementById('settingsSave').addEventListener('click', saveSettings);
 
+        // ── Quick Connect (one-click, localhost) ──
+        function setObsStatus(msg, color) {
+            const s = document.getElementById('obsConnectStatus');
+            if (!s) return;
+            s.textContent = msg;
+            s.style.color = color || '';
+        }
+
+        obsClient.on('authFail', () => {
+            setObsStatus('Wrong password — check OBS WebSocket Server Settings', '#f87171');
+        });
+
+        document.getElementById('obsQuickConnectBtn').addEventListener('click', () => {
+            const pass = document.getElementById('obsPassword').value;
+            // Auto-fill advanced fields so saveSettings() captures the right values
+            document.getElementById('obsHost').value = 'localhost';
+            document.getElementById('obsPort').value = '4455';
+            document.getElementById('obsProtocol').value = 'ws';
+            config.obs = { protocol: 'ws', host: 'localhost', port: 4455, password: pass };
+            saveConfig(true);
+            setObsStatus('Connecting…', '#a0aec0');
+            obsClient.connect('localhost', 4455, pass, 'ws');
+        });
+
+        // ── Advanced Connect ──
         document.getElementById('obsConnectBtn').addEventListener('click', () => {
             const proto = document.getElementById('obsProtocol').value || 'ws';
             const host = document.getElementById('obsHost').value || 'localhost';
             const port = parseInt(document.getElementById('obsPort').value) || 4455;
             const pass = document.getElementById('obsPassword').value;
             if (isObsBlocked(host, proto)) {
-                document.getElementById('obsConnectStatus').textContent = 'Blocked — use localhost or wss://';
+                setObsStatus('Blocked on HTTPS — use localhost or wss://', '#f59e0b');
                 return;
             }
             obsClient.connect(host, port, pass, proto);
-            document.getElementById('obsConnectStatus').textContent = 'Connecting…';
+            setObsStatus('Connecting…', '#a0aec0');
         });
         document.getElementById('obsDisconnectBtn').addEventListener('click', () => {
             obsClient.disconnect();
-            document.getElementById('obsConnectStatus').textContent = 'Disconnected';
+            setObsStatus('Disconnected', '#a0aec0');
         });
 
         document.getElementById('twitchConnectBtn').addEventListener('click', () => {

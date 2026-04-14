@@ -78,6 +78,11 @@ class OBSClient {
         this.ws.onclose = (ev) => {
             this.connected = false;
             this.authenticated = false;
+            if (ev.code === 4009) {
+                // Wrong password — stop reconnecting, tell UI
+                this.autoReconnect = false;
+                this.emit('authFail');
+            }
             this.emit('disconnected', ev.code);
             if (this.autoReconnect) this._scheduleReconnect();
         };

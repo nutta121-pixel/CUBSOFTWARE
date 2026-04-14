@@ -538,6 +538,50 @@ html, body { height: 100%; overflow: hidden; }
     color: var(--text-sec);
 }
 
+/* ─── OBS Quick Connect ─── */
+.cd-obs-quick-card {
+    background: rgba(88, 101, 242, 0.06);
+    border: 1px solid rgba(88, 101, 242, 0.22);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+}
+.cd-obs-quick-hint {
+    font-size: 12px;
+    color: var(--text-sec);
+    margin: 0 0 12px;
+    line-height: 1.55;
+}
+.cd-obs-connect-status {
+    font-size: 12px;
+    margin-top: 8px;
+    min-height: 16px;
+    line-height: 1.4;
+}
+.cd-obs-advanced {
+    margin-bottom: 4px;
+}
+.cd-obs-advanced summary {
+    font-size: 12px;
+    color: var(--text-sec);
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 0;
+}
+.cd-obs-advanced summary:hover { color: var(--text); }
+.cd-obs-advanced-body {
+    padding-top: 10px;
+}
+.cd-obs-url-box {
+    background: rgba(88, 101, 242, 0.08);
+    border: 1px solid rgba(88, 101, 242, 0.25);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #a5b4fc;
+    line-height: 1.6;
+}
+
 /* ─── Plugin Manager ─── */
 .cd-plugin-card {
     display: flex;

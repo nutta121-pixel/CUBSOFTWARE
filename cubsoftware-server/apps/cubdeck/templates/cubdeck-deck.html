@@ -122,7 +122,54 @@
         <div class="cd-settings-body">
             <div class="cd-settings-section">
                 <h3>OBS Connection</h3>
-                <div style="background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:#a5b4fc;margin-bottom:12px;line-height:1.6">
+
+                <!-- ── Quick Connect ── -->
+                <div class="cd-obs-quick-card">
+                    <p class="cd-obs-quick-hint">
+                        Connect to OBS on this computer. In OBS go to<br>
+                        <em>Tools → WebSocket Server Settings</em> and copy the password.
+                    </p>
+                    <div class="cd-form-row">
+                        <label>OBS Password</label>
+                        <input type="password" id="obsPassword" placeholder="Paste password from OBS (or leave blank)" class="cd-input">
+                    </div>
+                    <div class="cd-form-row cd-form-row-inline">
+                        <button class="cd-btn-primary" id="obsQuickConnectBtn" style="flex:1">Connect to OBS</button>
+                        <button class="cd-btn-danger" id="obsDisconnectBtn">Disconnect</button>
+                    </div>
+                    <div id="obsConnectStatus" class="cd-obs-connect-status"></div>
+                </div>
+
+                <!-- ── Advanced ── -->
+                <details class="cd-obs-advanced">
+                    <summary>Advanced / network settings</summary>
+                    <div class="cd-obs-advanced-body">
+                        <div id="obsHttpsWarning" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);border-radius:8px;padding:10px 12px;font-size:12px;color:#f59e0b;margin-bottom:10px;line-height:1.6">
+                            ⚠️ On HTTPS only <strong>localhost</strong> works with <strong>ws://</strong>. To connect from another device, use the OBS Browser Dock URL below.
+                        </div>
+                        <div class="cd-form-row">
+                            <label>Protocol</label>
+                            <select id="obsProtocol" class="cd-select">
+                                <option value="ws">ws:// (default)</option>
+                                <option value="wss">wss:// (TLS)</option>
+                            </select>
+                        </div>
+                        <div class="cd-form-row">
+                            <label>Host</label>
+                            <input type="text" id="obsHost" placeholder="localhost" class="cd-input">
+                        </div>
+                        <div class="cd-form-row">
+                            <label>Port</label>
+                            <input type="number" id="obsPort" placeholder="4455" class="cd-input">
+                        </div>
+                        <div class="cd-form-row cd-form-row-inline">
+                            <button class="cd-btn-secondary" id="obsConnectBtn">Connect (Advanced)</button>
+                        </div>
+                    </div>
+                </details>
+
+                <!-- ── OBS Browser Dock ── -->
+                <div class="cd-obs-url-box" style="margin-top:14px">
                     📋 <strong>OBS Browser Dock URL</strong><br>
                     In OBS: <em>View → Docks → Custom Browser Docks</em><br>
                     <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
@@ -130,41 +177,13 @@
                         <button onclick="navigator.clipboard.writeText(document.getElementById('obsDockUrl').value).then(()=>this.textContent='✓').catch(()=>{}); setTimeout(()=>this.textContent='Copy',1500)" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(88,101,242,.4);background:rgba(88,101,242,.15);color:#a5b4fc;font-size:12px;cursor:pointer;white-space:nowrap">Copy</button>
                     </div>
                 </div>
-                <div style="background:rgba(88,101,242,.08);border:1px solid rgba(88,101,242,.25);border-radius:8px;padding:10px 12px;font-size:12px;color:#a5b4fc;margin-bottom:12px;line-height:1.6">
+                <div class="cd-obs-url-box" style="margin-top:8px">
                     🎬 <strong>OBS Overlay URL</strong><br>
-                    In OBS: <em>Sources → Browser Source</em> — set width <strong>1920</strong>, height <strong>1080</strong>, check <strong>Transparent background</strong><br>
+                    In OBS: <em>Sources → Browser Source</em> — width <strong>1920</strong>, height <strong>1080</strong>, transparent background<br>
                     <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
                         <input id="obsOverlayUrl" type="text" readonly class="cd-input" style="font-size:11px;flex:1" value="">
                         <button onclick="navigator.clipboard.writeText(document.getElementById('obsOverlayUrl').value).then(()=>this.textContent='✓').catch(()=>{}); setTimeout(()=>this.textContent='Copy',1500)" style="padding:6px 12px;border-radius:6px;border:1px solid rgba(88,101,242,.4);background:rgba(88,101,242,.15);color:#a5b4fc;font-size:12px;cursor:pointer;white-space:nowrap">Copy</button>
                     </div>
-                </div>
-                <div id="obsHttpsWarning" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);border-radius:8px;padding:10px 12px;font-size:12px;color:#f59e0b;margin-bottom:12px;line-height:1.6">
-                    ⚠️ <strong>Using via OBS Browser Dock?</strong> Set protocol to <strong>ws://</strong> and host to <strong>localhost</strong> — browsers allow localhost WebSocket connections even from HTTPS.<br>
-                    <strong>Using from a phone/tablet?</strong> OBS WebSocket cannot connect from an external HTTPS page without WSS configured in OBS. Use the OBS dock instead.
-                </div>
-                <div class="cd-form-row">
-                    <label>Protocol</label>
-                    <select id="obsProtocol" class="cd-select">
-                        <option value="ws">ws:// (default)</option>
-                        <option value="wss">wss:// (TLS)</option>
-                    </select>
-                </div>
-                <div class="cd-form-row">
-                    <label>Host</label>
-                    <input type="text" id="obsHost" placeholder="localhost" class="cd-input">
-                </div>
-                <div class="cd-form-row">
-                    <label>Port</label>
-                    <input type="number" id="obsPort" placeholder="4455" class="cd-input">
-                </div>
-                <div class="cd-form-row">
-                    <label>Password</label>
-                    <input type="password" id="obsPassword" placeholder="(leave blank if none)" class="cd-input">
-                </div>
-                <div class="cd-form-row cd-form-row-inline">
-                    <button class="cd-btn-secondary" id="obsConnectBtn">Connect</button>
-                    <button class="cd-btn-danger" id="obsDisconnectBtn">Disconnect</button>
-                    <span class="cd-settings-status" id="obsConnectStatus"></span>
                 </div>
             </div>
             <div class="cd-settings-section">

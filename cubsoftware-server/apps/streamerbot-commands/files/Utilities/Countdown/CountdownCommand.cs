@@ -26,8 +26,12 @@
 // USAGE:
 //   !countdown 60      → 60-second countdown (must be within min/max range)
 //   !countdown 5m      → 5-minute countdown  (must be within min/max range)
-//   !countdown stop    → cancel the active countdown
+//   !countdown stop    → cancel the active countdown AND clear the queue
 //   Channel Point      → always uses config_countdown_channel_point_duration
+//
+// QUEUE:
+//   If a countdown is already running, new requests are queued and run automatically
+//   when the current one finishes. !countdown stop clears the entire queue.
 
 using System;
 using System.Text;
@@ -79,8 +83,9 @@ public class CPHInline
                     if (CPH.GetGlobalVar<bool>("countdown_active", false))
                     {
                         CPH.SetGlobalVar("countdown_active", false, false);
-                        CPH.SendMessage($"⛔ Countdown cancelled by {user}.");
-                        LogCommand("!countdown stop", user, "Countdown cancelled");
+                        CPH.SetGlobalVar("countdown_queue", "", false);
+                        CPH.SendMessage($"⛔ Countdown cancelled by {user}. Queue cleared.");
+                        LogCommand("!countdown stop", user, "Countdown cancelled + queue cleared");
                     }
                     else
                     {
@@ -88,23 +93,6 @@ public class CPHInline
                     }
                     return true;
                 }
-            }
-
-            // ── Block duplicate countdowns ─────────────────────────
-            if (CPH.GetGlobalVar<bool>("countdown_active", false))
-            {
-                CPH.SendMessage($"@{user} a countdown is already running! Use !countdown stop to cancel it.");
-                return false;
-            }
-
-            // ── Cooldown check ────────────────────────────────────
-            long lastEnd = CPH.GetGlobalVar<long>("countdown_last_end", false);
-            long nowTs   = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            if (lastEnd > 0 && (nowTs - lastEnd) < cooldownSecs)
-            {
-                int waitLeft = (int)(cooldownSecs - (nowTs - lastEnd));
-                CPH.SendMessage($"@{user} countdown on cooldown! Try again in {waitLeft}s.");
-                return false;
             }
 
             // ── Determine duration ────────────────────────────────
@@ -143,6 +131,24 @@ public class CPHInline
                     CPH.SendMessage($"@{user} maximum countdown is {FormatDuration(maxSeconds)}.");
                     return false;
                 }
+            }
+
+            // ── Queue if a countdown is already running ───────────
+            if (CPH.GetGlobalVar<bool>("countdown_active", false))
+            {
+                int pos = AddToQueue(seconds, user);
+                CPH.SendMessage($"@{user} a countdown is running — your {FormatDuration(seconds)} is queued at position #{pos}!");
+                return true;
+            }
+
+            // ── Cooldown check ────────────────────────────────────
+            long lastEnd = CPH.GetGlobalVar<long>("countdown_last_end", false);
+            long nowTs   = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (lastEnd > 0 && (nowTs - lastEnd) < cooldownSecs)
+            {
+                int waitLeft = (int)(cooldownSecs - (nowTs - lastEnd));
+                CPH.SendMessage($"@{user} countdown on cooldown! Try again in {waitLeft}s.");
+                return false;
             }
 
             // ── Run it ────────────────────────────────────────────
@@ -228,11 +234,55 @@ public class CPHInline
         CPH.SetGlobalVar("countdown_active", false, false);
         CPH.SetGlobalVar("countdown_last_end", DateTimeOffset.UtcNow.ToUnixTimeSeconds(), false);
         LogCommand(trigger, user, $"Completed {seconds}s countdown");
+
+        // ── Run next in queue ─────────────────────────────────
+        RunNextInQueue();
     }
 
     // ═══════════════════════════════════════════════════════════
     // HELPERS
     // ═══════════════════════════════════════════════════════════
+
+    /// <summary>Add a countdown to the pending queue. Returns the 1-based queue position.</summary>
+    private int AddToQueue(int seconds, string user)
+    {
+        string existing = CPH.GetGlobalVar<string>("countdown_queue", false) ?? "";
+        string entry    = $"{seconds}|{user}";
+        int pos;
+        string updated;
+        if (string.IsNullOrEmpty(existing))
+        {
+            updated = entry;
+            pos     = 1;
+        }
+        else
+        {
+            updated = existing + "," + entry;
+            pos     = existing.Split(',').Length + 1;
+        }
+        CPH.SetGlobalVar("countdown_queue", updated, false);
+        return pos;
+    }
+
+    /// <summary>Dequeue the next countdown and run it, if any are waiting.</summary>
+    private void RunNextInQueue()
+    {
+        string queue = CPH.GetGlobalVar<string>("countdown_queue", false) ?? "";
+        if (string.IsNullOrEmpty(queue)) return;
+
+        string[] items   = queue.Split(new[] { ',' }, 2);
+        string   next    = items[0];
+        string   remaining = items.Length > 1 ? items[1] : "";
+        CPH.SetGlobalVar("countdown_queue", remaining, false);
+
+        string[] parts = next.Split(new[] { '|' }, 2);
+        if (!int.TryParse(parts[0], out int nextSeconds)) return;
+        string nextUser = parts.Length > 1 ? parts[1] : "Someone";
+
+        CPH.Wait(1500);
+        CPH.SendMessage($"▶️ Next up: {FormatDuration(nextSeconds)} countdown for {nextUser}!");
+        RunCountdown(nextSeconds, nextUser, false);
+    }
 
     /// <summary>Update a Text GDI+ source, silently ignoring OBS errors.</summary>
     private void SetObsText(string scene, string source, string text)

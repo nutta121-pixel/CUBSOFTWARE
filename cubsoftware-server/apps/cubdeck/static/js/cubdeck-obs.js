@@ -37,12 +37,15 @@ class OBSClient {
     }
 
     connect(host, port, password, proto) {
-        this._obsHost = host || 'localhost';
+        this._obsHost = host || '127.0.0.1';
         this._obsPort = port || 4455;
         this._obsPass = password || '';
         this._obsProto = proto || 'ws';
         this._reconnectAttempts = 0;
         this._triedFallbackPort = false;
+        this._triedAltHost = false;
+        this._origHost = this._obsHost;
+        this._origPort = port || 4455;
         this.autoReconnect = true;
         this._connect();
     }
@@ -91,21 +94,44 @@ class OBSClient {
     _scheduleReconnect() {
         clearTimeout(this.reconnectTimer);
 
-        // On first failure: try the alternate port (4455 ↔ 4456) before backing off
+        // Step 1: try alternate port (4455 ↔ 4456) on same host
         if (!this._triedFallbackPort) {
-            const alt = this._obsPort === 4455 ? 4456 : this._obsPort === 4456 ? 4455 : null;
+            const alt = this._origPort === 4455 ? 4456 : this._origPort === 4456 ? 4455 : null;
             if (alt) {
                 this._triedFallbackPort = true;
                 this._obsPort = alt;
-                this.emit('scanning', alt);
+                this._obsHost = this._origHost;
+                this.emit('scanning', `${this._obsHost}:${alt}`);
                 this.reconnectTimer = setTimeout(() => this._connect(), 1500);
                 return;
             }
         }
 
+        // Step 2: if started with 'localhost', retry with '127.0.0.1' (bypasses PNA in OBS CEF)
+        if (!this._triedAltHost && this._origHost === 'localhost') {
+            this._triedAltHost = true;
+            this._obsHost = '127.0.0.1';
+            this._obsPort = this._origPort;
+            this._triedFallbackPort = false; // allow port fallback on new host too
+            this.emit('scanning', `127.0.0.1:${this._origPort}`);
+            this.reconnectTimer = setTimeout(() => this._connect(), 1500);
+            return;
+        }
+
+        // Step 3: if started with '127.0.0.1', retry with 'localhost'
+        if (!this._triedAltHost && this._origHost === '127.0.0.1') {
+            this._triedAltHost = true;
+            this._obsHost = 'localhost';
+            this._obsPort = this._origPort;
+            this._triedFallbackPort = false;
+            this.emit('scanning', `localhost:${this._origPort}`);
+            this.reconnectTimer = setTimeout(() => this._connect(), 1500);
+            return;
+        }
+
         this._reconnectAttempts = (this._reconnectAttempts || 0) + 1;
 
-        // On HTTPS, stop for non-localhost hosts — they can never work without wss://
+        // For non-local hosts on HTTPS, give up after 3 attempts — they can't work without wss://
         const h = (this._obsHost || '').toLowerCase();
         const isLocal = h === 'localhost' || h === '127.0.0.1' || h === '[::1]';
         if (location.protocol === 'https:' && !isLocal && this._reconnectAttempts >= 3) {
@@ -114,7 +140,6 @@ class OBSClient {
             return;
         }
 
-        // Localhost on HTTPS: keep retrying — OBS WebSocket might just be starting
         // Exponential backoff: 5s, 10s, 20s, capped at 30s
         const delay = Math.min(5000 * Math.pow(2, this._reconnectAttempts - 1), 30000);
         this.reconnectTimer = setTimeout(() => this._connect(), delay);

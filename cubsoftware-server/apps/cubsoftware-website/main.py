@@ -896,7 +896,28 @@ def _add_security_headers(response):
     # Content Security Policy — allow our own assets + Google Fonts + Discord CDN for avatars
     if not request.path.startswith('/static/'):
         _path = request.path.rstrip('/')
-        if _path == '/apps/multi-twitch':
+        if _path.startswith('/cubdeck'):
+            # CubDeck needs WebSocket to OBS (localhost) + Twitch APIs + various plugins
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' "
+                    "https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'self' https://fonts.gstatic.com; "
+                "img-src 'self' data: https://cdn.discordapp.com https://static-cdn.jtvnw.net "
+                    "https://cubsoftware.site https://i.imgur.com; "
+                "connect-src 'self' "
+                    "ws://localhost:* wss://localhost:* "
+                    "ws://127.0.0.1:* wss://127.0.0.1:* "
+                    "https://api.twitch.tv wss://irc-ws.chat.twitch.tv "
+                    "https://api.github.com; "
+                "worker-src 'self' blob:; "
+                "object-src 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self'; "
+                "frame-ancestors 'none';"
+            )
+        elif _path == '/apps/multi-twitch':
             # Multi-Twitch needs Twitch player iframes and chat
             response.headers['Content-Security-Policy'] = (
                 "default-src 'self'; "

@@ -911,21 +911,21 @@ const CubDeck = (() => {
         obsClient.on('authFail', () => {
             setObsStatus('Wrong password — check OBS WebSocket Server Settings', '#f87171');
         });
-        obsClient.on('scanning', (port) => {
-            setObsStatus('Port failed, trying port ' + port + '…', '#a0aec0');
+        obsClient.on('scanning', (addr) => {
+            setObsStatus('Trying ' + addr + '…', '#a0aec0');
         });
 
         document.getElementById('obsQuickConnectBtn').addEventListener('click', () => {
             const pass = document.getElementById('obsPassword').value;
             const port = parseInt(document.getElementById('obsQuickPort').value) || 4455;
-            // Sync to advanced fields so saveSettings() captures the right values
-            document.getElementById('obsHost').value = 'localhost';
+            // Use 127.0.0.1 — more reliable in OBS CEF than 'localhost' (avoids PNA issues)
+            document.getElementById('obsHost').value = '127.0.0.1';
             document.getElementById('obsPort').value = String(port);
             document.getElementById('obsProtocol').value = 'ws';
-            config.obs = { protocol: 'ws', host: 'localhost', port, password: pass };
+            config.obs = { protocol: 'ws', host: '127.0.0.1', port, password: pass };
             saveConfig(true);
-            setObsStatus('Connecting… (trying port ' + port + ')', '#a0aec0');
-            obsClient.connect('localhost', port, pass, 'ws');
+            setObsStatus('Scanning… trying 127.0.0.1:' + port, '#a0aec0');
+            obsClient.connect('127.0.0.1', port, pass, 'ws');
         });
 
         // ── Advanced Connect ──

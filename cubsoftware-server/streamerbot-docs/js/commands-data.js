@@ -1724,6 +1724,82 @@ const commandsData = {
     },
 
     // ============== UTILITY COMMANDS ==============
+    "countdown": {
+        name: "Countdown",
+        command: "!countdown",
+        category: "Utility",
+        categoryAnchor: "utility",
+        status: "Completed",
+        badges: ["Utility", "Channel Points"],
+        description: "Start a live chat countdown. Works with both chat commands and Channel Point redemptions. Announcements at smart intervals, ending with a 5-4-3-2-1 finish.",
+        features: [
+            "<strong>Dual Trigger</strong> – Works as a chat command (!countdown) and as a Channel Point reward",
+            "<strong>Flexible Duration</strong> – Accepts seconds (60) or minutes (5m), up to 10 minutes",
+            "<strong>Smart Announcements</strong> – Calls out remaining time at key milestones so chat stays informed",
+            "<strong>Cancellable</strong> – Type !countdown stop at any time to cancel a running countdown",
+            "<strong>Spam Protection</strong> – Cooldown between countdowns and blocks duplicate starts",
+            "<strong>Discord Logging</strong> – Start and finish events logged to Discord"
+        ],
+        commands: [
+            { cmd: "!countdown 60",   desc: "Start a 60-second countdown (within configured range)" },
+            { cmd: "!countdown 5m",   desc: "Start a 5-minute countdown (within configured range)" },
+            { cmd: "!countdown stop", desc: "Cancel the active countdown" },
+            { cmd: "!timer",          desc: "Alias for !countdown" },
+            { cmd: "!cd",             desc: "Alias for !countdown" }
+        ],
+        config: [
+            { variable: "config_countdown_min",                    default: "10",             desc: "Minimum seconds a viewer can request via the command" },
+            { variable: "config_countdown_max",                    default: "600",            desc: "Maximum seconds a viewer can request via the command" },
+            { variable: "config_countdown_channel_point_duration", default: "60",             desc: "Fixed duration (seconds) used when triggered by a channel point — set this to whatever you want" },
+            { variable: "config_countdown_cooldown",               default: "30",             desc: "Seconds required between countdowns to prevent spam" },
+            { variable: "config_countdown_obs_enabled",            default: "false",          desc: "Set to true to update an OBS Text GDI+ source with the live countdown" },
+            { variable: "config_countdown_obs_scene",              default: "Your Scene",     desc: "Name of the OBS scene that contains the text source" },
+            { variable: "config_countdown_obs_source",             default: "Countdown Timer", desc: "Name of the Text GDI+ source — shows MM:SS while running, clears when done or cancelled" }
+        ],
+        examples: [
+            {
+                title: "Command — 60 Seconds",
+                lines: [
+                    { type: "user", text: "!countdown 60" },
+                    { type: "bot",  text: "⏳ Countdown starting! 1m on the clock!" },
+                    { type: "bot",  text: "⏳ 30s remaining!" },
+                    { type: "bot",  text: "⏳ 10s remaining!" },
+                    { type: "bot",  text: "⏳ 5... 4... 3... 2... 1..." },
+                    { type: "bot",  text: "🎉 Time's up!" }
+                ]
+            },
+            {
+                title: "Channel Point (streamer set to 2 minutes)",
+                lines: [
+                    { type: "user", text: "[redeems \"Start Countdown\"]" },
+                    { type: "bot",  text: "⏳ Countdown starting! 2m on the clock!" },
+                    { type: "bot",  text: "⏳ 1m remaining!" },
+                    { type: "bot",  text: "⏳ 30s remaining!" },
+                    { type: "bot",  text: "⏳ 10s remaining!" },
+                    { type: "bot",  text: "🎉 Time's up!" }
+                ]
+            },
+            {
+                title: "Out of Range",
+                lines: [
+                    { type: "user", text: "!countdown 5" },
+                    { type: "bot",  text: "@User minimum countdown is 10s." }
+                ]
+            },
+            {
+                title: "Cancelling",
+                lines: [
+                    { type: "user", text: "!countdown 5m" },
+                    { type: "bot",  text: "⏳ Countdown starting! 5m on the clock!" },
+                    { type: "user", text: "!countdown stop" },
+                    { type: "bot",  text: "⛔ Countdown cancelled by StreamerName." }
+                ]
+            }
+        ],
+        related: ["welcome", "shoutout", "discord-logging"],
+        github: "https://github.com/HexEchoTV/CUBSOFTWARE/tree/main/cubsoftware-server/apps/streamerbot-commands/files/Utilities/Countdown"
+    },
+
     "discord-logging": {
         name: "Discord Logging",
         command: null,

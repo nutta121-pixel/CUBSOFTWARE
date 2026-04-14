@@ -379,6 +379,21 @@ public class CPHInline
         CPH.SetGlobalVar("config_wordle_obs_source", "Wordle Display", true); // The browser source name in OBS
         CPH.SetGlobalVar("config_wordle_auto_show_hide", true, true);       // Enable/disable auto show/hide
 
+        // ===== UTILITY COMMANDS =====
+
+        // Countdown Command
+        CPH.SetGlobalVar("config_countdown_min",                    10,    true); // Minimum seconds viewers can request via !countdown
+        CPH.SetGlobalVar("config_countdown_max",                    600,   true); // Maximum seconds viewers can request via !countdown
+        CPH.SetGlobalVar("config_countdown_channel_point_duration", 60,    true); // Fixed duration used when triggered by a channel point
+        CPH.SetGlobalVar("config_countdown_cooldown",               30,    true); // Seconds required between countdowns
+
+        // Countdown OBS Text GDI+ integration (optional)
+        // Set config_countdown_obs_enabled to true, then fill in your scene and source names.
+        // The source will show a live MM:SS timer while the countdown runs and clear when done.
+        CPH.SetGlobalVar("config_countdown_obs_enabled", false,            true); // true = update OBS text, false = chat only
+        CPH.SetGlobalVar("config_countdown_obs_scene",   "Your Scene",     true); // Name of the OBS scene containing the text source
+        CPH.SetGlobalVar("config_countdown_obs_source",  "Countdown Timer", true); // Name of the Text GDI+ source
+
         // ===== TWITCH API CONFIGURATION =====
         // Get these from: https://twitchtokengenerator.com/
         //

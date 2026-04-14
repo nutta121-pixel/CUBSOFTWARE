@@ -1446,7 +1446,7 @@ def get_features_status():
 # Global rate limiting storage
 rate_limits = {}  # ip -> {feature -> [timestamps]}
 RATE_LIMIT_CONFIGS = {
-    'global':    {'requests': 300, 'window': 60},   # 300 req/min global per-IP ceiling (exempts static files; accounts for CubDeck polling + normal browsing)
+    'global':    {'requests': 150, 'window': 60},   # 150 req/min global per-IP ceiling (static files are exempt; raised to avoid false positives for active users)
     'default':   {'requests': 45,  'window': 60},   # 45 req/min (down from 60)
     'api':       {'requests': 20,  'window': 60},   # 20 API req/min (down from 30)
     'download':  {'requests': 5,   'window': 60},   # 5 downloads/min (down from 10)

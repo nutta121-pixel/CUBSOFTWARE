@@ -21,7 +21,7 @@ module.exports = [
         prodUrl:          'https://cubsoftware.site',
         protectedPath:    '/api/protected',
         authMode:         'internal-key',   // supports INTERNAL_TEST_SECRET bearer check
-        rateLimitBurst:   120,              // Flask/Waitress: ~100 req limit, 120 burst is enough to trigger it
+        rateLimitBurst:   160,              // Flask/Waitress: ~150 req limit, 160 burst is enough to trigger it
         disabled:         false,
     },
     {

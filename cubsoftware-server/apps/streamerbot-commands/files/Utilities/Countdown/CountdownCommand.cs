@@ -342,7 +342,7 @@ public class CPHInline
     private void LogCommand(string commandName, string user, string details = "")
     {
         string message = $"**User:** {user}";
-        if (!string.IsNullOrEmpty(details)) message += $"\\n**Details:** {details}";
+        if (!string.IsNullOrEmpty(details)) message += $"\n**Details:** {details}";
         SendToDiscord($"Command: {commandName}", message, COLOR_COMMAND, "COMMAND");
     }
 

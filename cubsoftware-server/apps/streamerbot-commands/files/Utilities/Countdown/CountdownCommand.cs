@@ -65,6 +65,7 @@ public class CPHInline
             CPH.TryGetArg("command",    out string command);
             bool isChannelPoint = !string.IsNullOrEmpty(rewardName) || !string.IsNullOrEmpty(rewardId) || string.IsNullOrEmpty(command);
 
+
             // ── Handle "stop" (command only) ──────────────────────
             if (!isChannelPoint)
             {

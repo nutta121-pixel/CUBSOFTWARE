@@ -767,6 +767,26 @@ function checkBotPermissions(guild) {
     };
 }
 
+// Map Discord API errors to plain-English reasons
+function friendlyError(e) {
+    const code = e.code ?? e.status;
+    switch (code) {
+        case 50013: return 'Bot is missing permission to delete this';
+        case 50001: return 'Bot does not have access to this resource';
+        case 50003: return 'Cannot delete a DM channel';
+        case 10003: return 'Channel no longer exists (already deleted)';
+        case 10011: return 'Role no longer exists (already deleted)';
+        case 10007: return 'Member not found in guild';
+        case 30002: return 'Max channels reached on this server';
+        case 20001: return 'Bots cannot use this endpoint';
+        default:
+            if (e.message?.includes('Missing Access') || e.message?.includes('Missing Permissions')) return 'Bot is missing permission to delete this';
+            if (e.message?.includes('Unknown Channel')) return 'Channel no longer exists (already deleted)';
+            if (e.message?.includes('Unknown Role')) return 'Role no longer exists (already deleted)';
+            return e.message || 'Unknown error';
+    }
+}
+
 // Progress bar helper
 function createProgressBar(current, total, width = 20) {
     const percentage = Math.round((current / total) * 100);
@@ -1418,6 +1438,8 @@ async function handleClean(interaction) {
 
 async function performClean(interaction) {
     const guild = interaction.guild;
+    const userId = interaction.user.id;
+    const startTime = Date.now();
 
     const statusEmbed = new EmbedBuilder()
         .setTitle('🗑️ Cleaning Server...')
@@ -1425,30 +1447,54 @@ async function performClean(interaction) {
         .setDescription('Please wait...')
         .addFields({ name: 'Status', value: 'Starting...', inline: false });
 
-    await interaction.editReply({ embeds: [statusEmbed], components: [] });
+    try { await interaction.editReply({ embeds: [statusEmbed], components: [] }); } catch (_) {}
+
+    const failedChannels = []; // { name, reason }
+    const failedRoles = [];    // { name, reason }
+    const skippedRoles = [];   // managed or above bot
+    let deletedChannels = 0, deletedRoles = 0;
+    let textCount = 0, voiceCount = 0, categoryCount = 0, otherCount = 0;
 
     try {
         // Delete channels
-        statusEmbed.setFields({ name: 'Status', value: '🗑️ Deleting channels...', inline: false });
-        await interaction.editReply({ embeds: [statusEmbed] });
+        try {
+            statusEmbed.setFields({ name: 'Status', value: '🗑️ Deleting channels...', inline: false });
+            await interaction.editReply({ embeds: [statusEmbed] });
+        } catch (_) {}
 
-        let deletedChannels = 0;
         const channels = guild.channels.cache.filter(c => c.deletable);
         for (const [, channel] of channels) {
             try {
                 await channel.delete();
                 deletedChannels++;
+                if (channel.type === ChannelType.GuildText || channel.type === ChannelType.GuildAnnouncement) textCount++;
+                else if (channel.type === ChannelType.GuildVoice || channel.type === ChannelType.GuildStageVoice) voiceCount++;
+                else if (channel.type === ChannelType.GuildCategory) categoryCount++;
+                else otherCount++;
                 await sleep(500);
             } catch (e) {
+                failedChannels.push({ name: channel.name, reason: friendlyError(e) });
                 console.log(`Could not delete channel: ${e.message}`);
             }
         }
 
         // Delete roles
-        statusEmbed.setFields({ name: 'Status', value: '🗑️ Deleting roles...', inline: false });
-        await interaction.editReply({ embeds: [statusEmbed] });
+        try {
+            statusEmbed.setFields({ name: 'Status', value: '🗑️ Deleting roles...', inline: false });
+            await interaction.editReply({ embeds: [statusEmbed] });
+        } catch (_) {}
 
-        let deletedRoles = 0;
+        guild.roles.cache.forEach(r => {
+            if (r.id !== guild.id && (r.managed || r.position >= guild.members.me.roles.highest.position)) {
+                skippedRoles.push({
+                    name: r.name,
+                    reason: r.managed
+                        ? 'Managed by an integration — Discord does not allow manual deletion'
+                        : 'Positioned above the bot\'s role — move the bot\'s role higher to delete this'
+                });
+            }
+        });
+
         const roles = guild.roles.cache.filter(r =>
             r.id !== guild.id &&
             !r.managed &&
@@ -1460,32 +1506,120 @@ async function performClean(interaction) {
                 deletedRoles++;
                 await sleep(300);
             } catch (e) {
+                failedRoles.push({ name: role.name, reason: friendlyError(e) });
                 console.log(`Could not delete role: ${e.message}`);
             }
         }
 
-        // Create a general channel to send completion message
-        const generalChannel = await guild.channels.create({
-            name: 'general',
+        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+        const hasIssues = failedChannels.length > 0 || failedRoles.length > 0;
+
+        const statusChannel = await guild.channels.create({
+            name: 'cleanme-status',
             type: ChannelType.GuildText,
-            reason: 'CleanMe Bot - Created after clean'
+            reason: 'CleanMe Bot - Status after clean'
         });
 
         const doneEmbed = new EmbedBuilder()
-            .setTitle('✅ Server Cleaned!')
-            .setColor(0x00FF00)
-            .setDescription('Server has been wiped clean.')
+            .setTitle(hasIssues ? '⚠️ Server Cleaned (with issues)' : '✅ Server Cleaned!')
+            .setColor(hasIssues ? 0xFFA500 : 0x00FF00)
+            .setDescription(hasIssues
+                ? 'The server has been cleaned, but some items could not be deleted. See below for details.'
+                : 'The server has been fully wiped clean.')
             .addFields(
                 { name: 'Channels Deleted', value: `${deletedChannels}`, inline: true },
-                { name: 'Roles Deleted', value: `${deletedRoles}`, inline: true }
-            )
-            .setTimestamp();
+                { name: 'Roles Deleted', value: `${deletedRoles}`, inline: true },
+                { name: 'Duration', value: `${duration}s`, inline: true }
+            );
 
-        console.log(`[Clean] Completed for "${guild.name}" — ${deletedChannels} channels deleted, ${deletedRoles} roles deleted`);
-        await generalChannel.send({ embeds: [doneEmbed] });
+        const typeBreakdown = [
+            textCount > 0 ? `• ${textCount} text` : null,
+            voiceCount > 0 ? `• ${voiceCount} voice` : null,
+            categoryCount > 0 ? `• ${categoryCount} categories` : null,
+            otherCount > 0 ? `• ${otherCount} other` : null,
+        ].filter(Boolean).join('\n');
+        if (typeBreakdown) {
+            doneEmbed.addFields({ name: 'Channel Breakdown', value: typeBreakdown, inline: false });
+        }
+
+        if (skippedRoles.length > 0) {
+            const skippedText = skippedRoles.slice(0, 10).map(r => `• **${r.name}** — ${r.reason}`).join('\n')
+                + (skippedRoles.length > 10 ? `\n... and ${skippedRoles.length - 10} more` : '');
+            doneEmbed.addFields({
+                name: `⏭️ Skipped Roles (${skippedRoles.length})`,
+                value: skippedText,
+                inline: false
+            });
+        }
+
+        if (failedChannels.length > 0) {
+            const failText = failedChannels.slice(0, 10).map(f => `• \`${f.name}\` — ${f.reason}`).join('\n')
+                + (failedChannels.length > 10 ? `\n... and ${failedChannels.length - 10} more` : '');
+            doneEmbed.addFields({
+                name: `❌ Channels That Failed (${failedChannels.length})`,
+                value: failText + '\n\n**To fix:** Manually delete them, or give the bot **Administrator** permission and run `/clean` again.',
+                inline: false
+            });
+        }
+
+        if (failedRoles.length > 0) {
+            const failText = failedRoles.slice(0, 10).map(f => `• \`${f.name}\` — ${f.reason}`).join('\n')
+                + (failedRoles.length > 10 ? `\n... and ${failedRoles.length - 10} more` : '');
+            doneEmbed.addFields({
+                name: `❌ Roles That Failed (${failedRoles.length})`,
+                value: failText + '\n\n**To fix:** Manually delete them, or move the bot\'s role above them and run `/clean` again.',
+                inline: false
+            });
+        }
+
+        doneEmbed.addFields({
+            name: '💡 Next Steps',
+            value: '• Use `/save` to back up the current (clean) state\n• Use `/copy <serverid>` to restore a saved configuration\n• Delete this channel when you\'re done',
+            inline: false
+        }).setTimestamp();
+
+        console.log(`[Clean] Completed for "${guild.name}" in ${duration}s — ${deletedChannels} channels, ${deletedRoles} roles deleted${hasIssues ? `, ${failedChannels.length} channel(s)/${failedRoles.length} role(s) failed` : ''}`);
+        await statusChannel.send({ content: `<@${userId}>`, embeds: [doneEmbed] });
 
     } catch (error) {
         console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Clean failed in "${guild.name}": ${error.message}`);
+
+        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+
+        const errorEmbed = new EmbedBuilder()
+            .setTitle('❌ Clean Failed')
+            .setColor(0xFF0000)
+            .setDescription(`Something went wrong during the clean after **${duration}s**:\n\`\`\`${error.message}\`\`\``)
+            .addFields(
+                {
+                    name: 'Progress Before Failure',
+                    value: `• ${deletedChannels} channel(s) deleted\n• ${deletedRoles} role(s) deleted`,
+                    inline: false
+                },
+                {
+                    name: 'What to do',
+                    value: '• Make sure the bot has **Administrator** permission\n• Move the bot\'s role to the **top of the role list**\n• Try running `/clean` again',
+                    inline: false
+                }
+            )
+            .setTimestamp();
+
+        try {
+            const errorChannel = await guild.channels.create({
+                name: 'cleanme-status',
+                type: ChannelType.GuildText,
+                reason: 'CleanMe Bot - Error status channel'
+            });
+            await errorChannel.send({ content: `<@${userId}>`, embeds: [errorEmbed] });
+        } catch (_) {
+            try {
+                const user = await client.users.fetch(userId);
+                errorEmbed.setDescription(`Something went wrong while cleaning **${guild.name}** after **${duration}s**:\n\`\`\`${error.message}\`\`\``);
+                await user.send({ embeds: [errorEmbed] });
+            } catch (e) {
+                console.error(`Could not notify user about clean failure: ${e.message}`);
+            }
+        }
     }
 }
 
@@ -1533,14 +1667,20 @@ async function handleCleanRoles(interaction) {
 
 async function performCleanRoles(interaction) {
     const guild = interaction.guild;
+    const startTime = Date.now();
 
-    await interaction.editReply({
-        content: '🗑️ Deleting roles...',
-        embeds: [],
-        components: []
+    await interaction.editReply({ content: '🗑️ Deleting roles...', embeds: [], components: [] });
+
+    const failedRoles = [];
+    const skippedRoles = [];
+    let deletedCount = 0;
+
+    guild.roles.cache.forEach(r => {
+        if (r.id !== guild.id && (r.managed || r.position >= guild.members.me.roles.highest.position)) {
+            skippedRoles.push(r.name + (r.managed ? ' (managed)' : ' (above bot)'));
+        }
     });
 
-    let deletedCount = 0;
     const roles = guild.roles.cache.filter(r =>
         r.id !== guild.id &&
         !r.managed &&
@@ -1553,15 +1693,45 @@ async function performCleanRoles(interaction) {
             deletedCount++;
             await sleep(300);
         } catch (e) {
+            failedRoles.push({ name: role.name, reason: e.message });
             console.log(`Could not delete role ${role.name}: ${e.message}`);
         }
     }
 
-    await interaction.editReply({
-        content: `✅ Deleted **${deletedCount}** roles!`,
-        embeds: [],
-        components: []
-    });
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    const hasIssues = failedRoles.length > 0;
+
+    const doneEmbed = new EmbedBuilder()
+        .setTitle(hasIssues ? '⚠️ Roles Cleaned (with issues)' : '✅ Roles Deleted!')
+        .setColor(hasIssues ? 0xFFA500 : 0x00FF00)
+        .setDescription(hasIssues ? 'Most roles were deleted, but some could not be removed.' : 'All eligible roles have been deleted.')
+        .addFields(
+            { name: 'Roles Deleted', value: `${deletedCount}`, inline: true },
+            { name: 'Duration', value: `${duration}s`, inline: true }
+        );
+
+    if (skippedRoles.length > 0) {
+        const skippedText = skippedRoles.slice(0, 10).map(r => `• ${r}`).join('\n')
+            + (skippedRoles.length > 10 ? `\n... and ${skippedRoles.length - 10} more` : '');
+        doneEmbed.addFields({
+            name: `⏭️ Skipped Roles (${skippedRoles.length})`,
+            value: skippedText + '\n\nThese are managed by an integration or positioned above the bot\'s role.',
+            inline: false
+        });
+    }
+
+    if (hasIssues) {
+        const failText = failedRoles.slice(0, 10).map(f => `• \`${f.name}\` — ${f.reason}`).join('\n')
+            + (failedRoles.length > 10 ? `\n... and ${failedRoles.length - 10} more` : '');
+        doneEmbed.addFields({
+            name: `❌ Roles That Failed (${failedRoles.length})`,
+            value: failText + '\n\n**To fix:** Move the bot\'s role above these in **Server Settings → Roles**, then delete them manually or run `/cleanroles` again.',
+            inline: false
+        });
+    }
+
+    doneEmbed.setTimestamp();
+    await interaction.editReply({ content: '', embeds: [doneEmbed], components: [] });
 }
 
 // Clean channels command
@@ -1604,34 +1774,77 @@ async function handleCleanChannels(interaction) {
 
 async function performCleanChannels(interaction) {
     const guild = interaction.guild;
+    const userId = interaction.user.id;
+    const startTime = Date.now();
 
-    await interaction.editReply({
-        content: '🗑️ Deleting channels...',
-        embeds: [],
-        components: []
-    });
+    try { await interaction.editReply({ content: '🗑️ Deleting channels...', embeds: [], components: [] }); } catch (_) {}
 
+    const failedChannels = [];
     let deletedCount = 0;
+    let textCount = 0, voiceCount = 0, categoryCount = 0, otherCount = 0;
     const channels = guild.channels.cache.filter(c => c.deletable);
 
     for (const [, channel] of channels) {
         try {
             await channel.delete();
             deletedCount++;
+            if (channel.type === ChannelType.GuildText || channel.type === ChannelType.GuildAnnouncement) textCount++;
+            else if (channel.type === ChannelType.GuildVoice || channel.type === ChannelType.GuildStageVoice) voiceCount++;
+            else if (channel.type === ChannelType.GuildCategory) categoryCount++;
+            else otherCount++;
             await sleep(500);
         } catch (e) {
+            const isMissingAccess = e.code === 50013 || e.message?.includes('Missing Access') || e.message?.includes('Missing Permissions');
+            failedChannels.push({ name: channel.name, reason: isMissingAccess ? 'Missing Access' : e.message });
             console.log(`Could not delete channel ${channel.name}: ${e.message}`);
         }
     }
 
-    // Create a general channel
-    const generalChannel = await guild.channels.create({
-        name: 'general',
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    const hasIssues = failedChannels.length > 0;
+
+    const doneEmbed = new EmbedBuilder()
+        .setTitle(hasIssues ? '⚠️ Channels Cleaned (with issues)' : '✅ Channels Deleted!')
+        .setColor(hasIssues ? 0xFFA500 : 0x00FF00)
+        .setDescription(hasIssues ? 'Most channels were deleted, but some could not be removed.' : 'All channels have been deleted.')
+        .addFields(
+            { name: 'Channels Deleted', value: `${deletedCount}`, inline: true },
+            { name: 'Duration', value: `${duration}s`, inline: true }
+        );
+
+    const typeBreakdown = [
+        textCount > 0 ? `• ${textCount} text` : null,
+        voiceCount > 0 ? `• ${voiceCount} voice` : null,
+        categoryCount > 0 ? `• ${categoryCount} categories` : null,
+        otherCount > 0 ? `• ${otherCount} other` : null,
+    ].filter(Boolean).join('\n');
+    if (typeBreakdown) {
+        doneEmbed.addFields({ name: 'Channel Breakdown', value: typeBreakdown, inline: false });
+    }
+
+    if (hasIssues) {
+        const failText = failedChannels.slice(0, 10).map(f => `• \`${f.name}\` — ${f.reason}`).join('\n')
+            + (failedChannels.length > 10 ? `\n... and ${failedChannels.length - 10} more` : '');
+        doneEmbed.addFields({
+            name: `❌ Channels That Failed (${failedChannels.length})`,
+            value: failText + '\n\n**To fix:** Manually delete them, or give the bot **Administrator** permission and run `/cleanchannels` again.',
+            inline: false
+        });
+    }
+
+    doneEmbed.addFields({
+        name: '💡 Next Steps',
+        value: '• Use `/save` to back up the current state\n• Use `/copy <serverid>` to restore a saved configuration\n• Delete this channel when you\'re done',
+        inline: false
+    }).setTimestamp();
+
+    const statusChannel = await guild.channels.create({
+        name: 'cleanme-status',
         type: ChannelType.GuildText,
-        reason: 'CleanMe Bot - Created after channel clean'
+        reason: 'CleanMe Bot - Status after channel clean'
     });
 
-    await generalChannel.send(`✅ Deleted **${deletedCount}** channels! This channel was created as a default.`);
+    await statusChannel.send({ content: `<@${userId}>`, embeds: [doneEmbed] });
 }
 
 // Handle button interactions

@@ -307,17 +307,16 @@ setTimeout(() => {
     runAllChecks();
 }, STARTUP_DELAY_MS);
 
-// Clear the channel 5 minutes before each scheduled scan (23:55, 05:55, 11:55, 17:55 NZST/NZDT)
-// so the channel is already empty when the scan starts.
-cron.schedule('55 23,5,11,17 * * *', () => {
+// Clear the channel at 23:55 Saturday NZT (5 min before Sunday midnight scan)
+cron.schedule('55 23 * * 6', () => {
     log('Pre-scan cron fired — clearing Discord channel 5 min before scan');
     clearChannel().catch(e => log(`Pre-scan clear failed: ${e.message}`));
 }, { timezone: 'Pacific/Auckland' });
 
-// Scans at 00:00, 06:00, 12:00, 18:00 New Zealand time (Pacific/Auckland)
-cron.schedule('0 0,6,12,18 * * *', () => {
-    log('Cron fired — scheduled scan (NZ time)');
+// Weekly scan: Sunday at 00:00 New Zealand time (Pacific/Auckland)
+cron.schedule('0 0 * * 0', () => {
+    log('Cron fired — weekly scheduled scan (Sunday 00:00 NZT)');
     runAllChecks();
 }, { timezone: 'Pacific/Auckland' });
 
-log(`Auth tester running. Schedule: 00:00/06:00/12:00/18:00 NZT. Trigger port: ${TRIGGER_PORT}. Startup run in progress...`);
+log(`Auth tester running. Schedule: Sunday 00:00 NZT (weekly). Trigger port: ${TRIGGER_PORT}. Startup run in progress...`);

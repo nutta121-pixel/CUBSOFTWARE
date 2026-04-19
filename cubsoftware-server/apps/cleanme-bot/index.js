@@ -1631,6 +1631,24 @@ async function _executeClean(guild, userId, statusChannel, statusCategory, start
         await updateProgressEmbed(1, totalRoles, totalRoles, 'Complete');
         console.log(`[Clean] "${guild.name}" — Role removal done: ${deletedRoles}/${totalRoles} deleted${failedRoles.length > 0 ? `, ${failedRoles.length} failed` : ''}`);
 
+        // Create a General category + #general channel so the server isn't completely empty
+        try {
+            const generalCategory = await guild.channels.create({
+                name: 'General',
+                type: ChannelType.GuildCategory,
+                reason: 'CleanMe Bot — created after server clean'
+            });
+            await guild.channels.create({
+                name: 'general',
+                type: ChannelType.GuildText,
+                parent: generalCategory,
+                reason: 'CleanMe Bot — created after server clean'
+            });
+            await logAction('Created category: General + channel: #general');
+            console.log(`[Clean] Created General/#general in "${guild.name}"`);
+        } catch (e) {
+            console.log(`[Clean] Could not create General/#general: ${friendlyError(e)}`);
+        }
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(1);
         const hasIssues = failedChannels.length > 0 || failedRoles.length > 0;

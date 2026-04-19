@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder , MessageFlags } = require('discord.js');
 const { UserModel, ServerModel } = require('../../database/models');
 const config = require('../../../config.json');
 
@@ -19,7 +19,7 @@ module.exports = {
         if (!user) {
             return interaction.reply({
                 content: '❌ You need to complete a quest first before traveling!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -44,7 +44,7 @@ module.exports = {
                     })
                     .setFooter({ text: 'Check back when you arrive!' });
 
-                return interaction.reply({ embeds: [embed], ephemeral: true });
+                return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
             } else {
                 // Travel completed
                 UserModel.completeTravel(interaction.user.id);
@@ -66,7 +66,7 @@ module.exports = {
         if (cooldownRemaining > 0) {
             return interaction.reply({
                 content: `⏳ You need to wait ${Math.ceil(cooldownRemaining)}s before traveling again.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -77,7 +77,7 @@ module.exports = {
         if (availableServers.length === 0) {
             return interaction.reply({
                 content: '❌ No other servers available to travel to right now!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -95,7 +95,7 @@ module.exports = {
             if (!destination) {
                 return interaction.reply({
                     content: `❌ Server not found. Use autocomplete to see available servers, or enter a valid server ID.`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
         } else {

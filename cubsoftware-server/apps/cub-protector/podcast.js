@@ -32,6 +32,7 @@ const {
     ButtonBuilder,
     ButtonStyle,
     StringSelectMenuBuilder,
+    MessageFlags,
 } = require('discord.js');
 
 const { spawn }  = require('child_process');
@@ -573,7 +574,7 @@ async function podcastPlay(interaction) {
     const query      = interaction.options.getString('podcast');
     const episodeNum = interaction.options.getInteger('episode');
     const voice      = interaction.member?.voice?.channel;
-    if (!voice) return interaction.reply({ content: '🎙️ Join a voice channel first.', ephemeral: true });
+    if (!voice) return interaction.reply({ content: '🎙️ Join a voice channel first.', flags: MessageFlags.Ephemeral });
 
     await interaction.deferReply();
     try {
@@ -705,7 +706,7 @@ async function podcastSearch(interaction) {
 async function podcastBrowse(interaction) {
     const key   = interaction.options.getString('category');
     const genre = GENRES[key];
-    if (!genre) return interaction.reply({ content: '⚠️ Unknown category.', ephemeral: true });
+    if (!genre) return interaction.reply({ content: '⚠️ Unknown category.', flags: MessageFlags.Ephemeral });
 
     await interaction.deferReply();
     try {
@@ -793,7 +794,7 @@ async function podcastEpisodes(interaction) {
 // /podcast nowplaying
 async function podcastNowPlaying(interaction) {
     const session = sessions.get(interaction.guildId);
-    if (!session?.currentEpisode) return interaction.reply({ content: '❌ Nothing is playing right now.', ephemeral: true });
+    if (!session?.currentEpisode) return interaction.reply({ content: '❌ Nothing is playing right now.', flags: MessageFlags.Ephemeral });
     const msg = await interaction.reply({
         embeds:     [buildNowPlayingEmbed(session)],
         components: buildNowPlayingButtons(session),
@@ -805,22 +806,22 @@ async function podcastNowPlaying(interaction) {
 // /podcast pause
 async function podcastPause(interaction) {
     const session = sessions.get(interaction.guildId);
-    if (!session) return interaction.reply({ content: '❌ Nothing playing.', ephemeral: true });
-    if (session.paused) return interaction.reply({ content: '⏸️ Already paused.', ephemeral: true });
+    if (!session) return interaction.reply({ content: '❌ Nothing playing.', flags: MessageFlags.Ephemeral });
+    if (session.paused) return interaction.reply({ content: '⏸️ Already paused.', flags: MessageFlags.Ephemeral });
     session.player.pause();
     session.paused = true;
     session.pausedElapsed = getElapsedSeconds(session);
     if (session.nowPlayingMessage) {
         session.nowPlayingMessage.edit({ embeds: [buildNowPlayingEmbed(session)], components: buildNowPlayingButtons(session) }).catch(() => {});
     }
-    return interaction.reply({ content: '⏸️ Paused.', ephemeral: true });
+    return interaction.reply({ content: '⏸️ Paused.', flags: MessageFlags.Ephemeral });
 }
 
 // /podcast resume  (unpause)
 async function podcastResume(interaction) {
     const session = sessions.get(interaction.guildId);
-    if (!session) return interaction.reply({ content: '❌ Nothing playing.', ephemeral: true });
-    if (!session.paused) return interaction.reply({ content: '▶️ Already playing.', ephemeral: true });
+    if (!session) return interaction.reply({ content: '❌ Nothing playing.', flags: MessageFlags.Ephemeral });
+    if (!session.paused) return interaction.reply({ content: '▶️ Already playing.', flags: MessageFlags.Ephemeral });
     session.player.unpause();
     session.paused = false;
     if (session.pausedElapsed !== null) {
@@ -830,25 +831,25 @@ async function podcastResume(interaction) {
     if (session.nowPlayingMessage) {
         session.nowPlayingMessage.edit({ embeds: [buildNowPlayingEmbed(session)], components: buildNowPlayingButtons(session) }).catch(() => {});
     }
-    return interaction.reply({ content: '▶️ Resumed.', ephemeral: true });
+    return interaction.reply({ content: '▶️ Resumed.', flags: MessageFlags.Ephemeral });
 }
 
 // /podcast stop
 async function podcastStop(interaction) {
     const session = sessions.get(interaction.guildId);
-    if (!session) return interaction.reply({ content: '❌ Nothing playing.', ephemeral: true });
+    if (!session) return interaction.reply({ content: '❌ Nothing playing.', flags: MessageFlags.Ephemeral });
     if (session.nowPlayingMessage) {
         session.nowPlayingMessage.edit({ embeds: [buildFinishedEmbed(session)], components: [] }).catch(() => {});
     }
     destroySession(interaction.guildId);
-    return interaction.reply({ content: '⏹️ Stopped and left the voice channel.', ephemeral: true });
+    return interaction.reply({ content: '⏹️ Stopped and left the voice channel.', flags: MessageFlags.Ephemeral });
 }
 
 // /podcast skip
 async function podcastSkip(interaction) {
     const session = sessions.get(interaction.guildId);
-    if (!session) return interaction.reply({ content: '❌ Nothing playing.', ephemeral: true });
-    await interaction.deferReply({ ephemeral: true });
+    if (!session) return interaction.reply({ content: '❌ Nothing playing.', flags: MessageFlags.Ephemeral });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Queue has priority
     if (session.queue.length > 0) {
@@ -882,7 +883,7 @@ async function podcastSkip(interaction) {
 // /podcast queue
 async function podcastQueue(interaction) {
     const session = sessions.get(interaction.guildId);
-    if (!session) return interaction.reply({ content: '❌ Nothing playing.', ephemeral: true });
+    if (!session) return interaction.reply({ content: '❌ Nothing playing.', flags: MessageFlags.Ephemeral });
 
     const embed = new EmbedBuilder()
         .setColor(PODCAST_COLOR)
@@ -913,16 +914,16 @@ async function podcastQueue(interaction) {
 // /podcast speed <rate>
 async function podcastSpeed(interaction) {
     const session = sessions.get(interaction.guildId);
-    if (!session) return interaction.reply({ content: '❌ Nothing playing. Start a podcast first.', ephemeral: true });
+    if (!session) return interaction.reply({ content: '❌ Nothing playing. Start a podcast first.', flags: MessageFlags.Ephemeral });
 
     const speed = parseFloat(interaction.options.getString('rate'));
-    if (isNaN(speed)) return interaction.reply({ content: '⚠️ Invalid speed.', ephemeral: true });
+    if (isNaN(speed)) return interaction.reply({ content: '⚠️ Invalid speed.', flags: MessageFlags.Ephemeral });
 
     session.speed = speed;
 
     if (session.currentEpisode && session.player.state.status !== AudioPlayerStatus.Idle) {
         const elapsed = getElapsedSeconds(session);
-        await interaction.reply({ content: `⚡ Speed set to **${speed}x** — restarting episode from ~${formatDuration(elapsed) || '0:00'}...`, ephemeral: true });
+        await interaction.reply({ content: `⚡ Speed set to **${speed}x** — restarting episode from ~${formatDuration(elapsed) || '0:00'}...`, flags: MessageFlags.Ephemeral });
         try {
             const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, speed, elapsed, session.volume);
             session.resource = resource;
@@ -932,24 +933,24 @@ async function podcastSpeed(interaction) {
             console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_SPEED_106 — [PODCAST] Speed change error:', err.message);
         }
     } else {
-        await interaction.reply({ content: `⚡ Speed set to **${speed}x** for next episode.`, ephemeral: true });
+        await interaction.reply({ content: `⚡ Speed set to **${speed}x** for next episode.`, flags: MessageFlags.Ephemeral });
     }
 }
 
 // /podcast volume <level>
 async function podcastVolume(interaction) {
     const session = sessions.get(interaction.guildId);
-    if (!session) return interaction.reply({ content: '❌ Nothing playing. Start a podcast first.', ephemeral: true });
+    if (!session) return interaction.reply({ content: '❌ Nothing playing. Start a podcast first.', flags: MessageFlags.Ephemeral });
 
     const level = interaction.options.getInteger('level');
-    if (level < 1 || level > 200) return interaction.reply({ content: '⚠️ Volume must be between 1 and 200.', ephemeral: true });
+    if (level < 1 || level > 200) return interaction.reply({ content: '⚠️ Volume must be between 1 and 200.', flags: MessageFlags.Ephemeral });
 
     const volume = level / 100;
     session.volume = volume;
 
     if (session.currentEpisode && session.player.state.status !== AudioPlayerStatus.Idle) {
         const elapsed = getElapsedSeconds(session);
-        await interaction.reply({ content: `🔊 Volume set to **${level}%** — restarting from ~${formatDuration(elapsed) || '0:00'}...`, ephemeral: true });
+        await interaction.reply({ content: `🔊 Volume set to **${level}%** — restarting from ~${formatDuration(elapsed) || '0:00'}...`, flags: MessageFlags.Ephemeral });
         try {
             const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, session.speed, elapsed, volume);
             session.resource = resource;
@@ -959,14 +960,14 @@ async function podcastVolume(interaction) {
             console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_VOLUME_107 — [PODCAST] Volume restart error:', err.message);
         }
     } else {
-        await interaction.reply({ content: `🔊 Volume set to **${level}%** — will apply to next episode.`, ephemeral: true });
+        await interaction.reply({ content: `🔊 Volume set to **${level}%** — will apply to next episode.`, flags: MessageFlags.Ephemeral });
     }
 }
 
 // /podcast seek <time>  — accepts 1:30, 1:30:00, or raw seconds
 async function podcastSeek(interaction) {
     const session = sessions.get(interaction.guildId);
-    if (!session?.currentEpisode) return interaction.reply({ content: '❌ Nothing playing. Start a podcast first.', ephemeral: true });
+    if (!session?.currentEpisode) return interaction.reply({ content: '❌ Nothing playing. Start a podcast first.', flags: MessageFlags.Ephemeral });
 
     const input = interaction.options.getString('time').trim();
 
@@ -976,13 +977,13 @@ async function podcastSeek(interaction) {
         targetSeconds = parseInt(input, 10);
     } else {
         const parts = input.split(':').map(Number);
-        if (parts.some(isNaN)) return interaction.reply({ content: '⚠️ Invalid time. Use `1:30`, `1:30:00`, or seconds like `90`.', ephemeral: true });
+        if (parts.some(isNaN)) return interaction.reply({ content: '⚠️ Invalid time. Use `1:30`, `1:30:00`, or seconds like `90`.', flags: MessageFlags.Ephemeral });
         if (parts.length === 2) targetSeconds = parts[0] * 60 + parts[1];
         else if (parts.length === 3) targetSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-        else return interaction.reply({ content: '⚠️ Invalid time format.', ephemeral: true });
+        else return interaction.reply({ content: '⚠️ Invalid time format.', flags: MessageFlags.Ephemeral });
     }
 
-    await interaction.reply({ content: `⏩ Seeking to **${formatDuration(targetSeconds) || `${targetSeconds}s`}**...`, ephemeral: true });
+    await interaction.reply({ content: `⏩ Seeking to **${formatDuration(targetSeconds) || `${targetSeconds}s`}**...`, flags: MessageFlags.Ephemeral });
 
     try {
         const resource = createAudioResourceFromUrl(session.currentEpisode.audioUrl, session.speed, targetSeconds, session.volume);
@@ -997,7 +998,7 @@ async function podcastSeek(interaction) {
 // /podcast subscribe <podcast>
 async function podcastSubscribe(interaction) {
     const query = interaction.options.getString('podcast');
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     try {
         const results = await searchPodcasts(query, 1);
         if (!results.length) return interaction.editReply(`❌ Podcast not found: **"${query}"**`);
@@ -1033,10 +1034,10 @@ async function podcastUnsubscribe(interaction) {
     const guildId = interaction.guildId;
     const subs    = subscriptions[guildId] || [];
     const idx     = subs.findIndex(s => s.name.toLowerCase().includes(query));
-    if (idx === -1) return interaction.reply({ content: `❌ **"${query}"** not found in subscriptions.`, ephemeral: true });
+    if (idx === -1) return interaction.reply({ content: `❌ **"${query}"** not found in subscriptions.`, flags: MessageFlags.Ephemeral });
     const removed = subs.splice(idx, 1)[0];
     saveSubscriptions();
-    return interaction.reply({ content: `🗑️ Removed **${removed.name}** from subscriptions.`, ephemeral: true });
+    return interaction.reply({ content: `🗑️ Removed **${removed.name}** from subscriptions.`, flags: MessageFlags.Ephemeral });
 }
 
 // /podcast favorites
@@ -1138,7 +1139,7 @@ async function podcastHistory(interaction) {
 // /podcast bookmark  — save current position (per user, works across any server)
 async function podcastBookmark(interaction) {
     const session = sessions.get(interaction.guildId);
-    if (!session?.currentEpisode) return interaction.reply({ content: '❌ Nothing is playing to bookmark.', ephemeral: true });
+    if (!session?.currentEpisode) return interaction.reply({ content: '❌ Nothing is playing to bookmark.', flags: MessageFlags.Ephemeral });
 
     const elapsed = getElapsedSeconds(session);
     const userId  = interaction.user.id;
@@ -1168,7 +1169,7 @@ async function podcastBookmark(interaction) {
             ])
             .setFooter({ text: '🔖 Bookmark saved to your account' })
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
     });
 }
 
@@ -1177,8 +1178,8 @@ async function podcastContinue(interaction) {
     const bm    = bookmarks[interaction.user.id];  // per-user
     const voice = interaction.member?.voice?.channel;
 
-    if (!bm) return interaction.reply({ content: '❌ No bookmark saved for this server. Use `/podcast bookmark` while playing.', ephemeral: true });
-    if (!voice) return interaction.reply({ content: '🎙️ Join a voice channel first.', ephemeral: true });
+    if (!bm) return interaction.reply({ content: '❌ No bookmark saved for this server. Use `/podcast bookmark` while playing.', flags: MessageFlags.Ephemeral });
+    if (!voice) return interaction.reply({ content: '🎙️ Join a voice channel first.', flags: MessageFlags.Ephemeral });
 
     await interaction.deferReply();
     try {
@@ -1226,12 +1227,12 @@ async function handlePodcastInteraction(interaction) {
         const idx      = parseInt(value.slice(colonIdx + 1), 10);
         const results  = pendingSearch.get(origId);
 
-        if (!results) return interaction.reply({ content: '⌛ This selection has expired. Use the command again.', ephemeral: true });
+        if (!results) return interaction.reply({ content: '⌛ This selection has expired. Use the command again.', flags: MessageFlags.Ephemeral });
         const podcast = results[idx];
-        if (!podcast)  return interaction.reply({ content: '❌ Invalid selection.', ephemeral: true });
+        if (!podcast)  return interaction.reply({ content: '❌ Invalid selection.', flags: MessageFlags.Ephemeral });
 
         const voice = interaction.member?.voice?.channel;
-        if (!voice) return interaction.reply({ content: '🎙️ Join a voice channel first.', ephemeral: true });
+        if (!voice) return interaction.reply({ content: '🎙️ Join a voice channel first.', flags: MessageFlags.Ephemeral });
 
         await interaction.deferUpdate();
         try {
@@ -1240,7 +1241,7 @@ async function handlePodcastInteraction(interaction) {
             podcast.artwork = podcast.artwork || feed.image?.url;
 
             const episodes = feed.items.map(i => parseEpisode(i, podcast.artwork)).filter(Boolean);
-            if (!episodes.length) return interaction.followUp({ content: '❌ No playable episodes.', ephemeral: true });
+            if (!episodes.length) return interaction.followUp({ content: '❌ No playable episodes.', flags: MessageFlags.Ephemeral });
 
             const episode = episodes[0];
             const session = getOrCreateSession(interaction.guildId, voice, interaction.channel, interaction.guild, interaction.client);
@@ -1251,14 +1252,14 @@ async function handlePodcastInteraction(interaction) {
 
             if (isPlaying) {
                 session.queue.push({ episode, podcast });
-                return interaction.followUp({ content: `📋 Added **${episode.title}** to queue (#${session.queue.length})`, ephemeral: true });
+                return interaction.followUp({ content: `📋 Added **${episode.title}** to queue (#${session.queue.length})`, flags: MessageFlags.Ephemeral });
             }
 
             await playEpisodeInSession(interaction.guildId, episode, podcast, 0);
             await interaction.followUp({ content: `▶️ Playing **${podcast.name}** — ${episode.title}` });
         } catch (err) {
             console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_PODCAST_SELECT_111 — [PODCAST] select handler error:', err.message);
-            await interaction.followUp({ content: `⚠️ Error: ${err.message}`, ephemeral: true });
+            await interaction.followUp({ content: `⚠️ Error: ${err.message}`, flags: MessageFlags.Ephemeral });
         }
         return;
     }
@@ -1270,7 +1271,7 @@ async function handlePodcastInteraction(interaction) {
         // guildId may contain underscores — reconstruct from parts[2..]
         const guildId = parts.slice(2).join('_');
 
-        if (guildId !== interaction.guildId) return interaction.reply({ content: '❌ Wrong server.', ephemeral: true });
+        if (guildId !== interaction.guildId) return interaction.reply({ content: '❌ Wrong server.', flags: MessageFlags.Ephemeral });
 
         if (action === 'pause')  return podcastPause(interaction);
         if (action === 'resume') return podcastResume(interaction);

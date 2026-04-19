@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder , MessageFlags } = require('discord.js');
 const BossService = require('../../services/gameEngine/BossService');
 const { BossModel } = require('../../database/models');
 const { isStaff } = require('../utils/permissions');
@@ -38,7 +38,7 @@ async function handleStatus(interaction) {
         if (!bossResult.success || !bossResult.data) {
             return interaction.reply({
                 content: 'There is no active boss right now. Check back later.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -91,7 +91,7 @@ async function handleDespawn(interaction) {
     if (!await isStaff(interaction)) {
         return interaction.reply({
             content: 'This command is only available to QuestCord staff.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -100,7 +100,7 @@ async function handleDespawn(interaction) {
     if (!boss) {
         return interaction.reply({
             content: 'There is no active boss to despawn.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -128,6 +128,6 @@ async function handleDespawn(interaction) {
         )
         .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     console.log(`[BOSS] Boss manually despawned by ${interaction.user.username}: ${boss.boss_name} (ID: ${boss.id})`);
 };

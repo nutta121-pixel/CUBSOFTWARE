@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, ChannelType, PermissionFlagsBits , MessageFlags } = require('discord.js');
 const { getGuildSettings, updateGuildSettings, markSetupComplete } = require('../utils/guildSettings');
 const webhookLogger = require('../utils/webhookLogger');
 
@@ -69,7 +69,7 @@ module.exports = {
 
         await interaction.reply({
             content: response,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 };

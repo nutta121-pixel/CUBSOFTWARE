@@ -56,7 +56,7 @@ module.exports = {
                     if (!await isStaff(interaction)) {
                         return interaction.reply({
                             content: 'Admin help is only available to QuestCord staff.',
-                            ephemeral: true
+                            flags: MessageFlags.Ephemeral
                         });
                     }
 
@@ -86,7 +86,7 @@ module.exports = {
                     if (!await isStaff(interaction)) {
                         return interaction.reply({
                             content: '❌ This action is only available to QuestCord staff.',
-                            ephemeral: true
+                            flags: MessageFlags.Ephemeral
                         });
                     }
 

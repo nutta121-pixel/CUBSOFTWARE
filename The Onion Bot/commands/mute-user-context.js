@@ -1,4 +1,4 @@
-const { ContextMenuCommandBuilder, ApplicationCommandType, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, InteractionResponseType } = require('discord.js');
+const { ContextMenuCommandBuilder, ApplicationCommandType, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, InteractionResponseType , MessageFlags } = require('discord.js');
 const { muteUser, isUserMuted } = require('../utils/muteManager');
 const config = require('../config');
 const { debug } = require('../utils/debug');
@@ -22,7 +22,7 @@ module.exports = {
             console.log('[MUTE] User trying to mute themselves - BLOCKED');
             return await interaction.reply({
                 content: 'You cannot mute yourself!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -31,7 +31,7 @@ module.exports = {
             console.log('[MUTE] User trying to mute creator - BLOCKED');
             return await interaction.reply({
                 content: 'You cannot mute the bot creator (CUB)!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -40,7 +40,7 @@ module.exports = {
             console.log('[MUTE] Target is a bot - BLOCKED');
             return await interaction.reply({
                 content: 'You cannot mute bots!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -50,7 +50,7 @@ module.exports = {
             console.log('[MUTE] User already muted - BLOCKED');
             return await interaction.reply({
                 content: `**${targetUser.tag}** is already muted!`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -84,7 +84,7 @@ module.exports = {
         await interaction.reply({
             content: `**Select mute duration for ${targetUser.tag}:**`,
             components: [durationRow],
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
         console.log('[MUTE] Reply sent successfully!');
         console.log('[MUTE] === EXECUTE END ===');

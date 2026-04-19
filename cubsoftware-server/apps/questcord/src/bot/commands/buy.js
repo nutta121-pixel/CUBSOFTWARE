@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder , MessageFlags } = require('discord.js');
 const { UserModel } = require('../../database/models');
 const { db } = require('../../database/schema');
 const config = require('../../../config.json');
@@ -21,7 +21,7 @@ module.exports = {
         if (!user) {
             return interaction.reply({
                 content: '❌ You need to complete a quest first before shopping!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -31,7 +31,7 @@ module.exports = {
         if (!item) {
             return interaction.reply({
                 content: `❌ Item "${itemName}" not found. Use \`/shop\` to browse available items.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -39,7 +39,7 @@ module.exports = {
         if (item.rarity === 'mythic' || (item.currency_cost === 0 && item.gem_cost === 0)) {
             return interaction.reply({
                 content: `❌ **${item.item_name}** is not available for purchase.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -48,7 +48,7 @@ module.exports = {
             const needed = item.currency_cost - user.currency;
             return interaction.reply({
                 content: `❌ You don't have enough Dakari to buy **${item.item_name}**.\nYou need ${needed.toLocaleString()} more Dakari.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -56,7 +56,7 @@ module.exports = {
             const needed = item.gem_cost - user.gems;
             return interaction.reply({
                 content: `❌ You don't have enough gems to buy **${item.item_name}**.\nYou need ${needed} more gems.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -66,7 +66,7 @@ module.exports = {
         if (existingItem) {
             return interaction.reply({
                 content: `❌ You already own **${item.item_name}**!`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 

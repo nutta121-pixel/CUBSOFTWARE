@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } = require('discord.js');
 const { QuestModel, UserQuestModel, UserModel } = require('../../../database/models');
 const { isStaff, isDeveloper } = require('../../utils/permissions');
 const config = require('../../../../config.json');
@@ -39,7 +39,7 @@ module.exports = {
         if (!await isStaff(interaction)) {
             return interaction.reply({
                 content: 'This command is only available to QuestCord staff.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -63,14 +63,14 @@ async function handleForceComplete(interaction) {
     const user = UserModel.findByDiscordId(targetUser.id);
 
     if (!user) {
-        return interaction.reply({ content: '❌ This user has no data in the system.', ephemeral: true });
+        return interaction.reply({ content: '❌ This user has no data in the system.', flags: MessageFlags.Ephemeral });
     }
 
     try {
         const quest = QuestModel.findById(questId);
 
         if (!quest) {
-            return interaction.reply({ content: `❌ Quest with ID ${questId} not found.`, ephemeral: true });
+            return interaction.reply({ content: `❌ Quest with ID ${questId} not found.`, flags: MessageFlags.Ephemeral });
         }
 
         const userQuest = db.prepare('SELECT * FROM user_quests WHERE user_id = ? AND quest_id = ?').get(user.id, questId);
@@ -78,12 +78,12 @@ async function handleForceComplete(interaction) {
         if (!userQuest) {
             return interaction.reply({
                 content: `❌ ${targetUser.username} does not have this quest assigned.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (userQuest.completed) {
-            return interaction.reply({ content: `❌ This quest is already completed.`, ephemeral: true });
+            return interaction.reply({ content: `❌ This quest is already completed.`, flags: MessageFlags.Ephemeral });
         }
 
         UserQuestModel.completeQuest(user.id, questId);
@@ -101,17 +101,17 @@ async function handleForceComplete(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[QUEST-ADMIN] Force completed by ${interaction.user.username}: ${quest.quest_name} for ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force completing quest:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
 async function handleRemove(interaction) {
     if (!await isDeveloper(interaction)) {
-        return interaction.reply({ content: '❌ Only developers can remove quests.', ephemeral: true });
+        return interaction.reply({ content: '❌ Only developers can remove quests.', flags: MessageFlags.Ephemeral });
     }
 
     const questId = interaction.options.getInteger('quest-id');
@@ -120,7 +120,7 @@ async function handleRemove(interaction) {
         const quest = QuestModel.findById(questId);
 
         if (!quest) {
-            return interaction.reply({ content: `❌ Quest with ID ${questId} not found.`, ephemeral: true });
+            return interaction.reply({ content: `❌ Quest with ID ${questId} not found.`, flags: MessageFlags.Ephemeral });
         }
 
         db.prepare('DELETE FROM user_quests WHERE quest_id = ?').run(questId);
@@ -133,10 +133,10 @@ async function handleRemove(interaction) {
             .addFields({ name: 'Developer', value: `${interaction.user.username}` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[QUEST-ADMIN] Removed by ${interaction.user.username}: ${quest.quest_name} (ID: ${questId})`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error removing quest:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }

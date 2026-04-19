@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } = require('discord.js');
 const { isDeveloper } = require('../../utils/permissions');
 const config = require('../../../../config.json');
 const fs = require('fs');
@@ -54,7 +54,7 @@ module.exports = {
         if (!await isDeveloper(interaction)) {
             return interaction.reply({
                 content: '❌ This command is only available to QuestCord developers.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -138,13 +138,13 @@ async function handleEnable(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Web dashboard whitelist enabled by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error enabling whitelist:', error);
         await interaction.reply({
             content: '❌ An error occurred while enabling the whitelist.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -182,13 +182,13 @@ async function handleDisable(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Web dashboard whitelist disabled by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error disabling whitelist:', error);
         await interaction.reply({
             content: '❌ An error occurred while disabling the whitelist.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -209,7 +209,7 @@ async function handleAdd(interaction) {
         if (configData.webDashboard.whitelist.includes(targetUser.id)) {
             return interaction.reply({
                 content: `❌ User **${targetUser.username}** is already in the whitelist.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -244,13 +244,13 @@ async function handleAdd(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] ${targetUser.username} (${targetUser.id}) added to web dashboard whitelist by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error adding to whitelist:', error);
         await interaction.reply({
             content: '❌ An error occurred while adding the user to the whitelist.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -264,7 +264,7 @@ async function handleRemove(interaction) {
         if (!configData.webDashboard || !configData.webDashboard.whitelist) {
             return interaction.reply({
                 content: '❌ Whitelist is empty.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -272,7 +272,7 @@ async function handleRemove(interaction) {
         if (index === -1) {
             return interaction.reply({
                 content: `❌ User **${targetUser.username}** is not in the whitelist.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -302,13 +302,13 @@ async function handleRemove(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] ${targetUser.username} (${targetUser.id}) removed from web dashboard whitelist by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error removing from whitelist:', error);
         await interaction.reply({
             content: '❌ An error occurred while removing the user from the whitelist.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -320,7 +320,7 @@ async function handleList(interaction) {
         if (!configData.webDashboard || !configData.webDashboard.whitelist || configData.webDashboard.whitelist.length === 0) {
             return interaction.reply({
                 content: '📝 The whitelist is currently empty. Use `/admin-whitelist add` to add users.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -340,12 +340,12 @@ async function handleList(interaction) {
             .setFooter({ text: `${configData.webDashboard.whitelist.length} user(s) whitelisted` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error listing whitelist:', error);
         await interaction.reply({
             content: '❌ An error occurred while listing the whitelist.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -390,12 +390,12 @@ async function handleStatus(interaction) {
             });
         }
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error getting whitelist status:', error);
         await interaction.reply({
             content: '❌ An error occurred while getting the whitelist status.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder , MessageFlags } = require('discord.js');
 const { BannedIPModel } = require('../../../database/models');
 const { isDeveloper } = require('../../utils/permissions');
 const config = require('../../../../config.json');
@@ -64,7 +64,7 @@ module.exports = {
         if (!await isDeveloper(interaction)) {
             return interaction.reply({
                 content: 'This command is only available to developers.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -96,7 +96,7 @@ async function handleAddBan(interaction) {
     if (!validateIP(ip)) {
         return interaction.reply({
             content: 'Invalid IP address format.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -141,14 +141,14 @@ async function handleAddBan(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         console.log(`[IP BAN] ${ip} banned by ${interaction.user.username}: ${reason}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error banning IP:', error);
         await interaction.reply({
             content: 'An error occurred while banning the IP address.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -162,7 +162,7 @@ async function handleRemoveBan(interaction) {
         if (result.changes === 0) {
             return interaction.reply({
                 content: `IP address ${ip} is not currently banned.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -181,14 +181,14 @@ async function handleRemoveBan(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         console.log(`[IP UNBAN] ${ip} unbanned by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error unbanning IP:', error);
         await interaction.reply({
             content: 'An error occurred while unbanning the IP address.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -200,7 +200,7 @@ async function handleListBans(interaction) {
         if (bans.length === 0) {
             return interaction.reply({
                 content: 'No IP addresses are currently banned.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -218,12 +218,12 @@ async function handleListBans(interaction) {
             .setFooter({ text: `Showing ${Math.min(bans.length, 10)} of ${bans.length} bans` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error listing bans:', error);
         await interaction.reply({
             content: 'An error occurred while fetching the ban list.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -237,7 +237,7 @@ async function handleCheckBan(interaction) {
         if (!ban) {
             return interaction.reply({
                 content: `IP address ${ip} is not banned.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -271,12 +271,12 @@ async function handleCheckBan(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error checking ban:', error);
         await interaction.reply({
             content: 'An error occurred while checking the ban status.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } = require('discord.js');
 const { isDeveloper } = require('../../utils/permissions');
 const { debugLogger } = require('../../../utils/debugLogger');
 const config = require('../../../../config.json');
@@ -86,7 +86,7 @@ module.exports = {
         if (!await isDeveloper(interaction)) {
             return interaction.reply({
                 content: '❌ This command is only available to QuestCord developers.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -135,12 +135,12 @@ async function handleStatus(interaction) {
             .setFooter({ text: 'Use /debug enable or /debug disable to change' })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error getting debug status:', error);
         await interaction.reply({
             content: '❌ An error occurred while getting debug status.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -161,7 +161,7 @@ async function handleEnable(interaction) {
                 .setDescription('All debug log categories have been enabled.')
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         } else {
             debugLogger.setCategoryEnabled(category, true);
 
@@ -171,7 +171,7 @@ async function handleEnable(interaction) {
                 .setDescription(`**${category}** logs are now enabled.`)
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
 
         console.log(`[DEBUG] ${category} logs enabled by ${interaction.user.username}`);
@@ -179,7 +179,7 @@ async function handleEnable(interaction) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error enabling log category:', error);
         await interaction.reply({
             content: '❌ An error occurred while enabling the log category.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -200,7 +200,7 @@ async function handleDisable(interaction) {
                 .setDescription('All debug log categories have been disabled.')
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         } else {
             debugLogger.setCategoryEnabled(category, false);
 
@@ -210,7 +210,7 @@ async function handleDisable(interaction) {
                 .setDescription(`**${category}** logs are now disabled.`)
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
 
         console.log(`[DEBUG] ${category} logs disabled by ${interaction.user.username}`);
@@ -218,7 +218,7 @@ async function handleDisable(interaction) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error disabling log category:', error);
         await interaction.reply({
             content: '❌ An error occurred while disabling the log category.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -235,13 +235,13 @@ async function handleToggle(interaction) {
             .setDescription(`**${category}** logs are now ${newState ? 'enabled' : 'disabled'}.`)
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[DEBUG] ${category} logs toggled to ${newState ? 'enabled' : 'disabled'} by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error toggling log category:', error);
         await interaction.reply({
             content: '❌ An error occurred while toggling the log category.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }

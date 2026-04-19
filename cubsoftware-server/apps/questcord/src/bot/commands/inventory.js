@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle , MessageFlags } = require('discord.js');
 const { UserModel } = require('../../database/models');
 const { db } = require('../../database/schema');
 const config = require('../../../config.json');
@@ -38,7 +38,7 @@ module.exports = {
         if (userItems.length === 0) {
             return interaction.reply({
                 content: '❌ Your inventory is empty! Use `/shop` to purchase items or complete quests to find them.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -107,6 +107,6 @@ module.exports = {
         embed.setFooter({ text: 'Items are automatically equipped when you purchase better equipment' })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 };

@@ -1,4 +1,4 @@
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder , MessageFlags } = require('discord.js');
 const { UserModel } = require('../../database/models');
 const { db } = require('../../database/schema');
 const config = require('../../../config.json');
@@ -12,7 +12,7 @@ async function handleShopPurchase(interaction) {
     if (!user) {
         return interaction.reply({
             content: '❌ User not found. Please try again.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 

@@ -1,4 +1,4 @@
-const { ContextMenuCommandBuilder, ApplicationCommandType, PermissionFlagsBits } = require('discord.js');
+const { ContextMenuCommandBuilder, ApplicationCommandType, PermissionFlagsBits , MessageFlags } = require('discord.js');
 const { unmuteUser, isUserMuted, getRemainingMuteTime } = require('../utils/muteManager');
 const { debug } = require('../utils/debug');
 const webhookLogger = require('../utils/webhookLogger');
@@ -22,7 +22,7 @@ module.exports = {
             debug('[UNMUTE] User is NOT muted - cannot unmute');
             return await interaction.reply({
                 content: `**${targetUser.tag}** is not muted!`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -59,14 +59,14 @@ module.exports = {
 
             await interaction.reply({
                 content: `✅ Successfully unmuted **${targetUser.tag}**!\n\nThey had **${timeLeft}** remaining on their mute.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             debug('[UNMUTE] Success message sent!');
         } else {
             debug('[UNMUTE] Sending failure message...');
             await interaction.reply({
                 content: `Failed to unmute **${targetUser.tag}**!`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             debug('[UNMUTE] Failure message sent!');
         }

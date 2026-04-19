@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType, OverwriteType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AuditLogEvent, AttachmentBuilder, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, PermissionFlagsBits, PermissionsBitField, ChannelType, OverwriteType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, AuditLogEvent, AttachmentBuilder, ActivityType, MessageFlags } = require('discord.js');
 
 
 // Helper: creates an EmbedBuilder pre-loaded with CUB SOFTWARE branding footer
@@ -4687,7 +4687,7 @@ client.on('interactionCreate', async (interaction) => {
     if (CUSTOM_GUILD_ID && MAIN_BOT_ONLY_COMMANDS.has(interaction.commandName)) return;
     if (guildHasCustomBot(interaction.guildId) && !MAIN_BOT_SHARED_COMMANDS.has(interaction.commandName)) {
         const botName = getCustomBotName(interaction.guildId);
-        return interaction.reply({ content: `This server uses **${botName}**. Please use that bot for commands instead.`, ephemeral: true });
+        return interaction.reply({ content: `This server uses **${botName}**. Please use that bot for commands instead.`, flags: MessageFlags.Ephemeral });
     }
 
     const { commandName, member, guild } = interaction;
@@ -4703,12 +4703,12 @@ client.on('interactionCreate', async (interaction) => {
         const ECO_BET_GAMES = ['slots','blackjack','roulette','crash','scratch','coinbet','highlow'];
         if (GUARDED_GAMES.includes(commandName)) {
             const _ge = checkGameAllowed(guild.id, interaction.channelId, member, commandName);
-            if (_ge) return interaction.reply({ content: _ge, ephemeral: true });
+            if (_ge) return interaction.reply({ content: _ge, flags: MessageFlags.Ephemeral });
             if (ECO_BET_GAMES.includes(commandName)) {
                 const betOpt = interaction.options.getInteger('bet');
                 if (betOpt) {
                     const _bv = validateBet(guild.id, betOpt);
-                    if (!_bv.ok) return interaction.reply({ content: _bv.error, ephemeral: true });
+                    if (!_bv.ok) return interaction.reply({ content: _bv.error, flags: MessageFlags.Ephemeral });
                 }
             }
         }
@@ -4724,7 +4724,7 @@ client.on('interactionCreate', async (interaction) => {
         const keepAlive = interaction.options.getInteger('keep_alive') ?? 0;
         const ownershipLock = interaction.options.getInteger('ownership_lock') ?? 0;
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         try {
             // Create the hub voice channel
@@ -4795,10 +4795,10 @@ client.on('interactionCreate', async (interaction) => {
         const guildData = data.guilds[guild.id];
 
         if (!guildData || !guildData.hubs[hubChannel.id]) {
-            return interaction.reply({ content: 'That channel is not a hub.', ephemeral: true });
+            return interaction.reply({ content: 'That channel is not a hub.', flags: MessageFlags.Ephemeral });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         // Delete all active temp channels for this hub
         let deletedCount = 0;
@@ -4828,7 +4828,7 @@ client.on('interactionCreate', async (interaction) => {
         const guildData = data.guilds[guild.id];
 
         if (!guildData || !guildData.hubs[hubChannel.id]) {
-            return interaction.reply({ content: 'That channel is not a hub.', ephemeral: true });
+            return interaction.reply({ content: 'That channel is not a hub.', flags: MessageFlags.Ephemeral });
         }
 
         const hub = guildData.hubs[hubChannel.id];
@@ -4861,7 +4861,7 @@ client.on('interactionCreate', async (interaction) => {
                 { name: 'Ignored Roles', value: (hub.ignored_roles || []).length > 0 ? hub.ignored_roles.map(r => `<@&${r}>`).join(', ') : 'None', inline: true },
             );
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     // ---- VOICE-HUB-MODERATOR ----
@@ -4873,7 +4873,7 @@ client.on('interactionCreate', async (interaction) => {
         const guildData = data.guilds[guild.id];
 
         if (!guildData || !guildData.hubs[hubChannel.id]) {
-            return interaction.reply({ content: 'That channel is not a hub.', ephemeral: true });
+            return interaction.reply({ content: 'That channel is not a hub.', flags: MessageFlags.Ephemeral });
         }
 
         const hub = guildData.hubs[hubChannel.id];
@@ -4882,11 +4882,11 @@ client.on('interactionCreate', async (interaction) => {
         if (action === 'add') {
             if (!hub.moderator_roles.includes(role.id)) hub.moderator_roles.push(role.id);
             saveTempVoiceData(data);
-            await interaction.reply({ content: `Added <@&${role.id}> as a moderator role for this hub.`, ephemeral: true });
+            await interaction.reply({ content: `Added <@&${role.id}> as a moderator role for this hub.`, flags: MessageFlags.Ephemeral });
         } else {
             hub.moderator_roles = hub.moderator_roles.filter(r => r !== role.id);
             saveTempVoiceData(data);
-            await interaction.reply({ content: `Removed <@&${role.id}> from moderator roles for this hub.`, ephemeral: true });
+            await interaction.reply({ content: `Removed <@&${role.id}> from moderator roles for this hub.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -4899,7 +4899,7 @@ client.on('interactionCreate', async (interaction) => {
         const guildData = data.guilds[guild.id];
 
         if (!guildData || !guildData.hubs[hubChannel.id]) {
-            return interaction.reply({ content: 'That channel is not a hub.', ephemeral: true });
+            return interaction.reply({ content: 'That channel is not a hub.', flags: MessageFlags.Ephemeral });
         }
 
         const hub = guildData.hubs[hubChannel.id];
@@ -4908,11 +4908,11 @@ client.on('interactionCreate', async (interaction) => {
         if (action === 'add') {
             if (!hub.ignored_roles.includes(role.id)) hub.ignored_roles.push(role.id);
             saveTempVoiceData(data);
-            await interaction.reply({ content: `Added <@&${role.id}> as an ignored role for this hub.`, ephemeral: true });
+            await interaction.reply({ content: `Added <@&${role.id}> as an ignored role for this hub.`, flags: MessageFlags.Ephemeral });
         } else {
             hub.ignored_roles = hub.ignored_roles.filter(r => r !== role.id);
             saveTempVoiceData(data);
-            await interaction.reply({ content: `Removed <@&${role.id}> from ignored roles for this hub.`, ephemeral: true });
+            await interaction.reply({ content: `Removed <@&${role.id}> from ignored roles for this hub.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -4928,11 +4928,11 @@ client.on('interactionCreate', async (interaction) => {
         if (action === 'add') {
             if (!guildData.voice_moderators.roles.includes(role.id)) guildData.voice_moderators.roles.push(role.id);
             saveTempVoiceData(data);
-            await interaction.reply({ content: `Added <@&${role.id}> as a global voice moderator role.`, ephemeral: true });
+            await interaction.reply({ content: `Added <@&${role.id}> as a global voice moderator role.`, flags: MessageFlags.Ephemeral });
         } else {
             guildData.voice_moderators.roles = guildData.voice_moderators.roles.filter(r => r !== role.id);
             saveTempVoiceData(data);
-            await interaction.reply({ content: `Removed <@&${role.id}> from global voice moderator roles.`, ephemeral: true });
+            await interaction.reply({ content: `Removed <@&${role.id}> from global voice moderator roles.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -4948,11 +4948,11 @@ client.on('interactionCreate', async (interaction) => {
         if (action === 'add') {
             if (!guildData.voice_moderators.users.includes(user.id)) guildData.voice_moderators.users.push(user.id);
             saveTempVoiceData(data);
-            await interaction.reply({ content: `Added <@${user.id}> as a global voice moderator.`, ephemeral: true });
+            await interaction.reply({ content: `Added <@${user.id}> as a global voice moderator.`, flags: MessageFlags.Ephemeral });
         } else {
             guildData.voice_moderators.users = guildData.voice_moderators.users.filter(u => u !== user.id);
             saveTempVoiceData(data);
-            await interaction.reply({ content: `Removed <@${user.id}> from global voice moderators.`, ephemeral: true });
+            await interaction.reply({ content: `Removed <@${user.id}> from global voice moderators.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -4969,7 +4969,7 @@ client.on('interactionCreate', async (interaction) => {
                 { name: 'Moderator Roles', value: mods.roles.length > 0 ? mods.roles.map(r => `<@&${r}>`).join('\n') : 'None', inline: true },
                 { name: 'Individual Moderators', value: mods.users.length > 0 ? mods.users.map(u => `<@${u}>`).join('\n') : 'None', inline: true }
             );
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     // ---- VOICE-BAN ----
@@ -4978,21 +4978,21 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this. Only the channel owner or moderators can use this.', ephemeral: true });
+            return interaction.reply({ content: 'You don\'t have permission to do this. Only the channel owner or moderators can use this.', flags: MessageFlags.Ephemeral });
         }
 
         if (targetUser.id === member.id) {
-            return interaction.reply({ content: 'You can\'t ban yourself.', ephemeral: true });
+            return interaction.reply({ content: 'You can\'t ban yourself.', flags: MessageFlags.Ephemeral });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         if (!channelData.banned_users.includes(targetUser.id)) {
             channelData.banned_users.push(targetUser.id);
@@ -5019,17 +5019,17 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', ephemeral: true });
+            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         channelData.banned_users = channelData.banned_users.filter(id => id !== targetUser.id);
         saveTempVoiceData(fullData);
@@ -5046,17 +5046,17 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', ephemeral: true });
+            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         if (!targetMember || targetMember.voice?.channelId !== channel.id) {
@@ -5072,17 +5072,17 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', ephemeral: true });
+            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         channelData.locked = true;
         saveTempVoiceData(fullData);
@@ -5096,17 +5096,17 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', ephemeral: true });
+            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         channelData.locked = false;
         saveTempVoiceData(fullData);
@@ -5121,17 +5121,17 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', ephemeral: true });
+            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         channelData.hidden = true;
         saveTempVoiceData(fullData);
@@ -5145,17 +5145,17 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', ephemeral: true });
+            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         channelData.hidden = false;
         saveTempVoiceData(fullData);
@@ -5170,17 +5170,17 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', ephemeral: true });
+            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         await channel.setUserLimit(limit).catch(() => {});
         await interaction.editReply({ content: `User limit set to ${limit === 0 ? 'unlimited' : limit}.` });
@@ -5192,17 +5192,17 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', ephemeral: true });
+            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         await channel.setName(name).catch(() => {});
         await interaction.editReply({ content: `Voice channel renamed to **${name}**.` });
@@ -5213,19 +5213,19 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
 
         // Check if owner is still in the channel
         if (channel.members.has(channelData.owner_id)) {
-            return interaction.reply({ content: 'The owner is still in the channel. You can\'t claim it.', ephemeral: true });
+            return interaction.reply({ content: 'The owner is still in the channel. You can\'t claim it.', flags: MessageFlags.Ephemeral });
         }
 
         // Check if channel is claimable
         if (!channelData.claimable && channelData.owner_id !== member.id) {
-            return interaction.reply({ content: 'This channel is not yet available for claiming. The ownership lock period hasn\'t expired.', ephemeral: true });
+            return interaction.reply({ content: 'This channel is not yet available for claiming. The ownership lock period hasn\'t expired.', flags: MessageFlags.Ephemeral });
         }
 
         // Transfer ownership
@@ -5246,7 +5246,7 @@ client.on('interactionCreate', async (interaction) => {
             DeafenMembers: true,
         }).catch(() => {});
 
-        await interaction.reply({ content: `You are now the owner of this voice channel!`, ephemeral: true });
+        await interaction.reply({ content: `You are now the owner of this voice channel!`, flags: MessageFlags.Ephemeral });
     }
 
     // ---- VOICE-TRANSFER ----
@@ -5255,18 +5255,18 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!isChannelOwner(member.id, channelData) && !member.permissions.has(PermissionFlagsBits.ManageChannels)) {
-            return interaction.reply({ content: 'Only the channel owner can transfer ownership.', ephemeral: true });
+            return interaction.reply({ content: 'Only the channel owner can transfer ownership.', flags: MessageFlags.Ephemeral });
         }
 
         if (targetUser.id === member.id) {
-            return interaction.reply({ content: 'You already own this channel.', ephemeral: true });
+            return interaction.reply({ content: 'You already own this channel.', flags: MessageFlags.Ephemeral });
         }
 
         const oldOwnerId = channelData.owner_id;
@@ -5286,7 +5286,7 @@ client.on('interactionCreate', async (interaction) => {
             DeafenMembers: true,
         }).catch(() => {});
 
-        await interaction.reply({ content: `Ownership transferred to <@${targetUser.id}>.`, ephemeral: true });
+        await interaction.reply({ content: `Ownership transferred to <@${targetUser.id}>.`, flags: MessageFlags.Ephemeral });
     }
 
     // ---- VOICE-OWNER ----
@@ -5294,16 +5294,16 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { data: channelData } = result;
-        await interaction.reply({ content: `The owner of this channel is <@${channelData.owner_id}>.`, ephemeral: true });
+        await interaction.reply({ content: `The owner of this channel is <@${channelData.owner_id}>.`, flags: MessageFlags.Ephemeral });
     }
 
     // ---- VOICE-CLEAN ----
     else if (commandName === 'voice-clean') {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const data = loadTempVoiceData();
         const guildData = data.guilds[guild.id];
@@ -5338,18 +5338,18 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', ephemeral: true });
+            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
         }
 
         if (channelData.banned_users.includes(targetUser.id)) {
-            return interaction.reply({ content: `<@${targetUser.id}> is banned from this channel. Use /voice-unban first.`, ephemeral: true });
+            return interaction.reply({ content: `<@${targetUser.id}> is banned from this channel. Use /voice-unban first.`, flags: MessageFlags.Ephemeral });
         }
 
         if (!channelData.permitted_users.includes(targetUser.id)) {
@@ -5365,7 +5365,7 @@ client.on('interactionCreate', async (interaction) => {
             UseVAD: true,
         }).catch(() => {});
 
-        await interaction.reply({ content: `<@${targetUser.id}> can now see and join this voice channel.`, ephemeral: true });
+        await interaction.reply({ content: `<@${targetUser.id}> can now see and join this voice channel.`, flags: MessageFlags.Ephemeral });
     }
 
     // ---- VOICE-REJECT ----
@@ -5374,14 +5374,14 @@ client.on('interactionCreate', async (interaction) => {
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', ephemeral: true });
+            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', ephemeral: true });
+            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
         }
 
         channelData.permitted_users = channelData.permitted_users.filter(id => id !== targetUser.id);
@@ -5396,7 +5396,7 @@ client.on('interactionCreate', async (interaction) => {
             await targetMember.voice.disconnect('Rejected from temp VC').catch(() => {});
         }
 
-        await interaction.reply({ content: `<@${targetUser.id}> can no longer see or join this voice channel.`, ephemeral: true });
+        await interaction.reply({ content: `<@${targetUser.id}> can no longer see or join this voice channel.`, flags: MessageFlags.Ephemeral });
     }
 
     // ==================== MODERATION COMMAND HANDLERS ====================
@@ -5410,10 +5410,10 @@ client.on('interactionCreate', async (interaction) => {
 
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         if (targetMember && !targetMember.bannable) {
-            return interaction.reply({ content: 'I cannot ban this user. They may have a higher role than me.', ephemeral: true });
+            return interaction.reply({ content: 'I cannot ban this user. They may have a higher role than me.', flags: MessageFlags.Ephemeral });
         }
         if (targetUser.id === member.id) {
-            return interaction.reply({ content: 'You cannot ban yourself.', ephemeral: true });
+            return interaction.reply({ content: 'You cannot ban yourself.', flags: MessageFlags.Ephemeral });
         }
 
         await interaction.deferReply();
@@ -5504,13 +5504,13 @@ client.on('interactionCreate', async (interaction) => {
 
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         if (!targetMember) {
-            return interaction.reply({ content: 'User not found in this server.', ephemeral: true });
+            return interaction.reply({ content: 'User not found in this server.', flags: MessageFlags.Ephemeral });
         }
         if (!targetMember.kickable) {
-            return interaction.reply({ content: 'I cannot kick this user. They may have a higher role than me.', ephemeral: true });
+            return interaction.reply({ content: 'I cannot kick this user. They may have a higher role than me.', flags: MessageFlags.Ephemeral });
         }
         if (targetUser.id === member.id) {
-            return interaction.reply({ content: 'You cannot kick yourself.', ephemeral: true });
+            return interaction.reply({ content: 'You cannot kick yourself.', flags: MessageFlags.Ephemeral });
         }
 
         await interaction.deferReply();
@@ -5550,20 +5550,20 @@ client.on('interactionCreate', async (interaction) => {
 
         const durationMs = parseDuration(durationStr);
         if (!durationMs) {
-            return interaction.reply({ content: 'Invalid duration. Use formats like: 5m, 1h, 1d, 1w', ephemeral: true });
+            return interaction.reply({ content: 'Invalid duration. Use formats like: 5m, 1h, 1d, 1w', flags: MessageFlags.Ephemeral });
         }
 
         // Discord timeout max is 28 days
         if (durationMs > 28 * 86400000) {
-            return interaction.reply({ content: 'Maximum timeout duration is 28 days.', ephemeral: true });
+            return interaction.reply({ content: 'Maximum timeout duration is 28 days.', flags: MessageFlags.Ephemeral });
         }
 
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         if (!targetMember) {
-            return interaction.reply({ content: 'User not found in this server.', ephemeral: true });
+            return interaction.reply({ content: 'User not found in this server.', flags: MessageFlags.Ephemeral });
         }
         if (!targetMember.moderatable) {
-            return interaction.reply({ content: 'I cannot mute this user. They may have a higher role than me.', ephemeral: true });
+            return interaction.reply({ content: 'I cannot mute this user. They may have a higher role than me.', flags: MessageFlags.Ephemeral });
         }
 
         await interaction.deferReply();
@@ -5603,7 +5603,7 @@ client.on('interactionCreate', async (interaction) => {
 
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         if (!targetMember) {
-            return interaction.reply({ content: 'User not found in this server.', ephemeral: true });
+            return interaction.reply({ content: 'User not found in this server.', flags: MessageFlags.Ephemeral });
         }
 
         await interaction.deferReply();
@@ -5679,7 +5679,7 @@ client.on('interactionCreate', async (interaction) => {
         const userWarnings = guildMod.warnings.filter(w => w.user_id === targetUser.id);
 
         if (userWarnings.length === 0) {
-            return interaction.reply({ content: `<@${targetUser.id}> has no warnings.`, ephemeral: true });
+            return interaction.reply({ content: `<@${targetUser.id}> has no warnings.`, flags: MessageFlags.Ephemeral });
         }
 
         const embed = cubEmbed()
@@ -5691,7 +5691,7 @@ client.on('interactionCreate', async (interaction) => {
             .setFooter({ text: `Total: ${userWarnings.length} warning(s)` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     // ---- DELWARN ----
@@ -5703,13 +5703,13 @@ client.on('interactionCreate', async (interaction) => {
         const index = guildMod.warnings.findIndex(w => w.id === warnId);
 
         if (index === -1) {
-            return interaction.reply({ content: `Warning #${warnId} not found.`, ephemeral: true });
+            return interaction.reply({ content: `Warning #${warnId} not found.`, flags: MessageFlags.Ephemeral });
         }
 
         const removed = guildMod.warnings.splice(index, 1)[0];
         saveModData(modData);
 
-        await interaction.reply({ content: `Deleted warning #${warnId} for <@${removed.user_id}>.`, ephemeral: true });
+        await interaction.reply({ content: `Deleted warning #${warnId} for <@${removed.user_id}>.`, flags: MessageFlags.Ephemeral });
     }
 
     // ---- CLEARWARNINGS ----
@@ -5721,13 +5721,13 @@ client.on('interactionCreate', async (interaction) => {
         const count = guildMod.warnings.filter(w => w.user_id === targetUser.id).length;
 
         if (count === 0) {
-            return interaction.reply({ content: `<@${targetUser.id}> has no warnings to clear.`, ephemeral: true });
+            return interaction.reply({ content: `<@${targetUser.id}> has no warnings to clear.`, flags: MessageFlags.Ephemeral });
         }
 
         guildMod.warnings = guildMod.warnings.filter(w => w.user_id !== targetUser.id);
         saveModData(modData);
 
-        await interaction.reply({ content: `Cleared ${count} warning(s) for <@${targetUser.id}>.`, ephemeral: true });
+        await interaction.reply({ content: `Cleared ${count} warning(s) for <@${targetUser.id}>.`, flags: MessageFlags.Ephemeral });
     }
 
     // ---- NOTE ----
@@ -5748,7 +5748,7 @@ client.on('interactionCreate', async (interaction) => {
         });
         saveModData(modData);
 
-        await interaction.reply({ content: `Note #${noteId} added for <@${targetUser.id}>.`, ephemeral: true });
+        await interaction.reply({ content: `Note #${noteId} added for <@${targetUser.id}>.`, flags: MessageFlags.Ephemeral });
     }
 
     // ---- NOTES ----
@@ -5760,7 +5760,7 @@ client.on('interactionCreate', async (interaction) => {
         const userNotes = guildMod.notes.filter(n => n.user_id === targetUser.id);
 
         if (userNotes.length === 0) {
-            return interaction.reply({ content: `No notes for <@${targetUser.id}>.`, ephemeral: true });
+            return interaction.reply({ content: `No notes for <@${targetUser.id}>.`, flags: MessageFlags.Ephemeral });
         }
 
         const embed = cubEmbed()
@@ -5772,7 +5772,7 @@ client.on('interactionCreate', async (interaction) => {
             .setFooter({ text: `Total: ${userNotes.length} note(s)` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     // ---- DELNOTE ----
@@ -5784,13 +5784,13 @@ client.on('interactionCreate', async (interaction) => {
         const index = guildMod.notes.findIndex(n => n.id === noteId);
 
         if (index === -1) {
-            return interaction.reply({ content: `Note #${noteId} not found.`, ephemeral: true });
+            return interaction.reply({ content: `Note #${noteId} not found.`, flags: MessageFlags.Ephemeral });
         }
 
         const removed = guildMod.notes.splice(index, 1)[0];
         saveModData(modData);
 
-        await interaction.reply({ content: `Deleted note #${noteId} for <@${removed.user_id}>.`, ephemeral: true });
+        await interaction.reply({ content: `Deleted note #${noteId} for <@${removed.user_id}>.`, flags: MessageFlags.Ephemeral });
     }
 
     // ---- SOFTBAN ----
@@ -5800,7 +5800,7 @@ client.on('interactionCreate', async (interaction) => {
 
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         if (targetMember && !targetMember.bannable) {
-            return interaction.reply({ content: 'I cannot softban this user. They may have a higher role than me.', ephemeral: true });
+            return interaction.reply({ content: 'I cannot softban this user. They may have a higher role than me.', flags: MessageFlags.Ephemeral });
         }
 
         await interaction.deferReply();
@@ -5838,7 +5838,7 @@ client.on('interactionCreate', async (interaction) => {
         const filterUser = interaction.options.getUser('user');
         const filterType = interaction.options.getString('filter');
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         try {
             let messages = await interaction.channel.messages.fetch({ limit: Math.min(amount * 2, 100) });
@@ -5893,7 +5893,7 @@ client.on('interactionCreate', async (interaction) => {
                 await interaction.reply({ content: `Slowmode set to ${seconds} second(s) in <#${channel.id}>.` });
             }
         } catch (e) {
-            await interaction.reply({ content: `Failed to set slowmode: ${e.message}`, ephemeral: true });
+            await interaction.reply({ content: `Failed to set slowmode: ${e.message}`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -5919,7 +5919,7 @@ client.on('interactionCreate', async (interaction) => {
 
             await interaction.reply({ embeds: [embed] });
         } catch (e) {
-            await interaction.reply({ content: `Failed to lock channel: ${e.message}`, ephemeral: true });
+            await interaction.reply({ content: `Failed to lock channel: ${e.message}`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -5938,7 +5938,7 @@ client.on('interactionCreate', async (interaction) => {
 
             await interaction.reply({ embeds: [embed] });
         } catch (e) {
-            await interaction.reply({ content: `Failed to unlock channel: ${e.message}`, ephemeral: true });
+            await interaction.reply({ content: `Failed to unlock channel: ${e.message}`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -5951,7 +5951,7 @@ client.on('interactionCreate', async (interaction) => {
         const userCases = guildMod.cases.filter(c => c.target_id === targetUser.id);
 
         if (userCases.length === 0) {
-            return interaction.reply({ content: `No moderation history for <@${targetUser.id}>.`, ephemeral: true });
+            return interaction.reply({ content: `No moderation history for <@${targetUser.id}>.`, flags: MessageFlags.Ephemeral });
         }
 
         const typeEmojis = { ban: '🔨', unban: '🔓', kick: '👢', mute: '🔇', unmute: '🔊', warn: '⚠️', softban: '🧹', purge: '🗑️', lock: '🔒', unlock: '🔓' };
@@ -5965,7 +5965,7 @@ client.on('interactionCreate', async (interaction) => {
             .setFooter({ text: `Total: ${userCases.length} case(s)` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     // ==================== AUTO-MOD HANDLER ====================
@@ -5977,11 +5977,11 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'enable') {
             guildAM.enabled = true;
             saveAutoModData(amData);
-            await interaction.reply({ content: 'Auto-moderation enabled.', ephemeral: true });
+            await interaction.reply({ content: 'Auto-moderation enabled.', flags: MessageFlags.Ephemeral });
         } else if (sub === 'disable') {
             guildAM.enabled = false;
             saveAutoModData(amData);
-            await interaction.reply({ content: 'Auto-moderation disabled.', ephemeral: true });
+            await interaction.reply({ content: 'Auto-moderation disabled.', flags: MessageFlags.Ephemeral });
         } else if (sub === 'status') {
             const filters = ['bad_words', 'spam', 'caps', 'links', 'invites', 'mass_mentions', 'emojis', 'newlines', 'duplicates'];
             const embed = cubEmbed()
@@ -5993,7 +5993,7 @@ client.on('interactionCreate', async (interaction) => {
                     value: guildAM[f]?.enabled ? 'Enabled' : 'Disabled',
                     inline: true,
                 })));
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         } else if (sub === 'badwords') {
             const action = interaction.options.getString('action');
             const word = interaction.options.getString('word');
@@ -6001,44 +6001,44 @@ client.on('interactionCreate', async (interaction) => {
             if (action === 'toggle') {
                 guildAM.bad_words.enabled = !guildAM.bad_words.enabled;
                 saveAutoModData(amData);
-                await interaction.reply({ content: `Bad words filter ${guildAM.bad_words.enabled ? 'enabled' : 'disabled'}.`, ephemeral: true });
+                await interaction.reply({ content: `Bad words filter ${guildAM.bad_words.enabled ? 'enabled' : 'disabled'}.`, flags: MessageFlags.Ephemeral });
             } else if (action === 'add' && word) {
                 if (!guildAM.bad_words.words.includes(word.toLowerCase())) guildAM.bad_words.words.push(word.toLowerCase());
                 saveAutoModData(amData);
-                await interaction.reply({ content: `Added "${word}" to bad words list.`, ephemeral: true });
+                await interaction.reply({ content: `Added "${word}" to bad words list.`, flags: MessageFlags.Ephemeral });
             } else if (action === 'remove' && word) {
                 guildAM.bad_words.words = guildAM.bad_words.words.filter(w => w !== word.toLowerCase());
                 saveAutoModData(amData);
-                await interaction.reply({ content: `Removed "${word}" from bad words list.`, ephemeral: true });
+                await interaction.reply({ content: `Removed "${word}" from bad words list.`, flags: MessageFlags.Ephemeral });
             } else if (action === 'list') {
-                await interaction.reply({ content: guildAM.bad_words.words.length > 0 ? `Bad words: ||${guildAM.bad_words.words.join(', ')}||` : 'No bad words configured.', ephemeral: true });
+                await interaction.reply({ content: guildAM.bad_words.words.length > 0 ? `Bad words: ||${guildAM.bad_words.words.join(', ')}||` : 'No bad words configured.', flags: MessageFlags.Ephemeral });
             }
         } else if (sub === 'spam') {
             const action = interaction.options.getString('action');
             if (action === 'toggle') {
                 guildAM.spam.enabled = !guildAM.spam.enabled;
                 saveAutoModData(amData);
-                await interaction.reply({ content: `Spam filter ${guildAM.spam.enabled ? 'enabled' : 'disabled'}.`, ephemeral: true });
+                await interaction.reply({ content: `Spam filter ${guildAM.spam.enabled ? 'enabled' : 'disabled'}.`, flags: MessageFlags.Ephemeral });
             } else {
                 const max = interaction.options.getInteger('max_messages');
                 const interval = interaction.options.getInteger('interval');
                 if (max) guildAM.spam.max_messages = max;
                 if (interval) guildAM.spam.interval = interval;
                 saveAutoModData(amData);
-                await interaction.reply({ content: `Spam filter config: ${guildAM.spam.max_messages} messages in ${guildAM.spam.interval}s.`, ephemeral: true });
+                await interaction.reply({ content: `Spam filter config: ${guildAM.spam.max_messages} messages in ${guildAM.spam.interval}s.`, flags: MessageFlags.Ephemeral });
             }
         } else if (sub === 'invites') {
             guildAM.invites.enabled = !guildAM.invites.enabled;
             saveAutoModData(amData);
-            await interaction.reply({ content: `Invite filter ${guildAM.invites.enabled ? 'enabled' : 'disabled'}.`, ephemeral: true });
+            await interaction.reply({ content: `Invite filter ${guildAM.invites.enabled ? 'enabled' : 'disabled'}.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'caps') {
             guildAM.caps.enabled = !guildAM.caps.enabled;
             saveAutoModData(amData);
-            await interaction.reply({ content: `Caps filter ${guildAM.caps.enabled ? 'enabled' : 'disabled'}.`, ephemeral: true });
+            await interaction.reply({ content: `Caps filter ${guildAM.caps.enabled ? 'enabled' : 'disabled'}.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'links') {
             guildAM.links.enabled = !guildAM.links.enabled;
             saveAutoModData(amData);
-            await interaction.reply({ content: `Link filter ${guildAM.links.enabled ? 'enabled' : 'disabled'}.`, ephemeral: true });
+            await interaction.reply({ content: `Link filter ${guildAM.links.enabled ? 'enabled' : 'disabled'}.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'mentions') {
             const action = interaction.options.getString('action');
             const max = interaction.options.getInteger('max');
@@ -6047,13 +6047,13 @@ client.on('interactionCreate', async (interaction) => {
             }
             if (max) guildAM.mass_mentions.max_mentions = max;
             saveAutoModData(amData);
-            await interaction.reply({ content: `Mass mentions filter ${guildAM.mass_mentions.enabled ? 'enabled' : 'disabled'} (max: ${guildAM.mass_mentions.max_mentions}).`, ephemeral: true });
+            await interaction.reply({ content: `Mass mentions filter ${guildAM.mass_mentions.enabled ? 'enabled' : 'disabled'} (max: ${guildAM.mass_mentions.max_mentions}).`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'exempt') {
             const filterName = interaction.options.getString('filter');
             const role = interaction.options.getRole('role');
             const channel = interaction.options.getChannel('channel');
             const filter = guildAM[filterName];
-            if (!filter) return interaction.reply({ content: 'Invalid filter name.', ephemeral: true });
+            if (!filter) return interaction.reply({ content: 'Invalid filter name.', flags: MessageFlags.Ephemeral });
             if (role) {
                 if (!filter.exempt_roles) filter.exempt_roles = [];
                 if (!filter.exempt_roles.includes(role.id)) filter.exempt_roles.push(role.id);
@@ -6063,7 +6063,7 @@ client.on('interactionCreate', async (interaction) => {
                 if (!filter.exempt_channels.includes(channel.id)) filter.exempt_channels.push(channel.id);
             }
             saveAutoModData(amData);
-            await interaction.reply({ content: `Exemptions updated for ${filterName}.`, ephemeral: true });
+            await interaction.reply({ content: `Exemptions updated for ${filterName}.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -6101,7 +6101,7 @@ client.on('interactionCreate', async (interaction) => {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     // ==================== WELCOME HANDLER ====================
@@ -6113,29 +6113,29 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'channel') {
             guildW.welcome.channel_id = interaction.options.getChannel('channel').id;
             saveWelcomeData(wData);
-            await interaction.reply({ content: `Welcome channel set to <#${guildW.welcome.channel_id}>.`, ephemeral: true });
+            await interaction.reply({ content: `Welcome channel set to <#${guildW.welcome.channel_id}>.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'message') {
             guildW.welcome.message = interaction.options.getString('text');
             saveWelcomeData(wData);
-            await interaction.reply({ content: 'Welcome message updated.', ephemeral: true });
+            await interaction.reply({ content: 'Welcome message updated.', flags: MessageFlags.Ephemeral });
         } else if (sub === 'dm') {
             guildW.welcome.dm_message = interaction.options.getString('text');
             saveWelcomeData(wData);
-            await interaction.reply({ content: 'DM welcome message updated.', ephemeral: true });
+            await interaction.reply({ content: 'DM welcome message updated.', flags: MessageFlags.Ephemeral });
         } else if (sub === 'toggle') {
             guildW.welcome.enabled = !guildW.welcome.enabled;
             saveWelcomeData(wData);
-            await interaction.reply({ content: `Welcome messages ${guildW.welcome.enabled ? 'enabled' : 'disabled'}.`, ephemeral: true });
+            await interaction.reply({ content: `Welcome messages ${guildW.welcome.enabled ? 'enabled' : 'disabled'}.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'autorole') {
             const role = interaction.options.getRole('role');
             const action = interaction.options.getString('action');
             if (!guildW.welcome.auto_roles) guildW.welcome.auto_roles = [];
             if (action === 'add') {
                 if (!guildW.welcome.auto_roles.includes(role.id)) guildW.welcome.auto_roles.push(role.id);
-                await interaction.reply({ content: `Added <@&${role.id}> as auto-role.`, ephemeral: true });
+                await interaction.reply({ content: `Added <@&${role.id}> as auto-role.`, flags: MessageFlags.Ephemeral });
             } else {
                 guildW.welcome.auto_roles = guildW.welcome.auto_roles.filter(r => r !== role.id);
-                await interaction.reply({ content: `Removed <@&${role.id}> from auto-roles.`, ephemeral: true });
+                await interaction.reply({ content: `Removed <@&${role.id}> from auto-roles.`, flags: MessageFlags.Ephemeral });
             }
             saveWelcomeData(wData);
         } else if (sub === 'test') {
@@ -6146,7 +6146,7 @@ client.on('interactionCreate', async (interaction) => {
             const embed = cubEmbed()
                 .setColor(0x57F287).setTitle('Welcome!').setDescription(msg)
                 .setThumbnail(member.user.displayAvatarURL({ size: 256 })).setTimestamp();
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -6159,15 +6159,15 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'channel') {
             guildW.goodbye.channel_id = interaction.options.getChannel('channel').id;
             saveWelcomeData(wData);
-            await interaction.reply({ content: `Goodbye channel set to <#${guildW.goodbye.channel_id}>.`, ephemeral: true });
+            await interaction.reply({ content: `Goodbye channel set to <#${guildW.goodbye.channel_id}>.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'message') {
             guildW.goodbye.message = interaction.options.getString('text');
             saveWelcomeData(wData);
-            await interaction.reply({ content: 'Goodbye message updated.', ephemeral: true });
+            await interaction.reply({ content: 'Goodbye message updated.', flags: MessageFlags.Ephemeral });
         } else if (sub === 'toggle') {
             guildW.goodbye.enabled = !guildW.goodbye.enabled;
             saveWelcomeData(wData);
-            await interaction.reply({ content: `Goodbye messages ${guildW.goodbye.enabled ? 'enabled' : 'disabled'}.`, ephemeral: true });
+            await interaction.reply({ content: `Goodbye messages ${guildW.goodbye.enabled ? 'enabled' : 'disabled'}.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -6177,7 +6177,7 @@ client.on('interactionCreate', async (interaction) => {
         const lvlData = loadLevelsData();
         const guildLvl = getLevelsGuild(lvlData, guild.id);
 
-        if (!guildLvl.enabled) return interaction.reply({ content: 'Leveling is not enabled.', ephemeral: true });
+        if (!guildLvl.enabled) return interaction.reply({ content: 'Leveling is not enabled.', flags: MessageFlags.Ephemeral });
 
         await interaction.deferReply();
 
@@ -6242,7 +6242,7 @@ client.on('interactionCreate', async (interaction) => {
         if (preset) userTheme.preset = preset;
         if (accent) {
             const hexRegex = /^#?([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
-            if (!hexRegex.test(accent)) return interaction.reply({ content: 'Invalid hex colour. Use format: `#FF5733`', ephemeral: true });
+            if (!hexRegex.test(accent)) return interaction.reply({ content: 'Invalid hex colour. Use format: `#FF5733`', flags: MessageFlags.Ephemeral });
             userTheme.accent = accent.startsWith('#') ? accent : '#' + accent;
             userTheme.bar = userTheme.accent;
             userTheme.avatar_border = userTheme.accent;
@@ -6258,9 +6258,9 @@ client.on('interactionCreate', async (interaction) => {
         d.users[interaction.user.id].theme = userTheme;
         saveRankCardData(d);
 
-        if (!generateRankCard) return interaction.reply({ content: '✅ Theme saved! (Visual preview unavailable — canvas not installed)', ephemeral: true });
+        if (!generateRankCard) return interaction.reply({ content: '✅ Theme saved! (Visual preview unavailable — canvas not installed)', flags: MessageFlags.Ephemeral });
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         try {
             const lvlData = loadLevelsData();
             const guildLvl = getLevelsGuild(lvlData, guild.id);
@@ -6293,11 +6293,11 @@ client.on('interactionCreate', async (interaction) => {
         const lvlData = loadLevelsData();
         const guildLvl = getLevelsGuild(lvlData, guild.id);
 
-        if (!guildLvl.enabled) return interaction.reply({ content: 'Leveling is not enabled.', ephemeral: true });
+        if (!guildLvl.enabled) return interaction.reply({ content: 'Leveling is not enabled.', flags: MessageFlags.Ephemeral });
 
         const sorted = Object.entries(guildLvl.users).sort((a, b) => b[1].xp - a[1].xp).slice(0, 10);
 
-        if (sorted.length === 0) return interaction.reply({ content: 'No leaderboard data yet.', ephemeral: true });
+        if (sorted.length === 0) return interaction.reply({ content: 'No leaderboard data yet.', flags: MessageFlags.Ephemeral });
 
         const medals = ['🥇', '🥈', '🥉'];
         const embed = cubEmbed()
@@ -6319,7 +6319,7 @@ client.on('interactionCreate', async (interaction) => {
         if (!guildLvl.users[targetUser.id]) guildLvl.users[targetUser.id] = { xp: 0, total_messages: 0 };
         guildLvl.users[targetUser.id].xp += amount;
         saveLevelsData(lvlData);
-        await interaction.reply({ content: `Gave ${amount} XP to <@${targetUser.id}>. New total: ${guildLvl.users[targetUser.id].xp}`, ephemeral: true });
+        await interaction.reply({ content: `Gave ${amount} XP to <@${targetUser.id}>. New total: ${guildLvl.users[targetUser.id].xp}`, flags: MessageFlags.Ephemeral });
     }
 
     else if (commandName === 'removexp') {
@@ -6330,7 +6330,7 @@ client.on('interactionCreate', async (interaction) => {
         if (!guildLvl.users[targetUser.id]) guildLvl.users[targetUser.id] = { xp: 0, total_messages: 0 };
         guildLvl.users[targetUser.id].xp = Math.max(0, guildLvl.users[targetUser.id].xp - amount);
         saveLevelsData(lvlData);
-        await interaction.reply({ content: `Removed ${amount} XP from <@${targetUser.id}>. New total: ${guildLvl.users[targetUser.id].xp}`, ephemeral: true });
+        await interaction.reply({ content: `Removed ${amount} XP from <@${targetUser.id}>. New total: ${guildLvl.users[targetUser.id].xp}`, flags: MessageFlags.Ephemeral });
     }
 
     else if (commandName === 'resetxp') {
@@ -6339,7 +6339,7 @@ client.on('interactionCreate', async (interaction) => {
         const guildLvl = getLevelsGuild(lvlData, guild.id);
         delete guildLvl.users[targetUser.id];
         saveLevelsData(lvlData);
-        await interaction.reply({ content: `Reset XP for <@${targetUser.id}>.`, ephemeral: true });
+        await interaction.reply({ content: `Reset XP for <@${targetUser.id}>.`, flags: MessageFlags.Ephemeral });
     }
 
     else if (commandName === 'levels') {
@@ -6350,7 +6350,7 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'toggle') {
             guildLvl.enabled = !guildLvl.enabled;
             saveLevelsData(lvlData);
-            await interaction.reply({ content: `Leveling system ${guildLvl.enabled ? 'enabled' : 'disabled'}.`, ephemeral: true });
+            await interaction.reply({ content: `Leveling system ${guildLvl.enabled ? 'enabled' : 'disabled'}.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'channel') {
             const type = interaction.options.getString('type');
             guildLvl.announce_type = type;
@@ -6359,7 +6359,7 @@ client.on('interactionCreate', async (interaction) => {
                 if (ch) guildLvl.announce_channel = ch.id;
             }
             saveLevelsData(lvlData);
-            await interaction.reply({ content: `Level-up announcements set to: ${type}.`, ephemeral: true });
+            await interaction.reply({ content: `Level-up announcements set to: ${type}.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'reward') {
             const level = interaction.options.getInteger('level');
             const role = interaction.options.getRole('role');
@@ -6367,16 +6367,16 @@ client.on('interactionCreate', async (interaction) => {
             if (!guildLvl.role_rewards) guildLvl.role_rewards = {};
             if (action === 'add') {
                 guildLvl.role_rewards[level.toString()] = role.id;
-                await interaction.reply({ content: `Level ${level} reward set to <@&${role.id}>.`, ephemeral: true });
+                await interaction.reply({ content: `Level ${level} reward set to <@&${role.id}>.`, flags: MessageFlags.Ephemeral });
             } else {
                 delete guildLvl.role_rewards[level.toString()];
-                await interaction.reply({ content: `Removed level ${level} reward.`, ephemeral: true });
+                await interaction.reply({ content: `Removed level ${level} reward.`, flags: MessageFlags.Ephemeral });
             }
             saveLevelsData(lvlData);
         } else if (sub === 'multiplier') {
             guildLvl.xp_multiplier = interaction.options.getNumber('value');
             saveLevelsData(lvlData);
-            await interaction.reply({ content: `XP multiplier set to ${guildLvl.xp_multiplier}x.`, ephemeral: true });
+            await interaction.reply({ content: `XP multiplier set to ${guildLvl.xp_multiplier}x.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -6401,7 +6401,7 @@ client.on('interactionCreate', async (interaction) => {
             rrData.guilds[guild.id][msg.id] = { channel_id: interaction.channel.id, type, roles: [] };
             saveReactionRolesData(rrData);
 
-            await interaction.reply({ content: `Reaction role message created (ID: ${msg.id}). Use \`/reactionrole add\` to add roles.`, ephemeral: true });
+            await interaction.reply({ content: `Reaction role message created (ID: ${msg.id}). Use \`/reactionrole add\` to add roles.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'add') {
             const messageId = interaction.options.getString('message_id');
             const role = interaction.options.getRole('role');
@@ -6410,16 +6410,16 @@ client.on('interactionCreate', async (interaction) => {
             const color = interaction.options.getString('color') || 'Primary';
 
             const rrMsg = rrData.guilds[guild.id][messageId];
-            if (!rrMsg) return interaction.reply({ content: 'Reaction role message not found.', ephemeral: true });
+            if (!rrMsg) return interaction.reply({ content: 'Reaction role message not found.', flags: MessageFlags.Ephemeral });
 
             rrMsg.roles.push({ role_id: role.id, label, emoji: emoji || null, color });
             saveReactionRolesData(rrData);
 
             // Update the message with buttons or dropdown
             const channel = await guild.channels.fetch(rrMsg.channel_id).catch(() => null);
-            if (!channel) return interaction.reply({ content: 'Channel not found.', ephemeral: true });
+            if (!channel) return interaction.reply({ content: 'Channel not found.', flags: MessageFlags.Ephemeral });
             const msg = await channel.messages.fetch(messageId).catch(() => null);
-            if (!msg) return interaction.reply({ content: 'Message not found.', ephemeral: true });
+            if (!msg) return interaction.reply({ content: 'Message not found.', flags: MessageFlags.Ephemeral });
 
             if (rrMsg.type === 'buttons') {
                 const rows = [];
@@ -6453,18 +6453,18 @@ client.on('interactionCreate', async (interaction) => {
                 await msg.edit({ components: [row] }).catch(() => {});
             }
 
-            await interaction.reply({ content: `Added <@&${role.id}> to reaction role message.`, ephemeral: true });
+            await interaction.reply({ content: `Added <@&${role.id}> to reaction role message.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'remove') {
             const messageId = interaction.options.getString('message_id');
             const role = interaction.options.getRole('role');
 
             const rrMsg = rrData.guilds[guild.id][messageId];
-            if (!rrMsg) return interaction.reply({ content: 'Reaction role message not found.', ephemeral: true });
+            if (!rrMsg) return interaction.reply({ content: 'Reaction role message not found.', flags: MessageFlags.Ephemeral });
 
             rrMsg.roles = rrMsg.roles.filter(r => r.role_id !== role.id);
             saveReactionRolesData(rrData);
 
-            await interaction.reply({ content: `Removed <@&${role.id}> from reaction role message.`, ephemeral: true });
+            await interaction.reply({ content: `Removed <@&${role.id}> from reaction role message.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -6482,20 +6482,20 @@ client.on('interactionCreate', async (interaction) => {
 
             guildCC.commands.push({ trigger, response, type, created_by: member.id, created_at: Math.floor(Date.now() / 1000) });
             saveCustomCommandsData(ccData);
-            await interaction.reply({ content: `Custom command "${trigger}" added (type: ${type}).`, ephemeral: true });
+            await interaction.reply({ content: `Custom command "${trigger}" added (type: ${type}).`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'remove') {
             const trigger = interaction.options.getString('trigger');
             const before = guildCC.commands.length;
             guildCC.commands = guildCC.commands.filter(c => c.trigger.toLowerCase() !== trigger.toLowerCase());
             saveCustomCommandsData(ccData);
-            await interaction.reply({ content: guildCC.commands.length < before ? `Removed "${trigger}".` : 'Command not found.', ephemeral: true });
+            await interaction.reply({ content: guildCC.commands.length < before ? `Removed "${trigger}".` : 'Command not found.', flags: MessageFlags.Ephemeral });
         } else if (sub === 'list') {
-            if (guildCC.commands.length === 0) return interaction.reply({ content: 'No custom commands.', ephemeral: true });
+            if (guildCC.commands.length === 0) return interaction.reply({ content: 'No custom commands.', flags: MessageFlags.Ephemeral });
             const embed = cubEmbed()
                 .setColor(0x5865F2)
                 .setTitle('Custom Commands')
                 .setDescription(guildCC.commands.map(c => `**${c.trigger}** (${c.type})`).join('\n'));
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -6541,10 +6541,10 @@ client.on('interactionCreate', async (interaction) => {
             });
 
             saveTicketsData(tData);
-            await interaction.reply({ content: `Ticket panel created in <#${channel.id}>.`, ephemeral: true });
+            await interaction.reply({ content: `Ticket panel created in <#${channel.id}>.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'close') {
             const ticketInfo = guildT.tickets[interaction.channel.id];
-            if (!ticketInfo) return interaction.reply({ content: 'This is not a ticket channel.', ephemeral: true });
+            if (!ticketInfo) return interaction.reply({ content: 'This is not a ticket channel.', flags: MessageFlags.Ephemeral });
 
             await interaction.reply({ content: 'Closing ticket in 5 seconds...' });
 
@@ -6575,13 +6575,13 @@ client.on('interactionCreate', async (interaction) => {
         } else if (sub === 'add') {
             const targetUser = interaction.options.getUser('user');
             const ticketInfo = guildT.tickets[interaction.channel.id];
-            if (!ticketInfo) return interaction.reply({ content: 'This is not a ticket channel.', ephemeral: true });
+            if (!ticketInfo) return interaction.reply({ content: 'This is not a ticket channel.', flags: MessageFlags.Ephemeral });
             await interaction.channel.permissionOverwrites.create(targetUser.id, { ViewChannel: true, SendMessages: true }).catch(() => {});
             await interaction.reply({ content: `Added <@${targetUser.id}> to this ticket.` });
         } else if (sub === 'remove') {
             const targetUser = interaction.options.getUser('user');
             const ticketInfo = guildT.tickets[interaction.channel.id];
-            if (!ticketInfo) return interaction.reply({ content: 'This is not a ticket channel.', ephemeral: true });
+            if (!ticketInfo) return interaction.reply({ content: 'This is not a ticket channel.', flags: MessageFlags.Ephemeral });
             await interaction.channel.permissionOverwrites.delete(targetUser.id).catch(() => {});
             await interaction.reply({ content: `Removed <@${targetUser.id}> from this ticket.` });
         }
@@ -6601,7 +6601,7 @@ client.on('interactionCreate', async (interaction) => {
             const channel = interaction.options.getChannel('channel') || interaction.channel;
 
             const durationMs = parseDuration(durationStr);
-            if (!durationMs) return interaction.reply({ content: 'Invalid duration. Use: 1h, 1d, 7d', ephemeral: true });
+            if (!durationMs) return interaction.reply({ content: 'Invalid duration. Use: 1h, 1d, 7d', flags: MessageFlags.Ephemeral });
 
             const endsAt = Date.now() + durationMs;
 
@@ -6639,17 +6639,17 @@ client.on('interactionCreate', async (interaction) => {
             giveawayTimers.set(msg.id, timer);
 
             console.log(`[Giveaway] Started "${prize}" in "${guild.name}" — ${winners} winner(s), ends in ${durationStr} by ${member.user.tag}`);
-            await interaction.reply({ content: `Giveaway started in <#${channel.id}>!`, ephemeral: true });
+            await interaction.reply({ content: `Giveaway started in <#${channel.id}>!`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'end') {
             const messageId = interaction.options.getString('message_id');
             await endGiveaway(guild.id, messageId);
-            await interaction.reply({ content: 'Giveaway ended.', ephemeral: true });
+            await interaction.reply({ content: 'Giveaway ended.', flags: MessageFlags.Ephemeral });
         } else if (sub === 'reroll') {
             const messageId = interaction.options.getString('message_id');
             const gData2 = loadGiveawaysData();
             const giveaway = gData2.guilds[guild.id]?.find(g => g.message_id === messageId);
-            if (!giveaway || !giveaway.ended) return interaction.reply({ content: 'Giveaway not found or not ended.', ephemeral: true });
-            if (giveaway.entries.length === 0) return interaction.reply({ content: 'No entries.', ephemeral: true });
+            if (!giveaway || !giveaway.ended) return interaction.reply({ content: 'Giveaway not found or not ended.', flags: MessageFlags.Ephemeral });
+            if (giveaway.entries.length === 0) return interaction.reply({ content: 'No entries.', flags: MessageFlags.Ephemeral });
 
             const winners = [];
             const pool = [...giveaway.entries];
@@ -6662,7 +6662,7 @@ client.on('interactionCreate', async (interaction) => {
             if (channel) {
                 await channel.send({ content: `🎉 **Giveaway Rerolled!**\nNew winner(s): ${winners.map(w => `<@${w}>`).join(', ')}\nPrize: **${giveaway.prize}**` });
             }
-            await interaction.reply({ content: 'Rerolled!', ephemeral: true });
+            await interaction.reply({ content: 'Rerolled!', flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -6678,11 +6678,11 @@ client.on('interactionCreate', async (interaction) => {
             sbData.guilds[guild.id].threshold = interaction.options.getInteger('threshold') || 3;
             sbData.guilds[guild.id].enabled = true;
             saveStarboardData(sbData);
-            await interaction.reply({ content: `Starboard set up in <#${sbData.guilds[guild.id].channel_id}>.`, ephemeral: true });
+            await interaction.reply({ content: `Starboard set up in <#${sbData.guilds[guild.id].channel_id}>.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'toggle') {
             sbData.guilds[guild.id].enabled = !sbData.guilds[guild.id].enabled;
             saveStarboardData(sbData);
-            await interaction.reply({ content: `Starboard ${sbData.guilds[guild.id].enabled ? 'enabled' : 'disabled'}.`, ephemeral: true });
+            await interaction.reply({ content: `Starboard ${sbData.guilds[guild.id].enabled ? 'enabled' : 'disabled'}.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -6701,7 +6701,7 @@ client.on('interactionCreate', async (interaction) => {
         const timeStr = interaction.options.getString('time');
         const message = interaction.options.getString('message');
         const durationMs = parseDuration(timeStr);
-        if (!durationMs) return interaction.reply({ content: 'Invalid time format. Use: 30m, 2h, 1d', ephemeral: true });
+        if (!durationMs) return interaction.reply({ content: 'Invalid time format. Use: 30m, 2h, 1d', flags: MessageFlags.Ephemeral });
 
         const rData = loadRemindersData();
         const id = (rData.reminders.length > 0 ? Math.max(...rData.reminders.map(r => r.id)) : 0) + 1;
@@ -6719,14 +6719,14 @@ client.on('interactionCreate', async (interaction) => {
         }, durationMs);
         reminderTimers.set(id, timer);
 
-        await interaction.reply({ content: `Reminder set! I'll remind you <t:${Math.floor(reminder.expires_at / 1000)}:R>.`, ephemeral: true });
+        await interaction.reply({ content: `Reminder set! I'll remind you <t:${Math.floor(reminder.expires_at / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
     }
 
     else if (commandName === 'reminders') {
         const rData = loadRemindersData();
         const userReminders = rData.reminders.filter(r => r.user_id === member.id);
 
-        if (userReminders.length === 0) return interaction.reply({ content: 'No active reminders.', ephemeral: true });
+        if (userReminders.length === 0) return interaction.reply({ content: 'No active reminders.', flags: MessageFlags.Ephemeral });
 
         const embed = cubEmbed()
             .setColor(0x5865F2)
@@ -6735,7 +6735,7 @@ client.on('interactionCreate', async (interaction) => {
                 `**#${r.id}** - ${r.message}\nExpires: <t:${Math.floor(r.expires_at / 1000)}:R>`
             ).join('\n\n'));
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     // ==================== SUGGESTIONS HANDLER ====================
@@ -6747,11 +6747,11 @@ client.on('interactionCreate', async (interaction) => {
         if (!guildS.suggestions) guildS.suggestions = [];
 
         const channelId = guildS.channel_id || guildS.channel || null;
-        if (guildS.enabled === false) return interaction.reply({ content: 'Suggestions are currently disabled.', ephemeral: true });
-        if (!channelId) return interaction.reply({ content: 'Suggestion channel not set up. Ask an admin to configure it on the dashboard or use `/suggestion setup`.', ephemeral: true });
+        if (guildS.enabled === false) return interaction.reply({ content: 'Suggestions are currently disabled.', flags: MessageFlags.Ephemeral });
+        if (!channelId) return interaction.reply({ content: 'Suggestion channel not set up. Ask an admin to configure it on the dashboard or use `/suggestion setup`.', flags: MessageFlags.Ephemeral });
 
         const channel = await guild.channels.fetch(channelId).catch(() => null);
-        if (!channel) return interaction.reply({ content: 'Suggestion channel not found — an admin may need to reconfigure it.', ephemeral: true });
+        if (!channel) return interaction.reply({ content: 'Suggestion channel not found — an admin may need to reconfigure it.', flags: MessageFlags.Ephemeral });
 
         // Generate unique random 4-digit ID
         let sugId;
@@ -6781,7 +6781,7 @@ client.on('interactionCreate', async (interaction) => {
         saveSuggestionsData(sData);
 
         console.log(`[Suggestion] #${sugId} submitted by ${interaction.user.tag} in "${guild.name}"${anonymous ? ' (anonymous)' : ''}`);
-        await interaction.reply({ content: `✅ Suggestion #${sugId} submitted!`, ephemeral: true });
+        await interaction.reply({ content: `✅ Suggestion #${sugId} submitted!`, flags: MessageFlags.Ephemeral });
     }
 
     else if (commandName === 'suggestion') {
@@ -6796,12 +6796,12 @@ client.on('interactionCreate', async (interaction) => {
             guildS.channel = ch.id;
             guildS.enabled = true;
             saveSuggestionsData(sData);
-            await interaction.reply({ content: `✅ Suggestion channel set to <#${ch.id}>.`, ephemeral: true });
+            await interaction.reply({ content: `✅ Suggestion channel set to <#${ch.id}>.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'approve' || sub === 'deny') {
             const sugId = parseInt(interaction.options.getString('id'));
             const response = interaction.options.getString('response');
             const sug = guildS.suggestions.find(s => s.id === sugId);
-            if (!sug) return interaction.reply({ content: 'Suggestion not found.', ephemeral: true });
+            if (!sug) return interaction.reply({ content: 'Suggestion not found.', flags: MessageFlags.Ephemeral });
 
             const approved = sub === 'approve';
             sug.status = approved ? 'approved' : 'denied';
@@ -6835,7 +6835,7 @@ client.on('interactionCreate', async (interaction) => {
             }
 
             console.log(`[Suggestion] #${sugId} ${approved ? 'approved' : 'denied'} by ${member.user.tag} in "${guild.name}"`);
-            await interaction.reply({ content: `✅ Suggestion #${sugId} ${approved ? 'approved' : 'denied'}.`, ephemeral: true });
+            await interaction.reply({ content: `✅ Suggestion #${sugId} ${approved ? 'approved' : 'denied'}.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -6952,10 +6952,10 @@ client.on('interactionCreate', async (interaction) => {
     else if (commandName === 'cubai') {
         try {
             if (interaction.user.id !== '378501056008683530') {
-                return await interaction.reply({ content: 'Only the bot owner can use this command.', ephemeral: true });
+                return await interaction.reply({ content: 'Only the bot owner can use this command.', flags: MessageFlags.Ephemeral });
             }
             if (!cubAiJoin || !cubAiLeave || !cubAiPersonality) {
-                return await interaction.reply({ content: '⚠️ CUB AI is not available — voice dependencies not installed.', ephemeral: true });
+                return await interaction.reply({ content: '⚠️ CUB AI is not available — voice dependencies not installed.', flags: MessageFlags.Ephemeral });
             }
             const sub = interaction.options.getSubcommand();
             if (sub === 'join') return await cubAiJoin(interaction);
@@ -6968,7 +6968,7 @@ client.on('interactionCreate', async (interaction) => {
 
             // ── Feature list & toggle ────────────────────────────────────────
             if (sub === 'features') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active. Use `/cubai join` first.', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active. Use `/cubai join` first.', flags: MessageFlags.Ephemeral });
                 const lines = Object.entries(CUBAI_FEATURES).map(([k, v]) => {
                     const on = _caState.features?.[k] !== false;
                     return `${on ? '✅' : '❌'} **${v.label}**`;
@@ -6979,102 +6979,102 @@ client.on('interactionCreate', async (interaction) => {
                     `${_caState.therapistMode ? '🟢' : '⚫'} Therapist Mode`,
                     `${_caState.evilMode     ? '🟢' : '⚫'} Evil Mode`,
                 ].join(' · ');
-                return interaction.reply({ content: `🎮 **CUB AI Features:**\n${lines}\n\n**Active Modes:** ${modeLines}`, ephemeral: true });
+                return interaction.reply({ content: `🎮 **CUB AI Features:**\n${lines}\n\n**Active Modes:** ${modeLines}`, flags: MessageFlags.Ephemeral });
             }
 
             if (sub === 'toggle') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active. Use `/cubai join` first.', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active. Use `/cubai join` first.', flags: MessageFlags.Ephemeral });
                 const featureKey = interaction.options.getString('feature');
                 const meta = CUBAI_FEATURES[featureKey];
-                if (!meta) return interaction.reply({ content: '⚠️ Unknown feature.', ephemeral: true });
+                if (!meta) return interaction.reply({ content: '⚠️ Unknown feature.', flags: MessageFlags.Ephemeral });
                 _caState.features[featureKey] = !(_caState.features[featureKey] !== false);
                 const on = _caState.features[featureKey];
-                return interaction.reply({ content: `${on ? '✅' : '❌'} **${meta.label}** is now **${on ? 'enabled' : 'disabled'}**.`, ephemeral: true });
+                return interaction.reply({ content: `${on ? '✅' : '❌'} **${meta.label}** is now **${on ? 'enabled' : 'disabled'}**.`, flags: MessageFlags.Ephemeral });
             }
 
             // ── Overlay mode toggles ─────────────────────────────────────────
             if (sub === 'narrator') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
                 cubAiNarrator?.(_caState);
-                return interaction.reply({ content: `🎙️ Narrator Mode is now **${_caState.narratorMode ? 'ON' : 'OFF'}**.`, ephemeral: true });
+                return interaction.reply({ content: `🎙️ Narrator Mode is now **${_caState.narratorMode ? 'ON' : 'OFF'}**.`, flags: MessageFlags.Ephemeral });
             }
             if (sub === 'sports') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
                 cubAiSports?.(_caState);
-                return interaction.reply({ content: `🏆 Sports Announcer Mode is now **${_caState.sportsMode ? 'ON' : 'OFF'}**.`, ephemeral: true });
+                return interaction.reply({ content: `🏆 Sports Announcer Mode is now **${_caState.sportsMode ? 'ON' : 'OFF'}**.`, flags: MessageFlags.Ephemeral });
             }
             if (sub === 'therapist') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
                 cubAiTherapist?.(_caState);
-                return interaction.reply({ content: `🛋️ Therapist Mode is now **${_caState.therapistMode ? 'ON' : 'OFF'}**.`, ephemeral: true });
+                return interaction.reply({ content: `🛋️ Therapist Mode is now **${_caState.therapistMode ? 'ON' : 'OFF'}**.`, flags: MessageFlags.Ephemeral });
             }
             if (sub === 'evil') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
                 cubAiEvil?.(_caState);
-                return interaction.reply({ content: `😈 Evil Mode is now **${_caState.evilMode ? 'ON' : 'OFF'}**.`, ephemeral: true });
+                return interaction.reply({ content: `😈 Evil Mode is now **${_caState.evilMode ? 'ON' : 'OFF'}**.`, flags: MessageFlags.Ephemeral });
             }
 
             // ── One-shot fun features ────────────────────────────────────────
             if (sub === 'rapbattle') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
-                if (!(_caState.features?.rap_battle !== false)) return interaction.reply({ content: '❌ Rap Battle is disabled. Use `/cubai toggle` to enable it.', ephemeral: true });
-                await interaction.reply({ content: '🎤 Dropping a verse...', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
+                if (!(_caState.features?.rap_battle !== false)) return interaction.reply({ content: '❌ Rap Battle is disabled. Use `/cubai toggle` to enable it.', flags: MessageFlags.Ephemeral });
+                await interaction.reply({ content: '🎤 Dropping a verse...', flags: MessageFlags.Ephemeral });
                 await cubAiRapBattle?.(_caState, interaction.options.getString('target'), interaction.user.displayName || interaction.user.username);
                 return;
             }
 
             if (sub === 'burnadd') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
-                if (!(_caState.features?.burn_book !== false)) return interaction.reply({ content: '❌ Burn Book is disabled.', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
+                if (!(_caState.features?.burn_book !== false)) return interaction.reply({ content: '❌ Burn Book is disabled.', flags: MessageFlags.Ephemeral });
                 const name = interaction.options.getString('name');
                 const reason = interaction.options.getString('reason') || '';
                 cubAiBurnBookAdd?.(_caState, name, reason, interaction.user.displayName || interaction.user.username);
-                return interaction.reply({ content: `📒 **${name}** has been added to the burn book.`, ephemeral: true });
+                return interaction.reply({ content: `📒 **${name}** has been added to the burn book.`, flags: MessageFlags.Ephemeral });
             }
 
             if (sub === 'burnread') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
-                if (!(_caState.features?.burn_book !== false)) return interaction.reply({ content: '❌ Burn Book is disabled.', ephemeral: true });
-                await interaction.reply({ content: '📒 Reading the burn book...', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
+                if (!(_caState.features?.burn_book !== false)) return interaction.reply({ content: '❌ Burn Book is disabled.', flags: MessageFlags.Ephemeral });
+                await interaction.reply({ content: '📒 Reading the burn book...', flags: MessageFlags.Ephemeral });
                 await cubAiBurnBookRead?.(_caState);
                 return;
             }
 
             if (sub === 'hottake') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
-                if (!(_caState.features?.hot_takes !== false)) return interaction.reply({ content: '❌ Hot Takes is disabled.', ephemeral: true });
-                await interaction.reply({ content: '🌶️ Generating hot take...', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
+                if (!(_caState.features?.hot_takes !== false)) return interaction.reply({ content: '❌ Hot Takes is disabled.', flags: MessageFlags.Ephemeral });
+                await interaction.reply({ content: '🌶️ Generating hot take...', flags: MessageFlags.Ephemeral });
                 await cubAiHotTake?.(_caState, interaction.user.displayName || interaction.user.username);
                 return;
             }
 
             if (sub === 'horoscope') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
-                if (!(_caState.features?.horoscope !== false)) return interaction.reply({ content: '❌ Horoscope is disabled.', ephemeral: true });
-                await interaction.reply({ content: '🔮 Reading the stars...', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
+                if (!(_caState.features?.horoscope !== false)) return interaction.reply({ content: '❌ Horoscope is disabled.', flags: MessageFlags.Ephemeral });
+                await interaction.reply({ content: '🔮 Reading the stars...', flags: MessageFlags.Ephemeral });
                 await cubAiHoroscope?.(_caState, interaction.options.getString('name'), interaction.user.displayName || interaction.user.username);
                 return;
             }
 
             if (sub === 'conspiracy') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
-                if (!(_caState.features?.conspiracy !== false)) return interaction.reply({ content: '❌ Conspiracy Theory is disabled.', ephemeral: true });
-                await interaction.reply({ content: '🕵️ Digging up the truth...', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
+                if (!(_caState.features?.conspiracy !== false)) return interaction.reply({ content: '❌ Conspiracy Theory is disabled.', flags: MessageFlags.Ephemeral });
+                await interaction.reply({ content: '🕵️ Digging up the truth...', flags: MessageFlags.Ephemeral });
                 await cubAiConspiracy?.(_caState, interaction.options.getString('topic'), interaction.user.displayName || interaction.user.username);
                 return;
             }
 
             if (sub === 'translator') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
-                if (!(_caState.features?.translator !== false)) return interaction.reply({ content: '❌ Fake Translator is disabled.', ephemeral: true });
-                await interaction.reply({ content: '🗣️ Translating...', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
+                if (!(_caState.features?.translator !== false)) return interaction.reply({ content: '❌ Fake Translator is disabled.', flags: MessageFlags.Ephemeral });
+                await interaction.reply({ content: '🗣️ Translating...', flags: MessageFlags.Ephemeral });
                 await cubAiTranslator?.(_caState, interaction.options.getString('name'), interaction.user.displayName || interaction.user.username);
                 return;
             }
 
             if (sub === 'twotruths') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
-                if (!(_caState.features?.two_truths !== false)) return interaction.reply({ content: '❌ Two Truths & a Lie is disabled.', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
+                if (!(_caState.features?.two_truths !== false)) return interaction.reply({ content: '❌ Two Truths & a Lie is disabled.', flags: MessageFlags.Ephemeral });
                 await interaction.deferReply();
                 // Generate game via cubai.js, then show buttons for guessing
                 try {
@@ -7100,16 +7100,16 @@ client.on('interactionCreate', async (interaction) => {
             }
 
             if (sub === 'judge') {
-                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', ephemeral: true });
-                if (!(_caState.features?.court_judge !== false)) return interaction.reply({ content: '❌ Court Judge is disabled.', ephemeral: true });
-                await interaction.reply({ content: '⚖️ Order in the court...', ephemeral: true });
+                if (!_caState) return interaction.reply({ content: '⚠️ CUB AI is not active.', flags: MessageFlags.Ephemeral });
+                if (!(_caState.features?.court_judge !== false)) return interaction.reply({ content: '❌ Court Judge is disabled.', flags: MessageFlags.Ephemeral });
+                await interaction.reply({ content: '⚖️ Order in the court...', flags: MessageFlags.Ephemeral });
                 await cubAiJudge?.(_caState, interaction.options.getString('case'), interaction.user.displayName || interaction.user.username);
                 return;
             }
         } catch (err) {
             console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_HANDLER_060 — [CUB AI] Handler error:', err);
             if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: `⚠️ CUB AI error: ${err.message}`, ephemeral: true }).catch(() => {});
+                await interaction.reply({ content: `⚠️ CUB AI error: ${err.message}`, flags: MessageFlags.Ephemeral }).catch(() => {});
             }
         }
     }
@@ -7132,7 +7132,7 @@ client.on('interactionCreate', async (interaction) => {
                 '🤖 **[Custom Bot Dashboard](https://cubsoftware.site/bot-dashboard)**\nManage your custom Discord bot.\n\n' +
                 '🌐 **[cubsoftware.site](https://cubsoftware.site)**'
             );
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     else if (commandName === 'website') {
@@ -7178,16 +7178,16 @@ client.on('interactionCreate', async (interaction) => {
 
         if (specificCmd) {
             const cmd = commands.find(c => c.name === specificCmd);
-            if (!cmd) return interaction.reply({ content: `Command "${specificCmd}" not found.`, ephemeral: true });
+            if (!cmd) return interaction.reply({ content: `Command "${specificCmd}" not found.`, flags: MessageFlags.Ephemeral });
             const embed = cubEmbed()
                 .setColor(0x5865F2)
                 .setTitle(`/${cmd.name}`)
                 .setDescription(cmd.description || 'No description');
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         } else {
             const cats = buildHelpCategories(interaction.member);
             const { embed, components } = buildHelpPage(cats, 'home', 0);
-            await interaction.reply({ embeds: [embed], components, ephemeral: true });
+            await interaction.reply({ embeds: [embed], components, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -7210,7 +7210,7 @@ client.on('interactionCreate', async (interaction) => {
         embed.setTimestamp();
 
         await channel.send({ embeds: [embed] });
-        await interaction.reply({ content: `Embed sent to <#${channel.id}>.`, ephemeral: true });
+        await interaction.reply({ content: `Embed sent to <#${channel.id}>.`, flags: MessageFlags.Ephemeral });
     }
 
     // ==================== ECONOMY HANDLERS ====================
@@ -7226,7 +7226,7 @@ client.on('interactionCreate', async (interaction) => {
 
         if (lastDaily > midnight) {
             const nextDaily = midnight + 86400000;
-            return interaction.reply({ content: `You already claimed your daily reward! Next: <t:${Math.floor(nextDaily / 1000)}:R>`, ephemeral: true });
+            return interaction.reply({ content: `You already claimed your daily reward! Next: <t:${Math.floor(nextDaily / 1000)}:R>`, flags: MessageFlags.Ephemeral });
         }
 
         user.balance += guildE.daily_amount;
@@ -7249,14 +7249,14 @@ client.on('interactionCreate', async (interaction) => {
     else if (commandName === 'pay') {
         const targetUser = interaction.options.getUser('user');
         const amount = interaction.options.getInteger('amount');
-        if (targetUser.id === member.id) return interaction.reply({ content: 'You can\'t pay yourself.', ephemeral: true });
+        if (targetUser.id === member.id) return interaction.reply({ content: 'You can\'t pay yourself.', flags: MessageFlags.Ephemeral });
 
         const eData = loadEconomyData();
         const guildE = getEconomyGuild(eData, guild.id);
         if (!guildE.users[member.id]) guildE.users[member.id] = { balance: 0 };
         if (!guildE.users[targetUser.id]) guildE.users[targetUser.id] = { balance: 0 };
 
-        if (guildE.users[member.id].balance < amount) return interaction.reply({ content: 'Insufficient balance.', ephemeral: true });
+        if (guildE.users[member.id].balance < amount) return interaction.reply({ content: 'Insufficient balance.', flags: MessageFlags.Ephemeral });
 
         guildE.users[member.id].balance -= amount;
         guildE.users[targetUser.id].balance += amount;
@@ -7269,7 +7269,7 @@ client.on('interactionCreate', async (interaction) => {
         const eData = loadEconomyData();
         const guildE = getEconomyGuild(eData, guild.id);
 
-        if (guildE.shop.length === 0) return interaction.reply({ content: 'The shop is empty.', ephemeral: true });
+        if (guildE.shop.length === 0) return interaction.reply({ content: 'The shop is empty.', flags: MessageFlags.Ephemeral });
 
         const embed = cubEmbed()
             .setColor(0xFFD700)
@@ -7288,9 +7288,9 @@ client.on('interactionCreate', async (interaction) => {
         const guildE = getEconomyGuild(eData, guild.id);
         const item = guildE.shop.find(i => i.name.toLowerCase() === itemName.toLowerCase());
 
-        if (!item) return interaction.reply({ content: 'Item not found in shop.', ephemeral: true });
+        if (!item) return interaction.reply({ content: 'Item not found in shop.', flags: MessageFlags.Ephemeral });
         if (!guildE.users[member.id]) guildE.users[member.id] = { balance: 0 };
-        if (guildE.users[member.id].balance < item.price) return interaction.reply({ content: 'Insufficient balance.', ephemeral: true });
+        if (guildE.users[member.id].balance < item.price) return interaction.reply({ content: 'Insufficient balance.', flags: MessageFlags.Ephemeral });
 
         guildE.users[member.id].balance -= item.price;
         saveEconomyData(eData);
@@ -7313,7 +7313,7 @@ client.on('interactionCreate', async (interaction) => {
         const lastWork = user.last_work || 0;
         if (now - lastWork < cooldown) {
             const nextWork = lastWork + cooldown;
-            return interaction.reply({ content: `You need to rest! You can work again <t:${Math.floor(nextWork / 1000)}:R>.`, ephemeral: true });
+            return interaction.reply({ content: `You need to rest! You can work again <t:${Math.floor(nextWork / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
         }
 
         const min = guildE.work_min || 50;
@@ -7333,19 +7333,19 @@ client.on('interactionCreate', async (interaction) => {
         const guildE = getEconomyGuild(eData, guild.id);
 
         if (!guildE.rob_enabled) {
-            return interaction.reply({ content: 'Robbing is disabled on this server.', ephemeral: true });
+            return interaction.reply({ content: 'Robbing is disabled on this server.', flags: MessageFlags.Ephemeral });
         }
 
         const targetUser = interaction.options.getUser('user');
-        if (targetUser.id === member.id) return interaction.reply({ content: 'You can\'t rob yourself.', ephemeral: true });
-        if (targetUser.bot) return interaction.reply({ content: 'You can\'t rob a bot.', ephemeral: true });
+        if (targetUser.id === member.id) return interaction.reply({ content: 'You can\'t rob yourself.', flags: MessageFlags.Ephemeral });
+        if (targetUser.bot) return interaction.reply({ content: 'You can\'t rob a bot.', flags: MessageFlags.Ephemeral });
 
         if (!guildE.users[member.id]) guildE.users[member.id] = { balance: guildE.starting_balance || 0 };
         if (!guildE.users[targetUser.id]) guildE.users[targetUser.id] = { balance: guildE.starting_balance || 0 };
         const robber = guildE.users[member.id];
         const victim = guildE.users[targetUser.id];
 
-        if (victim.balance <= 0) return interaction.reply({ content: 'That user has no money to steal!', ephemeral: true });
+        if (victim.balance <= 0) return interaction.reply({ content: 'That user has no money to steal!', flags: MessageFlags.Ephemeral });
 
         const chance = guildE.rob_chance || 40;
         const finePercent = guildE.rob_fine || 25;
@@ -7377,26 +7377,26 @@ client.on('interactionCreate', async (interaction) => {
             if (!guildE.users[targetUser.id]) guildE.users[targetUser.id] = { balance: 0 };
             guildE.users[targetUser.id].balance += amount;
             saveEconomyData(eData);
-            await interaction.reply({ content: `Gave ${amount} ${guildE.currency_name} to <@${targetUser.id}>.`, ephemeral: true });
+            await interaction.reply({ content: `Gave ${amount} ${guildE.currency_name} to <@${targetUser.id}>.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'take') {
             const targetUser = interaction.options.getUser('user');
             const amount = interaction.options.getInteger('amount');
             if (!guildE.users[targetUser.id]) guildE.users[targetUser.id] = { balance: 0 };
             guildE.users[targetUser.id].balance = Math.max(0, guildE.users[targetUser.id].balance - amount);
             saveEconomyData(eData);
-            await interaction.reply({ content: `Took ${amount} ${guildE.currency_name} from <@${targetUser.id}>.`, ephemeral: true });
+            await interaction.reply({ content: `Took ${amount} ${guildE.currency_name} from <@${targetUser.id}>.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'set') {
             const targetUser = interaction.options.getUser('user');
             const amount = interaction.options.getInteger('amount');
             if (!guildE.users[targetUser.id]) guildE.users[targetUser.id] = { balance: 0 };
             guildE.users[targetUser.id].balance = amount;
             saveEconomyData(eData);
-            await interaction.reply({ content: `Set <@${targetUser.id}>'s balance to ${amount} ${guildE.currency_name}.`, ephemeral: true });
+            await interaction.reply({ content: `Set <@${targetUser.id}>'s balance to ${amount} ${guildE.currency_name}.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'reset') {
             const targetUser = interaction.options.getUser('user');
             delete guildE.users[targetUser.id];
             saveEconomyData(eData);
-            await interaction.reply({ content: `Reset <@${targetUser.id}>'s balance.`, ephemeral: true });
+            await interaction.reply({ content: `Reset <@${targetUser.id}>'s balance.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'additem') {
             const name = interaction.options.getString('name');
             const price = interaction.options.getInteger('price');
@@ -7404,12 +7404,12 @@ client.on('interactionCreate', async (interaction) => {
             const role = interaction.options.getRole('role');
             guildE.shop.push({ name, price, description, role_id: role?.id || null });
             saveEconomyData(eData);
-            await interaction.reply({ content: `Added "${name}" to the shop for ${price} ${guildE.currency_name}.`, ephemeral: true });
+            await interaction.reply({ content: `Added "${name}" to the shop for ${price} ${guildE.currency_name}.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'removeitem') {
             const name = interaction.options.getString('name');
             guildE.shop = guildE.shop.filter(i => i.name.toLowerCase() !== name.toLowerCase());
             saveEconomyData(eData);
-            await interaction.reply({ content: `Removed "${name}" from the shop.`, ephemeral: true });
+            await interaction.reply({ content: `Removed "${name}" from the shop.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'config') {
             const currencyName = interaction.options.getString('currency_name');
             const currencyEmoji = interaction.options.getString('currency_emoji');
@@ -7418,7 +7418,7 @@ client.on('interactionCreate', async (interaction) => {
             if (currencyEmoji) guildE.currency_emoji = currencyEmoji;
             if (dailyAmount) guildE.daily_amount = dailyAmount;
             saveEconomyData(eData);
-            await interaction.reply({ content: `Economy config updated: ${guildE.currency_emoji} ${guildE.currency_name}, daily: ${guildE.daily_amount}`, ephemeral: true });
+            await interaction.reply({ content: `Economy config updated: ${guildE.currency_emoji} ${guildE.currency_name}, daily: ${guildE.daily_amount}`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -7428,7 +7428,7 @@ client.on('interactionCreate', async (interaction) => {
         const achData = loadAchievementsData();
         const userAch = achData.guilds?.[guild.id]?.[targetUser.id] || [];
 
-        if (userAch.length === 0) return interaction.reply({ content: `<@${targetUser.id}> has no achievements yet.`, ephemeral: true });
+        if (userAch.length === 0) return interaction.reply({ content: `<@${targetUser.id}> has no achievements yet.`, flags: MessageFlags.Ephemeral });
 
         const tierEmojis = { Bronze: '🥉', Silver: '🥈', Gold: '🥇', Diamond: '💎' };
 
@@ -7441,7 +7441,7 @@ client.on('interactionCreate', async (interaction) => {
             .setFooter({ text: `Total: ${userAch.length} achievement(s)` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     // ── Admin Commands (from CubSoftware Bot) ─────────────────────────────────
@@ -7458,7 +7458,7 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (commandName === 'link-find') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
         let code = interaction.options.getString('code');
         if (code.includes('cubsw.link/')) code = code.split('cubsw.link/')[1].split(/[?#]/)[0];
         if (code.includes('/')) code = code.split('/').pop();
@@ -7467,87 +7467,87 @@ client.on('interactionCreate', async (interaction) => {
             const l = links[code];
             const embed = new EmbedBuilder().setColor(0x00FF00).setTitle('Link Found (Active)').addFields({ name: 'Short Code', value: code, inline: true }, { name: 'Status', value: '🟢 Active', inline: true }, { name: 'Clicks', value: String(l.clicks || 0), inline: true }, { name: 'Destination', value: l.url.substring(0, 500) }, { name: 'Created', value: new Date(l.created * 1000).toLocaleString(), inline: true }, { name: 'Creator IP', value: `||${l.ip || 'Unknown'}||`, inline: true }).setTimestamp();
             if (audit[code]?.history) embed.addFields({ name: 'History (last 5)', value: audit[code].history.slice(-5).map(h => `${h.action} - ${new Date(h.timestamp * 1000).toLocaleString()}`).join('\n') || 'None' });
-            return interaction.reply({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
         if (audit[code]) {
             const e = audit[code];
             const embed = new EmbedBuilder().setColor(0xFF6B6B).setTitle('Link Found (Deleted)').addFields({ name: 'Short Code', value: code, inline: true }, { name: 'Status', value: '🔴 Deleted', inline: true }, { name: 'Original URL', value: e.original_url.substring(0, 500) }, { name: 'Created', value: new Date(e.created_at * 1000).toLocaleString(), inline: true }, { name: 'Creator IP', value: `||${e.ip_address}||`, inline: true }).setTimestamp();
             if (e.history) embed.addFields({ name: 'Full History', value: e.history.map(h => `${h.action} - ${new Date(h.timestamp * 1000).toLocaleString()} - ||${h.ip}||`).join('\n') || 'None' });
-            return interaction.reply({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
-        return interaction.reply({ content: `❌ No link found: \`${code}\``, ephemeral: true });
+        return interaction.reply({ content: `❌ No link found: \`${code}\``, flags: MessageFlags.Ephemeral });
     }
 
     if (commandName === 'link-ban') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
         const ip = interaction.options.getString('ip'), reason = interaction.options.getString('reason') || 'No reason provided';
         const banned = loadBannedIps();
-        if (banned.ips.includes(ip)) return interaction.reply({ content: `⚠️ IP \`${ip}\` already banned.`, ephemeral: true });
+        if (banned.ips.includes(ip)) return interaction.reply({ content: `⚠️ IP \`${ip}\` already banned.`, flags: MessageFlags.Ephemeral });
         banned.ips.push(ip); banned.reasons[ip] = { reason, bannedBy: interaction.user.id, bannedAt: Date.now() };
-        return saveBannedIps(banned) ? interaction.reply({ content: `✅ Banned IP: \`${ip}\`\nReason: ${reason}`, ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+        return saveBannedIps(banned) ? interaction.reply({ content: `✅ Banned IP: \`${ip}\`\nReason: ${reason}`, flags: MessageFlags.Ephemeral }) : interaction.reply({ content: '❌ Save failed.', flags: MessageFlags.Ephemeral });
     }
 
     if (commandName === 'link-unban') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
         const ip = interaction.options.getString('ip');
         const banned = loadBannedIps();
-        if (!banned.ips.includes(ip)) return interaction.reply({ content: `⚠️ IP \`${ip}\` not banned.`, ephemeral: true });
+        if (!banned.ips.includes(ip)) return interaction.reply({ content: `⚠️ IP \`${ip}\` not banned.`, flags: MessageFlags.Ephemeral });
         banned.ips = banned.ips.filter(i => i !== ip); delete banned.reasons[ip];
-        return saveBannedIps(banned) ? interaction.reply({ content: `✅ Unbanned: \`${ip}\``, ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+        return saveBannedIps(banned) ? interaction.reply({ content: `✅ Unbanned: \`${ip}\``, flags: MessageFlags.Ephemeral }) : interaction.reply({ content: '❌ Save failed.', flags: MessageFlags.Ephemeral });
     }
 
     if (commandName === 'link-bans') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
         const banned = loadBannedIps();
-        if (!banned.ips.length) return interaction.reply({ content: '📋 No IPs currently banned.', ephemeral: true });
+        if (!banned.ips.length) return interaction.reply({ content: '📋 No IPs currently banned.', flags: MessageFlags.Ephemeral });
         const embed = new EmbedBuilder().setColor(0xFF6B6B).setTitle('Banned IPs').setDescription(banned.ips.map(ip => { const info = banned.reasons[ip]; return info ? `\`${ip}\` - ${info.reason} (${new Date(info.bannedAt).toLocaleDateString()})` : `\`${ip}\``; }).join('\n')).setFooter({ text: `Total: ${banned.ips.length}` }).setTimestamp();
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     if (commandName === 'link-delete') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
         let code = interaction.options.getString('code');
         if (code.includes('cubsw.link/')) code = code.split('cubsw.link/')[1].split(/[?#]/)[0];
         if (code.includes('/')) code = code.split('/').pop();
         const links = loadLinksFile(), audit = loadAuditFile();
-        if (!links[code]) return interaction.reply({ content: audit[code] ? `⚠️ Already deleted.` : `❌ Not found: \`${code}\``, ephemeral: true });
+        if (!links[code]) return interaction.reply({ content: audit[code] ? `⚠️ Already deleted.` : `❌ Not found: \`${code}\``, flags: MessageFlags.Ephemeral });
         const ld = links[code];
         if (!audit[code]) audit[code] = { original_url: ld.url, created_at: ld.created, ip_address: ld.ip || 'Unknown', history: [] };
         audit[code].history.push({ action: 'deleted', timestamp: Math.floor(Date.now() / 1000), ip: 'Discord Bot', deletedBy: interaction.user.id, clicks: ld.clicks || 0 });
         delete links[code];
-        if (!saveLinksFile(links)) return interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+        if (!saveLinksFile(links)) return interaction.reply({ content: '❌ Save failed.', flags: MessageFlags.Ephemeral });
         saveAuditFile(audit);
         const embed = new EmbedBuilder().setColor(0xFF6B6B).setTitle('Link Deleted').addFields({ name: 'Short Code', value: code, inline: true }, { name: 'Clicks', value: String(ld.clicks || 0), inline: true }, { name: 'Original URL', value: ld.url.substring(0, 500) }, { name: 'Creator IP', value: `||${ld.ip || 'Unknown'}||`, inline: true }, { name: 'Deleted By', value: `<@${interaction.user.id}>`, inline: true }).setTimestamp();
         try { const lc = await client.channels.fetch(LINKS_LOG_CHANNEL_ID).catch(() => null); if (lc) await lc.send({ content: `🗑️ Link deleted by <@${interaction.user.id}>`, embeds: [embed] }); } catch (_) {}
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     if (commandName === 'ip') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
         const sub = interaction.options.getSubcommand();
 
         if (sub === 'ban') {
             const ip = interaction.options.getString('ip'), type = interaction.options.getString('type'), reason = interaction.options.getString('reason') || 'No reason provided';
             const bans = loadIpBans();
             if (type === 'global') {
-                if (bans.global.some(b => b.ip === ip)) return interaction.reply({ content: `⚠️ \`${ip}\` already globally banned.`, ephemeral: true });
+                if (bans.global.some(b => b.ip === ip)) return interaction.reply({ content: `⚠️ \`${ip}\` already globally banned.`, flags: MessageFlags.Ephemeral });
                 bans.global.push({ ip, reason, bannedBy: interaction.user.id, bannedAt: Date.now() });
             } else {
                 if (!bans.features[type]) bans.features[type] = [];
-                if (bans.features[type].some(b => b.ip === ip)) return interaction.reply({ content: `⚠️ \`${ip}\` already banned from ${type}.`, ephemeral: true });
+                if (bans.features[type].some(b => b.ip === ip)) return interaction.reply({ content: `⚠️ \`${ip}\` already banned from ${type}.`, flags: MessageFlags.Ephemeral });
                 bans.features[type].push({ ip, reason, bannedBy: interaction.user.id, bannedAt: Date.now() });
             }
-            return saveIpBans(bans) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFF6B6B).setTitle('IP Banned').addFields({ name: 'IP', value: `\`${ip}\``, inline: true }, { name: 'Scope', value: type === 'global' ? 'Global' : type, inline: true }, { name: 'Reason', value: reason }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+            return saveIpBans(bans) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFF6B6B).setTitle('IP Banned').addFields({ name: 'IP', value: `\`${ip}\``, inline: true }, { name: 'Scope', value: type === 'global' ? 'Global' : type, inline: true }, { name: 'Reason', value: reason }).setTimestamp()], flags: MessageFlags.Ephemeral }) : interaction.reply({ content: '❌ Save failed.', flags: MessageFlags.Ephemeral });
         }
 
         if (sub === 'temp-ban') {
             const ip = interaction.options.getString('ip'), durationStr = interaction.options.getString('duration'), type = interaction.options.getString('type') || 'global', reason = interaction.options.getString('reason') || 'Temporary ban';
             const duration = parseDuration(durationStr);
-            if (!duration) return interaction.reply({ content: '❌ Invalid duration. Use: 30m, 1h, 7d', ephemeral: true });
+            if (!duration) return interaction.reply({ content: '❌ Invalid duration. Use: 30m, 1h, 7d', flags: MessageFlags.Ephemeral });
             const bans = loadIpBans(), expires = Date.now() + duration;
             bans.temp = bans.temp.filter(b => b.ip !== ip);
             bans.temp.push({ ip, feature: type === 'global' ? null : type, reason, bannedBy: interaction.user.id, bannedAt: Date.now(), expires });
-            return saveIpBans(bans) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFFA500).setTitle('IP Temporarily Banned').addFields({ name: 'IP', value: `\`${ip}\``, inline: true }, { name: 'Duration', value: formatDuration(duration), inline: true }, { name: 'Scope', value: type === 'global' ? 'Global' : type, inline: true }, { name: 'Expires', value: `<t:${Math.floor(expires / 1000)}:R>`, inline: true }, { name: 'Reason', value: reason }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+            return saveIpBans(bans) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFFA500).setTitle('IP Temporarily Banned').addFields({ name: 'IP', value: `\`${ip}\``, inline: true }, { name: 'Duration', value: formatDuration(duration), inline: true }, { name: 'Scope', value: type === 'global' ? 'Global' : type, inline: true }, { name: 'Expires', value: `<t:${Math.floor(expires / 1000)}:R>`, inline: true }, { name: 'Reason', value: reason }).setTimestamp()], flags: MessageFlags.Ephemeral }) : interaction.reply({ content: '❌ Save failed.', flags: MessageFlags.Ephemeral });
         }
 
         if (sub === 'unban') {
@@ -7558,9 +7558,9 @@ client.on('interactionCreate', async (interaction) => {
             const ti = bans.temp.findIndex(b => b.ip === ip); if (ti !== -1) { bans.temp.splice(ti, 1); removed = true; }
             // Also remove from scanner/auto-bans
             if (removeScannerBan(ip)) removed = true;
-            if (!removed) return interaction.reply({ content: `⚠️ \`${ip}\` not found in any ban list.`, ephemeral: true });
-            if (!saveIpBans(bans)) return interaction.reply({ content: '❌ Save failed.', ephemeral: true });
-            return interaction.reply({ content: `✅ Unbanned \`${ip}\` from all ban lists.`, ephemeral: true });
+            if (!removed) return interaction.reply({ content: `⚠️ \`${ip}\` not found in any ban list.`, flags: MessageFlags.Ephemeral });
+            if (!saveIpBans(bans)) return interaction.reply({ content: '❌ Save failed.', flags: MessageFlags.Ephemeral });
+            return interaction.reply({ content: `✅ Unbanned \`${ip}\` from all ban lists.`, flags: MessageFlags.Ephemeral });
         }
 
         if (sub === 'list') {
@@ -7575,13 +7575,13 @@ client.on('interactionCreate', async (interaction) => {
             if (scannerEntries.length) embed.addFields({ name: `🤖 Auto-Banned (${scannerEntries.length})`, value: scannerEntries.slice(0, 10).map(ip => `\`${ip}\` — scanner probe`).join('\n') + (scannerEntries.length > 10 ? `\n+${scannerEntries.length - 10} more` : '') });
             const total = bans.global.length + Object.values(bans.features).reduce((s, a) => s + a.length, 0) + active.length + scannerEntries.length;
             if (!total) embed.setDescription('No IPs currently banned.'); else embed.setFooter({ text: `Total: ${total} active bans` });
-            return interaction.reply({ embeds: [embed], ephemeral: true });
+            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
     }
 
     if (commandName === 'scan-security') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
-        await interaction.deferReply({ ephemeral: true });
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const port = process.env.AUTH_TESTER_PORT || '3849';
         const secret = process.env.INTERNAL_TEST_SECRET || '';
         if (!secret) return interaction.editReply('❌ `INTERNAL_TEST_SECRET` not set in bot env — cannot trigger scan.');
@@ -7607,45 +7607,45 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (commandName === 'keraplast-password') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
         const sub = interaction.options.getSubcommand();
         if (sub === 'create') {
             const password = interaction.options.getString('password'), label = interaction.options.getString('label') || '';
             const data = loadKeraplastPasswords();
-            if (data.passwords.some(p => p.password === password)) return interaction.reply({ content: '❌ Password already exists.', ephemeral: true });
+            if (data.passwords.some(p => p.password === password)) return interaction.reply({ content: '❌ Password already exists.', flags: MessageFlags.Ephemeral });
             data.passwords.push({ password, label, created_at: Date.now() / 1000 });
-            return saveKeraplastPasswords(data) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0x22c55e).setTitle('Keraplast Password Created').addFields({ name: 'Password', value: `\`${password}\``, inline: true }, { name: 'Label', value: label || 'None', inline: true }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+            return saveKeraplastPasswords(data) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0x22c55e).setTitle('Keraplast Password Created').addFields({ name: 'Password', value: `\`${password}\``, inline: true }, { name: 'Label', value: label || 'None', inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral }) : interaction.reply({ content: '❌ Save failed.', flags: MessageFlags.Ephemeral });
         }
         if (sub === 'delete') {
             const password = interaction.options.getString('password');
             const data = loadKeraplastPasswords(), orig = data.passwords.length;
             data.passwords = data.passwords.filter(p => p.password !== password);
-            if (data.passwords.length === orig) return interaction.reply({ content: '❌ Password not found.', ephemeral: true });
-            return saveKeraplastPasswords(data) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xef4444).setTitle('Keraplast Password Deleted').addFields({ name: 'Password', value: `\`${password}\`` }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+            if (data.passwords.length === orig) return interaction.reply({ content: '❌ Password not found.', flags: MessageFlags.Ephemeral });
+            return saveKeraplastPasswords(data) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xef4444).setTitle('Keraplast Password Deleted').addFields({ name: 'Password', value: `\`${password}\`` }).setTimestamp()], flags: MessageFlags.Ephemeral }) : interaction.reply({ content: '❌ Save failed.', flags: MessageFlags.Ephemeral });
         }
         if (sub === 'list') {
             const data = loadKeraplastPasswords();
-            if (!data.passwords.length) return interaction.reply({ content: 'No passwords configured.', ephemeral: true });
-            return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x5865f2).setTitle('Keraplast Passwords').setDescription(data.passwords.map((p, i) => `${i + 1}. \`${p.password}\`${p.label ? ` (${p.label})` : ''}`).join('\n')).setFooter({ text: `${data.passwords.length} password(s)` }).setTimestamp()], ephemeral: true });
+            if (!data.passwords.length) return interaction.reply({ content: 'No passwords configured.', flags: MessageFlags.Ephemeral });
+            return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x5865f2).setTitle('Keraplast Passwords').setDescription(data.passwords.map((p, i) => `${i + 1}. \`${p.password}\`${p.label ? ` (${p.label})` : ''}`).join('\n')).setFooter({ text: `${data.passwords.length} password(s)` }).setTimestamp()], flags: MessageFlags.Ephemeral });
         }
     }
 
     if (commandName === 'feature') {
-        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', ephemeral: true });
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
         const sub = interaction.options.getSubcommand(), name = interaction.options.getString('name');
         if (sub === 'list') {
             const disabled = loadDisabledFeatures();
-            return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x5865f2).setTitle('Feature Status').setDescription(ALL_WEBSITE_FEATURES.map(f => `${disabled.includes(f) ? '🔴' : '🟢'} ${f}`).join('\n')).setFooter({ text: `${disabled.length} disabled, ${ALL_WEBSITE_FEATURES.length - disabled.length} enabled` }).setTimestamp()], ephemeral: true });
+            return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x5865f2).setTitle('Feature Status').setDescription(ALL_WEBSITE_FEATURES.map(f => `${disabled.includes(f) ? '🔴' : '🟢'} ${f}`).join('\n')).setFooter({ text: `${disabled.length} disabled, ${ALL_WEBSITE_FEATURES.length - disabled.length} enabled` }).setTimestamp()], flags: MessageFlags.Ephemeral });
         }
         const disabled = loadDisabledFeatures();
         if (sub === 'disable') {
-            if (disabled.includes(name)) return interaction.reply({ content: `⚠️ **${name}** already disabled.`, ephemeral: true });
+            if (disabled.includes(name)) return interaction.reply({ content: `⚠️ **${name}** already disabled.`, flags: MessageFlags.Ephemeral });
             disabled.push(name);
-            return saveDisabledFeatures(disabled) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFF6B6B).setTitle('Feature Disabled').setDescription(`**${name}** has been disabled.`).addFields({ name: 'Status', value: '🔴 Disabled', inline: true }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+            return saveDisabledFeatures(disabled) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0xFF6B6B).setTitle('Feature Disabled').setDescription(`**${name}** has been disabled.`).addFields({ name: 'Status', value: '🔴 Disabled', inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral }) : interaction.reply({ content: '❌ Save failed.', flags: MessageFlags.Ephemeral });
         }
         if (sub === 'enable') {
-            if (!disabled.includes(name)) return interaction.reply({ content: `⚠️ **${name}** is not disabled.`, ephemeral: true });
-            return saveDisabledFeatures(disabled.filter(f => f !== name)) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0x22c55e).setTitle('Feature Enabled').setDescription(`**${name}** has been enabled.`).addFields({ name: 'Status', value: '🟢 Enabled', inline: true }).setTimestamp()], ephemeral: true }) : interaction.reply({ content: '❌ Save failed.', ephemeral: true });
+            if (!disabled.includes(name)) return interaction.reply({ content: `⚠️ **${name}** is not disabled.`, flags: MessageFlags.Ephemeral });
+            return saveDisabledFeatures(disabled.filter(f => f !== name)) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0x22c55e).setTitle('Feature Enabled').setDescription(`**${name}** has been enabled.`).addFields({ name: 'Status', value: '🟢 Enabled', inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral }) : interaction.reply({ content: '❌ Save failed.', flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -7977,9 +7977,9 @@ client.on('interactionCreate', async (interaction) => {
         const roleId = parts[parts.length - 1];
 
         const role = interaction.guild.roles.cache.get(roleId);
-        if (!role) return interaction.reply({ content: 'Role not found.', ephemeral: true });
+        if (!role) return interaction.reply({ content: 'Role not found.', flags: MessageFlags.Ephemeral });
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         if (interaction.member.roles.cache.has(roleId)) {
             await interaction.member.roles.remove(roleId).catch(() => {});
@@ -7996,9 +7996,9 @@ client.on('interactionCreate', async (interaction) => {
         const rrData = loadReactionRolesData();
         const messageId = interaction.customId.replace('rr_select_', '');
         const rrMsg = rrData.guilds[interaction.guild.id]?.[messageId];
-        if (!rrMsg) return interaction.reply({ content: 'Config not found.', ephemeral: true });
+        if (!rrMsg) return interaction.reply({ content: 'Config not found.', flags: MessageFlags.Ephemeral });
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const allRoleIds = rrMsg.roles.map(r => r.role_id);
 
@@ -8016,7 +8016,7 @@ client.on('interactionCreate', async (interaction) => {
     else if (interaction.isButton() && (interaction.customId === 'ticket_create' || interaction.customId.startsWith('ticket_create_'))) {
         const tData = loadTicketsData();
         const guildT = tData.guilds[interaction.guild.id];
-        if (!guildT) return interaction.reply({ content: 'Ticket system not configured.', ephemeral: true });
+        if (!guildT) return interaction.reply({ content: 'Ticket system not configured.', flags: MessageFlags.Ephemeral });
 
         // Extract ticket type from button customId
         const ticketType = interaction.customId === 'ticket_create' ? 'support' : interaction.customId.replace('ticket_create_', '');
@@ -8026,7 +8026,7 @@ client.on('interactionCreate', async (interaction) => {
         if (maxPerUser > 0) {
             const existingCount = Object.values(guildT.tickets).filter(t => t.creator_id === interaction.user.id && (t.type || 'support') === ticketType).length;
             if (existingCount >= maxPerUser) {
-                return interaction.reply({ content: `You already have ${existingCount} open ${ticketType} ticket${existingCount > 1 ? 's' : ''}. Maximum is ${maxPerUser}.`, ephemeral: true });
+                return interaction.reply({ content: `You already have ${existingCount} open ${ticketType} ticket${existingCount > 1 ? 's' : ''}. Maximum is ${maxPerUser}.`, flags: MessageFlags.Ephemeral });
             }
         }
 
@@ -8074,7 +8074,7 @@ client.on('interactionCreate', async (interaction) => {
         };
         if (categoryId) createOpts.parent = categoryId;
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const ticketChannel = await interaction.guild.channels.create(createOpts);
 
@@ -8129,11 +8129,11 @@ client.on('interactionCreate', async (interaction) => {
     else if (interaction.isButton() && interaction.customId === 'ticket_claim_btn') {
         const tData = loadTicketsData();
         const guildT = tData.guilds?.[interaction.guild.id];
-        if (!guildT || !guildT.tickets[interaction.channel.id]) return interaction.reply({ content: 'Not a ticket.', ephemeral: true });
+        if (!guildT || !guildT.tickets[interaction.channel.id]) return interaction.reply({ content: 'Not a ticket.', flags: MessageFlags.Ephemeral });
 
         const ticketInfo = guildT.tickets[interaction.channel.id];
         if (ticketInfo.claimed_by) {
-            return interaction.reply({ content: `This ticket is already claimed by <@${ticketInfo.claimed_by}>.`, ephemeral: true });
+            return interaction.reply({ content: `This ticket is already claimed by <@${ticketInfo.claimed_by}>.`, flags: MessageFlags.Ephemeral });
         }
 
         ticketInfo.claimed_by = interaction.user.id;
@@ -8177,7 +8177,7 @@ client.on('interactionCreate', async (interaction) => {
     else if (interaction.isButton() && interaction.customId === 'ticket_close_btn') {
         const tData = loadTicketsData();
         const guildT = tData.guilds[interaction.guild.id];
-        if (!guildT || !guildT.tickets[interaction.channel.id]) return interaction.reply({ content: 'Not a ticket.', ephemeral: true });
+        if (!guildT || !guildT.tickets[interaction.channel.id]) return interaction.reply({ content: 'Not a ticket.', flags: MessageFlags.Ephemeral });
 
         const ticketInfo = guildT.tickets[interaction.channel.id];
         const ticketType = ticketInfo.type || 'support';
@@ -8286,7 +8286,7 @@ client.on('interactionCreate', async (interaction) => {
     else if (interaction.isButton() && interaction.customId === 'ticket_reopen_btn') {
         const tData = loadTicketsData();
         const guildT = tData.guilds?.[interaction.guild.id];
-        if (!guildT) return interaction.reply({ content: 'Ticket system not configured.', ephemeral: true });
+        if (!guildT) return interaction.reply({ content: 'Ticket system not configured.', flags: MessageFlags.Ephemeral });
 
         // Find the original ticket type from channel name (closed-TYPE-ticket-N)
         const channelName = interaction.channel.name;
@@ -8330,25 +8330,25 @@ client.on('interactionCreate', async (interaction) => {
         const gData = loadGiveawaysData();
         const giveaway = gData.guilds[interaction.guild.id]?.find(g => g.message_id === interaction.message.id && !g.ended);
 
-        if (!giveaway) return interaction.reply({ content: 'This giveaway has ended.', ephemeral: true });
+        if (!giveaway) return interaction.reply({ content: 'This giveaway has ended.', flags: MessageFlags.Ephemeral });
 
         // Check required role
         if (giveaway.required_role && !interaction.member.roles.cache.has(giveaway.required_role)) {
-            return interaction.reply({ content: `You need the <@&${giveaway.required_role}> role to enter.`, ephemeral: true });
+            return interaction.reply({ content: `You need the <@&${giveaway.required_role}> role to enter.`, flags: MessageFlags.Ephemeral });
         }
 
         // Check blacklisted roles
         if (giveaway.blacklisted_roles && giveaway.blacklisted_roles.length > 0) {
             const hasBlacklisted = giveaway.blacklisted_roles.some(rid => interaction.member.roles.cache.has(rid));
             if (hasBlacklisted) {
-                return interaction.reply({ content: 'You have a role that prevents you from entering this giveaway.', ephemeral: true });
+                return interaction.reply({ content: 'You have a role that prevents you from entering this giveaway.', flags: MessageFlags.Ephemeral });
             }
         }
 
         // Check max entries
         const uniqueEntries = [...new Set(giveaway.entries)];
         if (giveaway.max_entries > 0 && uniqueEntries.length >= giveaway.max_entries && !giveaway.entries.includes(interaction.user.id)) {
-            return interaction.reply({ content: 'This giveaway has reached the maximum number of entries.', ephemeral: true });
+            return interaction.reply({ content: 'This giveaway has reached the maximum number of entries.', flags: MessageFlags.Ephemeral });
         }
 
         // Toggle entry
@@ -8356,7 +8356,7 @@ client.on('interactionCreate', async (interaction) => {
             // Remove all entries for this user (including bonus)
             giveaway.entries = giveaway.entries.filter(e => e !== interaction.user.id);
             saveGiveawaysData(gData);
-            return interaction.reply({ content: 'You left the giveaway.', ephemeral: true });
+            return interaction.reply({ content: 'You left the giveaway.', flags: MessageFlags.Ephemeral });
         }
 
         // Add entry + bonus entries
@@ -8372,7 +8372,7 @@ client.on('interactionCreate', async (interaction) => {
         const totalUniqueEntries = [...new Set(giveaway.entries)].length;
         const userEntries = giveaway.entries.filter(e => e === interaction.user.id).length;
         const bonusMsg = userEntries > 1 ? ` (${userEntries} entries with bonus!)` : '';
-        await interaction.reply({ content: `You entered the giveaway!${bonusMsg} (${totalUniqueEntries} total participants)`, ephemeral: true });
+        await interaction.reply({ content: `You entered the giveaway!${bonusMsg} (${totalUniqueEntries} total participants)`, flags: MessageFlags.Ephemeral });
     }
 
     // Verification Button
@@ -8382,21 +8382,21 @@ client.on('interactionCreate', async (interaction) => {
             try { vData = JSON.parse(fs.readFileSync(VERIFICATION_FILE, 'utf8')); } catch (e) {}
             const guildSettings = vData.guilds?.[interaction.guild.id]?.settings;
             if (!guildSettings || !guildSettings.enabled) {
-                return interaction.reply({ content: 'Verification is not enabled on this server.', ephemeral: true });
+                return interaction.reply({ content: 'Verification is not enabled on this server.', flags: MessageFlags.Ephemeral });
             }
             const verifiedRoleId = guildSettings.role;
             const unverifiedRoleId = guildSettings.unverified_role;
             if (!verifiedRoleId) {
-                return interaction.reply({ content: 'No verified role has been configured.', ephemeral: true });
+                return interaction.reply({ content: 'No verified role has been configured.', flags: MessageFlags.Ephemeral });
             }
             if (interaction.member.roles.cache.has(verifiedRoleId)) {
-                return interaction.reply({ content: 'You are already verified!', ephemeral: true });
+                return interaction.reply({ content: 'You are already verified!', flags: MessageFlags.Ephemeral });
             }
             await interaction.member.roles.add(verifiedRoleId).catch(() => {});
             if (unverifiedRoleId) {
                 await interaction.member.roles.remove(unverifiedRoleId).catch(() => {});
             }
-            await interaction.reply({ content: 'You have been verified! Welcome to the server.', ephemeral: true });
+            await interaction.reply({ content: 'You have been verified! Welcome to the server.', flags: MessageFlags.Ephemeral });
 
             // Log verification if configured
             if (guildSettings.log && guildSettings.log_channel) {
@@ -8411,7 +8411,7 @@ client.on('interactionCreate', async (interaction) => {
                 }
             }
         } catch (e) {
-            await interaction.reply({ content: 'Verification failed. Please contact an admin.', ephemeral: true });
+            await interaction.reply({ content: 'Verification failed. Please contact an admin.', flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -8421,14 +8421,14 @@ client.on('interactionCreate', async (interaction) => {
             const mmData = loadModmailData();
             const guildMM = mmData.guilds?.[interaction.guild.id]?.settings;
             if (!guildMM || !guildMM.enabled) {
-                return interaction.reply({ content: 'Modmail is not enabled on this server.', ephemeral: true });
+                return interaction.reply({ content: 'Modmail is not enabled on this server.', flags: MessageFlags.Ephemeral });
             }
 
             // Check if user already has an open modmail thread
             const threads = mmData.guilds[interaction.guild.id].threads || {};
             const existingThread = Object.entries(threads).find(([, t]) => t.user_id === interaction.user.id && t.status === 'open');
             if (existingThread) {
-                return interaction.reply({ content: `You already have an open modmail thread. Please wait for staff to respond or for your current thread to be closed.`, ephemeral: true });
+                return interaction.reply({ content: `You already have an open modmail thread. Please wait for staff to respond or for your current thread to be closed.`, flags: MessageFlags.Ephemeral });
             }
 
             // Create modmail channel in the configured category
@@ -8488,10 +8488,10 @@ client.on('interactionCreate', async (interaction) => {
                 .setFooter({ text: 'Reply to this DM to send messages to staff' });
             await interaction.user.send({ embeds: [dmEmbed] }).catch(() => {});
 
-            await interaction.reply({ content: 'Your modmail thread has been created! Check your DMs to communicate with staff.', ephemeral: true });
+            await interaction.reply({ content: 'Your modmail thread has been created! Check your DMs to communicate with staff.', flags: MessageFlags.Ephemeral });
         } catch (e) {
             console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_MODMAIL_CONTACT_050 — Modmail contact error:', e);
-            await interaction.reply({ content: 'Failed to create modmail thread. Please try again later.', ephemeral: true }).catch(() => {});
+            await interaction.reply({ content: 'Failed to create modmail thread. Please try again later.', flags: MessageFlags.Ephemeral }).catch(() => {});
         }
     }
 
@@ -8510,7 +8510,7 @@ client.on('interactionCreate', async (interaction) => {
                 }
             }
             if (!threadInfo || threadInfo.status !== 'open') {
-                return interaction.reply({ content: 'This is not an active modmail thread.', ephemeral: true });
+                return interaction.reply({ content: 'This is not an active modmail thread.', flags: MessageFlags.Ephemeral });
             }
 
             const guildMM = mmData.guilds[threadGuildId]?.settings || {};
@@ -8572,7 +8572,7 @@ client.on('interactionCreate', async (interaction) => {
             }, 10000);
         } catch (e) {
             console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_MODMAIL_CLOSE_051 — Modmail close error:', e);
-            await interaction.reply({ content: 'Failed to close modmail thread.', ephemeral: true }).catch(() => {});
+            await interaction.reply({ content: 'Failed to close modmail thread.', flags: MessageFlags.Ephemeral }).catch(() => {});
         }
     }
 
@@ -8586,7 +8586,7 @@ client.on('interactionCreate', async (interaction) => {
             const userId = parts[4];
 
             if (interaction.guild.id !== guildId) {
-                return interaction.reply({ content: 'This appeal is for a different server.', ephemeral: true });
+                return interaction.reply({ content: 'This appeal is for a different server.', flags: MessageFlags.Ephemeral });
             }
 
             // Load ban appeals data
@@ -8597,11 +8597,11 @@ client.on('interactionCreate', async (interaction) => {
             const appeal = guildAppeals.items?.find(a => a.id === appealId);
 
             if (!appeal) {
-                return interaction.reply({ content: 'Appeal not found.', ephemeral: true });
+                return interaction.reply({ content: 'Appeal not found.', flags: MessageFlags.Ephemeral });
             }
 
             if (appeal.status !== 'pending') {
-                return interaction.reply({ content: `This appeal has already been ${appeal.status}.`, ephemeral: true });
+                return interaction.reply({ content: `This appeal has already been ${appeal.status}.`, flags: MessageFlags.Ephemeral });
             }
 
             // Update appeal status
@@ -8666,7 +8666,7 @@ client.on('interactionCreate', async (interaction) => {
             }
         } catch (e) {
             console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_APPEAL_REVIEW_062 — Appeal review error:', e);
-            await interaction.reply({ content: 'Failed to process appeal.', ephemeral: true }).catch(() => {});
+            await interaction.reply({ content: 'Failed to process appeal.', flags: MessageFlags.Ephemeral }).catch(() => {});
         }
     }
 
@@ -8691,7 +8691,7 @@ client.on('interactionCreate', async (interaction) => {
         } else if (sub === 'disable') {
             cntGuild.enabled = false;
             saveCountingData(cntData);
-            await interaction.reply({ content: '✅ Counting channel disabled.', ephemeral: true });
+            await interaction.reply({ content: '✅ Counting channel disabled.', flags: MessageFlags.Ephemeral });
         } else if (sub === 'score') {
             const embed = cubEmbed()
                 .setColor(0x5865F2)
@@ -8706,7 +8706,7 @@ client.on('interactionCreate', async (interaction) => {
             cntGuild.current_count = 0;
             cntGuild.last_user_id = null;
             saveCountingData(cntData);
-            await interaction.reply({ content: '✅ Count has been reset to 0. Next number is **1**.', ephemeral: true });
+            await interaction.reply({ content: '✅ Count has been reset to 0. Next number is **1**.', flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -8740,7 +8740,7 @@ client.on('interactionCreate', async (interaction) => {
         } else if (sub === 'get') {
             const id = interaction.options.getInteger('id');
             const quote = qGuild.quotes.find(q => q.id === id);
-            if (!quote) return interaction.reply({ content: `Quote #${id} not found.`, ephemeral: true });
+            if (!quote) return interaction.reply({ content: `Quote #${id} not found.`, flags: MessageFlags.Ephemeral });
             const embed = cubEmbed()
                 .setColor(0x5865F2)
                 .setTitle(`Quote #${quote.id}`)
@@ -8752,7 +8752,7 @@ client.on('interactionCreate', async (interaction) => {
                 );
             await interaction.reply({ embeds: [embed] });
         } else if (sub === 'random') {
-            if (qGuild.quotes.length === 0) return interaction.reply({ content: 'No quotes yet! Use `/quote add` to add one.', ephemeral: true });
+            if (qGuild.quotes.length === 0) return interaction.reply({ content: 'No quotes yet! Use `/quote add` to add one.', flags: MessageFlags.Ephemeral });
             const quote = qGuild.quotes[Math.floor(Math.random() * qGuild.quotes.length)];
             const embed = cubEmbed()
                 .setColor(0x5865F2)
@@ -8764,7 +8764,7 @@ client.on('interactionCreate', async (interaction) => {
                 );
             await interaction.reply({ embeds: [embed] });
         } else if (sub === 'list') {
-            if (qGuild.quotes.length === 0) return interaction.reply({ content: 'No quotes yet!', ephemeral: true });
+            if (qGuild.quotes.length === 0) return interaction.reply({ content: 'No quotes yet!', flags: MessageFlags.Ephemeral });
             const recent = qGuild.quotes.slice(-10).reverse();
             const embed = cubEmbed()
                 .setColor(0x5865F2)
@@ -8775,20 +8775,20 @@ client.on('interactionCreate', async (interaction) => {
         } else if (sub === 'delete') {
             const id = interaction.options.getInteger('id');
             const idx = qGuild.quotes.findIndex(q => q.id === id);
-            if (idx === -1) return interaction.reply({ content: `Quote #${id} not found.`, ephemeral: true });
+            if (idx === -1) return interaction.reply({ content: `Quote #${id} not found.`, flags: MessageFlags.Ephemeral });
             const quote = qGuild.quotes[idx];
             if (quote.added_by !== interaction.user.id && !member.permissions.has(PermissionFlagsBits.ModerateMembers)) {
-                return interaction.reply({ content: 'You can only delete quotes you added, or you need Moderate Members permission.', ephemeral: true });
+                return interaction.reply({ content: 'You can only delete quotes you added, or you need Moderate Members permission.', flags: MessageFlags.Ephemeral });
             }
             qGuild.quotes.splice(idx, 1);
             saveQuotesData(qData);
-            await interaction.reply({ content: `✅ Quote #${id} deleted.`, ephemeral: true });
+            await interaction.reply({ content: `✅ Quote #${id} deleted.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'search') {
             const query = interaction.options.getString('query').toLowerCase();
             const results = qGuild.quotes.filter(q =>
                 q.content.toLowerCase().includes(query) || q.author_name.toLowerCase().includes(query)
             ).slice(0, 10);
-            if (results.length === 0) return interaction.reply({ content: `No quotes found matching "${query}".`, ephemeral: true });
+            if (results.length === 0) return interaction.reply({ content: `No quotes found matching "${query}".`, flags: MessageFlags.Ephemeral });
             const embed = cubEmbed()
                 .setColor(0x5865F2)
                 .setTitle(`🔍 Quote Search: "${query}"`)
@@ -8817,11 +8817,11 @@ client.on('interactionCreate', async (interaction) => {
             const channel = interaction.options.getChannel('channel');
             confGuild.log_channel_id = channel.id;
             saveConfessionsData(confData);
-            await interaction.reply({ content: `✅ Mod log set to <#${channel.id}>. Confession authors will only be visible there.`, ephemeral: true });
+            await interaction.reply({ content: `✅ Mod log set to <#${channel.id}>. Confession authors will only be visible there.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'disable') {
             confGuild.enabled = false;
             saveConfessionsData(confData);
-            await interaction.reply({ content: '✅ Confession channel disabled.', ephemeral: true });
+            await interaction.reply({ content: '✅ Confession channel disabled.', flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -8830,11 +8830,11 @@ client.on('interactionCreate', async (interaction) => {
         const confData = loadConfessionsData();
         const confGuild = getConfessionsGuild(confData, guildId);
         if (!confGuild.enabled || !confGuild.channel_id) {
-            return interaction.reply({ content: 'Confessions are not set up on this server.', ephemeral: true });
+            return interaction.reply({ content: 'Confessions are not set up on this server.', flags: MessageFlags.Ephemeral });
         }
         const channel = await guild.channels.fetch(confGuild.channel_id).catch(() => null);
         if (!channel) {
-            return interaction.reply({ content: 'Confession channel not found. Ask an admin to run `/confession setup` again.', ephemeral: true });
+            return interaction.reply({ content: 'Confession channel not found. Ask an admin to run `/confession setup` again.', flags: MessageFlags.Ephemeral });
         }
         const confId = confGuild.next_id++;
         saveConfessionsData(confData);
@@ -8856,7 +8856,7 @@ client.on('interactionCreate', async (interaction) => {
                 await logChannel.send({ embeds: [logEmbed] }).catch(() => {});
             }
         }
-        await interaction.reply({ content: '✅ Your confession has been posted anonymously!', ephemeral: true });
+        await interaction.reply({ content: '✅ Your confession has been posted anonymously!', flags: MessageFlags.Ephemeral });
     }
 
     // ==================== COLOR ROLES ====================
@@ -8866,7 +8866,7 @@ client.on('interactionCreate', async (interaction) => {
         const rmGuild = getRoleMenusGuild(rmData, guildId);
         if (sub === 'setup') {
             if (rmGuild.color_roles.colors.length === 0) {
-                return interaction.reply({ content: '⚠️ No color presets yet. Use `/color-roles add` to add colors first.', ephemeral: true });
+                return interaction.reply({ content: '⚠️ No color presets yet. Use `/color-roles add` to add colors first.', flags: MessageFlags.Ephemeral });
             }
             const channel = interaction.options.getChannel('channel');
             const colors = rmGuild.color_roles.colors.slice(0, 25);
@@ -8888,23 +8888,23 @@ client.on('interactionCreate', async (interaction) => {
             rmGuild.color_roles.message_id = msg.id;
             rmGuild.color_roles.enabled = true;
             saveRoleMenusData(rmData);
-            await interaction.reply({ content: `✅ Color roles panel posted in <#${channel.id}>!`, ephemeral: true });
+            await interaction.reply({ content: `✅ Color roles panel posted in <#${channel.id}>!`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'add') {
             const name = interaction.options.getString('name');
             const hex = interaction.options.getString('color');
             const emoji = interaction.options.getString('emoji');
             if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) {
-                return interaction.reply({ content: '⚠️ Invalid hex color. Use format `#FF0000`.', ephemeral: true });
+                return interaction.reply({ content: '⚠️ Invalid hex color. Use format `#FF0000`.', flags: MessageFlags.Ephemeral });
             }
             if (rmGuild.color_roles.colors.find(c => c.name.toLowerCase() === name.toLowerCase())) {
-                return interaction.reply({ content: `⚠️ A color named "${name}" already exists.`, ephemeral: true });
+                return interaction.reply({ content: `⚠️ A color named "${name}" already exists.`, flags: MessageFlags.Ephemeral });
             }
             if (guild.roles.cache.size >= 250) {
-                return interaction.reply({ content: '⚠️ This server is at the Discord role limit (250).', ephemeral: true });
+                return interaction.reply({ content: '⚠️ This server is at the Discord role limit (250).', flags: MessageFlags.Ephemeral });
             }
             const colorInt = parseInt(hex.replace('#', ''), 16);
             const role = await guild.roles.create({ name, color: colorInt, reason: `Color role added by ${interaction.user.tag}` }).catch(() => null);
-            if (!role) return interaction.reply({ content: '❌ Failed to create the role. Check my permissions.', ephemeral: true });
+            if (!role) return interaction.reply({ content: '❌ Failed to create the role. Check my permissions.', flags: MessageFlags.Ephemeral });
             rmGuild.color_roles.colors.push({ name, hex, emoji: emoji || null, role_id: role.id });
             saveRoleMenusData(rmData);
             const embed = cubEmbed()
@@ -8919,17 +8919,17 @@ client.on('interactionCreate', async (interaction) => {
         } else if (sub === 'remove') {
             const name = interaction.options.getString('name');
             const idx = rmGuild.color_roles.colors.findIndex(c => c.name.toLowerCase() === name.toLowerCase());
-            if (idx === -1) return interaction.reply({ content: `Color "${name}" not found.`, ephemeral: true });
+            if (idx === -1) return interaction.reply({ content: `Color "${name}" not found.`, flags: MessageFlags.Ephemeral });
             const color = rmGuild.color_roles.colors[idx];
             const role = guild.roles.cache.get(color.role_id);
             if (role) await role.delete(`Color role removed by ${interaction.user.tag}`).catch(() => {});
             rmGuild.color_roles.colors.splice(idx, 1);
             saveRoleMenusData(rmData);
-            await interaction.reply({ content: `✅ Color "${name}" removed.`, ephemeral: true });
+            await interaction.reply({ content: `✅ Color "${name}" removed.`, flags: MessageFlags.Ephemeral });
         } else if (sub === 'disable') {
             rmGuild.color_roles.enabled = false;
             saveRoleMenusData(rmData);
-            await interaction.reply({ content: '✅ Color roles disabled.', ephemeral: true });
+            await interaction.reply({ content: '✅ Color roles disabled.', flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -8945,18 +8945,18 @@ client.on('interactionCreate', async (interaction) => {
             selfRoles.channel_id = channel.id;
             selfRoles.enabled = true;
             saveRoleMenusData(rmData);
-            await interaction.reply({ content: `✅ Self-roles channel set to <#${channel.id}>. Now use \`/self-roles preset\` to add preset categories, or \`/self-roles add-category\` for a custom one. Then use \`/self-roles post\` to publish the panel.`, ephemeral: true });
+            await interaction.reply({ content: `✅ Self-roles channel set to <#${channel.id}>. Now use \`/self-roles preset\` to add preset categories, or \`/self-roles add-category\` for a custom one. Then use \`/self-roles post\` to publish the panel.`, flags: MessageFlags.Ephemeral });
         }
 
         else if (sub === 'preset') {
             const presetKey = interaction.options.getString('name');
             const preset = SELF_ROLE_PRESETS[presetKey];
-            if (!preset) return interaction.reply({ content: 'Invalid preset.', ephemeral: true });
-            if (!selfRoles.channel_id) return interaction.reply({ content: 'Run `/self-roles setup` to set a channel first.', ephemeral: true });
+            if (!preset) return interaction.reply({ content: 'Invalid preset.', flags: MessageFlags.Ephemeral });
+            if (!selfRoles.channel_id) return interaction.reply({ content: 'Run `/self-roles setup` to set a channel first.', flags: MessageFlags.Ephemeral });
             if (selfRoles.categories.find(c => c.preset === presetKey)) {
-                return interaction.reply({ content: `The **${preset.name}** preset is already active.`, ephemeral: true });
+                return interaction.reply({ content: `The **${preset.name}** preset is already active.`, flags: MessageFlags.Ephemeral });
             }
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
             // Create all roles for this preset
             const categoryRoles = [];
             for (const roleData of preset.roles) {
@@ -8980,20 +8980,20 @@ client.on('interactionCreate', async (interaction) => {
             const name = interaction.options.getString('name');
             const description = interaction.options.getString('description') || `Pick your ${name} role!`;
             const emoji = interaction.options.getString('emoji') || '🎭';
-            if (!selfRoles.channel_id) return interaction.reply({ content: 'Run `/self-roles setup` to set a channel first.', ephemeral: true });
+            if (!selfRoles.channel_id) return interaction.reply({ content: 'Run `/self-roles setup` to set a channel first.', flags: MessageFlags.Ephemeral });
             if (selfRoles.categories.find(c => c.name.toLowerCase() === name.toLowerCase())) {
-                return interaction.reply({ content: `A category named "${name}" already exists.`, ephemeral: true });
+                return interaction.reply({ content: `A category named "${name}" already exists.`, flags: MessageFlags.Ephemeral });
             }
             const categoryId = `custom_${Date.now()}`;
             selfRoles.categories.push({ id: categoryId, name, description, emoji, preset: null, roles: [], message_id: null });
             saveRoleMenusData(rmData);
-            await interaction.reply({ content: `✅ Category **${name}** created. Use \`/self-roles add-role\` to add roles to it, then \`/self-roles post\` to publish.`, ephemeral: true });
+            await interaction.reply({ content: `✅ Category **${name}** created. Use \`/self-roles add-role\` to add roles to it, then \`/self-roles post\` to publish.`, flags: MessageFlags.Ephemeral });
         }
 
         else if (sub === 'remove-category') {
             const name = interaction.options.getString('name');
             const idx = selfRoles.categories.findIndex(c => c.name.toLowerCase() === name.toLowerCase());
-            if (idx === -1) return interaction.reply({ content: `Category "${name}" not found.`, ephemeral: true });
+            if (idx === -1) return interaction.reply({ content: `Category "${name}" not found.`, flags: MessageFlags.Ephemeral });
             const category = selfRoles.categories[idx];
             // Delete panel message if exists
             if (category.message_id && selfRoles.channel_id) {
@@ -9005,7 +9005,7 @@ client.on('interactionCreate', async (interaction) => {
             }
             selfRoles.categories.splice(idx, 1);
             saveRoleMenusData(rmData);
-            await interaction.reply({ content: `✅ Category **${name}** removed.`, ephemeral: true });
+            await interaction.reply({ content: `✅ Category **${name}** removed.`, flags: MessageFlags.Ephemeral });
         }
 
         else if (sub === 'add-role') {
@@ -9014,12 +9014,12 @@ client.on('interactionCreate', async (interaction) => {
             const label = interaction.options.getString('label') || role.name;
             const emoji = interaction.options.getString('emoji');
             const category = selfRoles.categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
-            if (!category) return interaction.reply({ content: `Category "${catName}" not found.`, ephemeral: true });
+            if (!category) return interaction.reply({ content: `Category "${catName}" not found.`, flags: MessageFlags.Ephemeral });
             if (category.roles.find(r => r.role_id === role.id)) {
-                return interaction.reply({ content: `${role.name} is already in this category.`, ephemeral: true });
+                return interaction.reply({ content: `${role.name} is already in this category.`, flags: MessageFlags.Ephemeral });
             }
             if (category.roles.length >= 25) {
-                return interaction.reply({ content: 'A category can have at most 25 roles (Discord limit).', ephemeral: true });
+                return interaction.reply({ content: 'A category can have at most 25 roles (Discord limit).', flags: MessageFlags.Ephemeral });
             }
             category.roles.push({ role_id: role.id, label, emoji: emoji || null });
             // Update panel message
@@ -9031,29 +9031,29 @@ client.on('interactionCreate', async (interaction) => {
                 }
             }
             saveRoleMenusData(rmData);
-            await interaction.reply({ content: `✅ Added **${role.name}** to the **${category.name}** category.`, ephemeral: true });
+            await interaction.reply({ content: `✅ Added **${role.name}** to the **${category.name}** category.`, flags: MessageFlags.Ephemeral });
         }
 
         else if (sub === 'remove-role') {
             const catName = interaction.options.getString('category');
             const role = interaction.options.getRole('role');
             const category = selfRoles.categories.find(c => c.name.toLowerCase() === catName.toLowerCase());
-            if (!category) return interaction.reply({ content: `Category "${catName}" not found.`, ephemeral: true });
+            if (!category) return interaction.reply({ content: `Category "${catName}" not found.`, flags: MessageFlags.Ephemeral });
             const roleIdx = category.roles.findIndex(r => r.role_id === role.id);
-            if (roleIdx === -1) return interaction.reply({ content: `${role.name} is not in this category.`, ephemeral: true });
+            if (roleIdx === -1) return interaction.reply({ content: `${role.name} is not in this category.`, flags: MessageFlags.Ephemeral });
             category.roles.splice(roleIdx, 1);
             if (selfRoles.channel_id) {
                 const channel = await guild.channels.fetch(selfRoles.channel_id).catch(() => null);
                 if (channel) await postSelfRolesCategory(guild, channel, category);
             }
             saveRoleMenusData(rmData);
-            await interaction.reply({ content: `✅ Removed **${role.name}** from **${category.name}**.`, ephemeral: true });
+            await interaction.reply({ content: `✅ Removed **${role.name}** from **${category.name}**.`, flags: MessageFlags.Ephemeral });
         }
 
         else if (sub === 'post') {
-            if (!selfRoles.channel_id) return interaction.reply({ content: 'Run `/self-roles setup` to set a channel first.', ephemeral: true });
-            if (selfRoles.categories.length === 0) return interaction.reply({ content: 'No categories yet. Add some with `/self-roles preset` or `/self-roles add-category`.', ephemeral: true });
-            await interaction.deferReply({ ephemeral: true });
+            if (!selfRoles.channel_id) return interaction.reply({ content: 'Run `/self-roles setup` to set a channel first.', flags: MessageFlags.Ephemeral });
+            if (selfRoles.categories.length === 0) return interaction.reply({ content: 'No categories yet. Add some with `/self-roles preset` or `/self-roles add-category`.', flags: MessageFlags.Ephemeral });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
             const channel = await guild.channels.fetch(selfRoles.channel_id).catch(() => null);
             if (!channel) return interaction.editReply({ content: 'Panel channel not found. Run `/self-roles setup` again.' });
             let posted = 0, failed = 0;
@@ -9073,7 +9073,7 @@ client.on('interactionCreate', async (interaction) => {
         else if (sub === 'disable') {
             selfRoles.enabled = false;
             saveRoleMenusData(rmData);
-            await interaction.reply({ content: '✅ Self-roles disabled.', ephemeral: true });
+            await interaction.reply({ content: '✅ Self-roles disabled.', flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -9082,11 +9082,11 @@ client.on('interactionCreate', async (interaction) => {
         const rmData = loadRoleMenusData();
         const rmGuild = getRoleMenusGuild(rmData, interaction.guild.id);
         if (!rmGuild.color_roles.enabled) {
-            return interaction.reply({ content: 'Color roles are no longer active on this server.', ephemeral: true });
+            return interaction.reply({ content: 'Color roles are no longer active on this server.', flags: MessageFlags.Ephemeral });
         }
         const selectedRoleId = interaction.values[0];
         const colorData = rmGuild.color_roles.colors.find(c => c.role_id === selectedRoleId);
-        if (!colorData) return interaction.reply({ content: 'That color no longer exists.', ephemeral: true });
+        if (!colorData) return interaction.reply({ content: 'That color no longer exists.', flags: MessageFlags.Ephemeral });
         const allColorRoleIds = rmGuild.color_roles.colors.map(c => c.role_id);
         for (const rId of allColorRoleIds) {
             if (interaction.member.roles.cache.has(rId) && rId !== selectedRoleId) {
@@ -9095,10 +9095,10 @@ client.on('interactionCreate', async (interaction) => {
         }
         if (interaction.member.roles.cache.has(selectedRoleId)) {
             await interaction.member.roles.remove(selectedRoleId).catch(() => {});
-            return interaction.reply({ content: `✅ Removed your **${colorData.name}** color.`, ephemeral: true });
+            return interaction.reply({ content: `✅ Removed your **${colorData.name}** color.`, flags: MessageFlags.Ephemeral });
         } else {
             await interaction.member.roles.add(selectedRoleId).catch(() => {});
-            return interaction.reply({ content: `✅ You now have the **${colorData.name}** color!`, ephemeral: true });
+            return interaction.reply({ content: `✅ You now have the **${colorData.name}** color!`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -9108,7 +9108,7 @@ client.on('interactionCreate', async (interaction) => {
         const rmData = loadRoleMenusData();
         const rmGuild = getRoleMenusGuild(rmData, interaction.guild.id);
         const category = rmGuild.self_roles.categories.find(c => c.id === categoryId);
-        if (!category) return interaction.reply({ content: 'This category no longer exists.', ephemeral: true });
+        if (!category) return interaction.reply({ content: 'This category no longer exists.', flags: MessageFlags.Ephemeral });
 
         // Fetch member fresh to get accurate current role state
         const member = await interaction.guild.members.fetch(interaction.user.id).catch(() => interaction.member);
@@ -9140,7 +9140,7 @@ client.on('interactionCreate', async (interaction) => {
         if (failedAdd.length > 0 || failedRemove.length > 0) msg += `⚠️ Some changes failed — the bot may be missing **Manage Roles** permission or the role may be above the bot in the role list.`;
         if (!msg) msg = 'No changes made.';
 
-        return interaction.reply({ content: msg.trim(), ephemeral: true });
+        return interaction.reply({ content: msg.trim(), flags: MessageFlags.Ephemeral });
     }
 
     // ==================== PROFILE ====================
@@ -9177,32 +9177,32 @@ client.on('interactionCreate', async (interaction) => {
             const text = interaction.options.getString('text') || null;
             getUserProfile(pGuild, interaction.user.id).bio = text;
             saveProfilesData(pData);
-            return interaction.reply({ content: text ? '✅ Bio updated!' : '✅ Bio cleared.', ephemeral: true });
+            return interaction.reply({ content: text ? '✅ Bio updated!' : '✅ Bio cleared.', flags: MessageFlags.Ephemeral });
         }
         if (sub === 'color') {
             const hex = interaction.options.getString('hex');
-            if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) return interaction.reply({ content: '❌ Invalid hex color. Use `#RRGGBB`.', ephemeral: true });
+            if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) return interaction.reply({ content: '❌ Invalid hex color. Use `#RRGGBB`.', flags: MessageFlags.Ephemeral });
             getUserProfile(pGuild, interaction.user.id).color = hex;
             saveProfilesData(pData);
-            return interaction.reply({ content: `✅ Profile color set to \`${hex}\`.`, ephemeral: true });
+            return interaction.reply({ content: `✅ Profile color set to \`${hex}\`.`, flags: MessageFlags.Ephemeral });
         }
         if (sub === 'link') {
             const label = interaction.options.getString('label');
             const url = interaction.options.getString('url');
-            if (!url.startsWith('http://') && !url.startsWith('https://')) return interaction.reply({ content: '❌ URL must start with http:// or https://', ephemeral: true });
+            if (!url.startsWith('http://') && !url.startsWith('https://')) return interaction.reply({ content: '❌ URL must start with http:// or https://', flags: MessageFlags.Ephemeral });
             const profile = getUserProfile(pGuild, interaction.user.id);
-            if (Object.keys(profile.links).length >= 5) return interaction.reply({ content: '❌ Max 5 links.', ephemeral: true });
+            if (Object.keys(profile.links).length >= 5) return interaction.reply({ content: '❌ Max 5 links.', flags: MessageFlags.Ephemeral });
             profile.links[label] = url;
             saveProfilesData(pData);
-            return interaction.reply({ content: `✅ Added link **${label}**.`, ephemeral: true });
+            return interaction.reply({ content: `✅ Added link **${label}**.`, flags: MessageFlags.Ephemeral });
         }
         if (sub === 'unlink') {
             const label = interaction.options.getString('label');
             const profile = getUserProfile(pGuild, interaction.user.id);
-            if (!profile.links[label]) return interaction.reply({ content: `❌ No link **${label}** found.`, ephemeral: true });
+            if (!profile.links[label]) return interaction.reply({ content: `❌ No link **${label}** found.`, flags: MessageFlags.Ephemeral });
             delete profile.links[label];
             saveProfilesData(pData);
-            return interaction.reply({ content: `✅ Removed link **${label}**.`, ephemeral: true });
+            return interaction.reply({ content: `✅ Removed link **${label}**.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -9213,13 +9213,13 @@ client.on('interactionCreate', async (interaction) => {
         const repGuild = getRepGuild(repData, guild.id);
         if (sub === 'give') {
             const target = interaction.options.getUser('user');
-            if (target.id === interaction.user.id) return interaction.reply({ content: '❌ You cannot rep yourself.', ephemeral: true });
-            if (target.bot) return interaction.reply({ content: '❌ You cannot rep a bot.', ephemeral: true });
+            if (target.id === interaction.user.id) return interaction.reply({ content: '❌ You cannot rep yourself.', flags: MessageFlags.Ephemeral });
+            if (target.bot) return interaction.reply({ content: '❌ You cannot rep a bot.', flags: MessageFlags.Ephemeral });
             const giver = getUserRep(repGuild, interaction.user.id);
             const cooldownHours = repGuild.cooldown_hours || 24;
             const lastGiven = giver.last_given[target.id] || 0;
             const msRemaining = (lastGiven + cooldownHours * 3600000) - Date.now();
-            if (msRemaining > 0) return interaction.reply({ content: `❌ You can rep <@${target.id}> again in **${Math.ceil(msRemaining / 3600000)}h**.`, ephemeral: true });
+            if (msRemaining > 0) return interaction.reply({ content: `❌ You can rep <@${target.id}> again in **${Math.ceil(msRemaining / 3600000)}h**.`, flags: MessageFlags.Ephemeral });
             giver.last_given[target.id] = Date.now();
             const receiver = getUserRep(repGuild, target.id);
             receiver.rep += 1;
@@ -9233,7 +9233,7 @@ client.on('interactionCreate', async (interaction) => {
         }
         if (sub === 'leaderboard') {
             const sorted = Object.entries(repGuild.users).map(([id, v]) => ({ id, rep: v.rep || 0 })).filter(u => u.rep > 0).sort((a, b) => b.rep - a.rep).slice(0, 10);
-            if (!sorted.length) return interaction.reply({ content: 'No rep recorded yet!', ephemeral: true });
+            if (!sorted.length) return interaction.reply({ content: 'No rep recorded yet!', flags: MessageFlags.Ephemeral });
             const embed = cubEmbed().setColor(0xFFD700).setTitle('⭐ Rep Leaderboard').setDescription(sorted.map((u, i) => `**${i + 1}.** <@${u.id}> — **${u.rep}** rep`).join('\n'));
             return interaction.reply({ embeds: [embed] });
         }
@@ -9242,14 +9242,14 @@ client.on('interactionCreate', async (interaction) => {
     // ==================== PROPOSE / DIVORCE ====================
     else if (commandName === 'propose') {
         const target = interaction.options.getUser('user');
-        if (target.id === interaction.user.id) return interaction.reply({ content: '❌ You cannot propose to yourself.', ephemeral: true });
-        if (target.bot) return interaction.reply({ content: '❌ You cannot propose to a bot.', ephemeral: true });
+        if (target.id === interaction.user.id) return interaction.reply({ content: '❌ You cannot propose to yourself.', flags: MessageFlags.Ephemeral });
+        if (target.bot) return interaction.reply({ content: '❌ You cannot propose to a bot.', flags: MessageFlags.Ephemeral });
         const relData = loadRelationshipsData();
         const relGuild = getRelationshipsGuild(relData, guild.id);
         const alreadyMarried = Object.entries(relGuild.relationships || {}).some(([k, v]) => v.type === 'married' && (k.includes(interaction.user.id) || k.includes(target.id)));
-        if (alreadyMarried) return interaction.reply({ content: '❌ One of you is already married.', ephemeral: true });
+        if (alreadyMarried) return interaction.reply({ content: '❌ One of you is already married.', flags: MessageFlags.Ephemeral });
         const propKey = [interaction.user.id, target.id].sort().join(':');
-        if (relGuild.proposals[propKey]) return interaction.reply({ content: '❌ A proposal is already pending.', ephemeral: true });
+        if (relGuild.proposals[propKey]) return interaction.reply({ content: '❌ A proposal is already pending.', flags: MessageFlags.Ephemeral });
         relGuild.proposals[propKey] = { proposer: interaction.user.id, ts: Date.now() };
         saveRelationshipsData(relData);
         const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
@@ -9264,7 +9264,7 @@ client.on('interactionCreate', async (interaction) => {
         const relData = loadRelationshipsData();
         const relGuild = getRelationshipsGuild(relData, guild.id);
         const marriageKey = Object.keys(relGuild.relationships || {}).find(k => k.includes(interaction.user.id) && relGuild.relationships[k].type === 'married');
-        if (!marriageKey) return interaction.reply({ content: '❌ You are not married.', ephemeral: true });
+        if (!marriageKey) return interaction.reply({ content: '❌ You are not married.', flags: MessageFlags.Ephemeral });
         const partnerId = marriageKey.split(':').find(id => id !== interaction.user.id);
         delete relGuild.relationships[marriageKey];
         saveRelationshipsData(relData);
@@ -9274,13 +9274,13 @@ client.on('interactionCreate', async (interaction) => {
     // ==================== FRIEND / UNFRIEND ====================
     else if (commandName === 'friend') {
         const target = interaction.options.getUser('user');
-        if (target.id === interaction.user.id) return interaction.reply({ content: '❌ You cannot friend yourself.', ephemeral: true });
-        if (target.bot) return interaction.reply({ content: '❌ You cannot friend a bot.', ephemeral: true });
+        if (target.id === interaction.user.id) return interaction.reply({ content: '❌ You cannot friend yourself.', flags: MessageFlags.Ephemeral });
+        if (target.bot) return interaction.reply({ content: '❌ You cannot friend a bot.', flags: MessageFlags.Ephemeral });
         const relData = loadRelationshipsData();
         const relGuild = getRelationshipsGuild(relData, guild.id);
         const reqKey = [interaction.user.id, target.id].sort().join(':');
-        if (relGuild.relationships?.[reqKey]) return interaction.reply({ content: '❌ You are already friends!', ephemeral: true });
-        if (relGuild.friend_requests?.[reqKey]) return interaction.reply({ content: '❌ A friend request is already pending.', ephemeral: true });
+        if (relGuild.relationships?.[reqKey]) return interaction.reply({ content: '❌ You are already friends!', flags: MessageFlags.Ephemeral });
+        if (relGuild.friend_requests?.[reqKey]) return interaction.reply({ content: '❌ A friend request is already pending.', flags: MessageFlags.Ephemeral });
         if (!relGuild.friend_requests) relGuild.friend_requests = {};
         relGuild.friend_requests[reqKey] = { sender: interaction.user.id, ts: Date.now() };
         saveRelationshipsData(relData);
@@ -9297,10 +9297,10 @@ client.on('interactionCreate', async (interaction) => {
         const relData = loadRelationshipsData();
         const relGuild = getRelationshipsGuild(relData, guild.id);
         const key = [interaction.user.id, target.id].sort().join(':');
-        if (!relGuild.relationships?.[key] || relGuild.relationships[key].type !== 'friend') return interaction.reply({ content: '❌ You are not friends with that user.', ephemeral: true });
+        if (!relGuild.relationships?.[key] || relGuild.relationships[key].type !== 'friend') return interaction.reply({ content: '❌ You are not friends with that user.', flags: MessageFlags.Ephemeral });
         delete relGuild.relationships[key];
         saveRelationshipsData(relData);
-        return interaction.reply({ content: `✅ Removed <@${target.id}> from your friends.`, ephemeral: true });
+        return interaction.reply({ content: `✅ Removed <@${target.id}> from your friends.`, flags: MessageFlags.Ephemeral });
     }
 
     // ==================== MOOD ====================
@@ -9313,16 +9313,16 @@ client.on('interactionCreate', async (interaction) => {
             profile.mood = interaction.options.getString('emoji');
             profile.mood_text = interaction.options.getString('text') || null;
             saveProfilesData(pData);
-            return interaction.reply({ content: `✅ Mood set to ${profile.mood}${profile.mood_text ? ` *${profile.mood_text}*` : ''}`, ephemeral: true });
+            return interaction.reply({ content: `✅ Mood set to ${profile.mood}${profile.mood_text ? ` *${profile.mood_text}*` : ''}`, flags: MessageFlags.Ephemeral });
         }
         if (sub === 'clear') {
             profile.mood = null; profile.mood_text = null;
             saveProfilesData(pData);
-            return interaction.reply({ content: '✅ Mood cleared.', ephemeral: true });
+            return interaction.reply({ content: '✅ Mood cleared.', flags: MessageFlags.Ephemeral });
         }
         if (sub === 'view') {
-            if (!profile.mood) return interaction.reply({ content: 'No mood set. Use `/mood set` to set one.', ephemeral: true });
-            return interaction.reply({ content: `Your mood: ${profile.mood}${profile.mood_text ? ` *${profile.mood_text}*` : ''}`, ephemeral: true });
+            if (!profile.mood) return interaction.reply({ content: 'No mood set. Use `/mood set` to set one.', flags: MessageFlags.Ephemeral });
+            return interaction.reply({ content: `Your mood: ${profile.mood}${profile.mood_text ? ` *${profile.mood_text}*` : ''}`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -9342,10 +9342,10 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'join') {
             const id = interaction.options.getInteger('id');
             const t = tGuild.tournaments.find(x => x.id === id);
-            if (!t) return interaction.reply({ content: `❌ Tournament #${id} not found.`, ephemeral: true });
-            if (t.status !== 'open') return interaction.reply({ content: '❌ Not open for joining.', ephemeral: true });
-            if (t.participants.includes(interaction.user.id)) return interaction.reply({ content: '❌ Already in this tournament.', ephemeral: true });
-            if (t.participants.length >= t.max) return interaction.reply({ content: '❌ Tournament is full.', ephemeral: true });
+            if (!t) return interaction.reply({ content: `❌ Tournament #${id} not found.`, flags: MessageFlags.Ephemeral });
+            if (t.status !== 'open') return interaction.reply({ content: '❌ Not open for joining.', flags: MessageFlags.Ephemeral });
+            if (t.participants.includes(interaction.user.id)) return interaction.reply({ content: '❌ Already in this tournament.', flags: MessageFlags.Ephemeral });
+            if (t.participants.length >= t.max) return interaction.reply({ content: '❌ Tournament is full.', flags: MessageFlags.Ephemeral });
             t.participants.push(interaction.user.id);
             saveTournamentsData(tData);
             return interaction.reply({ content: `✅ Joined **${t.name}** (${t.participants.length}/${t.max}).` });
@@ -9353,8 +9353,8 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'start') {
             const id = interaction.options.getInteger('id');
             const t = tGuild.tournaments.find(x => x.id === id);
-            if (!t || t.status !== 'open') return interaction.reply({ content: '❌ Tournament not found or not open.', ephemeral: true });
-            if (t.participants.length < 2) return interaction.reply({ content: '❌ Need at least 2 participants.', ephemeral: true });
+            if (!t || t.status !== 'open') return interaction.reply({ content: '❌ Tournament not found or not open.', flags: MessageFlags.Ephemeral });
+            if (t.participants.length < 2) return interaction.reply({ content: '❌ Need at least 2 participants.', flags: MessageFlags.Ephemeral });
             const shuffled = [...t.participants].sort(() => Math.random() - 0.5);
             const matches = [];
             for (let i = 0; i < shuffled.length; i += 2) matches.push({ p1: shuffled[i], p2: shuffled[i + 1] || 'BYE', winner: shuffled[i + 1] ? null : shuffled[i] });
@@ -9368,9 +9368,9 @@ client.on('interactionCreate', async (interaction) => {
             const id = interaction.options.getInteger('id');
             const winner = interaction.options.getUser('winner');
             const t = tGuild.tournaments.find(x => x.id === id);
-            if (!t || t.status !== 'active') return interaction.reply({ content: '❌ Tournament not found or not active.', ephemeral: true });
+            if (!t || t.status !== 'active') return interaction.reply({ content: '❌ Tournament not found or not active.', flags: MessageFlags.Ephemeral });
             const match = t.bracket.matches.find(m => (m.p1 === winner.id || m.p2 === winner.id) && m.winner === null);
-            if (!match) return interaction.reply({ content: `❌ No pending match for <@${winner.id}>.`, ephemeral: true });
+            if (!match) return interaction.reply({ content: `❌ No pending match for <@${winner.id}>.`, flags: MessageFlags.Ephemeral });
             match.winner = winner.id;
             const pending = t.bracket.matches.filter(m => m.winner === null);
             if (pending.length === 0) {
@@ -9393,7 +9393,7 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'info') {
             const id = interaction.options.getInteger('id');
             const t = tGuild.tournaments.find(x => x.id === id);
-            if (!t) return interaction.reply({ content: `❌ Tournament #${id} not found.`, ephemeral: true });
+            if (!t) return interaction.reply({ content: `❌ Tournament #${id} not found.`, flags: MessageFlags.Ephemeral });
             const embed = cubEmbed().setColor(0xFFD700).setTitle(`🏆 ${t.name}`)
                 .addFields({ name: 'Status', value: t.status, inline: true }, { name: 'Participants', value: `${t.participants.length}/${t.max}`, inline: true });
             if (t.winner) embed.addFields({ name: 'Winner', value: `<@${t.winner}>` });
@@ -9402,14 +9402,14 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'end') {
             const id = interaction.options.getInteger('id');
             const t = tGuild.tournaments.find(x => x.id === id);
-            if (!t) return interaction.reply({ content: `❌ Tournament #${id} not found.`, ephemeral: true });
+            if (!t) return interaction.reply({ content: `❌ Tournament #${id} not found.`, flags: MessageFlags.Ephemeral });
             t.status = 'ended';
             saveTournamentsData(tData);
             return interaction.reply({ content: `✅ Tournament **${t.name}** ended.` });
         }
         if (sub === 'list') {
             const list = tGuild.tournaments.slice(-10);
-            if (!list.length) return interaction.reply({ content: 'No tournaments yet.', ephemeral: true });
+            if (!list.length) return interaction.reply({ content: 'No tournaments yet.', flags: MessageFlags.Ephemeral });
             return interaction.reply({ embeds: [cubEmbed().setColor(0xFFD700).setTitle('🏆 Tournaments').setDescription(list.map(t => `**#${t.id}** ${t.name} — \`${t.status}\` (${t.participants.length}/${t.max})`).join('\n'))] });
         }
     }
@@ -9423,8 +9423,8 @@ client.on('interactionCreate', async (interaction) => {
             const subr = interaction.options.getString('subreddit').replace(/^r\//i, '');
             const channel = interaction.options.getChannel('channel');
             const type = interaction.options.getString('type') || 'hot';
-            if (fGuild.reddit.length >= 10) return interaction.reply({ content: '❌ Max 10 Reddit feeds.', ephemeral: true });
-            if (fGuild.reddit.find(f => f.subreddit.toLowerCase() === subr.toLowerCase())) return interaction.reply({ content: `❌ r/${subr} is already tracked.`, ephemeral: true });
+            if (fGuild.reddit.length >= 10) return interaction.reply({ content: '❌ Max 10 Reddit feeds.', flags: MessageFlags.Ephemeral });
+            if (fGuild.reddit.find(f => f.subreddit.toLowerCase() === subr.toLowerCase())) return interaction.reply({ content: `❌ r/${subr} is already tracked.`, flags: MessageFlags.Ephemeral });
             fGuild.reddit.push({ id: Date.now(), subreddit: subr, channel_id: channel.id, type, last_id: null });
             saveFeedsData(fData);
             return interaction.reply({ content: `✅ Now posting **r/${subr}** (${type}) to <#${channel.id}>.` });
@@ -9432,14 +9432,14 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'remove') {
             const subr = interaction.options.getString('subreddit').replace(/^r\//i, '');
             const idx = fGuild.reddit.findIndex(f => f.subreddit.toLowerCase() === subr.toLowerCase());
-            if (idx === -1) return interaction.reply({ content: `❌ r/${subr} not tracked.`, ephemeral: true });
+            if (idx === -1) return interaction.reply({ content: `❌ r/${subr} not tracked.`, flags: MessageFlags.Ephemeral });
             fGuild.reddit.splice(idx, 1);
             saveFeedsData(fData);
-            return interaction.reply({ content: `✅ Removed Reddit feed for r/${subr}.`, ephemeral: true });
+            return interaction.reply({ content: `✅ Removed Reddit feed for r/${subr}.`, flags: MessageFlags.Ephemeral });
         }
         if (sub === 'list') {
-            if (!fGuild.reddit.length) return interaction.reply({ content: 'No Reddit feeds configured.', ephemeral: true });
-            return interaction.reply({ content: `**Reddit Feeds:**\n${fGuild.reddit.map(f => `• **r/${f.subreddit}** (${f.type}) → <#${f.channel_id}>`).join('\n')}`, ephemeral: true });
+            if (!fGuild.reddit.length) return interaction.reply({ content: 'No Reddit feeds configured.', flags: MessageFlags.Ephemeral });
+            return interaction.reply({ content: `**Reddit Feeds:**\n${fGuild.reddit.map(f => `• **r/${f.subreddit}** (${f.type}) → <#${f.channel_id}>`).join('\n')}`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -9452,8 +9452,8 @@ client.on('interactionCreate', async (interaction) => {
             const url = interaction.options.getString('url');
             const channel = interaction.options.getChannel('channel');
             const name = interaction.options.getString('name') || url.substring(0, 40);
-            if (!url.startsWith('http')) return interaction.reply({ content: '❌ Invalid URL.', ephemeral: true });
-            if (fGuild.news.length >= 10) return interaction.reply({ content: '❌ Max 10 news feeds.', ephemeral: true });
+            if (!url.startsWith('http')) return interaction.reply({ content: '❌ Invalid URL.', flags: MessageFlags.Ephemeral });
+            if (fGuild.news.length >= 10) return interaction.reply({ content: '❌ Max 10 news feeds.', flags: MessageFlags.Ephemeral });
             fGuild.news.push({ id: Date.now(), name, url, channel_id: channel.id, last_link: null });
             saveFeedsData(fData);
             return interaction.reply({ content: `✅ Added news feed **${name}** → <#${channel.id}>.` });
@@ -9461,14 +9461,14 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'remove') {
             const name = interaction.options.getString('name');
             const idx = fGuild.news.findIndex(f => f.name.toLowerCase() === name.toLowerCase());
-            if (idx === -1) return interaction.reply({ content: `❌ Feed "${name}" not found.`, ephemeral: true });
+            if (idx === -1) return interaction.reply({ content: `❌ Feed "${name}" not found.`, flags: MessageFlags.Ephemeral });
             fGuild.news.splice(idx, 1);
             saveFeedsData(fData);
-            return interaction.reply({ content: `✅ Removed news feed **${name}**.`, ephemeral: true });
+            return interaction.reply({ content: `✅ Removed news feed **${name}**.`, flags: MessageFlags.Ephemeral });
         }
         if (sub === 'list') {
-            if (!fGuild.news.length) return interaction.reply({ content: 'No news feeds configured.', ephemeral: true });
-            return interaction.reply({ content: `**News Feeds:**\n${fGuild.news.map(f => `• **${f.name}** → <#${f.channel_id}>`).join('\n')}`, ephemeral: true });
+            if (!fGuild.news.length) return interaction.reply({ content: 'No news feeds configured.', flags: MessageFlags.Ephemeral });
+            return interaction.reply({ content: `**News Feeds:**\n${fGuild.news.map(f => `• **${f.name}** → <#${f.channel_id}>`).join('\n')}`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -9485,7 +9485,7 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'disable') {
             fGuild.meme_of_day = null; fGuild.last_meme_date = null;
             saveFeedsData(fData);
-            return interaction.reply({ content: '✅ Meme of the Day disabled.', ephemeral: true });
+            return interaction.reply({ content: '✅ Meme of the Day disabled.', flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -9502,7 +9502,7 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'disable') {
             fGuild.quote_of_day = null; fGuild.last_quote_date = null;
             saveFeedsData(fData);
-            return interaction.reply({ content: '✅ Quote of the Day disabled.', ephemeral: true });
+            return interaction.reply({ content: '✅ Quote of the Day disabled.', flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -9513,7 +9513,7 @@ client.on('interactionCreate', async (interaction) => {
             const user1 = interaction.options.getUser('user1');
             const user2 = interaction.options.getUser('user2');
             const topic = interaction.options.getString('topic');
-            if (activeDebates.has(interaction.channel.id)) return interaction.reply({ content: '❌ A debate is already active here.', ephemeral: true });
+            if (activeDebates.has(interaction.channel.id)) return interaction.reply({ content: '❌ A debate is already active here.', flags: MessageFlags.Ephemeral });
             const timeout = setTimeout(async () => {
                 activeDebates.delete(interaction.channel.id);
                 const ch = await client.channels.fetch(interaction.channel.id).catch(() => null);
@@ -9524,7 +9524,7 @@ client.on('interactionCreate', async (interaction) => {
         }
         if (sub === 'end') {
             const debate = activeDebates.get(interaction.channel.id);
-            if (!debate) return interaction.reply({ content: '❌ No active debate here.', ephemeral: true });
+            if (!debate) return interaction.reply({ content: '❌ No active debate here.', flags: MessageFlags.Ephemeral });
             clearTimeout(debate.timeout);
             activeDebates.delete(interaction.channel.id);
             const embed = cubEmbed().setColor(0xED4245).setTitle('🗣️ Debate Ended').setDescription(`The debate on **${debate.topic}** has concluded!`);
@@ -9541,7 +9541,7 @@ client.on('interactionCreate', async (interaction) => {
             const dGuild = getDebateGuild(dData, guild.id);
             dGuild.log_channel_id = interaction.options.getChannel('channel').id;
             saveDebateData(dData);
-            return interaction.reply({ content: `✅ Debate logs → <#${dGuild.log_channel_id}>.`, ephemeral: true });
+            return interaction.reply({ content: `✅ Debate logs → <#${dGuild.log_channel_id}>.`, flags: MessageFlags.Ephemeral });
         }
     }
 
@@ -9555,8 +9555,8 @@ client.on('interactionCreate', async (interaction) => {
 
         if (action === 'marry_accept' || action === 'marry_decline') {
             const proposal = relGuild.proposals?.[key];
-            if (!proposal) return interaction.reply({ content: '❌ This proposal has expired.', ephemeral: true });
-            if (proposal.proposer === interaction.user.id) return interaction.reply({ content: '❌ Only the recipient can respond.', ephemeral: true });
+            if (!proposal) return interaction.reply({ content: '❌ This proposal has expired.', flags: MessageFlags.Ephemeral });
+            if (proposal.proposer === interaction.user.id) return interaction.reply({ content: '❌ Only the recipient can respond.', flags: MessageFlags.Ephemeral });
             delete relGuild.proposals[key];
             if (action === 'marry_accept') {
                 if (!relGuild.relationships) relGuild.relationships = {};
@@ -9572,8 +9572,8 @@ client.on('interactionCreate', async (interaction) => {
 
         if (action === 'friend_accept' || action === 'friend_decline') {
             const request = relGuild.friend_requests?.[key];
-            if (!request) return interaction.reply({ content: '❌ This friend request has expired.', ephemeral: true });
-            if (request.sender === interaction.user.id) return interaction.reply({ content: '❌ Only the recipient can respond.', ephemeral: true });
+            if (!request) return interaction.reply({ content: '❌ This friend request has expired.', flags: MessageFlags.Ephemeral });
+            if (request.sender === interaction.user.id) return interaction.reply({ content: '❌ Only the recipient can respond.', flags: MessageFlags.Ephemeral });
             delete relGuild.friend_requests[key];
             if (action === 'friend_accept') {
                 if (!relGuild.relationships) relGuild.relationships = {};
@@ -9592,17 +9592,17 @@ client.on('interactionCreate', async (interaction) => {
     // ── Blackjack buttons ────────────────────────────────────────────────────
     else if (interaction.isButton() && (interaction.customId.startsWith('bj_hit:') || interaction.customId.startsWith('bj_stand:') || interaction.customId.startsWith('bj_double:'))) {
         const [action, targetUserId] = interaction.customId.split(':');
-        if (interaction.user.id !== targetUserId) return interaction.reply({ content: '❌ This is not your game.', ephemeral: true });
+        if (interaction.user.id !== targetUserId) return interaction.reply({ content: '❌ This is not your game.', flags: MessageFlags.Ephemeral });
         const gameKey = `${guild.id}:${targetUserId}`;
         const game = activeGames.get(gameKey);
-        if (!game || game.type !== 'blackjack') return interaction.reply({ content: '❌ No active blackjack game.', ephemeral: true });
+        if (!game || game.type !== 'blackjack') return interaction.reply({ content: '❌ No active blackjack game.', flags: MessageFlags.Ephemeral });
 
         const eData = loadEconomyData();
         const guildE = getEconomyGuild(eData, guild.id);
         const user = getUserEco(guildE, targetUserId);
 
         if (action === 'bj_double') {
-            if (user.balance < game.bet) return interaction.reply({ content: '❌ Not enough coins to double down.', ephemeral: true });
+            if (user.balance < game.bet) return interaction.reply({ content: '❌ Not enough coins to double down.', flags: MessageFlags.Ephemeral });
             user.balance -= game.bet;
             game.bet *= 2;
             game.doubled = true;
@@ -9672,10 +9672,10 @@ client.on('interactionCreate', async (interaction) => {
     // ── Crash cash-out ───────────────────────────────────────────────────────
     else if (interaction.isButton() && interaction.customId.startsWith('crash_cashout:')) {
         const targetUserId = interaction.customId.split(':')[1];
-        if (interaction.user.id !== targetUserId) return interaction.reply({ content: '❌ This is not your game.', ephemeral: true });
+        if (interaction.user.id !== targetUserId) return interaction.reply({ content: '❌ This is not your game.', flags: MessageFlags.Ephemeral });
         const gameKey = `${guild.id}:${targetUserId}`;
         const game = activeGames.get(gameKey);
-        if (!game || game.crashed) return interaction.reply({ content: '❌ No active crash game or already crashed.', ephemeral: true });
+        if (!game || game.crashed) return interaction.reply({ content: '❌ No active crash game or already crashed.', flags: MessageFlags.Ephemeral });
 
         game.crashed = true;
         activeGames.delete(gameKey);
@@ -9706,10 +9706,10 @@ client.on('interactionCreate', async (interaction) => {
     // ── High-Low buttons ─────────────────────────────────────────────────────
     else if (interaction.isButton() && (interaction.customId.startsWith('hl_higher:') || interaction.customId.startsWith('hl_lower:') || interaction.customId.startsWith('hl_cashout:'))) {
         const [action, targetUserId] = interaction.customId.split(':');
-        if (interaction.user.id !== targetUserId) return interaction.reply({ content: '❌ This is not your game.', ephemeral: true });
+        if (interaction.user.id !== targetUserId) return interaction.reply({ content: '❌ This is not your game.', flags: MessageFlags.Ephemeral });
         const gameKey = `${guild.id}:${targetUserId}`;
         const game = activeGames.get(gameKey);
-        if (!game || game.type !== 'highlow') return interaction.reply({ content: '❌ No active High-Low game.', ephemeral: true });
+        if (!game || game.type !== 'highlow') return interaction.reply({ content: '❌ No active High-Low game.', flags: MessageFlags.Ephemeral });
 
         const eData = loadEconomyData();
         const guildE = getEconomyGuild(eData, guild.id);
@@ -9793,9 +9793,9 @@ client.on('interactionCreate', async (interaction) => {
         const cellIdx = parseInt(parts[1]);
         const gameId = parts[2];
         const game = activePvPGames.get(gameId);
-        if (!game || game.type !== 'ttt') return interaction.reply({ content: '❌ Game not found.', ephemeral: true });
-        if (interaction.user.id !== game.currentTurn) return interaction.reply({ content: '❌ It\'s not your turn.', ephemeral: true });
-        if (game.board[cellIdx] !== null) return interaction.reply({ content: '❌ That cell is taken.', ephemeral: true });
+        if (!game || game.type !== 'ttt') return interaction.reply({ content: '❌ Game not found.', flags: MessageFlags.Ephemeral });
+        if (interaction.user.id !== game.currentTurn) return interaction.reply({ content: '❌ It\'s not your turn.', flags: MessageFlags.Ephemeral });
+        if (game.board[cellIdx] !== null) return interaction.reply({ content: '❌ That cell is taken.', flags: MessageFlags.Ephemeral });
 
         const symbol = game.players[0] === interaction.user.id ? 'X' : 'O';
         game.board[cellIdx] = symbol;
@@ -9859,8 +9859,8 @@ client.on('interactionCreate', async (interaction) => {
         const col = parseInt(parts[1]);
         const gameId = parts[2];
         const game = activePvPGames.get(gameId);
-        if (!game || game.type !== 'c4') return interaction.reply({ content: '❌ Game not found.', ephemeral: true });
-        if (interaction.user.id !== game.currentTurn) return interaction.reply({ content: '❌ It\'s not your turn.', ephemeral: true });
+        if (!game || game.type !== 'c4') return interaction.reply({ content: '❌ Game not found.', flags: MessageFlags.Ephemeral });
+        if (interaction.user.id !== game.currentTurn) return interaction.reply({ content: '❌ It\'s not your turn.', flags: MessageFlags.Ephemeral });
 
         const playerIdx = game.players.indexOf(interaction.user.id) + 1;
         // Drop piece
@@ -9868,7 +9868,7 @@ client.on('interactionCreate', async (interaction) => {
         for (let r = 5; r >= 0; r--) {
             if (game.board[r][col] === 0) { game.board[r][col] = playerIdx; placed = r; break; }
         }
-        if (placed === -1) return interaction.reply({ content: '❌ That column is full.', ephemeral: true });
+        if (placed === -1) return interaction.reply({ content: '❌ That column is full.', flags: MessageFlags.Ephemeral });
 
         // Check win (horizontal, vertical, diagonal)
         const checkWin = (board, p) => {
@@ -9957,12 +9957,12 @@ client.on('interactionCreate', async (interaction) => {
         const choice = parts[1];
         const gameId = parts[2];
         const game = activePvPGames.get(gameId);
-        if (!game || game.type !== 'rps') return interaction.reply({ content: '❌ Game not found.', ephemeral: true });
-        if (!game.players.includes(interaction.user.id)) return interaction.reply({ content: '❌ You\'re not in this game.', ephemeral: true });
-        if (game.moves[interaction.user.id]) return interaction.reply({ content: '✅ You already chose! Waiting for opponent...', ephemeral: true });
+        if (!game || game.type !== 'rps') return interaction.reply({ content: '❌ Game not found.', flags: MessageFlags.Ephemeral });
+        if (!game.players.includes(interaction.user.id)) return interaction.reply({ content: '❌ You\'re not in this game.', flags: MessageFlags.Ephemeral });
+        if (game.moves[interaction.user.id]) return interaction.reply({ content: '✅ You already chose! Waiting for opponent...', flags: MessageFlags.Ephemeral });
 
         game.moves[interaction.user.id] = choice;
-        await interaction.reply({ content: `✅ You chose **${choice}**! Waiting for the other player...`, ephemeral: true });
+        await interaction.reply({ content: `✅ You chose **${choice}**! Waiting for the other player...`, flags: MessageFlags.Ephemeral });
 
         if (Object.keys(game.moves).length < 2) return;
 
@@ -9998,11 +9998,11 @@ client.on('interactionCreate', async (interaction) => {
         const parts = interaction.customId.split(':');
         const choiceIdx = parseInt(parts[1]);
         const gameId = parts[2];
-        if (gameId.endsWith('_done')) return interaction.reply({ content: '❌ This trivia has ended.', ephemeral: true });
+        if (gameId.endsWith('_done')) return interaction.reply({ content: '❌ This trivia has ended.', flags: MessageFlags.Ephemeral });
 
         const gameKey = `${guild.id}:${interaction.user.id}`;
         const game = activeGames.get(gameKey);
-        if (!game || game.type !== 'trivia' || game.gameId !== gameId) return interaction.reply({ content: '❌ This is not your trivia question.', ephemeral: true });
+        if (!game || game.type !== 'trivia' || game.gameId !== gameId) return interaction.reply({ content: '❌ This is not your trivia question.', flags: MessageFlags.Ephemeral });
 
         activeGames.delete(gameKey);
         const q = TRIVIA_QUESTIONS.find(q => q.a === game.answer);
@@ -10049,8 +10049,8 @@ client.on('interactionCreate', async (interaction) => {
         const gameId = parts[2];
         const gameKey = `${guild.id}:${interaction.user.id}`;
         const game = activeGames.get(gameKey);
-        if (!game || game.type !== 'hangman' || game.gameId !== gameId) return interaction.reply({ content: '❌ This is not your game.', ephemeral: true });
-        if (game.guessed.includes(letter)) return interaction.reply({ content: `❌ You already guessed **${letter.toUpperCase()}**.`, ephemeral: true });
+        if (!game || game.type !== 'hangman' || game.gameId !== gameId) return interaction.reply({ content: '❌ This is not your game.', flags: MessageFlags.Ephemeral });
+        if (game.guessed.includes(letter)) return interaction.reply({ content: `❌ You already guessed **${letter.toUpperCase()}**.`, flags: MessageFlags.Ephemeral });
 
         game.guessed.push(letter);
         if (!game.word.includes(letter)) game.wrong++;
@@ -10102,7 +10102,7 @@ client.on('interactionCreate', async (interaction) => {
         const [action, gameId] = interaction.customId.split(':');
         const gameKey = `${guild.id}:${interaction.user.id}`;
         const game = activeGames.get(gameKey);
-        if (!game || game.type !== 'wordle' || game.gameId !== gameId) return interaction.reply({ content: '❌ This is not your game.', ephemeral: true });
+        if (!game || game.type !== 'wordle' || game.gameId !== gameId) return interaction.reply({ content: '❌ This is not your game.', flags: MessageFlags.Ephemeral });
 
         if (action === 'wordle_quit') {
             activeGames.delete(gameKey);
@@ -10121,10 +10121,10 @@ client.on('interactionCreate', async (interaction) => {
         const gameId = interaction.customId.split(':')[1];
         const gameKey = `${guild.id}:${interaction.user.id}`;
         const game = activeGames.get(gameKey);
-        if (!game || game.type !== 'wordle') return interaction.reply({ content: '❌ No active Wordle game.', ephemeral: true });
+        if (!game || game.type !== 'wordle') return interaction.reply({ content: '❌ No active Wordle game.', flags: MessageFlags.Ephemeral });
 
         const guess = interaction.fields.getTextInputValue('guess').toLowerCase().trim();
-        if (!/^[a-z]{5}$/.test(guess)) return interaction.reply({ content: '❌ Please enter exactly 5 letters (a-z).', ephemeral: true });
+        if (!/^[a-z]{5}$/.test(guess)) return interaction.reply({ content: '❌ Please enter exactly 5 letters (a-z).', flags: MessageFlags.Ephemeral });
 
         game.guesses.push(guess);
         const buildDisplay = (guesses, word) => guesses.map(g =>
@@ -10170,7 +10170,7 @@ client.on('interactionCreate', async (interaction) => {
         const [action, gameId] = interaction.customId.split(':');
         const gameKey = `${guild.id}:${interaction.user.id}`;
         const game = activeGames.get(gameKey);
-        if (!game || game.type !== 'numguess' || game.gameId !== gameId) return interaction.reply({ content: '❌ No active Number Guess game.', ephemeral: true });
+        if (!game || game.type !== 'numguess' || game.gameId !== gameId) return interaction.reply({ content: '❌ No active Number Guess game.', flags: MessageFlags.Ephemeral });
 
         if (action === 'ng_quit') {
             activeGames.delete(gameKey);
@@ -10188,11 +10188,11 @@ client.on('interactionCreate', async (interaction) => {
         const gameId = interaction.customId.split(':')[1];
         const gameKey = `${guild.id}:${interaction.user.id}`;
         const game = activeGames.get(gameKey);
-        if (!game || game.type !== 'numguess') return interaction.reply({ content: '❌ No active game.', ephemeral: true });
+        if (!game || game.type !== 'numguess') return interaction.reply({ content: '❌ No active game.', flags: MessageFlags.Ephemeral });
 
         const raw = interaction.fields.getTextInputValue('guess');
         const guess = parseInt(raw);
-        if (isNaN(guess) || guess < 1 || guess > 100) return interaction.reply({ content: '❌ Please enter a number between 1 and 100.', ephemeral: true });
+        if (isNaN(guess) || guess < 1 || guess > 100) return interaction.reply({ content: '❌ Please enter a number between 1 and 100.', flags: MessageFlags.Ephemeral });
 
         game.attempts++;
         const diff = Math.abs(guess - game.secret);
@@ -10225,8 +10225,8 @@ client.on('interactionCreate', async (interaction) => {
         const gameId = parts[2];
         const gameKey = `${guild.id}:${interaction.user.id}`;
         const game = activeGames.get(gameKey);
-        if (!game || game.type !== 'memory' || game.gameId !== gameId) return interaction.reply({ content: '❌ This is not your game.', ephemeral: true });
-        if (game.matched[cardIdx] || game.revealed[cardIdx]) return interaction.reply({ content: '❌ That card is already flipped.', ephemeral: true });
+        if (!game || game.type !== 'memory' || game.gameId !== gameId) return interaction.reply({ content: '❌ This is not your game.', flags: MessageFlags.Ephemeral });
+        if (game.matched[cardIdx] || game.revealed[cardIdx]) return interaction.reply({ content: '❌ That card is already flipped.', flags: MessageFlags.Ephemeral });
 
         if (game.flipped === null) {
             // First flip
@@ -11321,7 +11321,7 @@ process.on('uncaughtException', async (err) => {
 // ============================================================
 // Startup — restore temp VC state after bot restart
 // ============================================================
-client.once('ready', async () => {
+client.once('clientReady', async () => {
     console.log('[TempVC] Running startup cleanup...');
     const data = loadTempVoiceData();
     let changed = false;

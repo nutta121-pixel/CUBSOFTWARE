@@ -1,4 +1,4 @@
-const { ContextMenuCommandBuilder, ApplicationCommandType, ChannelType, PermissionFlagsBits, ActionRowBuilder, ChannelSelectMenuBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
+const { ContextMenuCommandBuilder, ApplicationCommandType, ChannelType, PermissionFlagsBits, ActionRowBuilder, ChannelSelectMenuBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder , MessageFlags } = require('discord.js');
 const config = require('../config');
 const { debug } = require('../utils/debug');
 const webhookLogger = require('../utils/webhookLogger');
@@ -23,7 +23,7 @@ module.exports = {
             debug('[SOLITARY] User trying to confine themselves - BLOCKED');
             return await interaction.reply({
                 content: 'You cannot confine yourself!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -33,7 +33,7 @@ module.exports = {
             debug('[SOLITARY] User trying to confine creator - BLOCKED');
             return await interaction.reply({
                 content: 'You cannot confine the bot creator (CUB)!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -43,7 +43,7 @@ module.exports = {
             debug('[SOLITARY] Target is a bot - BLOCKED');
             return await interaction.reply({
                 content: 'You cannot confine bots!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -54,7 +54,7 @@ module.exports = {
             debug('[SOLITARY] User is already confined - BLOCKED');
             return await interaction.reply({
                 content: `**${targetUser.tag}** is already in solitary confinement!`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -99,7 +99,7 @@ module.exports = {
             await interaction.reply({
                 content: `**Confining ${targetUser.tag} to #${channelName}**\n\n**Select confinement duration:**`,
                 components: [durationRow],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             debug('[SOLITARY] Duration selection sent (using default channel)');
             return;
@@ -121,7 +121,7 @@ module.exports = {
         await interaction.reply({
             content: `**Select a voice channel to confine ${targetUser.tag} to:**\n\nThey will only be able to join the selected channel and will be moved there automatically if they try to join any other voice channel.\n\n*Tip: Use \`/setup\` to set a default confinement channel.*`,
             components: [row],
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
         debug('[SOLITARY] Reply sent successfully!');
         debug('[SOLITARY] === EXECUTE END ===');

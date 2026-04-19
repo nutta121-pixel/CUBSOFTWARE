@@ -1,4 +1,4 @@
-const { ContextMenuCommandBuilder, ApplicationCommandType, PermissionFlagsBits } = require('discord.js');
+const { ContextMenuCommandBuilder, ApplicationCommandType, PermissionFlagsBits , MessageFlags } = require('discord.js');
 const { debug } = require('../utils/debug');
 const webhookLogger = require('../utils/webhookLogger');
 
@@ -23,7 +23,7 @@ module.exports = {
             debug('[RELEASE] User is NOT confined');
             return await interaction.reply({
                 content: `**${targetUser.tag}** is not in solitary confinement!`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -93,7 +93,7 @@ module.exports = {
             content: `✅ **${targetUser.tag}** has been released from solitary confinement!\n\n` +
                      `**Previous confinement channel:** #${channelName}\n` +
                      `**Remaining time:** ${remainingTime}`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
         debug('[RELEASE] Success message sent!');
         debug('[RELEASE] === EXECUTE END ===');

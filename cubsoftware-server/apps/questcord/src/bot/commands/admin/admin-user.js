@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } = require('discord.js');
 const { UserModel, UserQuestModel, BossParticipantModel, LeaderboardModel, UserItemModel } = require('../../../database/models');
 const { isStaff, isDeveloper } = require('../../utils/permissions');
 const { LevelSystem } = require('../../../utils/levelSystem');
@@ -152,7 +152,7 @@ module.exports = {
         if (!await isStaff(interaction)) {
             return interaction.reply({
                 content: 'This command is only available to QuestCord staff.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -197,7 +197,7 @@ module.exports = {
 
 async function handleHeal(interaction, targetUser, user) {
     if (!user) {
-        return interaction.reply({ content: '❌ This user has no data in the system.', ephemeral: true });
+        return interaction.reply({ content: '❌ This user has no data in the system.', flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -214,11 +214,11 @@ async function handleHeal(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[USER-ADMIN] User healed by ${interaction.user.username}: ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error healing user:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
@@ -226,7 +226,7 @@ async function handleSetAttack(interaction, targetUser, user) {
     const attack = interaction.options.getInteger('attack');
 
     if (!user) {
-        return interaction.reply({ content: '❌ This user has no data in the system.', ephemeral: true });
+        return interaction.reply({ content: '❌ This user has no data in the system.', flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -244,11 +244,11 @@ async function handleSetAttack(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[USER-ADMIN] Attack modified by ${interaction.user.username}: ${targetUser.username} ${oldAttack} -> ${attack}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting attack:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
@@ -256,7 +256,7 @@ async function handleSetDefense(interaction, targetUser, user) {
     const defense = interaction.options.getInteger('defense');
 
     if (!user) {
-        return interaction.reply({ content: '❌ This user has no data in the system.', ephemeral: true });
+        return interaction.reply({ content: '❌ This user has no data in the system.', flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -274,21 +274,21 @@ async function handleSetDefense(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[USER-ADMIN] Defense modified by ${interaction.user.username}: ${targetUser.username} ${oldDefense} -> ${defense}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting defense:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
 async function handleClearInventory(interaction, targetUser, user) {
     if (!await isDeveloper(interaction)) {
-        return interaction.reply({ content: '❌ Only developers can clear inventories.', ephemeral: true });
+        return interaction.reply({ content: '❌ Only developers can clear inventories.', flags: MessageFlags.Ephemeral });
     }
 
     if (!user) {
-        return interaction.reply({ content: '❌ This user has no data in the system.', ephemeral: true });
+        return interaction.reply({ content: '❌ This user has no data in the system.', flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -304,21 +304,21 @@ async function handleClearInventory(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[USER-ADMIN] Inventory cleared by ${interaction.user.username}: ${targetUser.username} (${result.changes} items)`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error clearing inventory:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
 async function handleCancelTravel(interaction, targetUser, user) {
     if (!user) {
-        return interaction.reply({ content: '❌ This user has no data in the system.', ephemeral: true });
+        return interaction.reply({ content: '❌ This user has no data in the system.', flags: MessageFlags.Ephemeral });
     }
 
     if (!user.traveling) {
-        return interaction.reply({ content: `❌ ${targetUser.username} is not currently traveling.`, ephemeral: true });
+        return interaction.reply({ content: `❌ ${targetUser.username} is not currently traveling.`, flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -331,21 +331,21 @@ async function handleCancelTravel(interaction, targetUser, user) {
             .addFields({ name: 'Staff Member', value: `${interaction.user.username}` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[USER-ADMIN] Travel cancelled by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error cancelling travel:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
 async function handleCompleteTravel(interaction, targetUser, user) {
     if (!user) {
-        return interaction.reply({ content: '❌ This user has no data in the system.', ephemeral: true });
+        return interaction.reply({ content: '❌ This user has no data in the system.', flags: MessageFlags.Ephemeral });
     }
 
     if (!user.traveling) {
-        return interaction.reply({ content: `❌ ${targetUser.username} is not currently traveling.`, ephemeral: true });
+        return interaction.reply({ content: `❌ ${targetUser.username} is not currently traveling.`, flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -359,17 +359,17 @@ async function handleCompleteTravel(interaction, targetUser, user) {
             .addFields({ name: 'Staff Member', value: `${interaction.user.username}` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[USER-ADMIN] Travel completed by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error completing travel:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
 async function handleResetPvp(interaction, targetUser, user) {
     if (!user) {
-        return interaction.reply({ content: '❌ This user has no data in the system.', ephemeral: true });
+        return interaction.reply({ content: '❌ This user has no data in the system.', flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -386,17 +386,17 @@ async function handleResetPvp(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[USER-ADMIN] PVP reset by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting PVP:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
 async function handleTogglePvp(interaction, targetUser, user) {
     if (!user) {
-        return interaction.reply({ content: '❌ This user has no data in the system.', ephemeral: true });
+        return interaction.reply({ content: '❌ This user has no data in the system.', flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -410,17 +410,17 @@ async function handleTogglePvp(interaction, targetUser, user) {
             .addFields({ name: 'Staff Member', value: `${interaction.user.username}` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[USER-ADMIN] PVP toggled by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error toggling PVP:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
 async function handleGiveCurrency(interaction, targetUser, user) {
     if (!user) {
-        return interaction.reply({ content: '❌ This user has no data in the system.', ephemeral: true });
+        return interaction.reply({ content: '❌ This user has no data in the system.', flags: MessageFlags.Ephemeral });
     }
 
     const dakari = interaction.options.getInteger('dakari') || 0;
@@ -429,7 +429,7 @@ async function handleGiveCurrency(interaction, targetUser, user) {
     if (dakari === 0 && gems === 0) {
         return interaction.reply({
             content: '❌ You must specify at least some Dakari or gems to give.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -468,17 +468,17 @@ async function handleGiveCurrency(interaction, targetUser, user) {
         embed.addFields({ name: 'Staff Member', value: `${interaction.user.username}` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[USER-ADMIN] Currency given by ${interaction.user.username} to ${targetUser.username}: ${dakari} Dakari, ${gems} gems`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error giving currency:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
 async function handleRemoveCurrency(interaction, targetUser, user) {
     if (!user) {
-        return interaction.reply({ content: '❌ This user has no data in the system.', ephemeral: true });
+        return interaction.reply({ content: '❌ This user has no data in the system.', flags: MessageFlags.Ephemeral });
     }
 
     const dakari = interaction.options.getInteger('dakari') || 0;
@@ -487,7 +487,7 @@ async function handleRemoveCurrency(interaction, targetUser, user) {
     if (dakari === 0 && gems === 0) {
         return interaction.reply({
             content: '❌ You must specify at least some Dakari or gems to remove.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -529,10 +529,10 @@ async function handleRemoveCurrency(interaction, targetUser, user) {
         embed.addFields({ name: 'Staff Member', value: `${interaction.user.username}` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[USER-ADMIN] Currency removed by ${interaction.user.username} from ${targetUser.username}: ${dakari} Dakari, ${gems} gems`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error removing currency:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }

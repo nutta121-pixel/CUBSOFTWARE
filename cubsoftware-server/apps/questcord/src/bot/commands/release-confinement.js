@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } = require('discord.js');
 const { db } = require('../../database/schema');
 
 module.exports = {
@@ -20,7 +20,7 @@ module.exports = {
         if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
             return interaction.editReply({
                 content: '❌ Only administrators can use this command.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -36,7 +36,7 @@ module.exports = {
             if (!confinement) {
                 return interaction.editReply({
                     content: `❌ ${targetUser} is not currently in solitary confinement.`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -64,7 +64,7 @@ module.exports = {
             console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_GENERAL_126 — Error releasing from confinement:', error);
             return interaction.editReply({
                 content: '❌ An error occurred while releasing from confinement.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

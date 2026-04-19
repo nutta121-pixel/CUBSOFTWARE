@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle , MessageFlags } = require('discord.js');
 const { UserModel, QuestModel, UserQuestModel, ServerModel, GlobalStatsModel, LeaderboardModel } = require('../../database/models');
 const { LevelSystem } = require('../../utils/levelSystem');
 const { QuestScaling } = require('./questScaling');
@@ -19,7 +19,7 @@ async function handleQuestAccept(interaction) {
     if (!quest) {
         return interaction.reply({
             content: 'Quest not found.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -41,7 +41,7 @@ async function handleQuestAccept(interaction) {
 
             return interaction.reply({
                 content: `🚢 You're currently traveling to **${user.travel_destination}**! You can't accept quests while on the road.\n\n⏱️ Arrival in: **${minutes}m ${seconds}s**`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         } else {
             // Travel completed, clear the traveling status
@@ -79,7 +79,7 @@ async function handleQuestAccept(interaction) {
 
         return interaction.reply({
             content: randomMessage,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -88,7 +88,7 @@ async function handleQuestAccept(interaction) {
     if (existingQuest && existingQuest.completed) {
         return interaction.reply({
             content: 'You have already completed this quest today.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -97,7 +97,7 @@ async function handleQuestAccept(interaction) {
     if (completedCount >= config.quest.questsPerServer) {
         return interaction.reply({
             content: `You have completed all ${config.quest.questsPerServer} quests in this server today. Use \`/travel\` to visit another server.`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -135,7 +135,7 @@ async function startCombatQuest(interaction, quest, user) {
 
     const row = new ActionRowBuilder().addComponents(button);
 
-    await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
 }
 
 async function handleCombatAttack(interaction) {
@@ -150,7 +150,7 @@ async function handleCombatAttack(interaction) {
     if (!questData) {
         return interaction.reply({
             content: 'Quest session expired. Please start the quest again.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -206,7 +206,7 @@ async function startGatheringQuest(interaction, quest, user) {
             value: `⏳ Gathering... (${waitTime}s remaining)`
         });
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
     // Set timeout to complete quest
     setTimeout(async () => {
@@ -244,7 +244,7 @@ async function startExplorationQuest(interaction, quest, user) {
 
     const row = new ActionRowBuilder().addComponents(button);
 
-    await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
 }
 
 async function handleExplorationContinue(interaction) {
@@ -302,7 +302,7 @@ async function startDeliveryQuest(interaction, quest, user) {
             value: `🚚 Traveling... (${deliveryTime}s remaining)`
         });
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
     // Set timeout to complete quest
     setTimeout(async () => {
@@ -412,7 +412,7 @@ async function completeQuest(interaction, quest, user, isFollowUp = false) {
     if (isFollowUp) {
         // For timer-based quests, send a follow-up message
         try {
-            await interaction.followUp({ embeds: [embed], ephemeral: true });
+            await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
         } catch (error) {
             console.error('CUBSOFTWARE_ERROR_QUESTCORD_QUEST_INTERACTIONS_134 — Error sending quest completion follow-up:', error);
         }
@@ -443,7 +443,7 @@ async function startChallengeQuest(interaction, quest, user) {
         // Reaction test: Show waiting button, then turn green
         const row = createReactionButtons(false);
 
-        await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+        await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
 
         // Wait for the random delay, then make button green
         setTimeout(async () => {
@@ -467,7 +467,7 @@ async function startChallengeQuest(interaction, quest, user) {
 
     } else if (challenge.type === 'memory') {
         // Memory game: Show sequence, then ask user to type it
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         // Wait 5 seconds for memorization
         setTimeout(async () => {
@@ -511,7 +511,7 @@ async function startChallengeQuest(interaction, quest, user) {
 
     } else {
         // Word scramble, math, or trivia: User types answer
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         const filter = m => m.author.id === interaction.user.id;
         const collector = interaction.channel.createMessageCollector({ filter, time: challenge.timeLimit * 1000, max: 1 });
@@ -561,19 +561,19 @@ async function handleReactionClick(interaction) {
     }
 
     if (!questData || !questKey) {
-        return interaction.reply({ content: 'No active reaction challenge found.', ephemeral: true });
+        return interaction.reply({ content: 'No active reaction challenge found.', flags: MessageFlags.Ephemeral });
     }
 
     // Verify it's a reaction challenge
     if (questData.challenge.type !== 'reaction') {
-        return interaction.reply({ content: 'This is not a reaction challenge.', ephemeral: true });
+        return interaction.reply({ content: 'This is not a reaction challenge.', flags: MessageFlags.Ephemeral });
     }
 
     const quest = QuestModel.findById(questData.questId);
     const user = UserModel.findById(questData.userId);
 
     if (!quest || !user) {
-        return interaction.reply({ content: 'Quest or user not found.', ephemeral: true });
+        return interaction.reply({ content: 'Quest or user not found.', flags: MessageFlags.Ephemeral });
     }
 
     activeQuests.delete(questKey);
@@ -599,7 +599,7 @@ async function failQuest(interaction, quest, user, isFollowUp) {
 
     if (isFollowUp) {
         try {
-            await interaction.followUp({ embeds: [embed], ephemeral: true });
+            await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
         } catch (error) {
             console.error('CUBSOFTWARE_ERROR_QUESTCORD_QUEST_INTERACTIONS_134 — Error sending quest failure follow-up:', error);
         }

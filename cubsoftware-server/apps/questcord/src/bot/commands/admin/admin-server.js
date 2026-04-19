@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } = require('discord.js');
 const { ServerModel } = require('../../../database/models');
 const { isStaff, isDeveloper } = require('../../utils/permissions');
 const config = require('../../../../config.json');
@@ -33,7 +33,7 @@ module.exports = {
         if (!await isDeveloper(interaction)) {
             return interaction.reply({
                 content: '❌ Only developers can use server admin commands.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -61,7 +61,7 @@ async function handleForceOptin(interaction) {
             if (!guild) {
                 return interaction.reply({
                     content: `❌ Server with ID \`${serverId}\` not found.`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -77,11 +77,11 @@ async function handleForceOptin(interaction) {
             .addFields({ name: 'Developer', value: `${interaction.user.username}` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[SERVER-ADMIN] Force opted in by ${interaction.user.username}: ${serverId}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force opting in:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
@@ -94,7 +94,7 @@ async function handleForceOptout(interaction) {
         if (!server) {
             return interaction.reply({
                 content: `❌ Server with ID \`${serverId}\` not found in database.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -107,10 +107,10 @@ async function handleForceOptout(interaction) {
             .addFields({ name: 'Developer', value: `${interaction.user.username}` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[SERVER-ADMIN] Force opted out by ${interaction.user.username}: ${serverId}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force opting out:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }

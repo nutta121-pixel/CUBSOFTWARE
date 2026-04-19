@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle , MessageFlags } = require('discord.js');
 const { UserModel } = require('../../database/models');
 const { db } = require('../../database/schema');
 const config = require('../../../config.json');
@@ -74,7 +74,7 @@ async function handleToggle(interaction) {
             : 'You will no longer receive PVP challenges.')
         .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 async function handleChallenge(interaction) {
@@ -84,14 +84,14 @@ async function handleChallenge(interaction) {
     if (opponent.id === interaction.user.id) {
         return interaction.reply({
             content: '❌ You cannot challenge yourself to PVP!',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
     if (opponent.bot) {
         return interaction.reply({
             content: '❌ You cannot challenge bots to PVP!',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -106,7 +106,7 @@ async function handleChallenge(interaction) {
     if (!opponentUser) {
         return interaction.reply({
             content: '❌ This user has not started their quest journey yet!',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -114,7 +114,7 @@ async function handleChallenge(interaction) {
     if (!challenger.pvp_enabled) {
         return interaction.reply({
             content: '❌ You need to enable PVP first! Use `/pvp toggle` to enable it.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -122,7 +122,7 @@ async function handleChallenge(interaction) {
     if (!opponentUser.pvp_enabled) {
         return interaction.reply({
             content: `❌ ${opponent.username} has PVP disabled.`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -131,14 +131,14 @@ async function handleChallenge(interaction) {
     if (challenger.traveling && challenger.travel_arrives_at > now) {
         return interaction.reply({
             content: '❌ You cannot challenge others to PVP while traveling!',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
     if (opponentUser.traveling && opponentUser.travel_arrives_at > now) {
         return interaction.reply({
             content: `❌ ${opponent.username} is currently traveling and cannot accept challenges!`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -147,13 +147,13 @@ async function handleChallenge(interaction) {
         if (battle.challenger.id === interaction.user.id || battle.opponent.id === interaction.user.id) {
             return interaction.reply({
                 content: '❌ You are already in an arena battle!',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
         if (battle.challenger.id === opponent.id || battle.opponent.id === opponent.id) {
             return interaction.reply({
                 content: `❌ ${opponent.username} is already in an arena battle!`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }
@@ -163,7 +163,7 @@ async function handleChallenge(interaction) {
     if (activeChallenges.has(challengeKey)) {
         return interaction.reply({
             content: `❌ You already have a pending challenge to ${opponent.username}!`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -221,7 +221,7 @@ async function handleStats(interaction) {
     if (!user) {
         return interaction.reply({
             content: '❌ This user has not started their quest journey yet!',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -303,7 +303,7 @@ async function handleStats(interaction) {
         )
         .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 module.exports.activeChallenges = activeChallenges;

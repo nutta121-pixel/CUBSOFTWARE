@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, PermissionFlagsBits, ChannelType, Collection, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, REST, Routes, SlashCommandBuilder, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, PermissionFlagsBits, ChannelType, Collection, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, REST, Routes, SlashCommandBuilder, ActivityType, MessageFlags } = require('discord.js');
 
 // Yellow [Tag] labels in PM2 log output
 { const _l = console.log.bind(console); console.log = (...a) => { if (typeof a[0] === 'string') a[0] = a[0].replace(/\[([A-Za-z][A-Za-z0-9 _-]*)\]/g, '\x1b[33m[$1]\x1b[0m'); _l(...a); }; }
@@ -278,7 +278,7 @@ client.on('interactionCreate', async (interaction) => {
         if (!interaction.member || !interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
             return interaction.reply({
                 content: '❌ You need Administrator permissions to use this command.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }
@@ -318,7 +318,7 @@ client.on('interactionCreate', async (interaction) => {
     } catch (err) {
         console.error(`CUBSOFTWARE_ERROR_CLEANME_CMD_HANDLER_152 — [Error] /${commandName} threw: ${err.message}`);
         if (!interaction.replied && !interaction.deferred) {
-            interaction.reply({ content: '❌ An error occurred.', ephemeral: true }).catch(() => {});
+            interaction.reply({ content: '❌ An error occurred.', flags: MessageFlags.Ephemeral }).catch(() => {});
         }
     }
 });
@@ -419,7 +419,7 @@ async function handleSave(interaction) {
                 { name: 'Saved Categories', value: `${saves[guildId].categories.length}`, inline: true }
             );
 
-        return interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+        return interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
     }
 
     await performSave(interaction);
@@ -428,7 +428,7 @@ async function handleSave(interaction) {
 async function performSave(interaction, isOverride = false) {
     // Only defer if not already deferred (override case)
     if (!isOverride) {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -578,7 +578,7 @@ async function handleList(interaction) {
             })
             .setTimestamp();
 
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     const save = saves[guildId];
@@ -601,7 +601,7 @@ async function handleList(interaction) {
         })
         .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 // Lookup command - look up any server's save by ID
@@ -621,7 +621,7 @@ async function handleLookup(interaction) {
             })
             .setTimestamp();
 
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     const save = saves[targetServerId];
@@ -656,7 +656,7 @@ async function handleLookup(interaction) {
         })
         .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 // Delete command - delete your server's save
@@ -667,7 +667,7 @@ async function handleDelete(interaction) {
     if (!saves[guildId]) {
         return interaction.reply({
             content: '❌ This server does not have a saved configuration to delete.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -710,7 +710,7 @@ async function handleDelete(interaction) {
             inline: false
         });
 
-    await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
 }
 
 // Helper function to check if bot has highest role position (excluding managed roles)
@@ -777,6 +777,7 @@ function friendlyError(e) {
         case 10003: return 'Channel no longer exists (already deleted)';
         case 10011: return 'Role no longer exists (already deleted)';
         case 10007: return 'Member not found in guild';
+        case 10008: return 'Message no longer exists (already deleted)';
         case 30002: return 'Max channels reached on this server';
         case 20001: return 'Bots cannot use this endpoint';
         default:
@@ -855,7 +856,7 @@ async function handleCopy(interaction) {
     if (!saves[targetServerId]) {
         return interaction.reply({
             content: `❌ No saved configuration found for server ID: \`${targetServerId}\``,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -913,7 +914,7 @@ async function handleCopy(interaction) {
             inline: false
         });
 
-        return interaction.reply({ embeds: [embed], ephemeral: true });
+        return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
     const save = saves[targetServerId];
@@ -964,7 +965,7 @@ async function handleCopy(interaction) {
             }
         );
 
-    await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
 }
 
 async function performCopy(interaction, sourceServerId) {
@@ -1433,7 +1434,7 @@ async function handleClean(interaction) {
             inline: false
         });
 
-    await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
 }
 
 async function performClean(interaction) {
@@ -1441,28 +1442,53 @@ async function performClean(interaction) {
     const userId = interaction.user.id;
     const startTime = Date.now();
 
-    const statusEmbed = new EmbedBuilder()
-        .setTitle('🗑️ Cleaning Server...')
-        .setColor(0xFF0000)
-        .setDescription('Please wait...')
-        .addFields({ name: 'Status', value: 'Starting...', inline: false });
+    // Create status channel and category FIRST so they survive the deletion
+    let statusCategory = null;
+    let statusChannel = null;
 
-    try { await interaction.editReply({ embeds: [statusEmbed], components: [] }); } catch (_) {}
+    try { await interaction.editReply({ content: '🔄 Setting up status channel...', embeds: [], components: [] }); } catch (_) {}
 
-    const failedChannels = []; // { name, reason }
-    const failedRoles = [];    // { name, reason }
-    const skippedRoles = [];   // managed or above bot
+    try {
+        statusCategory = await guild.channels.create({
+            name: '⚙️ CUBSOFTWARE',
+            type: ChannelType.GuildCategory,
+            reason: 'CleanMe Bot - Clean status'
+        });
+        statusChannel = await guild.channels.create({
+            name: 'cleanme-status',
+            type: ChannelType.GuildText,
+            parent: statusCategory,
+            reason: 'CleanMe Bot - Clean status'
+        });
+        await statusChannel.send(`<@${userId}> 🗑️ **Server clean started.** All other channels and roles will be deleted. This channel will be removed 30 seconds after completion.`);
+    } catch (setupErr) {
+        console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Could not create status channel in "${guild.name}": ${setupErr.message}`);
+    }
+
+    const cleanupStatus = async (delay = 30000) => {
+        await sleep(delay);
+        try { if (statusChannel) await statusChannel.delete(); } catch (_) {}
+        try { if (statusCategory) await statusCategory.delete(); } catch (_) {}
+    };
+
+    const failedChannels = [];
+    const failedRoles = [];
+    const skippedRoles = [];
     let deletedChannels = 0, deletedRoles = 0;
     let textCount = 0, voiceCount = 0, categoryCount = 0, otherCount = 0;
 
     try {
-        // Delete channels
-        try {
-            statusEmbed.setFields({ name: 'Status', value: '🗑️ Deleting channels...', inline: false });
-            await interaction.editReply({ embeds: [statusEmbed] });
-        } catch (_) {}
+        // ── Phase 1: Channel removal ──────────────────────────────────────────
+        const channels = guild.channels.cache.filter(c =>
+            c.deletable &&
+            c.id !== statusChannel?.id &&
+            c.id !== statusCategory?.id
+        );
+        const totalChannels = channels.size;
 
-        const channels = guild.channels.cache.filter(c => c.deletable);
+        console.log(`[Clean] Starting channel removal on "${guild.name}" — ${totalChannels} channels`);
+        if (statusChannel) await statusChannel.send(`🗑️ Starting channel removal on **${guild.name}**... (${totalChannels} channels)`).catch(() => {});
+
         for (const [, channel] of channels) {
             try {
                 await channel.delete();
@@ -1476,14 +1502,15 @@ async function performClean(interaction) {
                 failedChannels.push({ name: channel.name, reason: friendlyError(e) });
                 console.log(`Could not delete channel: ${e.message}`);
             }
+            if (totalChannels > 0 && (deletedChannels % 10 === 0 || deletedChannels + failedChannels.length === totalChannels)) {
+                console.log(`[Clean] "${guild.name}" — Channels ${createProgressBar(deletedChannels + failedChannels.length, totalChannels)}`);
+            }
         }
 
-        // Delete roles
-        try {
-            statusEmbed.setFields({ name: 'Status', value: '🗑️ Deleting roles...', inline: false });
-            await interaction.editReply({ embeds: [statusEmbed] });
-        } catch (_) {}
+        console.log(`[Clean] "${guild.name}" — Channel removal done: ${deletedChannels}/${totalChannels} deleted${failedChannels.length > 0 ? `, ${failedChannels.length} failed` : ''}`);
+        if (statusChannel) await statusChannel.send(`✅ Channel removal complete — ${deletedChannels} deleted${failedChannels.length > 0 ? `, ${failedChannels.length} failed` : ''}`).catch(() => {});
 
+        // ── Phase 2: Role removal ─────────────────────────────────────────────
         guild.roles.cache.forEach(r => {
             if (r.id !== guild.id && (r.managed || r.position >= guild.members.me.roles.highest.position)) {
                 skippedRoles.push({
@@ -1500,6 +1527,11 @@ async function performClean(interaction) {
             !r.managed &&
             r.position < guild.members.me.roles.highest.position
         );
+        const totalRoles = roles.size;
+
+        console.log(`[Clean] Starting role removal on "${guild.name}" — ${totalRoles} roles`);
+        if (statusChannel) await statusChannel.send(`🎭 Starting role removal on **${guild.name}**... (${totalRoles} roles)`).catch(() => {});
+
         for (const [, role] of roles) {
             try {
                 await role.delete();
@@ -1509,16 +1541,16 @@ async function performClean(interaction) {
                 failedRoles.push({ name: role.name, reason: friendlyError(e) });
                 console.log(`Could not delete role: ${e.message}`);
             }
+            if (totalRoles > 0 && (deletedRoles % 5 === 0 || deletedRoles + failedRoles.length === totalRoles)) {
+                console.log(`[Clean] "${guild.name}" — Roles ${createProgressBar(deletedRoles + failedRoles.length, totalRoles)}`);
+            }
         }
+
+        console.log(`[Clean] "${guild.name}" — Role removal done: ${deletedRoles}/${totalRoles} deleted${failedRoles.length > 0 ? `, ${failedRoles.length} failed` : ''}`);
+        if (statusChannel) await statusChannel.send(`✅ Role removal complete — ${deletedRoles} deleted${failedRoles.length > 0 ? `, ${failedRoles.length} failed` : ''}`).catch(() => {});
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(1);
         const hasIssues = failedChannels.length > 0 || failedRoles.length > 0;
-
-        const statusChannel = await guild.channels.create({
-            name: 'cleanme-status',
-            type: ChannelType.GuildText,
-            reason: 'CleanMe Bot - Status after clean'
-        });
 
         const doneEmbed = new EmbedBuilder()
             .setTitle(hasIssues ? '⚠️ Server Cleaned (with issues)' : '✅ Server Cleaned!')
@@ -1574,12 +1606,18 @@ async function performClean(interaction) {
 
         doneEmbed.addFields({
             name: '💡 Next Steps',
-            value: '• Use `/save` to back up the current (clean) state\n• Use `/copy <serverid>` to restore a saved configuration\n• Delete this channel when you\'re done',
+            value: '• Use `/save` to back up the current (clean) state\n• Use `/copy <serverid>` to restore a saved configuration\n• This channel will be deleted in 30 seconds',
             inline: false
         }).setTimestamp();
 
         console.log(`[Clean] Completed for "${guild.name}" in ${duration}s — ${deletedChannels} channels, ${deletedRoles} roles deleted${hasIssues ? `, ${failedChannels.length} channel(s)/${failedRoles.length} role(s) failed` : ''}`);
-        await statusChannel.send({ content: `<@${userId}>`, embeds: [doneEmbed] });
+
+        if (statusChannel) {
+            await statusChannel.send({ content: `<@${userId}>`, embeds: [doneEmbed] }).catch(() => {});
+            cleanupStatus(30000);
+        } else {
+            try { const u = await client.users.fetch(userId); await u.send({ embeds: [doneEmbed] }); } catch (_) {}
+        }
 
     } catch (error) {
         console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Clean failed in "${guild.name}": ${error.message}`);
@@ -1604,14 +1642,10 @@ async function performClean(interaction) {
             )
             .setTimestamp();
 
-        try {
-            const errorChannel = await guild.channels.create({
-                name: 'cleanme-status',
-                type: ChannelType.GuildText,
-                reason: 'CleanMe Bot - Error status channel'
-            });
-            await errorChannel.send({ content: `<@${userId}>`, embeds: [errorEmbed] });
-        } catch (_) {
+        if (statusChannel) {
+            await statusChannel.send({ content: `<@${userId}>`, embeds: [errorEmbed] }).catch(() => {});
+            cleanupStatus(30000);
+        } else {
             try {
                 const user = await client.users.fetch(userId);
                 errorEmbed.setDescription(`Something went wrong while cleaning **${guild.name}** after **${duration}s**:\n\`\`\`${error.message}\`\`\``);
@@ -1662,7 +1696,7 @@ async function handleCleanRoles(interaction) {
             inline: false
         });
 
-    await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
 }
 
 async function performCleanRoles(interaction) {
@@ -1769,7 +1803,7 @@ async function handleCleanChannels(interaction) {
             inline: false
         });
 
-    await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
 }
 
 async function performCleanChannels(interaction) {
@@ -1838,13 +1872,32 @@ async function performCleanChannels(interaction) {
         inline: false
     }).setTimestamp();
 
-    const statusChannel = await guild.channels.create({
-        name: 'cleanme-status',
-        type: ChannelType.GuildText,
-        reason: 'CleanMe Bot - Status after channel clean'
-    });
-
-    await statusChannel.send({ content: `<@${userId}>`, embeds: [doneEmbed] });
+    let statusChannel;
+    for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+            if (attempt > 0) await sleep(3000);
+            statusChannel = await guild.channels.create({
+                name: 'cleanme-status',
+                type: ChannelType.GuildText,
+                reason: 'CleanMe Bot - Status after channel clean'
+            });
+            break;
+        } catch (createErr) {
+            if (attempt === 2) {
+                console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Could not create status channel in "${guild.name}": ${createErr.message}`);
+            }
+        }
+    }
+    if (statusChannel) {
+        try {
+            await statusChannel.send({ content: `<@${userId}>`, embeds: [doneEmbed] });
+        } catch (sendErr) {
+            console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Could not send status in "${guild.name}": ${sendErr.message}`);
+            try { const u = await client.users.fetch(userId); await u.send({ embeds: [doneEmbed] }); } catch (_) {}
+        }
+    } else {
+        try { const u = await client.users.fetch(userId); await u.send({ embeds: [doneEmbed] }); } catch (_) {}
+    }
 }
 
 // Handle button interactions
@@ -1855,16 +1908,16 @@ async function handleCleanMePublish(interaction, guildId) {
     if (!apiKey) {
         return interaction.reply({
             content: '❌ CleanMe website API key not configured. Set `CLEANME_API_KEY` in `.env`.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
     const guild = interaction.guild;
     if (guild.id !== guildId) {
-        return interaction.reply({ content: '❌ Server mismatch.', ephemeral: true });
+        return interaction.reply({ content: '❌ Server mismatch.', flags: MessageFlags.Ephemeral });
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
         const iconHash = guild.icon;
@@ -1954,7 +2007,7 @@ async function handleButton(interaction) {
     if (!pending) {
         return interaction.reply({
             content: '❌ This confirmation has expired. Please run the command again.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1962,7 +2015,7 @@ async function handleButton(interaction) {
     if (pending.userId !== interaction.user.id) {
         return interaction.reply({
             content: '❌ Only the person who initiated this action can confirm it.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1971,7 +2024,7 @@ async function handleButton(interaction) {
         pendingConfirmations.delete(confirmId);
         return interaction.reply({
             content: '❌ This confirmation has expired. Please run the command again.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 

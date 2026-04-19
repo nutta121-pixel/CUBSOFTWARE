@@ -1,3 +1,4 @@
+const { MessageFlags } = require('discord.js');
 module.exports = {
     name: 'interactionCreate',
     async execute(interaction) {
@@ -19,7 +20,7 @@ module.exports = {
                 if (ms > 2000) console.log(`[Slow] /${interaction.commandName} took ${ms}ms in ${interaction.guild?.name || 'DM'}`);
             } catch (error) {
                 console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] /${interaction.commandName} threw: ${error.message}`);
-                const errorMessage = { content: 'There was an error while executing this command!', ephemeral: true };
+                const errorMessage = { content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral };
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp(errorMessage);
                 } else {
@@ -41,7 +42,7 @@ module.exports = {
                 await command.execute(interaction);
             } catch (error) {
                 console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] Context menu "${interaction.commandName}" threw: ${error.message}`);
-                const errorMessage = { content: 'There was an error while executing this command!', ephemeral: true };
+                const errorMessage = { content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral };
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp(errorMessage);
                 } else {
@@ -69,7 +70,7 @@ module.exports = {
                     await command.handleButton(interaction);
                 } catch (error) {
                     console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] Button "${interaction.customId}" threw: ${error.message}`);
-                    const errorMessage = { content: 'There was an error while processing this interaction!', ephemeral: true };
+                    const errorMessage = { content: 'There was an error while processing this interaction!', flags: MessageFlags.Ephemeral };
 
                     if (interaction.replied || interaction.deferred) {
                         await interaction.followUp(errorMessage);
@@ -96,7 +97,7 @@ module.exports = {
                     await command.handleChannelSelect(interaction);
                 } catch (error) {
                     console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] Channel select "${interaction.customId}" threw: ${error.message}`);
-                    const errorMessage = { content: 'There was an error while processing this interaction!', ephemeral: true };
+                    const errorMessage = { content: 'There was an error while processing this interaction!', flags: MessageFlags.Ephemeral };
 
                     if (interaction.replied || interaction.deferred) {
                         await interaction.followUp(errorMessage);
@@ -123,7 +124,7 @@ module.exports = {
                     await command.handleStringSelect(interaction);
                 } catch (error) {
                     console.error(`CUBSOFTWARE_ERROR_ONIONBOT_CMD_INTERACTION_173 — [Error] String select "${interaction.customId}" threw: ${error.message}`);
-                    const errorMessage = { content: 'There was an error while processing this interaction!', ephemeral: true };
+                    const errorMessage = { content: 'There was an error while processing this interaction!', flags: MessageFlags.Ephemeral };
 
                     if (interaction.replied || interaction.deferred) {
                         await interaction.followUp(errorMessage);

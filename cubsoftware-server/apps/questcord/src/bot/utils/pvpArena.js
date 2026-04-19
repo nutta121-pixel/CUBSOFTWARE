@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle , MessageFlags } = require('discord.js');
 const { UserModel, LeaderboardModel } = require('../../database/models');
 const { LevelSystem } = require('../../utils/levelSystem');
 const { db } = require('../../database/schema');
@@ -20,7 +20,7 @@ async function handlePvpAccept(interaction, challengeKey, activeChallenges, aren
     if (interaction.user.id !== challenge.opponent.id) {
         return interaction.reply({
             content: '❌ Only the challenged player can accept this!',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -90,7 +90,7 @@ async function handlePvpDecline(interaction, challengeKey, activeChallenges) {
     if (interaction.user.id !== challenge.opponent.id) {
         return interaction.reply({
             content: '❌ Only the challenged player can decline this!',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -120,7 +120,7 @@ async function handlePvpAttack(interaction, battleId, arenaeBattles) {
     if (interaction.user.id !== currentTurn.id) {
         return interaction.reply({
             content: '❌ It\'s not your turn!',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 

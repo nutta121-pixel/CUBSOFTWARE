@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder , MessageFlags } = require('discord.js');
 const { UserModel } = require('../../database/models');
 const AchievementService = require('../../services/gameEngine/AchievementService');
 const config = require('../../../config.json');
@@ -47,7 +47,7 @@ module.exports = {
             } else {
                 return interaction.reply({
                     content: 'This user has not started their quest journey yet.',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
         }
@@ -171,7 +171,7 @@ module.exports = {
             console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ACHIEVEMENTS_124 — Error displaying achievements:', error);
             await interaction.reply({
                 content: 'An error occurred while fetching achievements.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

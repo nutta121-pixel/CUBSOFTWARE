@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType , MessageFlags } = require('discord.js');
 const { db } = require('../../database/schema');
 
 module.exports = {
@@ -39,7 +39,7 @@ module.exports = {
         if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
             return interaction.editReply({
                 content: '❌ Only administrators can use this command.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -52,7 +52,7 @@ module.exports = {
         if (targetUser.id === process.env.OWNER_ID) {
             return interaction.editReply({
                 content: '❌ The bot owner cannot be confined to solitary confinement.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -60,7 +60,7 @@ module.exports = {
         if (targetChannel.type !== 2) { // 2 = VoiceChannel
             return interaction.editReply({
                 content: '❌ The selected channel must be a voice channel.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -69,7 +69,7 @@ module.exports = {
         if (!duration) {
             return interaction.editReply({
                 content: '❌ Invalid duration format. Use formats like: 30m, 2h, 1d',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -141,7 +141,7 @@ module.exports = {
             console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_GENERAL_126 — Error creating solitary confinement:', error);
             return interaction.editReply({
                 content: '❌ An error occurred while creating the confinement.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle , MessageFlags } = require('discord.js');
 const { WebsiteSettingsModel } = require('../../database/models');
 const { isStaff } = require('../utils/permissions');
 const config = require('../../../config.json');
@@ -101,7 +101,7 @@ async function handleHelp(interaction) {
         .setFooter({ text: 'Visit https://questcord.fun to see the website' })
         .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 async function handleStatus(interaction) {
@@ -110,7 +110,7 @@ async function handleStatus(interaction) {
     if (!settings) {
         return interaction.reply({
             content: '❌ Unable to fetch website settings.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -143,9 +143,9 @@ async function handleStatus(interaction) {
     // Only add buttons if user is staff
     if (await isStaff(interaction)) {
         const components = createToggleButtons();
-        await interaction.reply({ embeds: [embed], components, ephemeral: true });
+        await interaction.reply({ embeds: [embed], components, flags: MessageFlags.Ephemeral });
     } else {
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 }
 
@@ -209,7 +209,7 @@ async function handleFeature(interaction) {
     if (!await isStaff(interaction)) {
         return interaction.reply({
             content: '❌ This command is only available to QuestCord staff.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -257,7 +257,7 @@ async function handleFeature(interaction) {
             .setFooter({ text: 'Changes will be reflected on all connected browsers instantly' })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         await debugLogger.success('WEBSITE', `Feature ${prettyName} ${state === 'on' ? 'enabled' : 'disabled'}`, {
             feature: featureName,
@@ -271,7 +271,7 @@ async function handleFeature(interaction) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_GENERAL_126 — Error updating website feature:', error);
         await interaction.reply({
             content: '❌ An error occurred while updating the feature.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -281,7 +281,7 @@ async function handleMaintenance(interaction) {
     if (!await isStaff(interaction)) {
         return interaction.reply({
             content: '❌ This command is only available to QuestCord staff.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -327,7 +327,7 @@ async function handleMaintenance(interaction) {
             .setFooter({ text: state === 'on' ? 'Use /website maintenance state:Off to disable' : 'System is back online' })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         await debugLogger.success('WEBSITE', `Maintenance mode ${state === 'on' ? 'enabled' : 'disabled'}`, {
             state: state,
@@ -340,7 +340,7 @@ async function handleMaintenance(interaction) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_GENERAL_126 — Error updating maintenance mode:', error);
         await interaction.reply({
             content: '❌ An error occurred while updating maintenance mode.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }

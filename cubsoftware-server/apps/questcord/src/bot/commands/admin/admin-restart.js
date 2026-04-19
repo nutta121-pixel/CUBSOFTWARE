@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder , MessageFlags } = require('discord.js');
 const { isStaff, isDeveloper, isOwner } = require('../../utils/permissions');
 const { getReportingInstance } = require('../../../utils/reportingSystem');
 
@@ -18,7 +18,7 @@ module.exports = {
         if (!hasPermission) {
             return interaction.reply({
                 content: 'You do not have permission to use this command. This command is restricted to Staff and Developers only.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 

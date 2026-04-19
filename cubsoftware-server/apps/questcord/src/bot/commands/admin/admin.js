@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ActionRowBuilder, ButtonBuilder, ButtonStyle , MessageFlags } = require('discord.js');
 const { UserModel, UserQuestModel, BossParticipantModel, LeaderboardModel, UserItemModel, BossModel, ServerModel, QuestModel } = require('../../../database/models');
 const { isStaff, isDeveloper } = require('../../utils/permissions');
 const { LevelSystem } = require('../../../utils/levelSystem');
@@ -259,7 +259,7 @@ module.exports = {
         if (!await isStaff(interaction)) {
             return interaction.reply({
                 content: 'This command is only available to QuestCord staff.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -408,14 +408,14 @@ async function handleWipeUser(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: 'This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: 'Only developers can wipe user data.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -432,14 +432,14 @@ async function handleWipeUser(interaction, targetUser, user) {
             })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         console.log(`[ADMIN] User data wiped: ${targetUser.username} (${targetUser.id}) by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error wiping user:', error);
         await interaction.reply({
             content: 'An error occurred while wiping user data.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -448,7 +448,7 @@ async function handleResetUser(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: 'This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -479,14 +479,14 @@ async function handleResetUser(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         console.log(`[ADMIN] User reset: ${targetUser.username} (${targetUser.id}) by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting user:', error);
         await interaction.reply({
             content: 'An error occurred while resetting user data.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -519,7 +519,7 @@ async function handleGiveCurrency(interaction, targetUser, user) {
         )
         .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
     console.log(`[ADMIN] Currency given: ${amount} to ${targetUser.username} by ${interaction.user.username}`);
 }
@@ -552,7 +552,7 @@ async function handleGiveGems(interaction, targetUser, user) {
         )
         .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
     console.log(`[ADMIN] Gems given: ${amount} to ${targetUser.username} by ${interaction.user.username}`);
 }
@@ -588,7 +588,7 @@ async function handleSetLevel(interaction, targetUser, user) {
         )
         .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
     console.log(`[ADMIN] Level set: ${level} for ${targetUser.username} by ${interaction.user.username}`);
 }
@@ -597,7 +597,7 @@ async function handleViewUser(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: 'This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -664,14 +664,14 @@ async function handleViewUser(interaction, targetUser, user) {
         .setFooter({ text: `Requested by ${interaction.user.username}` })
         .setTimestamp();
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 async function handleResetLeaderboard(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: 'This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -696,7 +696,7 @@ async function handleResetLeaderboard(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         // Broadcast updated leaderboard
         const { broadcastLeaderboard } = require('../../web/server');
@@ -708,7 +708,7 @@ async function handleResetLeaderboard(interaction, targetUser, user) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting leaderboard:', error);
         await interaction.reply({
             content: 'An error occurred while resetting leaderboard points.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -717,7 +717,7 @@ async function handleResetQuestsGlobal(interaction) {
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: 'Only developers can reset quests globally.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -741,14 +741,14 @@ async function handleResetQuestsGlobal(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         console.log(`[ADMIN] Global quest reset by ${interaction.user.username} - ${result.changes} quests deleted`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting quests globally:', error);
         await interaction.reply({
             content: 'An error occurred while resetting quests globally.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -763,7 +763,7 @@ async function handleResetQuestsServer(interaction) {
         if (quests.length === 0) {
             return interaction.reply({
                 content: 'No quests found for this server.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -789,14 +789,14 @@ async function handleResetQuestsServer(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         console.log(`[ADMIN] Server quest reset for ${serverId} by ${interaction.user.username} - ${result.changes} entries deleted`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting server quests:', error);
         await interaction.reply({
             content: 'An error occurred while resetting server quests.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -805,7 +805,7 @@ async function handleResetQuestsUser(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: 'This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -829,14 +829,14 @@ async function handleResetQuestsUser(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         console.log(`[ADMIN] User quest reset for ${targetUser.username} by ${interaction.user.username} - ${result.changes} entries deleted`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting user quests:', error);
         await interaction.reply({
             content: 'An error occurred while resetting user quests.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -861,7 +861,7 @@ async function handleGiveItem(interaction, targetUser, user) {
 
             return interaction.reply({
                 content: `Item "${itemName}" not found.\n\nAvailable items: ${itemList}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -917,14 +917,14 @@ async function handleGiveItem(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         console.log(`[ADMIN] ${quantity}x ${item.item_name} given to ${targetUser.username} by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error giving item:', error);
         await interaction.reply({
             content: 'An error occurred while giving the item.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -933,7 +933,7 @@ async function handleDisableCommand(interaction) {
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: '❌ Only developers can disable commands.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -943,7 +943,7 @@ async function handleDisableCommand(interaction) {
     if (commandName === 'admin') {
         return interaction.reply({
             content: '❌ Cannot disable the admin command!',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -953,7 +953,7 @@ async function handleDisableCommand(interaction) {
         if (existing) {
             return interaction.reply({
                 content: `❌ Command **/${commandName}** is already disabled.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -970,13 +970,13 @@ async function handleDisableCommand(interaction) {
             })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Command /${commandName} disabled by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error disabling command:', error);
         await interaction.reply({
             content: 'An error occurred while disabling the command.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -985,7 +985,7 @@ async function handleEnableCommand(interaction) {
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: '❌ Only developers can enable commands.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -997,7 +997,7 @@ async function handleEnableCommand(interaction) {
         if (result.changes === 0) {
             return interaction.reply({
                 content: `❌ Command **/${commandName}** is not disabled.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1012,13 +1012,13 @@ async function handleEnableCommand(interaction) {
             })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Command /${commandName} enabled by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error enabling command:', error);
         await interaction.reply({
             content: 'An error occurred while enabling the command.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1027,7 +1027,7 @@ async function handleRestrictCommand(interaction) {
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: '❌ Only developers can restrict commands.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1038,7 +1038,7 @@ async function handleRestrictCommand(interaction) {
     if (commandName === 'admin') {
         return interaction.reply({
             content: '❌ Cannot restrict the admin command!',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1049,7 +1049,7 @@ async function handleRestrictCommand(interaction) {
         if (existing) {
             return interaction.reply({
                 content: `❌ User **${targetUser.username}** already has access to **/${commandName}**.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1067,13 +1067,13 @@ async function handleRestrictCommand(interaction) {
             })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] User ${targetUser.username} whitelisted for /${commandName} by ${interaction.user.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error restricting command:', error);
         await interaction.reply({
             content: 'An error occurred while restricting the command.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1082,7 +1082,7 @@ async function handleUnrestrictCommand(interaction) {
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: '❌ Only developers can unrestrict commands.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1100,7 +1100,7 @@ async function handleUnrestrictCommand(interaction) {
             if (result.changes === 0) {
                 return interaction.reply({
                     content: `❌ User **${targetUser.username}** does not have whitelist access to **/${commandName}**.`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -1110,7 +1110,7 @@ async function handleUnrestrictCommand(interaction) {
                 .setDescription(`User **${targetUser.username}** has been removed from the whitelist for **/${commandName}**.`)
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
             console.log(`[ADMIN] User ${targetUser.username} removed from /${commandName} whitelist by ${interaction.user.username}`);
         } else {
             // Remove all restrictions for this command
@@ -1119,7 +1119,7 @@ async function handleUnrestrictCommand(interaction) {
             if (result.changes === 0) {
                 return interaction.reply({
                     content: `❌ Command **/${commandName}** has no restrictions.`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -1129,14 +1129,14 @@ async function handleUnrestrictCommand(interaction) {
                 .setDescription(`All restrictions have been removed from **/${commandName}**. (${result.changes} users removed)`)
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
             console.log(`[ADMIN] All restrictions removed from /${commandName} by ${interaction.user.username}`);
         }
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error unrestricting command:', error);
         await interaction.reply({
             content: 'An error occurred while unrestricting the command.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1148,7 +1148,7 @@ async function handleListDisabled(interaction) {
         if (disabledCommands.length === 0) {
             return interaction.reply({
                 content: 'No commands are currently disabled.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1161,12 +1161,12 @@ async function handleListDisabled(interaction) {
             .setFooter({ text: `${disabledCommands.length} command(s) disabled` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error listing disabled commands:', error);
         await interaction.reply({
             content: 'An error occurred while listing disabled commands.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1191,7 +1191,7 @@ async function handleListRestrictions(interaction) {
                 content: commandName
                     ? `Command **/${commandName}** has no restrictions.`
                     : 'No commands have restrictions.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1218,12 +1218,12 @@ async function handleListRestrictions(interaction) {
             });
         });
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error listing restrictions:', error);
         await interaction.reply({
             content: 'An error occurred while listing restrictions.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1239,14 +1239,14 @@ async function handleForceSpawnBoss(interaction) {
         if (!server) {
             return interaction.reply({
                 content: `❌ Server with ID \`${serverId}\` not found in database.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (!server.opted_in) {
             return interaction.reply({
                 content: `❌ Server **${server.name}** is not opted in to boss spawns.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1255,11 +1255,11 @@ async function handleForceSpawnBoss(interaction) {
         if (activeBoss) {
             return interaction.reply({
                 content: `❌ There is already an active boss: **${activeBoss.boss_name}** (${activeBoss.id})`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         // Force spawn boss using BossManager
         const { getRandomBoss } = require('../utils/questData');
@@ -1325,7 +1325,7 @@ async function handleSetBossHealth(interaction) {
         if (!boss) {
             return interaction.reply({
                 content: '❌ There is no active boss to modify.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1354,7 +1354,7 @@ async function handleSetBossHealth(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         // Update the notification
         await BossManager.updateBossNotification();
@@ -1364,7 +1364,7 @@ async function handleSetBossHealth(interaction) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting boss health:', error);
         await interaction.reply({
             content: 'An error occurred while modifying boss health.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1376,7 +1376,7 @@ async function handleViewBossParticipants(interaction) {
         if (!boss) {
             return interaction.reply({
                 content: '❌ There is no active boss.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1385,7 +1385,7 @@ async function handleViewBossParticipants(interaction) {
         if (participants.length === 0) {
             return interaction.reply({
                 content: `No participants yet for **${boss.boss_name}**.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1400,12 +1400,12 @@ async function handleViewBossParticipants(interaction) {
             .setFooter({ text: `Total: ${participants.length} participants` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error viewing boss participants:', error);
         await interaction.reply({
             content: 'An error occurred while viewing participants.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1414,7 +1414,7 @@ async function handleClearBoss(interaction) {
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: '❌ Only developers can clear the active boss.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1424,7 +1424,7 @@ async function handleClearBoss(interaction) {
         if (!boss) {
             return interaction.reply({
                 content: '❌ There is no active boss to clear.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1442,13 +1442,13 @@ async function handleClearBoss(interaction) {
             })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Boss cleared by ${interaction.user.username}: ${boss.boss_name} (ID: ${boss.id})`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error clearing boss:', error);
         await interaction.reply({
             content: 'An error occurred while clearing the boss.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1459,14 +1459,14 @@ async function handleCancelTravel(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: '❌ This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
     if (!user.traveling) {
         return interaction.reply({
             content: `❌ ${targetUser.username} is not currently traveling.`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1483,13 +1483,13 @@ async function handleCancelTravel(interaction, targetUser, user) {
             })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Travel cancelled by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error cancelling travel:', error);
         await interaction.reply({
             content: 'An error occurred while cancelling travel.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1498,14 +1498,14 @@ async function handleForceCompleteTravel(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: '❌ This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
     if (!user.traveling) {
         return interaction.reply({
             content: `❌ ${targetUser.username} is not currently traveling.`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1523,13 +1523,13 @@ async function handleForceCompleteTravel(interaction, targetUser, user) {
             })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Travel force completed by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force completing travel:', error);
         await interaction.reply({
             content: 'An error occurred while completing travel.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1540,7 +1540,7 @@ async function handleResetPvpStats(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: '❌ This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1569,13 +1569,13 @@ async function handleResetPvpStats(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] PVP stats reset by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error resetting PVP stats:', error);
         await interaction.reply({
             content: 'An error occurred while resetting PVP stats.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1584,7 +1584,7 @@ async function handleTogglePvpForUser(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: '❌ This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1602,13 +1602,13 @@ async function handleTogglePvpForUser(interaction, targetUser, user) {
             })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] PVP ${newStatus ? 'enabled' : 'disabled'} by ${interaction.user.username} for ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error toggling PVP:', error);
         await interaction.reply({
             content: 'An error occurred while toggling PVP status.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1619,7 +1619,7 @@ async function handleForceOptinServer(interaction) {
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: '❌ Only developers can force opt-in servers.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1634,7 +1634,7 @@ async function handleForceOptinServer(interaction) {
             if (!guild) {
                 return interaction.reply({
                     content: `❌ Server with ID \`${serverId}\` not found.`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -1653,13 +1653,13 @@ async function handleForceOptinServer(interaction) {
             })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Server force opted in by ${interaction.user.username}: ${serverId}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force opting in server:', error);
         await interaction.reply({
             content: 'An error occurred while opting in the server.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1668,7 +1668,7 @@ async function handleForceOptoutServer(interaction) {
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: '❌ Only developers can force opt-out servers.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1680,7 +1680,7 @@ async function handleForceOptoutServer(interaction) {
         if (!server) {
             return interaction.reply({
                 content: `❌ Server with ID \`${serverId}\` not found in database.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1696,13 +1696,13 @@ async function handleForceOptoutServer(interaction) {
             })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Server force opted out by ${interaction.user.username}: ${serverId}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force opting out server:', error);
         await interaction.reply({
             content: 'An error occurred while opting out the server.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1713,7 +1713,7 @@ async function handleHealUser(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: '❌ This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1742,13 +1742,13 @@ async function handleHealUser(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] User healed by ${interaction.user.username}: ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error healing user:', error);
         await interaction.reply({
             content: 'An error occurred while healing the user.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1759,7 +1759,7 @@ async function handleSetAttack(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: '❌ This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1789,13 +1789,13 @@ async function handleSetAttack(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Attack stat modified by ${interaction.user.username}: ${targetUser.username} ${oldAttack} -> ${attack}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting attack:', error);
         await interaction.reply({
             content: 'An error occurred while setting attack stat.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1806,7 +1806,7 @@ async function handleSetDefense(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: '❌ This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1836,13 +1836,13 @@ async function handleSetDefense(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Defense stat modified by ${interaction.user.username}: ${targetUser.username} ${oldDefense} -> ${defense}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting defense:', error);
         await interaction.reply({
             content: 'An error occurred while setting defense stat.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1851,14 +1851,14 @@ async function handleClearInventory(interaction, targetUser, user) {
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: '❌ Only developers can clear inventories.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
     if (!user) {
         return interaction.reply({
             content: '❌ This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1882,13 +1882,13 @@ async function handleClearInventory(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Inventory cleared by ${interaction.user.username}: ${targetUser.username} (${result.changes} items)`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error clearing inventory:', error);
         await interaction.reply({
             content: 'An error occurred while clearing inventory.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1901,7 +1901,7 @@ async function handleForceCompleteQuest(interaction, targetUser, user) {
     if (!user) {
         return interaction.reply({
             content: '❌ This user has no data in the system.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1911,7 +1911,7 @@ async function handleForceCompleteQuest(interaction, targetUser, user) {
         if (!quest) {
             return interaction.reply({
                 content: `❌ Quest with ID ${questId} not found.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1921,14 +1921,14 @@ async function handleForceCompleteQuest(interaction, targetUser, user) {
         if (!userQuest) {
             return interaction.reply({
                 content: `❌ ${targetUser.username} does not have this quest assigned.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (userQuest.completed) {
             return interaction.reply({
                 content: `❌ This quest is already completed.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -1955,13 +1955,13 @@ async function handleForceCompleteQuest(interaction, targetUser, user) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Quest force completed by ${interaction.user.username}: ${quest.quest_name} for ${targetUser.username}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error force completing quest:', error);
         await interaction.reply({
             content: 'An error occurred while completing the quest.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -1970,7 +1970,7 @@ async function handleRemoveQuest(interaction) {
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: '❌ Only developers can remove quests.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1982,7 +1982,7 @@ async function handleRemoveQuest(interaction) {
         if (!quest) {
             return interaction.reply({
                 content: `❌ Quest with ID ${questId} not found.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -2000,13 +2000,13 @@ async function handleRemoveQuest(interaction) {
             })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[ADMIN] Quest removed by ${interaction.user.username}: ${quest.quest_name} (ID: ${questId})`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error removing quest:', error);
         await interaction.reply({
             content: 'An error occurred while removing the quest.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 }
@@ -2017,7 +2017,7 @@ async function handleHelp(interaction) {
     const embed = createAdminHelpEmbed('overview');
     const buttons = createAdminHelpButtons();
 
-    await interaction.reply({ embeds: [embed], components: buttons, ephemeral: true });
+    await interaction.reply({ embeds: [embed], components: buttons, flags: MessageFlags.Ephemeral });
 }
 
 function createAdminHelpEmbed(category) {

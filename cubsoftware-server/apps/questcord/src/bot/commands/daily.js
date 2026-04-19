@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder , MessageFlags } = require('discord.js');
 const LoginService = require('../../services/gameEngine/LoginService');
 const { UserModel } = require('../../database/models');
 
@@ -57,7 +57,7 @@ async function handleClaim(interaction, user) {
     if (!result.success) {
         return interaction.editReply({
             content: `❌ ${result.error}`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -129,7 +129,7 @@ async function handleRewards(interaction) {
     if (!result.success) {
         return interaction.editReply({
             content: `❌ ${result.error}`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -174,7 +174,7 @@ async function handleStats(interaction, user) {
     if (!result.success) {
         return interaction.editReply({
             content: `❌ ${result.error}`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 

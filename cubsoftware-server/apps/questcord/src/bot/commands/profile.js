@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder , MessageFlags } = require('discord.js');
 const { UserModel, LeaderboardModel } = require('../../database/models');
 const { LevelSystem } = require('../../utils/levelSystem');
 const { formatNumber } = require('../../utils/formatNumber');
@@ -25,7 +25,7 @@ module.exports = {
             } else {
                 return interaction.reply({
                     content: 'This user has not started their quest journey yet.',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
         }

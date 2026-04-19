@@ -18,6 +18,7 @@ const {
 } = require('@discordjs/voice');
 const prism = require('prism-media');
 const Anthropic = require('@anthropic-ai/sdk');
+const { MessageFlags } = require('discord.js');
 const { spawn } = require('child_process');
 const readline = require('readline');
 const fs = require('fs');
@@ -1277,21 +1278,21 @@ async function cubAiJoin(interaction) {
     if (!DEVELOPER_IDS.includes(interaction.user.id)) {
         return interaction.reply({
             content: '🔒 **CUB AI** is currently restricted to the bot owner.\n\nWant access? Join the CUB SOFTWARE Discord server and ask for access: **discord.gg/ngQXHUbnKg**',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
     const voiceChannel = interaction.member?.voice?.channel;
     if (!voiceChannel) {
-        return interaction.reply({ content: 'You need to be in a voice channel first.', ephemeral: true });
+        return interaction.reply({ content: 'You need to be in a voice channel first.', flags: MessageFlags.Ephemeral });
     }
 
     const guildId = interaction.guildId;
     if (cubAiState.has(guildId)) {
-        return interaction.reply({ content: 'CUB AI is already active. Use `/cubai leave` first.', ephemeral: true });
+        return interaction.reply({ content: 'CUB AI is already active. Use `/cubai leave` first.', flags: MessageFlags.Ephemeral });
     }
 
-    await interaction.reply({ content: `🤖 CUB AI joining **${voiceChannel.name}**...`, ephemeral: true });
+    await interaction.reply({ content: `🤖 CUB AI joining **${voiceChannel.name}**...`, flags: MessageFlags.Ephemeral });
 
     // Pre-warm Whisper so it's ready before you speak
     startWhisperServer();
@@ -1365,7 +1366,7 @@ async function cubAiLeave(interaction) {
     if (!DEVELOPER_IDS.includes(interaction.user.id)) {
         return interaction.reply({
             content: '🔒 **CUB AI** is currently restricted to the bot owner.\n\nWant access? Join the CUB SOFTWARE Discord server and ask for access: **discord.gg/ngQXHUbnKg**',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -1373,12 +1374,12 @@ async function cubAiLeave(interaction) {
     const state = cubAiState.get(guildId);
 
     if (!state) {
-        return interaction.reply({ content: 'CUB AI is not active in this server.', ephemeral: true });
+        return interaction.reply({ content: 'CUB AI is not active in this server.', flags: MessageFlags.Ephemeral });
     }
 
     state.connection.destroy();
     cubAiState.delete(guildId);
-    return interaction.reply({ content: '👋 CUB AI has left the voice channel.', ephemeral: true });
+    return interaction.reply({ content: '👋 CUB AI has left the voice channel.', flags: MessageFlags.Ephemeral });
 }
 
 // ---------------------------------------------------------------------------
@@ -1432,7 +1433,7 @@ async function cubAiPersonality(interaction) {
     const state = cubAiState.get(guildId);
 
     if (!state) {
-        return interaction.reply({ content: '⚠️ CUB AI is not active. Use `/cubai join` first.', ephemeral: true });
+        return interaction.reply({ content: '⚠️ CUB AI is not active. Use `/cubai join` first.', flags: MessageFlags.Ephemeral });
     }
 
     const chosen = interaction.options.getString('name');
@@ -1442,7 +1443,7 @@ async function cubAiPersonality(interaction) {
     } else {
         const found = PERSONALITIES.find(p => p.name.toLowerCase() === chosen.toLowerCase());
         if (!found) {
-            return interaction.reply({ content: `⚠️ Unknown personality: ${chosen}`, ephemeral: true });
+            return interaction.reply({ content: `⚠️ Unknown personality: ${chosen}`, flags: MessageFlags.Ephemeral });
         }
         state.personality = found;
     }
@@ -1465,7 +1466,7 @@ async function cubAiPersonality(interaction) {
         state.textChannel.send(`🎭 **Personality changed to: ${state.personality.name}**`).catch(() => {});
     }
 
-    return interaction.reply({ content: `✅ Personality set to **${state.personality.name}**.`, ephemeral: true });
+    return interaction.reply({ content: `✅ Personality set to **${state.personality.name}**.`, flags: MessageFlags.Ephemeral });
 }
 
 // ---------------------------------------------------------------------------

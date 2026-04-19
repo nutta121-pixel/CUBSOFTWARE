@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder , MessageFlags } = require('discord.js');
 const { UserModel } = require('../../database/models');
 const { isDeveloper } = require('../utils/permissions');
 const config = require('../../../config.json');
@@ -22,7 +22,7 @@ module.exports = {
         if (!await isDeveloper(interaction)) {
             return interaction.reply({
                 content: '❌ This command is only available to developers.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -65,14 +65,14 @@ module.exports = {
                 )
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
             console.log(`[VERIFY] ${targetUser.username} (${targetUser.id}) ${verifiedStatus ? 'verified' : 'unverified'} by ${interaction.user.username}`);
         } catch (error) {
             console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_GENERAL_126 — Error verifying user:', error);
             await interaction.reply({
                 content: 'An error occurred while updating verification status.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
     }

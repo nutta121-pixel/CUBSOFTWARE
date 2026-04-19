@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } = require('discord.js');
 const { ServerModel } = require('../../database/models');
 const { QuestManager } = require('../utils/questManager');
 const config = require('../../../config.json');
@@ -13,14 +13,14 @@ module.exports = {
         if (!interaction.guild) {
             return interaction.reply({
                 content: 'This command can only be used in a server.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (interaction.guild.ownerId !== interaction.user.id) {
             return interaction.reply({
                 content: 'Only the server owner can use this command.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -34,7 +34,7 @@ module.exports = {
         if (server.opted_in) {
             return interaction.reply({
                 content: 'This server is already opted in to the quest system.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 

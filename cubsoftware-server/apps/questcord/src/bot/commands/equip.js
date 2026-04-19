@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder , MessageFlags } = require('discord.js');
 const { UserModel } = require('../../database/models');
 const { equipItem, unequipItem } = require('../../utils/equipmentHelper');
 const { db } = require('../../database/schema');
@@ -53,7 +53,7 @@ module.exports = {
             if (!result.success) {
                 return interaction.reply({
                     content: `❌ ${result.message}`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -85,7 +85,7 @@ module.exports = {
                 .setFooter({ text: 'Use /inventory to view your equipped items' })
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
         } else if (subcommand === 'unequip') {
             const itemType = interaction.options.getString('type');
@@ -101,7 +101,7 @@ module.exports = {
             if (!equippedItem) {
                 return interaction.reply({
                     content: `❌ You don't have a ${itemType} equipped.`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -110,7 +110,7 @@ module.exports = {
             if (!result.success) {
                 return interaction.reply({
                     content: `❌ ${result.message}`,
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
@@ -121,7 +121,7 @@ module.exports = {
                 .setFooter({ text: 'Use /equip weapon to equip a different item' })
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
     },
 

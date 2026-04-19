@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle , MessageFlags } = require('discord.js');
 const QuestService = require('../../services/gameEngine/QuestService');
 const { UserModel } = require('../../database/models');
 const config = require('../../../config.json');
@@ -12,7 +12,7 @@ module.exports = {
         if (!interaction.guild) {
             return interaction.reply({
                 content: 'This command can only be used in a server.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -23,13 +23,13 @@ module.exports = {
             if (questsResult.type === 'not_opted_in') {
                 return interaction.reply({
                     content: 'This server has not opted in to the quest system. Ask a server administrator to use `/optin`.',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
             return interaction.reply({
                 content: `❌ Error: ${questsResult.error}`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 

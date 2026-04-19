@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits , MessageFlags } = require('discord.js');
 const { BossModel, BossParticipantModel, ServerModel } = require('../../../database/models');
 const { isStaff, isDeveloper } = require('../../utils/permissions');
 const { BossManager } = require('../../utils/bossManager');
@@ -46,7 +46,7 @@ module.exports = {
         if (!await isStaff(interaction)) {
             return interaction.reply({
                 content: 'This command is only available to QuestCord staff.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -78,14 +78,14 @@ async function handleForceSpawn(interaction) {
         if (!server) {
             return interaction.reply({
                 content: `❌ Server with ID \`${serverId}\` not found in database.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
         if (!server.opted_in) {
             return interaction.reply({
                 content: `❌ Server **${server.name}** is not opted in to boss spawns.`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -93,11 +93,11 @@ async function handleForceSpawn(interaction) {
         if (activeBoss) {
             return interaction.reply({
                 content: `❌ There is already an active boss: **${activeBoss.boss_name}** (${activeBoss.id})`,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const { getRandomBoss } = require('../../utils/questData');
         const bossTemplate = getRandomBoss();
@@ -144,7 +144,7 @@ async function handleSetHealth(interaction) {
         if (!boss) {
             return interaction.reply({
                 content: '❌ There is no active boss to modify.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -162,12 +162,12 @@ async function handleSetHealth(interaction) {
             )
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         await BossManager.updateBossNotification();
         console.log(`[BOSS-ADMIN] Boss health modified by ${interaction.user.username}: ${oldHealth} -> ${health}`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error setting boss health:', error);
-        await interaction.reply({ content: 'An error occurred while modifying boss health.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred while modifying boss health.', flags: MessageFlags.Ephemeral });
     }
 }
 
@@ -176,13 +176,13 @@ async function handleViewParticipants(interaction) {
         const boss = BossModel.getActiveBoss();
 
         if (!boss) {
-            return interaction.reply({ content: '❌ There is no active boss.', ephemeral: true });
+            return interaction.reply({ content: '❌ There is no active boss.', flags: MessageFlags.Ephemeral });
         }
 
         const participants = BossParticipantModel.getParticipants(boss.id);
 
         if (participants.length === 0) {
-            return interaction.reply({ content: `No participants yet for **${boss.boss_name}**.`, ephemeral: true });
+            return interaction.reply({ content: `No participants yet for **${boss.boss_name}**.`, flags: MessageFlags.Ephemeral });
         }
 
         const participantList = participants.map((p, i) =>
@@ -196,10 +196,10 @@ async function handleViewParticipants(interaction) {
             .setFooter({ text: `Total: ${participants.length} participants` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error viewing boss participants:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }
 
@@ -207,7 +207,7 @@ async function handleClear(interaction) {
     if (!await isDeveloper(interaction)) {
         return interaction.reply({
             content: '❌ Only developers can clear the active boss.',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -215,7 +215,7 @@ async function handleClear(interaction) {
         const boss = BossModel.getActiveBoss();
 
         if (!boss) {
-            return interaction.reply({ content: '❌ There is no active boss to clear.', ephemeral: true });
+            return interaction.reply({ content: '❌ There is no active boss to clear.', flags: MessageFlags.Ephemeral });
         }
 
         db.prepare('DELETE FROM bosses WHERE id = ?').run(boss.id);
@@ -228,10 +228,10 @@ async function handleClear(interaction) {
             .addFields({ name: 'Staff Member', value: `${interaction.user.username} (${interaction.user.id})` })
             .setTimestamp();
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         console.log(`[BOSS-ADMIN] Boss cleared by ${interaction.user.username}: ${boss.boss_name} (ID: ${boss.id})`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_QUESTCORD_CMD_ADMIN_125 — Error clearing boss:', error);
-        await interaction.reply({ content: 'An error occurred.', ephemeral: true });
+        await interaction.reply({ content: 'An error occurred.', flags: MessageFlags.Ephemeral });
     }
 }

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder , MessageFlags } = require('discord.js');
 const GuildService = require('../../services/gameEngine/GuildService');
 const { GuildModel, UserModel } = require('../../database/models');
 const config = require('../../../config.json');
@@ -321,17 +321,17 @@ async function handleCreate(interaction) {
 async function handleInfo(interaction) {
     const user = UserModel.findByDiscordId(interaction.user.id);
     if (!user) {
-        return interaction.reply({ content: '❌ User profile not found. Please use any command to create your profile first.', ephemeral: true });
+        return interaction.reply({ content: '❌ User profile not found. Please use any command to create your profile first.', flags: MessageFlags.Ephemeral });
     }
 
     const userGuild = GuildModel.getUserGuild(user.id);
     if (!userGuild) {
-        return interaction.reply({ content: '❌ You are not in a guild. Use `/guild create` to create one or `/guild invites` to see pending invites.', ephemeral: true });
+        return interaction.reply({ content: '❌ You are not in a guild. Use `/guild create` to create one or `/guild invites` to see pending invites.', flags: MessageFlags.Ephemeral });
     }
 
     const guildInfo = await GuildService.getGuildInfo(userGuild.id);
     if (!guildInfo.success) {
-        return interaction.reply({ content: `❌ ${guildInfo.error}`, ephemeral: true });
+        return interaction.reply({ content: `❌ ${guildInfo.error}`, flags: MessageFlags.Ephemeral });
     }
 
     const guild = guildInfo.data;
@@ -369,7 +369,7 @@ async function handleInvite(interaction) {
     const targetUser = interaction.options.getUser('user');
 
     if (targetUser.bot) {
-        return interaction.reply({ content: '❌ You cannot invite bots to your guild.', ephemeral: true });
+        return interaction.reply({ content: '❌ You cannot invite bots to your guild.', flags: MessageFlags.Ephemeral });
     }
 
     const result = await GuildService.inviteUser(interaction.user.id, targetUser.id, 'discord');
@@ -407,13 +407,13 @@ async function handleJoin(interaction) {
 async function handleInvites(interaction) {
     const user = UserModel.findByDiscordId(interaction.user.id);
     if (!user) {
-        return interaction.reply({ content: '❌ User profile not found.', ephemeral: true });
+        return interaction.reply({ content: '❌ User profile not found.', flags: MessageFlags.Ephemeral });
     }
 
     const invites = GuildModel.getPendingInvites(user.id);
 
     if (invites.length === 0) {
-        return interaction.reply({ content: '📭 You have no pending guild invites.', ephemeral: true });
+        return interaction.reply({ content: '📭 You have no pending guild invites.', flags: MessageFlags.Ephemeral });
     }
 
     const embed = new EmbedBuilder()
@@ -429,7 +429,7 @@ async function handleInvites(interaction) {
 
     embed.addFields({ name: 'Invites', value: inviteList, inline: false });
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
 async function handleLeave(interaction) {
@@ -449,7 +449,7 @@ async function handleContribute(interaction) {
     const gems = interaction.options.getInteger('gems') || 0;
 
     if (currency === 0 && gems === 0) {
-        return interaction.reply({ content: '❌ You must contribute at least some currency or gems.', ephemeral: true });
+        return interaction.reply({ content: '❌ You must contribute at least some currency or gems.', flags: MessageFlags.Ephemeral });
     }
 
     const result = await GuildService.contributeToGuild(interaction.user.id, currency, gems, 'discord');
@@ -467,7 +467,7 @@ async function handleList(interaction) {
     const guilds = GuildModel.findByServerId(interaction.guild.id);
 
     if (guilds.length === 0) {
-        return interaction.reply({ content: '📭 No guilds have been created in this server yet. Use `/guild create` to create one!', ephemeral: true });
+        return interaction.reply({ content: '📭 No guilds have been created in this server yet. Use `/guild create` to create one!', flags: MessageFlags.Ephemeral });
     }
 
     const embed = new EmbedBuilder()
@@ -559,7 +559,7 @@ async function handleLeaderboard(interaction) {
     if (!guilds || guilds.length === 0) {
         return interaction.reply({
             content: '📭 No guilds found. Be the first to create one!',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -604,7 +604,7 @@ async function handleKick(interaction) {
     if (!result.success) {
         return interaction.reply({
             content: `❌ ${result.error}`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -633,7 +633,7 @@ async function handlePromote(interaction) {
     if (!result.success) {
         return interaction.reply({
             content: `❌ ${result.error}`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -662,7 +662,7 @@ async function handleDemote(interaction) {
     if (!result.success) {
         return interaction.reply({
             content: `❌ ${result.error}`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -686,7 +686,7 @@ async function handleSettings(interaction) {
     if (!description && isPublic === null) {
         return interaction.reply({
             content: '❌ Please provide at least one setting to update',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -703,7 +703,7 @@ async function handleSettings(interaction) {
     if (!result.success) {
         return interaction.reply({
             content: `❌ ${result.error}`,
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -729,7 +729,7 @@ async function handleDisband(interaction) {
         .setDescription('Are you sure you want to disband your guild? This action is **permanent** and cannot be undone!\n\nAll members will be removed and guild progress will be lost.')
         .setFooter({ text: 'Reply with "confirm disband" to proceed, or anything else to cancel.' });
 
-    await interaction.reply({ embeds: [confirmEmbed], ephemeral: true });
+    await interaction.reply({ embeds: [confirmEmbed], flags: MessageFlags.Ephemeral });
 
     // Wait for confirmation
     const filter = m => m.author.id === interaction.user.id;
@@ -761,7 +761,7 @@ async function handleDisband(interaction) {
 
     collector.on('end', collected => {
         if (collected.size === 0) {
-            interaction.followUp({ content: '❌ Guild disbanding cancelled (timeout).', ephemeral: true });
+            interaction.followUp({ content: '❌ Guild disbanding cancelled (timeout).', flags: MessageFlags.Ephemeral });
         }
     });
 }
@@ -776,7 +776,7 @@ async function handleTransfer(interaction) {
         .setDescription(`Are you sure you want to transfer leadership to **${targetUser.username}**?\n\nYou will become a regular member and lose all leader privileges.`)
         .setFooter({ text: 'Reply with "confirm transfer" to proceed, or anything else to cancel.' });
 
-    await interaction.reply({ embeds: [confirmEmbed], ephemeral: true });
+    await interaction.reply({ embeds: [confirmEmbed], flags: MessageFlags.Ephemeral });
 
     // Wait for confirmation
     const filter = m => m.author.id === interaction.user.id;
@@ -812,7 +812,7 @@ async function handleTransfer(interaction) {
 
     collector.on('end', collected => {
         if (collected.size === 0) {
-            interaction.followUp({ content: '❌ Leadership transfer cancelled (timeout).', ephemeral: true });
+            interaction.followUp({ content: '❌ Leadership transfer cancelled (timeout).', flags: MessageFlags.Ephemeral });
         }
     });
 }
@@ -822,7 +822,7 @@ async function handleMembers(interaction) {
     if (!user) {
         return interaction.reply({
             content: '❌ User not found in database',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -830,7 +830,7 @@ async function handleMembers(interaction) {
     if (!userGuild) {
         return interaction.reply({
             content: '❌ You are not in a guild',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -885,7 +885,7 @@ async function handleActivity(interaction) {
     if (!user) {
         return interaction.reply({
             content: '❌ User not found in database',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -893,7 +893,7 @@ async function handleActivity(interaction) {
     if (!userGuild) {
         return interaction.reply({
             content: '❌ You are not in a guild',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -903,7 +903,7 @@ async function handleActivity(interaction) {
     if (activities.length === 0) {
         return interaction.reply({
             content: '📭 No recent activity to display',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -980,7 +980,7 @@ async function handleAnnouncements(interaction) {
     if (!user) {
         return interaction.reply({
             content: '❌ User not found in database',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -988,7 +988,7 @@ async function handleAnnouncements(interaction) {
     if (!userGuild) {
         return interaction.reply({
             content: '❌ You are not in a guild',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 
@@ -998,7 +998,7 @@ async function handleAnnouncements(interaction) {
     if (announcements.length === 0) {
         return interaction.reply({
             content: '📭 No announcements to display',
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
     }
 

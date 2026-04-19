@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, ComponentType , MessageFlags } = require('discord.js');
 const { UserModel } = require('../../database/models');
 const { db } = require('../../database/schema');
 const config = require('../../../config.json');
@@ -52,7 +52,7 @@ module.exports = {
         if (items.length === 0) {
             return interaction.reply({
                 content: 'No items available in this category.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -95,7 +95,7 @@ module.exports = {
         const response = await interaction.reply({
             embeds: [embed],
             components: [row],
-            ephemeral: true
+            flags: MessageFlags.Ephemeral
         });
 
         // Handle selection
@@ -106,14 +106,14 @@ module.exports = {
 
         collector.on('collect', async (i) => {
             if (i.user.id !== interaction.user.id) {
-                return i.reply({ content: 'This shop is not for you!', ephemeral: true });
+                return i.reply({ content: 'This shop is not for you!', flags: MessageFlags.Ephemeral });
             }
 
             const itemId = parseInt(i.values[0].replace('buy_', ''));
             const item = db.prepare('SELECT * FROM items WHERE id = ?').get(itemId);
 
             if (!item) {
-                return i.reply({ content: '❌ Item not found!', ephemeral: true });
+                return i.reply({ content: '❌ Item not found!', flags: MessageFlags.Ephemeral });
             }
 
             // Show confirmation with item details

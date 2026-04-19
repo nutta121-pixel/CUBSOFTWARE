@@ -19856,7 +19856,6 @@ def handle_exception(e):
 
 # ==================== AUTOMATED SECURITY CHECKS ====================
 
-_SECURITY_CHECK_INTERVAL = 3600   # hourly
 _SELF_BASE_URL = 'http://localhost:3000'
 
 def _run_security_check():
@@ -19901,7 +19900,7 @@ def _run_security_check():
     all_pass = all(bool_results.values())
     status = 'PASS' if all_pass else 'FAIL'
 
-    print(f'[Security] Hourly check {now}: {status}', flush=True)
+    print(f'[Security] Weekly check {now}: {status}', flush=True)
     for k, v in results.items():
         flag = (' OK' if v is True else (' FAIL' if v is False else ''))
         print(f'[Security]   {k}: {v}{flag}', flush=True)
@@ -19909,11 +19908,29 @@ def _run_security_check():
         failed = [k for k, v in bool_results.items() if not v]
         print(f'[Security] FAILED checks: {", ".join(failed)}', flush=True)
 
-def _schedule_security_checks():
-    _run_security_check()
-    t = threading.Timer(_SECURITY_CHECK_INTERVAL, _schedule_security_checks)
+def _schedule_next_security_check():
+    import datetime as _dt
+    try:
+        from zoneinfo import ZoneInfo as _ZI
+    except ImportError:
+        import pytz as _pytz
+        class _ZI:
+            def __new__(cls, key): return _pytz.timezone(key)
+    nzt = _ZI('Pacific/Auckland')
+    now = _dt.datetime.now(nzt)
+    days_until_sunday = (6 - now.weekday()) % 7 or 7
+    next_sunday = (now + _dt.timedelta(days=days_until_sunday)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    delay = (next_sunday - now).total_seconds()
+    t = threading.Timer(delay, _run_and_reschedule_security_check)
     t.daemon = True
     t.start()
+    return next_sunday
+
+def _run_and_reschedule_security_check():
+    _run_security_check()
+    _schedule_next_security_check()
 
 def _auto_launch_custom_bots():
     """On startup, re-launch all enabled custom bots that aren't already running."""
@@ -20005,11 +20022,9 @@ if __name__ == '__main__':
     signal.signal(signal.SIGTERM, shutdown_handler)
     atexit.register(lambda: logger.shutdown())
 
-    # Start hourly security checks — 30s delay lets the server come up first
-    _sec_timer = threading.Timer(30, _schedule_security_checks)
-    _sec_timer.daemon = True
-    _sec_timer.start()
-    print('[Security] Hourly OAuth/security checks scheduled (first run in 30s)', flush=True)
+    # Schedule weekly security check — Sunday midnight NZT, no run on startup
+    _next_check = _schedule_next_security_check()
+    print(f'[Security] Weekly OAuth/security check scheduled for {_next_check.strftime("%Y-%m-%d %H:%M %Z")}', flush=True)
 
     # Auto-launch custom bots — 15s delay lets PM2 finish starting other processes first
     _cb_timer = threading.Timer(15, _auto_launch_custom_bots)

@@ -1244,7 +1244,7 @@ async function performCopy(interaction, sourceServerId) {
             try {
                 const newRole = await safeCall(() => guild.roles.create({
                     name: roleData.name,
-                    colors: roleData.color ? [roleData.color] : undefined,
+                    ...(roleData.color ? { colors: [roleData.color] } : {}),
                     hoist: roleData.hoist,
                     permissions: BigInt(roleData.permissions),
                     mentionable: roleData.mentionable,

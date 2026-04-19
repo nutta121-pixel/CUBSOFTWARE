@@ -91,6 +91,24 @@ async function deployCommands() {
 // Data storage path
 const DATA_DIR = path.join(__dirname, 'data');
 const SAVES_FILE = path.join(DATA_DIR, 'server-saves.json');
+const STATUS_CHANNELS_FILE = path.join(DATA_DIR, 'status-channels.json');
+
+function loadStatusChannels() {
+    try {
+        if (fs.existsSync(STATUS_CHANNELS_FILE)) return JSON.parse(fs.readFileSync(STATUS_CHANNELS_FILE, 'utf8'));
+    } catch (_) {}
+    return {};
+}
+function saveStatusChannel(channelId, categoryId) {
+    const data = loadStatusChannels();
+    data[channelId] = categoryId || null;
+    fs.writeFileSync(STATUS_CHANNELS_FILE, JSON.stringify(data, null, 2));
+}
+function removeStatusChannel(channelId) {
+    const data = loadStatusChannels();
+    delete data[channelId];
+    fs.writeFileSync(STATUS_CHANNELS_FILE, JSON.stringify(data, null, 2));
+}
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -165,6 +183,20 @@ client.once('clientReady', async () => {
     if (_errorReporterModule) {
         errorReporter = _errorReporterModule.createErrorReporter(client, 'CleanMe');
         errorReporter.hookConsoleError();
+    }
+
+    // Re-attach close buttons to any status channels that survived a restart
+    const pendingStatusChannels = loadStatusChannels();
+    for (const [channelId] of Object.entries(pendingStatusChannels)) {
+        try {
+            const channel = await client.channels.fetch(channelId).catch(() => null);
+            if (!channel) { removeStatusChannel(channelId); continue; }
+            const closeRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('close_status_channel').setLabel('🗑️ Close this channel').setStyle(ButtonStyle.Danger)
+            );
+            await channel.send({ content: '🔄 **Bot restarted.** Click the button below to close this status channel.', components: [closeRow] }).catch(() => {});
+            console.log(`[CleanMe] Re-attached close button to status channel ${channelId}`);
+        } catch (_) {}
     }
 
     // Add custom terminal commands
@@ -1460,16 +1492,15 @@ async function performClean(interaction) {
             parent: statusCategory,
             reason: 'CleanMe Bot - Clean status'
         });
-        await statusChannel.send(`<@${userId}> 🗑️ **Server clean started.** All other channels and roles will be deleted. This channel will be removed 30 seconds after completion.`);
+        saveStatusChannel(statusChannel.id, statusCategory?.id ?? null);
+        await statusChannel.send(`<@${userId}> 🗑️ **Server clean started.** All other channels and roles will be deleted. Click the button on the completion message to close this channel when you're done.`);
     } catch (setupErr) {
         console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Could not create status channel in "${guild.name}": ${setupErr.message}`);
     }
 
-    const cleanupStatus = async (delay = 30000) => {
-        await sleep(delay);
-        try { if (statusChannel) await statusChannel.delete(); } catch (_) {}
-        try { if (statusCategory) await statusCategory.delete(); } catch (_) {}
-    };
+    const closeButton = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('close_status_channel').setLabel('🗑️ Close this channel').setStyle(ButtonStyle.Danger)
+    );
 
     const failedChannels = [];
     const failedRoles = [];
@@ -1606,15 +1637,14 @@ async function performClean(interaction) {
 
         doneEmbed.addFields({
             name: '💡 Next Steps',
-            value: '• Use `/save` to back up the current (clean) state\n• Use `/copy <serverid>` to restore a saved configuration\n• This channel will be deleted in 30 seconds',
+            value: '• Use `/save` to back up the current (clean) state\n• Use `/copy serverid:<serverid>` to restore a saved configuration\n• Click the button below to close this channel',
             inline: false
         }).setTimestamp();
 
         console.log(`[Clean] Completed for "${guild.name}" in ${duration}s — ${deletedChannels} channels, ${deletedRoles} roles deleted${hasIssues ? `, ${failedChannels.length} channel(s)/${failedRoles.length} role(s) failed` : ''}`);
 
         if (statusChannel) {
-            await statusChannel.send({ content: `<@${userId}>`, embeds: [doneEmbed] }).catch(() => {});
-            cleanupStatus(30000);
+            await statusChannel.send({ content: `<@${userId}>`, embeds: [doneEmbed], components: [closeButton] }).catch(() => {});
         } else {
             try { const u = await client.users.fetch(userId); await u.send({ embeds: [doneEmbed] }); } catch (_) {}
         }
@@ -1643,8 +1673,7 @@ async function performClean(interaction) {
             .setTimestamp();
 
         if (statusChannel) {
-            await statusChannel.send({ content: `<@${userId}>`, embeds: [errorEmbed] }).catch(() => {});
-            cleanupStatus(30000);
+            await statusChannel.send({ content: `<@${userId}>`, embeds: [errorEmbed], components: [closeButton] }).catch(() => {});
         } else {
             try {
                 const user = await client.users.fetch(userId);
@@ -1991,6 +2020,22 @@ async function handleCleanMePublish(interaction, guildId) {
 
 async function handleButton(interaction) {
     const customId = interaction.customId;
+
+    // Close status channel button
+    if (customId === 'close_status_channel') {
+        const channelId = interaction.channel.id;
+        const data = loadStatusChannels();
+        const categoryId = data[channelId];
+        try { await interaction.update({ content: '🗑️ Closing...', components: [] }); } catch (_) {}
+        await sleep(500);
+        removeStatusChannel(channelId);
+        if (categoryId) {
+            const category = interaction.guild.channels.cache.get(categoryId);
+            if (category) await category.delete().catch(() => {});
+        }
+        await interaction.channel.delete().catch(() => {});
+        return;
+    }
 
     // Handle CleanMe website publish button
     if (customId.startsWith('cleanme_publish_')) {

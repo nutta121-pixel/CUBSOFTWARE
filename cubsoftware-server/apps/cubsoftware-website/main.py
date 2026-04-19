@@ -5190,9 +5190,9 @@ def cleanme_create_server():
         'channel_count': len(voice_and_text),
         'role_count': len(non_everyone_roles),
         'category_count': len(categories),
-        'channels': [],
-        'roles': [],
-        'categories': [],
+        'channels': [{'id': c['id'], 'name': c['name'], 'type': c['type'], 'parent_id': c.get('parent_id')} for c in voice_and_text],
+        'roles': [{'id': r['id'], 'name': r['name'], 'color': r.get('color', 0)} for r in non_everyone_roles],
+        'categories': [{'id': c['id'], 'name': c['name']} for c in categories],
         'votes': 0,
         'copies': 0,
         'created': time.time()

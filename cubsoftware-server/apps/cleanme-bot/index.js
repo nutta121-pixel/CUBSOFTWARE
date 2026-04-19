@@ -1193,7 +1193,7 @@ async function _executeCopy(guild, userId, save, statusChannel, statusCategory) 
             try {
                 const newRole = await safeCall(() => guild.roles.create({
                     name: roleData.name,
-                    ...(roleData.color ? { colors: [roleData.color] } : {}),
+                    colors: roleData.color ?? 0,
                     hoist: roleData.hoist,
                     permissions: BigInt(roleData.permissions),
                     mentionable: roleData.mentionable,

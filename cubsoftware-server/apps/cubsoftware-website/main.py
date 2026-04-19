@@ -1228,6 +1228,34 @@ def team_api():
 _community_members_cache = {'data': [], 'ts': 0}
 _COMMUNITY_MEMBERS_TTL = 600  # 10 minutes
 
+# Roles in priority order (highest first). Only one is shown per member.
+_RANKED_ROLE_IDS = [
+    '1466195493859364957',  # Developer
+    '1284601176712810556',  # Head Management
+    '1284601177425842239',  # Admin
+    '1284601180969762888',  # Head Moderator
+    '1284601181754097737',  # Senior Moderator
+    '1284601183708643399',  # Moderator
+    '1284601182857461852',  # Chat Moderator
+    '1284601185701199882',  # Helper
+    '1284601187273801851',  # Trial Moderator
+    '1387055133266804817',  # Server Booster
+    '1284601218571829370',  # Members
+]
+_ROLE_META = {
+    '1466195493859364957': ('Developer',        'role-developer'),
+    '1284601176712810556': ('Head Management',   'role-head-mgmt'),
+    '1284601177425842239': ('Admin',             'role-admin'),
+    '1284601180969762888': ('Head Moderator',    'role-head-mod'),
+    '1284601181754097737': ('Senior Moderator',  'role-senior-mod'),
+    '1284601183708643399': ('Moderator',         'role-moderator'),
+    '1284601182857461852': ('Chat Moderator',    'role-chat-mod'),
+    '1284601185701199882': ('Helper',            'role-helper'),
+    '1284601187273801851': ('Trial Moderator',   'role-trial-mod'),
+    '1387055133266804817': ('Server Booster',    'role-booster'),
+    '1284601218571829370': ('Member',            'role-member'),
+}
+
 @app.route('/api/community-members')
 def community_members_api():
     """Return [{name, avatar}] for members with the community role in the CUB SOFTWARE Discord."""
@@ -1270,7 +1298,13 @@ def community_members_api():
                         else:
                             idx = (int(user_id) >> 22) % 6 if user_id.isdigit() else 0
                             avatar = f'https://cdn.discordapp.com/embed/avatars/{idx}.png'
-                        members.append({'name': name[:24], 'avatar': avatar, 'joinedAt': m.get('joined_at', '')})
+                        member_roles = m.get('roles', [])
+                        top_role_label = top_role_class = None
+                        for rid in _RANKED_ROLE_IDS:
+                            if rid in member_roles:
+                                top_role_label, top_role_class = _ROLE_META[rid]
+                                break
+                        members.append({'name': name[:24], 'avatar': avatar, 'joinedAt': m.get('joined_at', ''), 'topRole': top_role_label, 'topRoleClass': top_role_class})
                     if len(batch) < 1000:
                         break
                     after = batch[-1]['user']['id']
@@ -5081,6 +5115,39 @@ def cleanme_get_server(server_id):
 
     server = data['servers'][server_id].copy()
     server['id'] = server_id
+
+    # If the listing was saved before arrays were populated, re-fetch from Discord now
+    needs_repopulate = (
+        server.get('channel_count', 0) > 0 and not server.get('channels') or
+        server.get('role_count', 0) > 0 and not server.get('roles') or
+        server.get('category_count', 0) > 0 and not server.get('categories')
+    )
+    if needs_repopulate:
+        bot_token = os.environ.get('CLEANME_BOT_TOKEN', '')
+        if bot_token:
+            try:
+                headers = {'Authorization': f'Bot {bot_token}'}
+                ch_r = requests.get(f'https://discord.com/api/v10/guilds/{server_id}/channels', headers=headers, timeout=8)
+                ro_r = requests.get(f'https://discord.com/api/v10/guilds/{server_id}/roles',    headers=headers, timeout=8)
+                if ch_r.status_code == 200 and ro_r.status_code == 200:
+                    all_channels = ch_r.json()
+                    all_roles    = ro_r.json()
+                    voice_and_text = [c for c in all_channels if c['type'] in (0, 2, 5, 15)]
+                    categories     = [c for c in all_channels if c['type'] == 4]
+                    non_everyone_roles = [r for r in all_roles if r['name'] != '@everyone']
+                    populated = {
+                        'channel_count':  len(voice_and_text),
+                        'role_count':     len(non_everyone_roles),
+                        'category_count': len(categories),
+                        'channels':   [{'id': c['id'], 'name': c['name'], 'type': c['type'], 'parent_id': c.get('parent_id')} for c in voice_and_text],
+                        'roles':      [{'id': r['id'], 'name': r['name'], 'color': r.get('color', 0)} for r in non_everyone_roles],
+                        'categories': [{'id': c['id'], 'name': c['name']} for c in categories],
+                    }
+                    data['servers'][server_id].update(populated)
+                    save_cleanme_servers(data)
+                    server.update(populated)
+            except Exception as _e:
+                app.logger.warning(f'[CleanMe] Re-populate failed for {server_id}: {_e}')
 
     return jsonify(server)
 

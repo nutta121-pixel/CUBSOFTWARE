@@ -111,6 +111,23 @@ function removeStatusChannel(channelId) {
 }
 
 const PENDING_CLEANS_FILE = path.join(DATA_DIR, 'pending-cleans.json');
+const PENDING_COPIES_FILE = path.join(DATA_DIR, 'pending-copies.json');
+function loadPendingCopies() {
+    try {
+        if (fs.existsSync(PENDING_COPIES_FILE)) return JSON.parse(fs.readFileSync(PENDING_COPIES_FILE, 'utf8'));
+    } catch (_) {}
+    return {};
+}
+function savePendingCopy(guildId, userId, sourceServerId, statusChannelId, statusCategoryId) {
+    const data = loadPendingCopies();
+    data[guildId] = { userId, sourceServerId, statusChannelId: statusChannelId || null, statusCategoryId: statusCategoryId || null };
+    fs.writeFileSync(PENDING_COPIES_FILE, JSON.stringify(data, null, 2));
+}
+function removePendingCopy(guildId) {
+    const data = loadPendingCopies();
+    delete data[guildId];
+    fs.writeFileSync(PENDING_COPIES_FILE, JSON.stringify(data, null, 2));
+}
 function loadPendingCleans() {
     try {
         if (fs.existsSync(PENDING_CLEANS_FILE)) return JSON.parse(fs.readFileSync(PENDING_CLEANS_FILE, 'utf8'));
@@ -219,6 +236,31 @@ client.once('clientReady', async () => {
         if (statusChannel) await statusChannel.send('🔄 **Bot restarted** — resuming clean from where it left off...').catch(() => {});
         _executeClean(guild, job.userId, statusChannel, statusCategory).catch(e =>
             console.error(`[Clean] Resume failed for "${guild.name}": ${e.message}`)
+        );
+    }
+
+    // Resume any copy jobs that were interrupted by a restart
+    const pendingCopies = loadPendingCopies();
+    for (const [guildId, job] of Object.entries(pendingCopies)) {
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) { removePendingCopy(guildId); continue; }
+        const saves = loadSaves();
+        const save = saves[job.sourceServerId];
+        if (!save) {
+            console.log(`[Copy] Cannot resume copy for "${guild.name}" — save for ${job.sourceServerId} not found`);
+            removePendingCopy(guildId);
+            continue;
+        }
+        let statusChannel = null, statusCategory = null;
+        if (job.statusChannelId) {
+            statusChannel = await client.channels.fetch(job.statusChannelId).catch(() => null);
+            if (statusChannel) resumingChannelIds.add(job.statusChannelId);
+        }
+        if (job.statusCategoryId) statusCategory = guild.channels.cache.get(job.statusCategoryId) || null;
+        console.log(`[Copy] Resuming interrupted copy for "${guild.name}" (source: ${job.sourceServerId})`);
+        if (statusChannel) await statusChannel.send('🔄 **Bot restarted** — resuming copy from where it left off...').catch(() => {});
+        _executeCopy(guild, job.userId, save, statusChannel, statusCategory).catch(e =>
+            console.error(`[Copy] Resume failed for "${guild.name}": ${e.message}`)
         );
     }
 
@@ -1038,186 +1080,93 @@ async function handleCopy(interaction) {
     await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
 }
 
-async function performCopy(interaction, sourceServerId) {
-    const saves = loadSaves();
-    const save = saves[sourceServerId];
-    const guild = interaction.guild;
-
-    let statusChannel = null;
-    let statusCategory = null;
+async function _executeCopy(guild, userId, save, statusChannel, statusCategory) {
+    const closeButton = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('close_status_channel').setLabel('🗑️ Close this channel').setStyle(ButtonStyle.Danger)
+    );
     let statusMessage = null;
     let rateLimitPaused = false;
 
-    // Wrapper around safeApiCall that notifies the status channel on rate limits
     const safeCall = async (fn) => {
         const result = await safeApiCall(fn, 5, 1000, async (retryAfter) => {
             rateLimitPaused = true;
             const seconds = Math.ceil(retryAfter / 1000);
-            if (statusChannel) {
-                await statusChannel.send(
-                    `⏳ **Rate limited by Discord.** Pausing for ~${seconds} second${seconds !== 1 ? 's' : ''}, then continuing automatically...`
-                ).catch(() => {});
-            }
+            if (statusChannel) await statusChannel.send(`⏳ **Rate limited by Discord.** Pausing for ~${seconds} second${seconds !== 1 ? 's' : ''}, then continuing automatically...`).catch(() => {});
         });
         rateLimitPaused = false;
         return result;
     };
 
-    // Helper function to clean up temp channel
-    const cleanupStatusChannel = async (delay = 0) => {
-        if (delay > 0) await sleep(delay);
-        try {
-            if (statusChannel && statusChannel.deletable) {
-                await statusChannel.delete().catch(() => {});
-            }
-            if (statusCategory && statusCategory.deletable) {
-                await statusCategory.delete().catch(() => {});
-            }
-        } catch (e) {
-            console.log('Could not delete status channel:', e.message);
-        }
-    };
-
-    // Update the main progress embed
-    const updateProgressEmbed = async (step, stepName, current, total, details = '', isError = false) => {
+    const updateProgressEmbed = async (step, stepName, current, total, details = '') => {
         if (!statusMessage) return;
-
         const steps = [
             { name: 'Deleting Channels', icon: '🗑️' },
-            { name: 'Deleting Roles', icon: '🗑️' },
-            { name: 'Creating Roles', icon: '🎭' },
+            { name: 'Deleting Roles',    icon: '🗑️' },
+            { name: 'Creating Roles',    icon: '🎭' },
             { name: 'Creating Categories', icon: '📁' },
             { name: 'Creating Channels', icon: '📺' }
         ];
-
         let description = `Copying configuration from **${save.guildName}**\n\n`;
-
         for (let i = 0; i < steps.length; i++) {
             if (i < step) {
                 description += `✅ ${steps[i].name}\n`;
             } else if (i === step) {
-                const bar = createProgressBar(current, total);
-                description += `${steps[i].icon} **${steps[i].name}**\n${bar}\n`;
-                if (details) {
-                    description += `└─ ${details}\n`;
-                }
+                description += `${steps[i].icon} **${steps[i].name}**\n${createProgressBar(current, total)}\n`;
+                if (details) description += `└─ ${details}\n`;
             } else {
                 description += `⬚ ${steps[i].name}\n`;
             }
         }
-
-        if (rateLimitPaused) {
-            description += '\n⚠️ **Rate Limited** - Waiting for Discord cooldown...';
-        }
-
+        if (rateLimitPaused) description += '\n⚠️ **Rate Limited** - Waiting for Discord cooldown...';
         const embed = new EmbedBuilder()
             .setTitle('🔄 Server Copy In Progress')
-            .setColor(isError ? 0xFF6B6B : 0x5865F2)
+            .setColor(0x5865F2)
             .setDescription(description)
             .setFooter({ text: 'Do not close this channel' })
             .setTimestamp();
-
-        try {
-            await statusMessage.edit({ embeds: [embed] });
-        } catch (e) {
-            // Message might have been deleted
-        }
+        await statusMessage.edit({ embeds: [embed] }).catch(() => {});
     };
 
-    // Log action to status channel
     const logAction = async (action, success = true) => {
         if (!statusChannel) return;
-        try {
-            await statusChannel.send(`${success ? '✓' : '✗'} ${action}`).catch(() => {});
-        } catch (e) {
-            // Ignore
-        }
+        await statusChannel.send(`${success ? '✓' : '✗'} ${action}`).catch(() => {});
     };
 
     try {
-        // Final permission check
-        const permCheck = checkBotPermissions(guild);
-        if (!permCheck.canProceed) {
-            await interaction.editReply({
-                content: '❌ **Error:** Bot permissions have changed. Please ensure the bot has **Manage Channels**, **Manage Roles**, and **Manage Server** permissions and its role is at the top of the role list, then try again.',
-                embeds: [],
-                components: []
-            });
-            return;
-        }
-
-        // Step 0: Create temporary status category and channel FIRST
-        await interaction.editReply({
-            content: '🔄 Setting up... Creating status channel.',
-            embeds: [],
-            components: []
-        });
-
-        try {
-            statusCategory = await safeCall(() => guild.channels.create({
-                name: '⚙️ CUBSOFTWARE',
-                type: ChannelType.GuildCategory,
-                reason: 'CleanMe Bot - Temporary status channel'
-            }));
-
-            statusChannel = await safeCall(() => guild.channels.create({
-                name: 'copy-status',
-                type: ChannelType.GuildText,
-                parent: statusCategory,
-                reason: 'CleanMe Bot - Temporary status channel'
-            }));
-
-            // Send initial progress message
-            const initialEmbed = new EmbedBuilder()
-                .setTitle('🔄 Server Copy Starting...')
-                .setColor(0x5865F2)
-                .setDescription(`Preparing to copy configuration from **${save.guildName}**\n\n**Items to process:**\n• ${save.roles.length} roles\n• ${save.categories.length} categories\n• ${save.channels.length} channels`)
-                .setTimestamp();
-
-            statusMessage = await statusChannel.send({ embeds: [initialEmbed] });
-
-        } catch (e) {
-            console.error('CUBSOFTWARE_ERROR_CLEANME_STATUS_CHANNEL_154 — Failed to create status channel:', e);
-            await interaction.editReply({
-                content: `❌ **Error:** Could not create status channel. Make sure the bot has permission to create channels.\nError: ${e.message}`,
-                embeds: [],
-                components: []
-            });
-            return;
-        }
+        // Send/resend initial progress embed (handles fresh start and resume)
+        const initialEmbed = new EmbedBuilder()
+            .setTitle('🔄 Server Copy In Progress')
+            .setColor(0x5865F2)
+            .setDescription(`Copying configuration from **${save.guildName}**\n\n**Items to process:**\n• ${save.roles.length} roles\n• ${save.categories.length} categories\n• ${save.channels.length} channels`)
+            .setTimestamp();
+        if (statusChannel) statusMessage = await statusChannel.send({ embeds: [initialEmbed] }).catch(() => null);
 
         // Step 1: Delete all channels (except our status channel)
         const channels = guild.channels.cache.filter(c =>
-            c.deletable &&
-            c.id !== statusChannel.id &&
-            c.id !== statusCategory.id
+            c.deletable && c.id !== statusChannel?.id && c.id !== statusCategory?.id
         );
         let deletedChannels = 0;
         const totalChannels = channels.size;
-
         for (const [, channel] of channels) {
             await updateProgressEmbed(0, 'Deleting Channels', deletedChannels, totalChannels, `Deleting #${channel.name}`);
             try {
                 await safeCall(() => channel.delete());
                 deletedChannels++;
                 await logAction(`Deleted channel: ${channel.name}`);
-                await sleep(800); // Slower to avoid rate limits
+                await sleep(800);
             } catch (e) {
                 console.log(`Could not delete channel ${channel.name}: ${e.message}`);
-                await logAction(`Failed to delete channel: ${channel.name} - ${e.message}`, false);
+                await logAction(`Failed to delete channel: ${channel.name} — ${friendlyError(e)}`, false);
             }
         }
         await updateProgressEmbed(0, 'Deleting Channels', totalChannels, totalChannels, 'Complete');
 
         // Step 2: Delete all roles
         const roles = guild.roles.cache.filter(r =>
-            r.id !== guild.id &&
-            !r.managed &&
-            r.position < guild.members.me.roles.highest.position
+            r.id !== guild.id && !r.managed && r.position < guild.members.me.roles.highest.position
         );
         let deletedRoles = 0;
         const totalRoles = roles.size;
-
         for (const [, role] of roles) {
             await updateProgressEmbed(1, 'Deleting Roles', deletedRoles, totalRoles, `Deleting @${role.name}`);
             try {
@@ -1227,20 +1176,20 @@ async function performCopy(interaction, sourceServerId) {
                 await sleep(500);
             } catch (e) {
                 console.log(`Could not delete role ${role.name}: ${e.message}`);
-                await logAction(`Failed to delete role: ${role.name} - ${e.message}`, false);
+                await logAction(`Failed to delete role: ${role.name} — ${friendlyError(e)}`, false);
             }
         }
         await updateProgressEmbed(1, 'Deleting Roles', totalRoles, totalRoles, 'Complete');
 
-        // Step 3: Create roles
+        // Step 3: Create roles (skip any that already exist — resume safety)
         const roleMap = new Map();
         const roleErrors = [];
-        // Sort roles from highest to lowest position so they stack correctly when created
         const sortedRoles = [...save.roles].sort((a, b) => b.position - a.position);
         let rolesCreated = 0;
-
         for (const roleData of sortedRoles) {
             await updateProgressEmbed(2, 'Creating Roles', rolesCreated, save.roles.length, `Creating @${roleData.name}`);
+            const existing = guild.roles.cache.find(r => r.name === roleData.name);
+            if (existing) { roleMap.set(roleData.name, existing); rolesCreated++; continue; }
             try {
                 const newRole = await safeCall(() => guild.roles.create({
                     name: roleData.name,
@@ -1256,55 +1205,38 @@ async function performCopy(interaction, sourceServerId) {
                 await sleep(500);
             } catch (e) {
                 console.log(`Could not create role ${roleData.name}: ${e.message}`);
-                roleErrors.push(`${roleData.name}: ${e.message}`);
-                await logAction(`Failed to create role: ${roleData.name} - ${e.message}`, false);
+                roleErrors.push(`${roleData.name}: ${friendlyError(e)}`);
+                await logAction(`Failed to create role: ${roleData.name} — ${friendlyError(e)}`, false);
             }
         }
         await updateProgressEmbed(2, 'Creating Roles', save.roles.length, save.roles.length, 'Complete');
 
-        // Try to reorder roles - sort by original position (highest first) and assign new positions
+        // Reorder roles
         try {
-            const rolePositions = [];
-            // Get roles sorted by their original position (highest first)
             const rolesWithPositions = [...save.roles]
                 .sort((a, b) => b.position - a.position)
-                .map(roleData => ({
-                    role: roleMap.get(roleData.name),
-                    originalPosition: roleData.position
-                }))
+                .map(rd => ({ role: roleMap.get(rd.name), originalPosition: rd.position }))
                 .filter(r => r.role);
-
-            // Calculate max position we can use (below bot's highest role)
             const maxPosition = guild.members.me.roles.highest.position - 1;
-
-            // Assign positions from top to bottom
-            rolesWithPositions.forEach((r, index) => {
-                rolePositions.push({
-                    role: r.role.id,
-                    position: Math.max(1, maxPosition - index)
-                });
-            });
-
-            if (rolePositions.length > 0) {
-                await safeCall(() => guild.roles.setPositions(rolePositions));
-            }
+            const rolePositions = rolesWithPositions.map((r, i) => ({ role: r.role.id, position: Math.max(1, maxPosition - i) }));
+            if (rolePositions.length > 0) await safeCall(() => guild.roles.setPositions(rolePositions));
         } catch (e) {
             console.log('Could not reorder roles:', e.message);
         }
 
-        // Step 4: Create categories
+        // Step 4: Create categories (skip existing — resume safety)
         const categoryMap = new Map();
         const categoryErrors = [];
         let categoriesCreated = 0;
-
         for (const catData of save.categories) {
             await updateProgressEmbed(3, 'Creating Categories', categoriesCreated, save.categories.length, `Creating ${catData.name}`);
+            const existing = guild.channels.cache.find(c => c.type === ChannelType.GuildCategory && c.name === catData.name);
+            if (existing) { categoryMap.set(catData.name, existing); categoriesCreated++; continue; }
             try {
-                const permissionOverwrites = buildPermissionOverwrites(catData.permissionOverwrites, roleMap, guild);
                 const newCategory = await safeCall(() => guild.channels.create({
                     name: catData.name,
                     type: ChannelType.GuildCategory,
-                    permissionOverwrites: permissionOverwrites,
+                    permissionOverwrites: buildPermissionOverwrites(catData.permissionOverwrites, roleMap, guild),
                     reason: 'CleanMe Bot - Server Copy'
                 }));
                 categoryMap.set(catData.name, newCategory);
@@ -1313,28 +1245,30 @@ async function performCopy(interaction, sourceServerId) {
                 await sleep(500);
             } catch (e) {
                 console.log(`Could not create category ${catData.name}: ${e.message}`);
-                categoryErrors.push(`${catData.name}: ${e.message}`);
-                await logAction(`Failed to create category: ${catData.name} - ${e.message}`, false);
+                categoryErrors.push(`${catData.name}: ${friendlyError(e)}`);
+                await logAction(`Failed to create category: ${catData.name} — ${friendlyError(e)}`, false);
             }
         }
         await updateProgressEmbed(3, 'Creating Categories', save.categories.length, save.categories.length, 'Complete');
 
-        // Step 5: Create channels
+        // Step 5: Create channels (skip existing in same parent — resume safety)
         let channelsCreated = 0;
         const channelErrors = [];
-
         for (const channelData of save.channels) {
             await updateProgressEmbed(4, 'Creating Channels', channelsCreated, save.channels.length, `Creating #${channelData.name}`);
+            const expectedParent = channelData.parentName ? categoryMap.get(channelData.parentName) : null;
+            const existing = guild.channels.cache.find(c =>
+                c.name === channelData.name && c.type === channelData.type && c.parentId === (expectedParent?.id ?? null)
+            );
+            if (existing) { channelsCreated++; continue; }
             try {
-                const permissionOverwrites = buildPermissionOverwrites(channelData.permissionOverwrites, roleMap, guild);
                 const channelOptions = {
                     name: channelData.name,
                     type: channelData.type,
-                    parent: channelData.parentName ? categoryMap.get(channelData.parentName) : null,
-                    permissionOverwrites: permissionOverwrites,
+                    parent: expectedParent,
+                    permissionOverwrites: buildPermissionOverwrites(channelData.permissionOverwrites, roleMap, guild),
                     reason: 'CleanMe Bot - Server Copy'
                 };
-
                 if (channelData.type === ChannelType.GuildText) {
                     if (channelData.topic) channelOptions.topic = channelData.topic;
                     if (channelData.nsfw) channelOptions.nsfw = channelData.nsfw;
@@ -1343,57 +1277,42 @@ async function performCopy(interaction, sourceServerId) {
                     if (channelData.bitrate) channelOptions.bitrate = Math.min(channelData.bitrate, 96000);
                     if (channelData.userLimit) channelOptions.userLimit = channelData.userLimit;
                 }
-
                 await safeCall(() => guild.channels.create(channelOptions));
                 channelsCreated++;
                 await logAction(`Created channel: #${channelData.name}`);
                 await sleep(500);
             } catch (e) {
                 console.log(`Could not create channel ${channelData.name}: ${e.message}`);
-                channelErrors.push(`${channelData.name}: ${e.message}`);
-                await logAction(`Failed to create channel: #${channelData.name} - ${e.message}`, false);
+                channelErrors.push(`${channelData.name}: ${friendlyError(e)}`);
+                await logAction(`Failed to create channel: #${channelData.name} — ${friendlyError(e)}`, false);
             }
         }
         await updateProgressEmbed(4, 'Creating Channels', save.channels.length, save.channels.length, 'Complete');
 
-        // Done! Send completion message
         const hasErrors = roleErrors.length > 0 || categoryErrors.length > 0 || channelErrors.length > 0;
         const totalErrors = roleErrors.length + categoryErrors.length + channelErrors.length;
 
         const doneEmbed = new EmbedBuilder()
             .setTitle(hasErrors ? '⚠️ Server Copy Complete (with errors)' : '✅ Server Copy Complete!')
             .setColor(hasErrors ? 0xFFA500 : 0x00FF00)
-            .setDescription(`Successfully copied configuration from **${save.guildName}**!\n\nThis status channel will be deleted in 30 seconds.`)
+            .setDescription(`Successfully copied configuration from **${save.guildName}**!\n\nClick the button below to close this channel.`)
             .addFields(
                 { name: 'Roles', value: `${roleMap.size}/${save.roles.length}`, inline: true },
                 { name: 'Categories', value: `${categoryMap.size}/${save.categories.length}`, inline: true },
                 { name: 'Channels', value: `${channelsCreated}/${save.channels.length}`, inline: true }
             )
             .setTimestamp();
-
         if (hasErrors) {
             const allErrors = [
                 ...roleErrors.slice(0, 3).map(e => `Role: ${e}`),
                 ...categoryErrors.slice(0, 3).map(e => `Category: ${e}`),
                 ...channelErrors.slice(0, 3).map(e => `Channel: ${e}`)
             ];
-            const errorText = allErrors.join('\n') + (totalErrors > 9 ? `\n... and ${totalErrors - 9} more` : '');
-            doneEmbed.addFields({ name: '❌ Some Errors Occurred', value: errorText || 'Unknown errors', inline: false });
+            doneEmbed.addFields({ name: '❌ Some Errors Occurred', value: allErrors.join('\n') + (totalErrors > 9 ? `\n... and ${totalErrors - 9} more` : '') || 'Unknown errors', inline: false });
         }
+        if (statusChannel) await statusChannel.send({ content: `<@${userId}>`, embeds: [doneEmbed], components: [closeButton] }).catch(() => {});
 
-        await statusChannel.send({ embeds: [doneEmbed] }).catch(() => {});
-
-        // Send to owner
-        await sendOwnerDM(client, BOT_OWNER_ID, hasErrors ? '⚠️ Server Copy Complete (with errors)' : '✅ Server Copy Complete',
-            `**Server:** ${guild.name}\n**Roles:** ${roleMap.size}/${save.roles.length}\n**Categories:** ${categoryMap.size}/${save.categories.length}\n**Channels:** ${channelsCreated}/${save.channels.length}\n${hasErrors ? `**Errors:** ${totalErrors}` : ''}`,
-            hasErrors ? 0xFFA500 : 0x00FF00
-        );
-
-        // Send to a newly created channel
-        const firstTextChannel = guild.channels.cache.find(c =>
-            c.type === ChannelType.GuildText &&
-            c.id !== statusChannel.id
-        );
+        const firstTextChannel = guild.channels.cache.find(c => c.type === ChannelType.GuildText && c.id !== statusChannel?.id);
         if (firstTextChannel) {
             const welcomeEmbed = new EmbedBuilder()
                 .setTitle('✅ Server Setup Complete!')
@@ -1409,35 +1328,52 @@ async function performCopy(interaction, sourceServerId) {
             await firstTextChannel.send({ embeds: [welcomeEmbed] }).catch(() => {});
         }
 
-        // Delete status channel after 30 seconds
-        await cleanupStatusChannel(30000);
-
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_CLEANME_COPY_ERROR_155 — Copy error:', error);
-
-        // Notify owner about error
-        await sendOwnerDM(client, BOT_OWNER_ID, '❌ Server Copy Failed',
-            `**Server:** ${guild.name} (${guild.id})\n**Error:** ${error.message}`,
-            0xFF0000
-        );
-
         if (statusChannel) {
             const errorEmbed = new EmbedBuilder()
                 .setTitle('❌ Error During Copy')
                 .setColor(0xFF0000)
-                .setDescription(`An error occurred during the copy process:\n\`\`\`${error.message}\`\`\`\n\nThis may be due to Discord rate limiting. Some items may have been created.\n\nThis channel will be deleted in 30 seconds.`)
+                .setDescription(`An error occurred during the copy process:\n\`\`\`${error.message}\`\`\`\n\nSome items may have been created. Click the button to close this channel.`)
                 .setTimestamp();
-
-            await statusChannel.send({ embeds: [errorEmbed] }).catch(() => {});
-            await cleanupStatusChannel(30000);
-        } else {
-            await interaction.editReply({
-                content: `❌ **Error during copy:** ${error.message}`,
-                embeds: [],
-                components: []
-            }).catch(() => {});
+            await statusChannel.send({ content: `<@${userId}>`, embeds: [errorEmbed], components: [closeButton] }).catch(() => {});
         }
+    } finally {
+        removePendingCopy(guild.id);
     }
+}
+
+async function performCopy(interaction, sourceServerId) {
+    const saves = loadSaves();
+    const save = saves[sourceServerId];
+    const guild = interaction.guild;
+    const userId = interaction.user.id;
+
+    const permCheck = checkBotPermissions(guild);
+    if (!permCheck.canProceed) {
+        await interaction.editReply({
+            content: '❌ **Error:** Bot permissions have changed. Please ensure the bot has **Manage Channels**, **Manage Roles**, and **Manage Server** permissions and its role is at the top of the role list, then try again.',
+            embeds: [], components: []
+        });
+        return;
+    }
+
+    await interaction.editReply({ content: '🔄 Setting up... Creating status channel.', embeds: [], components: [] });
+
+    let statusCategory = null;
+    let statusChannel = null;
+    try {
+        statusCategory = await guild.channels.create({ name: '⚙️ CUBSOFTWARE', type: ChannelType.GuildCategory, reason: 'CleanMe Bot - Temporary status channel' });
+        statusChannel = await guild.channels.create({ name: 'copy-status', type: ChannelType.GuildText, parent: statusCategory, reason: 'CleanMe Bot - Temporary status channel' });
+        saveStatusChannel(statusChannel.id, statusCategory.id);
+        savePendingCopy(guild.id, userId, sourceServerId, statusChannel.id, statusCategory.id);
+    } catch (e) {
+        console.error('CUBSOFTWARE_ERROR_CLEANME_STATUS_CHANNEL_154 — Failed to create status channel:', e);
+        await interaction.editReply({ content: `❌ **Error:** Could not create status channel. Make sure the bot has permission to create channels.\nError: ${friendlyError(e)}`, embeds: [], components: [] });
+        return;
+    }
+
+    await _executeCopy(guild, userId, save, statusChannel, statusCategory);
 }
 
 // Helper function to build permission overwrites from saved data

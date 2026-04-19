@@ -705,12 +705,16 @@
                 const now = Date.now();
                 return members.map(m => {
                     const isNew = m.joinedAt && (now - new Date(m.joinedAt).getTime()) < ONE_HOUR_MS;
+                    const roleHtml = m.topRole
+                        ? `<span class="community-member-role ${escHtml(m.topRoleClass)}">${escHtml(m.topRole)}</span>`
+                        : '';
                     return `
                         <div class="community-member-card">
                             ${isNew ? '<span class="community-new-badge">NEW</span>' : ''}
                             <img class="community-member-avatar" src="${escHtml(m.avatar)}" alt=""
                                  onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
                             <span class="community-member-name">${escHtml(m.name)}</span>
+                            ${roleHtml}
                         </div>`;
                 }).join('');
             }

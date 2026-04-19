@@ -857,9 +857,11 @@ def _after_request_logging(response):
 
         # 4xx/5xx errors (excluding 429 which is logged above)
         # Skip 4xx from localhost — those are the auth-tester doing its job
+        # Skip 404s from anonymous users — those are scanner/bot traffic already in [Request] logs
         _is_localhost = ip in ('127.0.0.1', '::1')
-        if status >= 400 and status != 429 and not is_static and not _is_localhost:
-            user_id = session.get('user', {}).get('id', 'anon') if 'user' in session else 'anon'
+        user_id = session.get('user', {}).get('id', 'anon') if 'user' in session else 'anon'
+        _is_anon_404 = (status == 404 and user_id == 'anon')
+        if status >= 400 and status != 429 and not is_static and not _is_localhost and not _is_anon_404:
             _web_log('Error', f'HTTP {status} from {ip} (user:{user_id}): {request.method} {path}')
 
         # ── 404 flood detection — directory fuzzing (gobuster/ffuf style) ────

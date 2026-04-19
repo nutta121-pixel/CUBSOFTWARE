@@ -110,6 +110,24 @@ function removeStatusChannel(channelId) {
     fs.writeFileSync(STATUS_CHANNELS_FILE, JSON.stringify(data, null, 2));
 }
 
+const PENDING_CLEANS_FILE = path.join(DATA_DIR, 'pending-cleans.json');
+function loadPendingCleans() {
+    try {
+        if (fs.existsSync(PENDING_CLEANS_FILE)) return JSON.parse(fs.readFileSync(PENDING_CLEANS_FILE, 'utf8'));
+    } catch (_) {}
+    return {};
+}
+function savePendingClean(guildId, userId, statusChannelId, statusCategoryId) {
+    const data = loadPendingCleans();
+    data[guildId] = { userId, statusChannelId: statusChannelId || null, statusCategoryId: statusCategoryId || null };
+    fs.writeFileSync(PENDING_CLEANS_FILE, JSON.stringify(data, null, 2));
+}
+function removePendingClean(guildId) {
+    const data = loadPendingCleans();
+    delete data[guildId];
+    fs.writeFileSync(PENDING_CLEANS_FILE, JSON.stringify(data, null, 2));
+}
+
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -185,9 +203,29 @@ client.once('clientReady', async () => {
         errorReporter.hookConsoleError();
     }
 
-    // Re-attach close buttons to any status channels that survived a restart
+    // Resume any clean jobs that were interrupted by a restart
+    const pendingCleans = loadPendingCleans();
+    const resumingChannelIds = new Set();
+    for (const [guildId, job] of Object.entries(pendingCleans)) {
+        const guild = client.guilds.cache.get(guildId);
+        if (!guild) { removePendingClean(guildId); continue; }
+        let statusChannel = null, statusCategory = null;
+        if (job.statusChannelId) {
+            statusChannel = await client.channels.fetch(job.statusChannelId).catch(() => null);
+            if (statusChannel) resumingChannelIds.add(job.statusChannelId);
+        }
+        if (job.statusCategoryId) statusCategory = guild.channels.cache.get(job.statusCategoryId) || null;
+        console.log(`[Clean] Resuming interrupted clean for "${guild.name}"`);
+        if (statusChannel) await statusChannel.send('🔄 **Bot restarted** — resuming clean from where it left off...').catch(() => {});
+        _executeClean(guild, job.userId, statusChannel, statusCategory).catch(e =>
+            console.error(`[Clean] Resume failed for "${guild.name}": ${e.message}`)
+        );
+    }
+
+    // Re-attach close buttons to completed status channels that survived restart (not currently resuming)
     const pendingStatusChannels = loadStatusChannels();
     for (const [channelId] of Object.entries(pendingStatusChannels)) {
+        if (resumingChannelIds.has(channelId)) continue;
         try {
             const channel = await client.channels.fetch(channelId).catch(() => null);
             if (!channel) { removeStatusChannel(channelId); continue; }
@@ -1108,12 +1146,6 @@ async function performCopy(interaction, sourceServerId) {
             return;
         }
 
-        // Notify owner via DM
-        await sendOwnerDM(client, BOT_OWNER_ID, '🔄 Server Copy Started',
-            `**Server:** ${guild.name} (${guild.id})\n**User:** ${interaction.user.tag}\n**Copying from:** ${save.guildName}`,
-            0x5865F2
-        );
-
         // Step 0: Create temporary status category and channel FIRST
         await interaction.editReply({
             content: '🔄 Setting up... Creating status channel.',
@@ -1212,7 +1244,7 @@ async function performCopy(interaction, sourceServerId) {
             try {
                 const newRole = await safeCall(() => guild.roles.create({
                     name: roleData.name,
-                    color: roleData.color,
+                    colors: roleData.color ? [roleData.color] : undefined,
                     hoist: roleData.hoist,
                     permissions: BigInt(roleData.permissions),
                     mentionable: roleData.mentionable,
@@ -1469,35 +1501,7 @@ async function handleClean(interaction) {
     await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
 }
 
-async function performClean(interaction) {
-    const guild = interaction.guild;
-    const userId = interaction.user.id;
-    const startTime = Date.now();
-
-    // Create status channel and category FIRST so they survive the deletion
-    let statusCategory = null;
-    let statusChannel = null;
-
-    try { await interaction.editReply({ content: '🔄 Setting up status channel...', embeds: [], components: [] }); } catch (_) {}
-
-    try {
-        statusCategory = await guild.channels.create({
-            name: '⚙️ CUBSOFTWARE',
-            type: ChannelType.GuildCategory,
-            reason: 'CleanMe Bot - Clean status'
-        });
-        statusChannel = await guild.channels.create({
-            name: 'cleanme-status',
-            type: ChannelType.GuildText,
-            parent: statusCategory,
-            reason: 'CleanMe Bot - Clean status'
-        });
-        saveStatusChannel(statusChannel.id, statusCategory?.id ?? null);
-        await statusChannel.send(`<@${userId}> 🗑️ **Server clean started.** All other channels and roles will be deleted. Click the button on the completion message to close this channel when you're done.`);
-    } catch (setupErr) {
-        console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Could not create status channel in "${guild.name}": ${setupErr.message}`);
-    }
-
+async function _executeClean(guild, userId, statusChannel, statusCategory, startTime = Date.now()) {
     const closeButton = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('close_status_channel').setLabel('🗑️ Close this channel').setStyle(ButtonStyle.Danger)
     );
@@ -1507,8 +1511,51 @@ async function performClean(interaction) {
     const skippedRoles = [];
     let deletedChannels = 0, deletedRoles = 0;
     let textCount = 0, voiceCount = 0, categoryCount = 0, otherCount = 0;
+    let statusMessage = null;
+
+    const updateProgressEmbed = async (step, current, total, details = '') => {
+        if (!statusMessage) return;
+        const steps = [
+            { name: 'Deleting Channels', icon: '🗑️' },
+            { name: 'Deleting Roles',    icon: '🎭' },
+        ];
+        let description = `Cleaning **${guild.name}**\n\n`;
+        for (let i = 0; i < steps.length; i++) {
+            if (i < step) {
+                description += `✅ ${steps[i].name}\n`;
+            } else if (i === step) {
+                description += `${steps[i].icon} **${steps[i].name}**\n${createProgressBar(current, total)}\n`;
+                if (details) description += `└─ ${details}\n`;
+            } else {
+                description += `⬚ ${steps[i].name}\n`;
+            }
+        }
+        const embed = new EmbedBuilder()
+            .setTitle('🔄 Server Clean In Progress')
+            .setColor(0xFF4444)
+            .setDescription(description)
+            .setFooter({ text: 'Do not close this channel' })
+            .setTimestamp();
+        await statusMessage.edit({ embeds: [embed] }).catch(() => {});
+    };
+
+    const logAction = async (action, success = true) => {
+        if (!statusChannel) return;
+        await statusChannel.send(`${success ? '✓' : '✗'} ${action}`).catch(() => {});
+    };
 
     try {
+        // Send initial status embed
+        if (statusChannel) {
+            const initialEmbed = new EmbedBuilder()
+                .setTitle('🔄 Server Clean In Progress')
+                .setColor(0xFF4444)
+                .setDescription(`Cleaning **${guild.name}**\n\n⬚ Deleting Channels\n⬚ Deleting Roles`)
+                .setFooter({ text: 'Do not close this channel' })
+                .setTimestamp();
+            statusMessage = await statusChannel.send({ embeds: [initialEmbed] }).catch(() => null);
+        }
+
         // ── Phase 1: Channel removal ──────────────────────────────────────────
         const channels = guild.channels.cache.filter(c =>
             c.deletable &&
@@ -1518,9 +1565,9 @@ async function performClean(interaction) {
         const totalChannels = channels.size;
 
         console.log(`[Clean] Starting channel removal on "${guild.name}" — ${totalChannels} channels`);
-        if (statusChannel) await statusChannel.send(`🗑️ Starting channel removal on **${guild.name}**... (${totalChannels} channels)`).catch(() => {});
 
         for (const [, channel] of channels) {
+            await updateProgressEmbed(0, deletedChannels, totalChannels, `Deleting #${channel.name}`);
             try {
                 await channel.delete();
                 deletedChannels++;
@@ -1528,9 +1575,11 @@ async function performClean(interaction) {
                 else if (channel.type === ChannelType.GuildVoice || channel.type === ChannelType.GuildStageVoice) voiceCount++;
                 else if (channel.type === ChannelType.GuildCategory) categoryCount++;
                 else otherCount++;
+                await logAction(`Deleted channel: ${channel.name}`);
                 await sleep(500);
             } catch (e) {
                 failedChannels.push({ name: channel.name, reason: friendlyError(e) });
+                await logAction(`Failed to delete channel: ${channel.name} — ${friendlyError(e)}`, false);
                 console.log(`Could not delete channel: ${e.message}`);
             }
             if (totalChannels > 0 && (deletedChannels % 10 === 0 || deletedChannels + failedChannels.length === totalChannels)) {
@@ -1538,8 +1587,8 @@ async function performClean(interaction) {
             }
         }
 
+        await updateProgressEmbed(0, totalChannels, totalChannels, 'Complete');
         console.log(`[Clean] "${guild.name}" — Channel removal done: ${deletedChannels}/${totalChannels} deleted${failedChannels.length > 0 ? `, ${failedChannels.length} failed` : ''}`);
-        if (statusChannel) await statusChannel.send(`✅ Channel removal complete — ${deletedChannels} deleted${failedChannels.length > 0 ? `, ${failedChannels.length} failed` : ''}`).catch(() => {});
 
         // ── Phase 2: Role removal ─────────────────────────────────────────────
         guild.roles.cache.forEach(r => {
@@ -1561,15 +1610,17 @@ async function performClean(interaction) {
         const totalRoles = roles.size;
 
         console.log(`[Clean] Starting role removal on "${guild.name}" — ${totalRoles} roles`);
-        if (statusChannel) await statusChannel.send(`🎭 Starting role removal on **${guild.name}**... (${totalRoles} roles)`).catch(() => {});
 
         for (const [, role] of roles) {
+            await updateProgressEmbed(1, deletedRoles, totalRoles, `Deleting @${role.name}`);
             try {
                 await role.delete();
                 deletedRoles++;
+                await logAction(`Deleted role: ${role.name}`);
                 await sleep(300);
             } catch (e) {
                 failedRoles.push({ name: role.name, reason: friendlyError(e) });
+                await logAction(`Failed to delete role: ${role.name} — ${friendlyError(e)}`, false);
                 console.log(`Could not delete role: ${e.message}`);
             }
             if (totalRoles > 0 && (deletedRoles % 5 === 0 || deletedRoles + failedRoles.length === totalRoles)) {
@@ -1577,8 +1628,9 @@ async function performClean(interaction) {
             }
         }
 
+        await updateProgressEmbed(1, totalRoles, totalRoles, 'Complete');
         console.log(`[Clean] "${guild.name}" — Role removal done: ${deletedRoles}/${totalRoles} deleted${failedRoles.length > 0 ? `, ${failedRoles.length} failed` : ''}`);
-        if (statusChannel) await statusChannel.send(`✅ Role removal complete — ${deletedRoles} deleted${failedRoles.length > 0 ? `, ${failedRoles.length} failed` : ''}`).catch(() => {});
+
 
         const duration = ((Date.now() - startTime) / 1000).toFixed(1);
         const hasIssues = failedChannels.length > 0 || failedRoles.length > 0;
@@ -1683,7 +1735,42 @@ async function performClean(interaction) {
                 console.error(`Could not notify user about clean failure: ${e.message}`);
             }
         }
+    } finally {
+        removePendingClean(guild.id);
     }
+}
+
+async function performClean(interaction) {
+    const guild = interaction.guild;
+    const userId = interaction.user.id;
+    const startTime = Date.now();
+
+    // Create status channel and category FIRST so they survive the deletion
+    let statusCategory = null;
+    let statusChannel = null;
+
+    try { await interaction.editReply({ content: '🔄 Setting up status channel...', embeds: [], components: [] }); } catch (_) {}
+
+    try {
+        statusCategory = await guild.channels.create({
+            name: '⚙️ CUBSOFTWARE',
+            type: ChannelType.GuildCategory,
+            reason: 'CleanMe Bot - Clean status'
+        });
+        statusChannel = await guild.channels.create({
+            name: 'cleanme-status',
+            type: ChannelType.GuildText,
+            parent: statusCategory,
+            reason: 'CleanMe Bot - Clean status'
+        });
+        saveStatusChannel(statusChannel.id, statusCategory?.id ?? null);
+        savePendingClean(guild.id, userId, statusChannel.id, statusCategory?.id ?? null);
+        await statusChannel.send(`<@${userId}> 🗑️ **Server clean started.** All other channels and roles will be deleted. Click the button on the completion message to close this channel when you're done.`);
+    } catch (setupErr) {
+        console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Could not create status channel in "${guild.name}": ${setupErr.message}`);
+    }
+
+    await _executeClean(guild, userId, statusChannel, statusCategory, startTime);
 }
 
 // Clean roles command
@@ -2023,6 +2110,12 @@ async function handleButton(interaction) {
 
     // Close status channel button
     if (customId === 'close_status_channel') {
+        const member = interaction.member;
+        const isOwner = interaction.guild.ownerId === interaction.user.id;
+        const isAdmin = member?.permissions?.has(PermissionFlagsBits.Administrator);
+        if (!isOwner && !isAdmin) {
+            return interaction.reply({ content: '❌ Only server admins or the server owner can close this channel.', flags: MessageFlags.Ephemeral });
+        }
         const channelId = interaction.channel.id;
         const data = loadStatusChannels();
         const categoryId = data[channelId];

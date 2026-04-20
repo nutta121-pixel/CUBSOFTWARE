@@ -34,6 +34,10 @@ const commands = [
     new SlashCommandBuilder()
         .setName('cleanchannels')
         .setDescription('Delete all channels and categories from your server'),
+
+    new SlashCommandBuilder()
+        .setName('stop')
+        .setDescription('Cancel your server\'s active operation or remove it from the queue'),
 ].map(command => command.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);

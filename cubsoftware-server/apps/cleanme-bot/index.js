@@ -68,6 +68,10 @@ const commands = [
         .setName('cleanchannels')
         .setDescription('Delete all channels and categories from your server'),
 
+    new SlashCommandBuilder()
+        .setName('stop')
+        .setDescription('Cancel your server\'s active operation or remove it from the queue'),
+
 ].map(command => command.toJSON());
 
 // Deploy commands function
@@ -85,6 +89,96 @@ async function deployCommands() {
         console.log(`[Commands] Deployed ${data.length} slash commands`);
     } catch (error) {
         console.error('CUBSOFTWARE_ERROR_CLEANME_DEPLOY_COMMANDS_151 — Error deploying commands:', error);
+    }
+}
+
+// Concurrency limiter + persistent queue
+// Discord global rate limit: 50 req/s. Each operation peaks at ~4-7 calls/sec,
+// so 10 concurrent = safe ceiling. Queue auto-starts the next operation when a slot opens.
+const MAX_CONCURRENT_OPS = 10;
+const AVG_OP_DURATION_MS  = 5 * 60 * 1000; // 5-minute average per operation (for ETA)
+const QUEUE_FILE = path.join(DATA_DIR, 'operation-queue.json');
+let _activeOps = 0;
+const _opStartTimes = new Map(); // guildId -> Date.now() when op started (in-memory)
+const _cancelledOps = new Set(); // guildIds that have been requested to stop
+
+function loadQueue() {
+    try {
+        if (fs.existsSync(QUEUE_FILE)) return JSON.parse(fs.readFileSync(QUEUE_FILE, 'utf8'));
+    } catch (_) {}
+    return [];
+}
+function saveQueue(queue) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(QUEUE_FILE, JSON.stringify(queue, null, 2));
+}
+
+function getQueueETA(position) {
+    const now = Date.now();
+    // Remaining time for each running op, sorted fastest-finish-first
+    const remaining = Array.from(_opStartTimes.values())
+        .map(t => Math.max(5_000, AVG_OP_DURATION_MS - (now - t)))
+        .sort((a, b) => a - b);
+
+    let etaMs;
+    if (remaining.length === 0) {
+        etaMs = AVG_OP_DURATION_MS;
+    } else if (position <= remaining.length) {
+        etaMs = remaining[position - 1]; // fills one of the current slots
+    } else {
+        const overshoot   = position - remaining.length;
+        const extraWaves  = Math.ceil(overshoot / MAX_CONCURRENT_OPS);
+        etaMs = remaining[remaining.length - 1] + extraWaves * AVG_OP_DURATION_MS;
+    }
+    return Math.max(1, Math.ceil(etaMs / 60_000));
+}
+
+async function processQueue() {
+    const queue = loadQueue();
+    while (_activeOps < MAX_CONCURRENT_OPS && queue.length > 0) {
+        const entry = queue.shift();
+        saveQueue(queue);
+
+        const guild = client.guilds.cache.get(entry.guildId);
+        if (!guild) {
+            console.log(`[Queue] Guild ${entry.guildId} not in cache — skipping`);
+            continue;
+        }
+
+        let statusChannel = null, statusCategory = null;
+        if (entry.statusChannelId)
+            statusChannel = await client.channels.fetch(entry.statusChannelId).catch(() => null);
+        if (entry.statusCategoryId)
+            statusCategory = guild.channels.cache.get(entry.statusCategoryId) || null;
+
+        if (statusChannel) {
+            await statusChannel.send({
+                embeds: [new EmbedBuilder()
+                    .setTitle('🚀 Starting Now!')
+                    .setColor(0x00FF00)
+                    .setDescription(`Your **${entry.type === 'copy' ? 'copy' : 'clean'}** operation has left the queue and is starting.`)
+                    .setTimestamp()
+                ]
+            }).catch(() => {});
+        }
+
+        if (entry.type === 'copy') {
+            const saves = loadSaves();
+            const save  = saves[entry.sourceServerId];
+            if (!save) {
+                if (statusChannel) await statusChannel.send('❌ The source server save could not be found. Operation cancelled.').catch(() => {});
+                continue;
+            }
+            savePendingCopy(entry.guildId, entry.userId, entry.sourceServerId, entry.statusChannelId, entry.statusCategoryId);
+            _executeCopy(guild, entry.userId, save, statusChannel, statusCategory).catch(e =>
+                console.error(`[Queue] Copy failed for "${guild.name}": ${e.message}`)
+            );
+        } else {
+            savePendingClean(entry.guildId, entry.userId, entry.statusChannelId, entry.statusCategoryId);
+            _executeClean(guild, entry.userId, statusChannel, statusCategory).catch(e =>
+                console.error(`[Queue] Clean failed for "${guild.name}": ${e.message}`)
+            );
+        }
     }
 }
 
@@ -279,6 +373,36 @@ client.once('clientReady', async () => {
         } catch (_) {}
     }
 
+    // Restore queue: notify queued users the bot restarted and they're still in line
+    const queue = loadQueue();
+    const queuedChannelIds = new Set();
+    for (let i = 0; i < queue.length; i++) {
+        const entry = queue[i];
+        queuedChannelIds.add(entry.statusChannelId);
+        try {
+            if (!entry.statusChannelId) continue;
+            const ch = await client.channels.fetch(entry.statusChannelId).catch(() => null);
+            if (!ch) continue;
+            const position = i + 1;
+            const eta = getQueueETA(position);
+            await ch.send({
+                embeds: [new EmbedBuilder()
+                    .setTitle('🔄 Bot Restarted — Still in Queue')
+                    .setColor(0x5865F2)
+                    .setDescription('The bot restarted but your operation is still in the queue. It will start automatically when a slot opens.')
+                    .addFields(
+                        { name: '📋 Queue Position', value: `**#${position}**`, inline: true },
+                        { name: '⏱️ Estimated Wait',  value: `**~${eta} minute${eta !== 1 ? 's' : ''}**`, inline: true }
+                    )
+                    .setTimestamp()
+                ]
+            }).catch(() => {});
+        } catch (_) {}
+    }
+    console.log(`[Queue] ${queue.length} queued operation(s) restored after restart`);
+    // Fill any available slots from the queue now (resumed ops count toward _activeOps)
+    processQueue().catch(e => console.error(`[Queue] Startup processQueue error: ${e.message}`));
+
     // Add custom terminal commands
     terminal.addCommand('saves', {
         description: 'List all saved server configurations',
@@ -423,6 +547,9 @@ client.on('interactionCreate', async (interaction) => {
             break;
         case 'cleanchannels':
             await handleCleanChannels(interaction);
+            break;
+        case 'stop':
+            await handleStop(interaction);
             break;
     }
     const _cmdMs = Date.now() - _cmdStart;
@@ -1081,6 +1208,9 @@ async function handleCopy(interaction) {
 }
 
 async function _executeCopy(guild, userId, save, statusChannel, statusCategory) {
+    _activeOps++;
+    _opStartTimes.set(guild.id, Date.now());
+    console.log(`[Ops] Copy started for "${guild.name}". Active ops: ${_activeOps}/${MAX_CONCURRENT_OPS}`);
     const closeButton = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('close_status_channel').setLabel('🗑️ Close this channel').setStyle(ButtonStyle.Danger)
     );
@@ -1132,6 +1262,7 @@ async function _executeCopy(guild, userId, save, statusChannel, statusCategory) 
         await statusChannel.send(`${success ? '✓' : '✗'} ${action}`).catch(() => {});
     };
 
+    let cancelled = false;
     try {
         // Send/resend initial progress embed (handles fresh start and resume)
         const initialEmbed = new EmbedBuilder()
@@ -1148,6 +1279,7 @@ async function _executeCopy(guild, userId, save, statusChannel, statusCategory) 
         let deletedChannels = 0;
         const totalChannels = channels.size;
         for (const [, channel] of channels) {
+            if (_cancelledOps.has(guild.id)) { cancelled = true; break; }
             await updateProgressEmbed(0, 'Deleting Channels', deletedChannels, totalChannels, `Deleting #${channel.name}`);
             try {
                 await safeCall(() => channel.delete());
@@ -1161,6 +1293,8 @@ async function _executeCopy(guild, userId, save, statusChannel, statusCategory) 
         }
         await updateProgressEmbed(0, 'Deleting Channels', totalChannels, totalChannels, 'Complete');
 
+        if (cancelled) throw Object.assign(new Error('cancelled'), { _cancelled: true });
+
         // Step 2: Delete all roles
         const roles = guild.roles.cache.filter(r =>
             r.id !== guild.id && !r.managed && r.position < guild.members.me.roles.highest.position
@@ -1168,6 +1302,7 @@ async function _executeCopy(guild, userId, save, statusChannel, statusCategory) 
         let deletedRoles = 0;
         const totalRoles = roles.size;
         for (const [, role] of roles) {
+            if (_cancelledOps.has(guild.id)) { cancelled = true; break; }
             await updateProgressEmbed(1, 'Deleting Roles', deletedRoles, totalRoles, `Deleting @${role.name}`);
             try {
                 await safeCall(() => role.delete());
@@ -1181,12 +1316,15 @@ async function _executeCopy(guild, userId, save, statusChannel, statusCategory) 
         }
         await updateProgressEmbed(1, 'Deleting Roles', totalRoles, totalRoles, 'Complete');
 
+        if (cancelled) throw Object.assign(new Error('cancelled'), { _cancelled: true });
+
         // Step 3: Create roles (skip any that already exist — resume safety)
         const roleMap = new Map();
         const roleErrors = [];
         const sortedRoles = [...save.roles].sort((a, b) => b.position - a.position);
         let rolesCreated = 0;
         for (const roleData of sortedRoles) {
+            if (_cancelledOps.has(guild.id)) { cancelled = true; break; }
             await updateProgressEmbed(2, 'Creating Roles', rolesCreated, save.roles.length, `Creating @${roleData.name}`);
             const existing = guild.roles.cache.find(r => r.name === roleData.name);
             if (existing) { roleMap.set(roleData.name, existing); rolesCreated++; continue; }
@@ -1224,11 +1362,14 @@ async function _executeCopy(guild, userId, save, statusChannel, statusCategory) 
             console.log('Could not reorder roles:', e.message);
         }
 
+        if (cancelled) throw Object.assign(new Error('cancelled'), { _cancelled: true });
+
         // Step 4: Create categories (skip existing — resume safety)
         const categoryMap = new Map();
         const categoryErrors = [];
         let categoriesCreated = 0;
         for (const catData of save.categories) {
+            if (_cancelledOps.has(guild.id)) { cancelled = true; break; }
             await updateProgressEmbed(3, 'Creating Categories', categoriesCreated, save.categories.length, `Creating ${catData.name}`);
             const existing = guild.channels.cache.find(c => c.type === ChannelType.GuildCategory && c.name === catData.name);
             if (existing) { categoryMap.set(catData.name, existing); categoriesCreated++; continue; }
@@ -1251,10 +1392,13 @@ async function _executeCopy(guild, userId, save, statusChannel, statusCategory) 
         }
         await updateProgressEmbed(3, 'Creating Categories', save.categories.length, save.categories.length, 'Complete');
 
+        if (cancelled) throw Object.assign(new Error('cancelled'), { _cancelled: true });
+
         // Step 5: Create channels (skip existing in same parent — resume safety)
         let channelsCreated = 0;
         const channelErrors = [];
         for (const channelData of save.channels) {
+            if (_cancelledOps.has(guild.id)) { cancelled = true; break; }
             await updateProgressEmbed(4, 'Creating Channels', channelsCreated, save.channels.length, `Creating #${channelData.name}`);
             const expectedParent = channelData.parentName ? categoryMap.get(channelData.parentName) : null;
             const existing = guild.channels.cache.find(c =>
@@ -1329,50 +1473,102 @@ async function _executeCopy(guild, userId, save, statusChannel, statusCategory) 
         }
 
     } catch (error) {
-        console.error('CUBSOFTWARE_ERROR_CLEANME_COPY_ERROR_155 — Copy error:', error);
-        if (statusChannel) {
-            const errorEmbed = new EmbedBuilder()
-                .setTitle('❌ Error During Copy')
-                .setColor(0xFF0000)
-                .setDescription(`An error occurred during the copy process:\n\`\`\`${error.message}\`\`\`\n\nSome items may have been created. Click the button to close this channel.`)
+        if (error._cancelled || cancelled) {
+            console.log(`[Ops] Copy cancelled for "${guild.name}"`);
+            const cancelEmbed = new EmbedBuilder()
+                .setTitle('🛑 Operation Cancelled')
+                .setColor(0xFF4444)
+                .setDescription('The copy operation was cancelled. Partial changes may have been applied.')
                 .setTimestamp();
-            await statusChannel.send({ content: `<@${userId}>`, embeds: [errorEmbed], components: [closeButton] }).catch(() => {});
+            if (statusChannel) await statusChannel.send({ content: `<@${userId}>`, embeds: [cancelEmbed], components: [closeButton] }).catch(() => {});
+        } else {
+            console.error('CUBSOFTWARE_ERROR_CLEANME_COPY_ERROR_155 — Copy error:', error);
+            if (statusChannel) {
+                const errorEmbed = new EmbedBuilder()
+                    .setTitle('❌ Error During Copy')
+                    .setColor(0xFF0000)
+                    .setDescription(`An error occurred during the copy process:\n\`\`\`${error.message}\`\`\`\n\nSome items may have been created. Click the button to close this channel.`)
+                    .setTimestamp();
+                await statusChannel.send({ content: `<@${userId}>`, embeds: [errorEmbed], components: [closeButton] }).catch(() => {});
+            }
         }
     } finally {
+        _cancelledOps.delete(guild.id);
         removePendingCopy(guild.id);
+        _activeOps = Math.max(0, _activeOps - 1);
+        _opStartTimes.delete(guild.id);
+        console.log(`[Ops] Copy finished for "${guild.name}". Active ops: ${_activeOps}/${MAX_CONCURRENT_OPS}`);
+        processQueue().catch(e => console.error(`[Queue] processQueue error after copy: ${e.message}`));
     }
 }
 
 async function performCopy(interaction, sourceServerId) {
-    const saves = loadSaves();
-    const save = saves[sourceServerId];
-    const guild = interaction.guild;
+    const guild  = interaction.guild;
     const userId = interaction.user.id;
+
+    // Prevent duplicate: guild already has active op
+    const activeCopies = loadPendingCopies();
+    const activeCleans = loadPendingCleans();
+    if (activeCopies[guild.id] || activeCleans[guild.id]) {
+        return interaction.followUp({ content: '⚠️ This server already has a CleanMe operation in progress.', flags: MessageFlags.Ephemeral });
+    }
+    // Prevent duplicate: guild already in queue
+    const queue = loadQueue();
+    const alreadyQueued = queue.find(e => e.guildId === guild.id);
+    if (alreadyQueued) {
+        const pos = queue.indexOf(alreadyQueued) + 1;
+        const eta = getQueueETA(pos);
+        return interaction.followUp({ content: `⏳ This server is already in the queue at **position #${pos}** (~${eta} min wait).`, flags: MessageFlags.Ephemeral });
+    }
+
+    const saves = loadSaves();
+    const save  = saves[sourceServerId];
 
     const permCheck = checkBotPermissions(guild);
     if (!permCheck.canProceed) {
-        await interaction.editReply({
-            content: '❌ **Error:** Bot permissions have changed. Please ensure the bot has **Manage Channels**, **Manage Roles**, and **Manage Server** permissions and its role is at the top of the role list, then try again.',
-            embeds: [], components: []
-        });
+        await interaction.editReply({ content: '❌ **Error:** Bot permissions have changed. Please ensure the bot has **Manage Channels**, **Manage Roles**, and **Manage Server** permissions and its role is at the top of the role list, then try again.', embeds: [], components: [] });
         return;
     }
 
+    // Create the status channel (needed whether queued or running immediately)
     await interaction.editReply({ content: '🔄 Setting up... Creating status channel.', embeds: [], components: [] });
-
-    let statusCategory = null;
-    let statusChannel = null;
+    let statusCategory = null, statusChannel = null;
     try {
-        statusCategory = await guild.channels.create({ name: '⚙️ CUBSOFTWARE', type: ChannelType.GuildCategory, reason: 'CleanMe Bot - Temporary status channel' });
-        statusChannel = await guild.channels.create({ name: 'copy-status', type: ChannelType.GuildText, parent: statusCategory, reason: 'CleanMe Bot - Temporary status channel' });
+        statusCategory = await guild.channels.create({ name: '⚙️ CUBSOFTWARE', type: ChannelType.GuildCategory, reason: 'CleanMe Bot - Copy status' });
+        statusChannel  = await guild.channels.create({ name: 'copy-status', type: ChannelType.GuildText, parent: statusCategory, reason: 'CleanMe Bot - Copy status' });
         saveStatusChannel(statusChannel.id, statusCategory.id);
-        savePendingCopy(guild.id, userId, sourceServerId, statusChannel.id, statusCategory.id);
     } catch (e) {
         console.error('CUBSOFTWARE_ERROR_CLEANME_STATUS_CHANNEL_154 — Failed to create status channel:', e);
         await interaction.editReply({ content: `❌ **Error:** Could not create status channel. Make sure the bot has permission to create channels.\nError: ${friendlyError(e)}`, embeds: [], components: [] });
         return;
     }
 
+    if (_activeOps >= MAX_CONCURRENT_OPS) {
+        // At capacity — queue the operation
+        queue.push({ guildId: guild.id, userId, type: 'copy', sourceServerId, queuedAt: Date.now(), statusChannelId: statusChannel.id, statusCategoryId: statusCategory.id });
+        saveQueue(queue);
+        const position = queue.length;
+        const eta      = getQueueETA(position);
+
+        await statusChannel.send({
+            embeds: [new EmbedBuilder()
+                .setTitle('⏳ You\'re in the Queue')
+                .setColor(0x5865F2)
+                .setDescription('CleanMe is at full capacity. Your copy operation has been queued and will start automatically when a slot opens.')
+                .addFields(
+                    { name: '📋 Queue Position', value: `**#${position}**`, inline: true },
+                    { name: '⏱️ Estimated Wait',  value: `**~${eta} minute${eta !== 1 ? 's' : ''}**`, inline: true }
+                )
+                .setFooter({ text: 'A message will appear here when your operation starts.' })
+                .setTimestamp()
+            ]
+        }).catch(() => {});
+
+        return interaction.editReply({ content: `⏳ CleanMe is at full capacity. You've been added to the queue at **position #${position}** with an estimated wait of **~${eta} minute${eta !== 1 ? 's' : ''}**. Follow updates in <#${statusChannel.id}>.`, embeds: [], components: [] });
+    }
+
+    // Slot available — start immediately
+    savePendingCopy(guild.id, userId, sourceServerId, statusChannel.id, statusCategory.id);
     await _executeCopy(guild, userId, save, statusChannel, statusCategory);
 }
 
@@ -1438,10 +1634,14 @@ async function handleClean(interaction) {
 }
 
 async function _executeClean(guild, userId, statusChannel, statusCategory, startTime = Date.now()) {
+    _activeOps++;
+    _opStartTimes.set(guild.id, Date.now());
+    console.log(`[Ops] Clean started for "${guild.name}". Active ops: ${_activeOps}/${MAX_CONCURRENT_OPS}`);
     const closeButton = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('close_status_channel').setLabel('🗑️ Close this channel').setStyle(ButtonStyle.Danger)
     );
 
+    let cancelled = false;
     const failedChannels = [];
     const failedRoles = [];
     const skippedRoles = [];
@@ -1503,6 +1703,7 @@ async function _executeClean(guild, userId, statusChannel, statusCategory, start
         console.log(`[Clean] Starting channel removal on "${guild.name}" — ${totalChannels} channels`);
 
         for (const [, channel] of channels) {
+            if (_cancelledOps.has(guild.id)) { cancelled = true; break; }
             await updateProgressEmbed(0, deletedChannels, totalChannels, `Deleting #${channel.name}`);
             try {
                 await channel.delete();
@@ -1547,7 +1748,10 @@ async function _executeClean(guild, userId, statusChannel, statusCategory, start
 
         console.log(`[Clean] Starting role removal on "${guild.name}" — ${totalRoles} roles`);
 
+        if (cancelled) throw Object.assign(new Error('cancelled'), { _cancelled: true });
+
         for (const [, role] of roles) {
+            if (_cancelledOps.has(guild.id)) { cancelled = true; break; }
             await updateProgressEmbed(1, deletedRoles, totalRoles, `Deleting @${role.name}`);
             try {
                 await role.delete();
@@ -1656,74 +1860,171 @@ async function _executeClean(guild, userId, statusChannel, statusCategory, start
         }
 
     } catch (error) {
-        console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Clean failed in "${guild.name}": ${error.message}`);
-
-        const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-
-        const errorEmbed = new EmbedBuilder()
-            .setTitle('❌ Clean Failed')
-            .setColor(0xFF0000)
-            .setDescription(`Something went wrong during the clean after **${duration}s**:\n\`\`\`${error.message}\`\`\``)
-            .addFields(
-                {
-                    name: 'Progress Before Failure',
-                    value: `• ${deletedChannels} channel(s) deleted\n• ${deletedRoles} role(s) deleted`,
-                    inline: false
-                },
-                {
-                    name: 'What to do',
-                    value: '• Make sure the bot has **Administrator** permission\n• Move the bot\'s role to the **top of the role list**\n• Try running `/clean` again',
-                    inline: false
-                }
-            )
-            .setTimestamp();
-
-        if (statusChannel) {
-            await statusChannel.send({ content: `<@${userId}>`, embeds: [errorEmbed], components: [closeButton] }).catch(() => {});
+        if (error._cancelled || cancelled) {
+            console.log(`[Ops] Clean cancelled for "${guild.name}"`);
+            const cancelEmbed = new EmbedBuilder()
+                .setTitle('🛑 Operation Cancelled')
+                .setColor(0xFF4444)
+                .setDescription('The clean operation was cancelled. Partial deletions may have occurred.')
+                .setTimestamp();
+            if (statusChannel) await statusChannel.send({ content: `<@${userId}>`, embeds: [cancelEmbed], components: [closeButton] }).catch(() => {});
         } else {
-            try {
-                const user = await client.users.fetch(userId);
-                errorEmbed.setDescription(`Something went wrong while cleaning **${guild.name}** after **${duration}s**:\n\`\`\`${error.message}\`\`\``);
-                await user.send({ embeds: [errorEmbed] });
-            } catch (e) {
-                console.error(`Could not notify user about clean failure: ${e.message}`);
+            console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Clean failed in "${guild.name}": ${error.message}`);
+
+            const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+
+            const errorEmbed = new EmbedBuilder()
+                .setTitle('❌ Clean Failed')
+                .setColor(0xFF0000)
+                .setDescription(`Something went wrong during the clean after **${duration}s**:\n\`\`\`${error.message}\`\`\``)
+                .addFields(
+                    {
+                        name: 'Progress Before Failure',
+                        value: `• ${deletedChannels} channel(s) deleted\n• ${deletedRoles} role(s) deleted`,
+                        inline: false
+                    },
+                    {
+                        name: 'What to do',
+                        value: '• Make sure the bot has **Administrator** permission\n• Move the bot\'s role to the **top of the role list**\n• Try running `/clean` again',
+                        inline: false
+                    }
+                )
+                .setTimestamp();
+
+            if (statusChannel) {
+                await statusChannel.send({ content: `<@${userId}>`, embeds: [errorEmbed], components: [closeButton] }).catch(() => {});
+            } else {
+                try {
+                    const user = await client.users.fetch(userId);
+                    errorEmbed.setDescription(`Something went wrong while cleaning **${guild.name}** after **${duration}s**:\n\`\`\`${error.message}\`\`\``);
+                    await user.send({ embeds: [errorEmbed] });
+                } catch (e) {
+                    console.error(`Could not notify user about clean failure: ${e.message}`);
+                }
             }
         }
     } finally {
+        _cancelledOps.delete(guild.id);
         removePendingClean(guild.id);
+        _activeOps = Math.max(0, _activeOps - 1);
+        _opStartTimes.delete(guild.id);
+        console.log(`[Ops] Clean finished for "${guild.name}". Active ops: ${_activeOps}/${MAX_CONCURRENT_OPS}`);
+        processQueue().catch(e => console.error(`[Queue] processQueue error after clean: ${e.message}`));
     }
 }
 
-async function performClean(interaction) {
+async function handleStop(interaction) {
     const guild = interaction.guild;
-    const userId = interaction.user.id;
-    const startTime = Date.now();
+    if (!guild) return interaction.reply({ content: '❌ This command can only be used in a server.', flags: MessageFlags.Ephemeral });
 
-    // Create status channel and category FIRST so they survive the deletion
-    let statusCategory = null;
-    let statusChannel = null;
+    const isActive  = _opStartTimes.has(guild.id);
+    const queue     = loadQueue();
+    const queueIdx  = queue.findIndex(e => e.guildId === guild.id);
+    const inQueue   = queueIdx !== -1;
 
-    try { await interaction.editReply({ content: '🔄 Setting up status channel...', embeds: [], components: [] }); } catch (_) {}
-
-    try {
-        statusCategory = await guild.channels.create({
-            name: '⚙️ CUBSOFTWARE',
-            type: ChannelType.GuildCategory,
-            reason: 'CleanMe Bot - Clean status'
+    if (!isActive && !inQueue) {
+        return interaction.reply({
+            content: '❌ There is no active operation or queue entry for this server.',
+            flags: MessageFlags.Ephemeral
         });
-        statusChannel = await guild.channels.create({
-            name: 'cleanme-status',
-            type: ChannelType.GuildText,
-            parent: statusCategory,
-            reason: 'CleanMe Bot - Clean status'
-        });
-        saveStatusChannel(statusChannel.id, statusCategory?.id ?? null);
-        savePendingClean(guild.id, userId, statusChannel.id, statusCategory?.id ?? null);
-        await statusChannel.send(`<@${userId}> 🗑️ **Server clean started.** All other channels and roles will be deleted. Click the button on the completion message to close this channel when you're done.`);
-    } catch (setupErr) {
-        console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — [Error] Could not create status channel in "${guild.name}": ${setupErr.message}`);
     }
 
+    if (inQueue && !isActive) {
+        // Remove from queue and notify their status channel
+        const entry = queue[queueIdx];
+        queue.splice(queueIdx, 1);
+        saveQueue(queue);
+
+        if (entry.statusChannelId) {
+            const statusChannel = await client.channels.fetch(entry.statusChannelId).catch(() => null);
+            if (statusChannel) {
+                const cancelEmbed = new EmbedBuilder()
+                    .setTitle('🛑 Removed from Queue')
+                    .setColor(0xFF4444)
+                    .setDescription('Your operation was removed from the queue by a server admin.')
+                    .setTimestamp();
+                const closeButton = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('close_status_channel').setLabel('🗑️ Close this channel').setStyle(ButtonStyle.Danger)
+                );
+                await statusChannel.send({ embeds: [cancelEmbed], components: [closeButton] }).catch(() => {});
+            }
+        }
+
+        return interaction.reply({
+            content: '✅ Your server has been removed from the queue.',
+            flags: MessageFlags.Ephemeral
+        });
+    }
+
+    // Active operation — signal cancellation
+    _cancelledOps.add(guild.id);
+    return interaction.reply({
+        content: '🛑 Cancellation signal sent. The operation will stop after the current step completes.',
+        flags: MessageFlags.Ephemeral
+    });
+}
+
+async function performClean(interaction) {
+    const guild     = interaction.guild;
+    const userId    = interaction.user.id;
+    const startTime = Date.now();
+
+    // Prevent duplicate: guild already has active op
+    const activeCopies = loadPendingCopies();
+    const activeCleans = loadPendingCleans();
+    if (activeCopies[guild.id] || activeCleans[guild.id]) {
+        return interaction.followUp({ content: '⚠️ This server already has a CleanMe operation in progress.', flags: MessageFlags.Ephemeral });
+    }
+    // Prevent duplicate: guild already in queue
+    const queue = loadQueue();
+    const alreadyQueued = queue.find(e => e.guildId === guild.id);
+    if (alreadyQueued) {
+        const pos = queue.indexOf(alreadyQueued) + 1;
+        const eta = getQueueETA(pos);
+        return interaction.followUp({ content: `⏳ This server is already in the queue at **position #${pos}** (~${eta} min wait).`, flags: MessageFlags.Ephemeral });
+    }
+
+    // Create status channel FIRST — it must survive the deletion phase
+    try { await interaction.editReply({ content: '🔄 Setting up status channel...', embeds: [], components: [] }); } catch (_) {}
+
+    let statusCategory = null, statusChannel = null;
+    try {
+        statusCategory = await guild.channels.create({ name: '⚙️ CUBSOFTWARE', type: ChannelType.GuildCategory, reason: 'CleanMe Bot - Clean status' });
+        statusChannel  = await guild.channels.create({ name: 'cleanme-status', type: ChannelType.GuildText, parent: statusCategory, reason: 'CleanMe Bot - Clean status' });
+        saveStatusChannel(statusChannel.id, statusCategory?.id ?? null);
+    } catch (setupErr) {
+        console.error(`CUBSOFTWARE_ERROR_CLEANME_CLEAN_FAILED_156 — Could not create status channel in "${guild.name}": ${setupErr.message}`);
+    }
+
+    if (_activeOps >= MAX_CONCURRENT_OPS) {
+        // At capacity — queue the operation
+        queue.push({ guildId: guild.id, userId, type: 'clean', queuedAt: Date.now(), statusChannelId: statusChannel?.id ?? null, statusCategoryId: statusCategory?.id ?? null });
+        saveQueue(queue);
+        const position = queue.length;
+        const eta      = getQueueETA(position);
+
+        if (statusChannel) {
+            await statusChannel.send({
+                embeds: [new EmbedBuilder()
+                    .setTitle('⏳ You\'re in the Queue')
+                    .setColor(0x5865F2)
+                    .setDescription('CleanMe is at full capacity. Your clean operation has been queued and will start automatically when a slot opens.')
+                    .addFields(
+                        { name: '📋 Queue Position', value: `**#${position}**`, inline: true },
+                        { name: '⏱️ Estimated Wait',  value: `**~${eta} minute${eta !== 1 ? 's' : ''}**`, inline: true }
+                    )
+                    .setFooter({ text: 'A message will appear here when your operation starts.' })
+                    .setTimestamp()
+                ]
+            }).catch(() => {});
+        }
+
+        return interaction.editReply({ content: `⏳ CleanMe is at full capacity. You've been added to the queue at **position #${position}** with an estimated wait of **~${eta} minute${eta !== 1 ? 's' : ''}**${statusChannel ? `. Follow updates in <#${statusChannel.id}>` : ''}.`, embeds: [], components: [] });
+    }
+
+    // Slot available — start immediately
+    savePendingClean(guild.id, userId, statusChannel?.id ?? null, statusCategory?.id ?? null);
+    if (statusChannel) await statusChannel.send(`<@${userId}> 🗑️ **Server clean started.** All other channels and roles will be deleted. Click the button on the completion message to close this channel when you're done.`);
     await _executeClean(guild, userId, statusChannel, statusCategory, startTime);
 }
 

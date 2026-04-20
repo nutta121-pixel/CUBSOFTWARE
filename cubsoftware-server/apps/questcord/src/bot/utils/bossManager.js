@@ -192,76 +192,96 @@ class BossManager {
         };
     }
 
+    static _isTransientNetworkError(err) {
+        const code = err?.code || '';
+        return code === 'UND_ERR_CONNECT_TIMEOUT' || code === 'ECONNRESET' || code === 'ETIMEDOUT' || code === 'ENOTFOUND';
+    }
+
     static async updateBossNotification() {
-        try {
-            const boss = BossModel.getActiveBossWithAnnouncement();
-            if (!boss) return;
-
-            const channel = this.client.channels.cache.get(boss.announcement_channel_id);
-            if (!channel) return;
-
-            const message = await channel.messages.fetch(boss.announcement_message_id);
-            if (!message) return;
-
-            const { ServerModel: SM } = require('../../database/models');
-            const server = SM.findByDiscordId(boss.server_id);
-            if (!server) return;
-
-            const guild = this.client.guilds.cache.get(server.discord_id);
-            if (!guild) return;
-
-            const serverIcon = guild.iconURL({ size: 256, extension: 'png' }) || 'https://cdn.discordapp.com/embed/avatars/0.png';
-
-            const timeRemaining = boss.expires_at - Math.floor(Date.now() / 1000);
-            const minutesRemaining = Math.max(0, Math.round(timeRemaining / 60));
-            const healthPercent = Math.round((boss.health / boss.max_health) * 100);
-
-            const embed = new EmbedBuilder()
-                .setColor('#FF6B35')
-                .setAuthor({ name: '╭───𒌋𒀖 「🜲・Boss Notification」' })
-                .setTitle(`🔥 NEW BOSS ALERT 🔥`)
-                .setDescription(`⚔️ **${boss.boss_name} has spawned!**\nA ${boss.boss_type} boss has emerged and threatens the realm!`)
-                .addFields(
-                    {
-                        name: '💀 Boss Info',
-                        value: `**HP:** ${boss.health.toLocaleString()} / ${boss.max_health.toLocaleString()} (${healthPercent}%)\n**Type:** ${boss.boss_type}`,
-                        inline: false
-                    },
-                    {
-                        name: '📍 Location',
-                        value: `**${server.name}**`,
-                        inline: true
-                    },
-                    {
-                        name: '🌐 Visit Website',
-                        value: '[questcord.fun](https://questcord.fun)',
-                        inline: true
-                    },
-                    {
-                        name: '⏰ Time Left',
-                        value: `${minutesRemaining}m`,
-                        inline: true
-                    },
-                    {
-                        name: '⚔️ How to Fight',
-                        value: `• Join the server where the boss spawned\n• Use \`/boss attack\` to deal damage\n• Work together with other players!\n• Defeat it for valuable rewards`,
-                        inline: false
-                    },
-                    {
-                        name: '🚀 How to Travel',
-                        value: `Use the \`/travel\` command with the QuestCord bot to see available destinations and travel to **${server.name}**!`,
-                        inline: false
-                    }
-                )
-                .setThumbnail(serverIcon)
-                .setFooter({ text: `Boss spawned on server • ${server.name}` })
-                .setTimestamp();
-
-            await message.edit({ embeds: [embed] });
-            console.log(`[Boss] Notification updated for ${boss.boss_name}`);
-        } catch (error) {
-            console.error('CUBSOFTWARE_ERROR_QUESTCORD_BOSS_MANAGER_132 — Error updating boss notification:', error);
+        const maxAttempts = 3;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                await this._updateBossNotificationOnce();
+                return;
+            } catch (error) {
+                if (this._isTransientNetworkError(error) && attempt < maxAttempts) {
+                    const delay = attempt * 5000;
+                    console.warn(`[Boss] Network timeout on notification update, retrying in ${delay / 1000}s (attempt ${attempt}/${maxAttempts})`);
+                    await new Promise(r => setTimeout(r, delay));
+                } else {
+                    console.error('CUBSOFTWARE_ERROR_QUESTCORD_BOSS_MANAGER_132 — Error updating boss notification:', error);
+                    return;
+                }
+            }
         }
+    }
+
+    static async _updateBossNotificationOnce() {
+        const boss = BossModel.getActiveBossWithAnnouncement();
+        if (!boss) return;
+
+        const channel = this.client.channels.cache.get(boss.announcement_channel_id);
+        if (!channel) return;
+
+        const message = await channel.messages.fetch(boss.announcement_message_id);
+        if (!message) return;
+
+        const { ServerModel: SM } = require('../../database/models');
+        const server = SM.findByDiscordId(boss.server_id);
+        if (!server) return;
+
+        const guild = this.client.guilds.cache.get(server.discord_id);
+        if (!guild) return;
+
+        const serverIcon = guild.iconURL({ size: 256, extension: 'png' }) || 'https://cdn.discordapp.com/embed/avatars/0.png';
+
+        const timeRemaining = boss.expires_at - Math.floor(Date.now() / 1000);
+        const minutesRemaining = Math.max(0, Math.round(timeRemaining / 60));
+        const healthPercent = Math.round((boss.health / boss.max_health) * 100);
+
+        const embed = new EmbedBuilder()
+            .setColor('#FF6B35')
+            .setAuthor({ name: '╭───𒌋𒀖 「🜲・Boss Notification」' })
+            .setTitle(`🔥 NEW BOSS ALERT 🔥`)
+            .setDescription(`⚔️ **${boss.boss_name} has spawned!**\nA ${boss.boss_type} boss has emerged and threatens the realm!`)
+            .addFields(
+                {
+                    name: '💀 Boss Info',
+                    value: `**HP:** ${boss.health.toLocaleString()} / ${boss.max_health.toLocaleString()} (${healthPercent}%)\n**Type:** ${boss.boss_type}`,
+                    inline: false
+                },
+                {
+                    name: '📍 Location',
+                    value: `**${server.name}**`,
+                    inline: true
+                },
+                {
+                    name: '🌐 Visit Website',
+                    value: '[questcord.fun](https://questcord.fun)',
+                    inline: true
+                },
+                {
+                    name: '⏰ Time Left',
+                    value: `${minutesRemaining}m`,
+                    inline: true
+                },
+                {
+                    name: '⚔️ How to Fight',
+                    value: `• Join the server where the boss spawned\n• Use \`/boss attack\` to deal damage\n• Work together with other players!\n• Defeat it for valuable rewards`,
+                    inline: false
+                },
+                {
+                    name: '🚀 How to Travel',
+                    value: `Use the \`/travel\` command with the QuestCord bot to see available destinations and travel to **${server.name}**!`,
+                    inline: false
+                }
+            )
+            .setThumbnail(serverIcon)
+            .setFooter({ text: `Boss spawned on server • ${server.name}` })
+            .setTimestamp();
+
+        await message.edit({ embeds: [embed] });
+        console.log(`[Boss] Notification updated for ${boss.boss_name}`);
     }
 
     static async announceBossDefeat(bossId) {

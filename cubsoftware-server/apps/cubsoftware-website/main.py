@@ -1080,50 +1080,65 @@ def bmac_supporters():
     } for s in supporters]
     return jsonify(result)
 
-# ── Space background — Discord member names for ship labels ──────────────
-_space_members_cache = {'data': [], 'ts': 0}
-_SPACE_MEMBERS_TTL   = 300   # refresh every 5 minutes
+# ── Shared raw member cache — one fetch serves both space-members and community-members ──
 _SPACE_GUILD_ID      = '1284593395188367502'
 _SPACE_ROLE_ID       = '1284601218571829370'
+_RAW_MEMBERS_TTL     = 300   # 5 minutes — shared by both derived endpoints
+_raw_members_cache   = {'data': [], 'ts': 0}
+_raw_members_lock    = __import__('threading').Lock()
+
+def _fetch_raw_members():
+    """Fetch every non-bot member of the main guild. Returns cached data if still fresh."""
+    global _raw_members_cache
+    now = time.time()
+    if now - _raw_members_cache['ts'] <= _RAW_MEMBERS_TTL:
+        return _raw_members_cache['data']
+    with _raw_members_lock:
+        # Re-check inside the lock to avoid duplicate fetches
+        if time.time() - _raw_members_cache['ts'] <= _RAW_MEMBERS_TTL:
+            return _raw_members_cache['data']
+        token = get_cub_protector_token()
+        if not token:
+            return _raw_members_cache['data']
+        try:
+            headers = {'Authorization': f'Bot {token}'}
+            all_members, after = [], None
+            while True:
+                url = f'https://discord.com/api/v10/guilds/{_SPACE_GUILD_ID}/members?limit=1000'
+                if after:
+                    url += f'&after={after}'
+                r = requests.get(url, headers=headers, timeout=10)
+                if r.status_code != 200:
+                    break
+                batch = r.json()
+                if not batch:
+                    break
+                for m in batch:
+                    if not m.get('user', {}).get('bot'):
+                        all_members.append(m)
+                if len(batch) < 1000:
+                    break
+                after = batch[-1]['user']['id']
+            if all_members:
+                _raw_members_cache['data'] = all_members
+                _raw_members_cache['ts'] = time.time()
+                app.logger.info(f'[Members] Raw cache refreshed: {len(all_members)} members')
+        except Exception as e:
+            app.logger.warning(f'[Members] Raw fetch failed: {e}')
+    return _raw_members_cache['data']
 
 @app.route('/api/space-members')
 def space_members_api():
-    """Return {name, joinedAt} for guild members with the spaceship role."""
-    global _space_members_cache
-    now = time.time()
-    if now - _space_members_cache['ts'] > _SPACE_MEMBERS_TTL:
-        token = get_cub_protector_token()
-        if token:
-            try:
-                headers = {'Authorization': f'Bot {token}'}
-                members, after = [], None
-                while True:
-                    url = f'https://discord.com/api/v10/guilds/{_SPACE_GUILD_ID}/members?limit=1000'
-                    if after:
-                        url += f'&after={after}'
-                    r = requests.get(url, headers=headers, timeout=10)
-                    if r.status_code != 200:
-                        break
-                    batch = r.json()
-                    if not batch:
-                        break
-                    for m in batch:
-                        if _SPACE_ROLE_ID in m.get('roles', []):
-                            name = (m.get('nick') or
-                                    m.get('user', {}).get('global_name') or
-                                    m.get('user', {}).get('username', ''))
-                            if name:
-                                joined = m.get('joined_at', '')
-                                members.append({'name': name[:20], 'joinedAt': joined})
-                    if len(batch) < 1000:
-                        break
-                    after = batch[-1]['user']['id']
-                if members:
-                    _space_members_cache['data'] = members
-                    _space_members_cache['ts'] = now
-            except Exception as e:
-                app.logger.warning(f'[SpaceMembers] {e}')
-    resp = jsonify(_space_members_cache['data'])
+    """Return {name, joinedAt} for guild members with the Member role (space background)."""
+    raw = _fetch_raw_members()
+    members = []
+    for m in raw:
+        if _SPACE_ROLE_ID not in m.get('roles', []):
+            continue
+        name = (m.get('nick') or m.get('user', {}).get('global_name') or m.get('user', {}).get('username', ''))
+        if name:
+            members.append({'name': name[:20], 'joinedAt': m.get('joined_at', '')})
+    resp = jsonify(members)
     resp.headers['Cache-Control'] = 'public, max-age=300'
     return resp
 
@@ -1258,62 +1273,41 @@ _ROLE_META = {
 
 @app.route('/api/community-members')
 def community_members_api():
-    """Return [{name, avatar}] for members with the community role in the CUB SOFTWARE Discord."""
+    """Return [{name, avatar, topRole, topRoleClass}] for members with the community role."""
     import random as _random
     global _community_members_cache
     now = time.time()
     if now - _community_members_cache['ts'] > _COMMUNITY_MEMBERS_TTL:
-        token = get_cub_protector_token()
-        if token:
-            try:
-                headers = {'Authorization': f'Bot {token}'}
-                members, after = [], None
-                while True:
-                    url = f'https://discord.com/api/v10/guilds/{_SPACE_GUILD_ID}/members?limit=1000'
-                    if after:
-                        url += f'&after={after}'
-                    r = requests.get(url, headers=headers, timeout=10)
-                    if r.status_code != 200:
-                        break
-                    batch = r.json()
-                    if not batch:
-                        break
-                    for m in batch:
-                        user = m.get('user', {})
-                        if user.get('bot'):
-                            continue
-                        # Only include members with the community role
-                        if _SPACE_ROLE_ID not in m.get('roles', []):
-                            continue
-                        user_id = user.get('id', '')
-                        name = (m.get('nick') or user.get('global_name') or user.get('username', ''))
-                        if not name:
-                            continue
-                        guild_avatar = m.get('avatar')
-                        global_avatar = user.get('avatar')
-                        if guild_avatar:
-                            avatar = f'https://cdn.discordapp.com/guilds/{_SPACE_GUILD_ID}/users/{user_id}/avatars/{guild_avatar}.png?size=64'
-                        elif global_avatar:
-                            avatar = f'https://cdn.discordapp.com/avatars/{user_id}/{global_avatar}.png?size=64'
-                        else:
-                            idx = (int(user_id) >> 22) % 6 if user_id.isdigit() else 0
-                            avatar = f'https://cdn.discordapp.com/embed/avatars/{idx}.png'
-                        member_roles = m.get('roles', [])
-                        top_role_label = top_role_class = None
-                        for rid in _RANKED_ROLE_IDS:
-                            if rid in member_roles:
-                                top_role_label, top_role_class = _ROLE_META[rid]
-                                break
-                        members.append({'name': name[:24], 'avatar': avatar, 'joinedAt': m.get('joined_at', ''), 'topRole': top_role_label, 'topRoleClass': top_role_class})
-                    if len(batch) < 1000:
-                        break
-                    after = batch[-1]['user']['id']
-                if members:
-                    _random.shuffle(members)
-                    _community_members_cache['data'] = members
-                    _community_members_cache['ts'] = now
-            except Exception as e:
-                app.logger.warning(f'[CommunityMembers] {e}')
+        raw = _fetch_raw_members()
+        members = []
+        for m in raw:
+            user = m.get('user', {})
+            if _SPACE_ROLE_ID not in m.get('roles', []):
+                continue
+            user_id = user.get('id', '')
+            name = (m.get('nick') or user.get('global_name') or user.get('username', ''))
+            if not name:
+                continue
+            guild_avatar = m.get('avatar')
+            global_avatar = user.get('avatar')
+            if guild_avatar:
+                avatar = f'https://cdn.discordapp.com/guilds/{_SPACE_GUILD_ID}/users/{user_id}/avatars/{guild_avatar}.png?size=64'
+            elif global_avatar:
+                avatar = f'https://cdn.discordapp.com/avatars/{user_id}/{global_avatar}.png?size=64'
+            else:
+                idx = (int(user_id) >> 22) % 6 if user_id.isdigit() else 0
+                avatar = f'https://cdn.discordapp.com/embed/avatars/{idx}.png'
+            member_roles = m.get('roles', [])
+            top_role_label = top_role_class = None
+            for rid in _RANKED_ROLE_IDS:
+                if rid in member_roles:
+                    top_role_label, top_role_class = _ROLE_META[rid]
+                    break
+            members.append({'name': name[:24], 'avatar': avatar, 'joinedAt': m.get('joined_at', ''), 'topRole': top_role_label, 'topRoleClass': top_role_class})
+        if members:
+            _random.shuffle(members)
+            _community_members_cache['data'] = members
+            _community_members_cache['ts'] = now
     resp = jsonify(_community_members_cache['data'])
     resp.headers['Cache-Control'] = 'no-cache'
     return resp

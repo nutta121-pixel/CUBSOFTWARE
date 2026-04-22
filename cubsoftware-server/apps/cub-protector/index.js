@@ -7656,7 +7656,7 @@ client.on('interactionCreate', async (interaction) => {
     if (commandName === 'barrel-roll') {
         if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
         const secret     = process.env.BARREL_ROLL_SECRET || '';
-        const websiteUrl = process.env.WEBSITE_INTERNAL_URL || 'http://127.0.0.1:5000';
+        const websiteUrl = process.env.WEBSITE_INTERNAL_URL || 'http://127.0.0.1:3000';
         if (!secret) return interaction.reply({ content: '❌ `BARREL_ROLL_SECRET` not set in bot env.', flags: MessageFlags.Ephemeral });
         await interaction.deferReply();
         try {

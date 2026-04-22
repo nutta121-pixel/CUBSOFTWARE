@@ -7252,6 +7252,8 @@ _CSRF_EXEMPT_PREFIXES = (
     '/overlays/source/',
     '/overlays/alerts/',
     '/api/trigger-barrel-roll',
+    '/api/pm2/',
+    '/api/admin/',
 )
 
 @app.before_request

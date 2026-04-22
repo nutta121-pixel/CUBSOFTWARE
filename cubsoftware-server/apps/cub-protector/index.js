@@ -1880,6 +1880,10 @@ const commands = [
         .setName('barrel-roll')
         .setDescription('Trigger a barrel roll on all rockets on the website (Bot Owners only)'),
 
+    new SlashCommandBuilder()
+        .setName('blood-moon')
+        .setDescription('Trigger a blood moon on the website (Bot Owners only)'),
+
 ];
 
 // ============================================================
@@ -7653,15 +7657,17 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 
-    if (commandName === 'barrel-roll') {
+    if (commandName === 'barrel-roll' || commandName === 'blood-moon') {
         if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
         const secret     = process.env.BARREL_ROLL_SECRET || '';
         const websiteUrl = process.env.WEBSITE_INTERNAL_URL || 'http://127.0.0.1:3000';
         if (!secret) return interaction.reply({ content: '❌ `BARREL_ROLL_SECRET` not set in bot env.', flags: MessageFlags.Ephemeral });
         await interaction.deferReply();
+        const isBloodMoon = commandName === 'blood-moon';
+        const apiPath = isBloodMoon ? '/api/trigger-blood-moon' : '/api/trigger-barrel-roll';
         try {
             const http = require('http');
-            const url  = new URL('/api/trigger-barrel-roll', websiteUrl);
+            const url  = new URL(apiPath, websiteUrl);
             await new Promise((resolve, reject) => {
                 const req = http.request({ hostname: url.hostname, port: parseInt(url.port) || 80, path: url.pathname, method: 'POST', headers: { 'Authorization': `Bearer ${secret}` } }, res => {
                     if (res.statusCode === 200) resolve();
@@ -7671,9 +7677,12 @@ client.on('interactionCreate', async (interaction) => {
                 req.on('error', reject);
                 req.end();
             });
+            if (isBloodMoon) {
+                return interaction.editReply({ embeds: [cubEmbed().setColor(0xc0392b).setTitle('🌕 Blood Moon Triggered!').setDescription('The moon on the website is turning red.').setFooter({ text: `Triggered by ${interaction.user.tag}` }).setTimestamp()] });
+            }
             return interaction.editReply({ embeds: [cubEmbed().setColor(0x9b59b6).setTitle('🚀 Barrel Roll Triggered!').setDescription('All rockets on the website are doing a barrel roll right now.').setFooter({ text: `Triggered by ${interaction.user.tag}` }).setTimestamp()] });
         } catch (err) {
-            return interaction.editReply(`❌ Failed to trigger barrel roll: ${err.message}`);
+            return interaction.editReply(`❌ Failed to trigger ${isBloodMoon ? 'blood moon' : 'barrel roll'}: ${err.message}`);
         }
     }
 

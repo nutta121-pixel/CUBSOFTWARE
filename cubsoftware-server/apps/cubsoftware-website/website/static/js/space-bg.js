@@ -400,6 +400,20 @@
             .catch(() => {});
     }, 3000);
 
+    /* ── Blood moon Discord trigger ───────────────────────── */
+    let _bloodMoonLastKnown = 0;
+    setInterval(function() {
+        fetch('/api/blood-moon-status')
+            .then(r => r.json())
+            .then(d => {
+                if (d.lastTriggered && d.lastTriggered > _bloodMoonLastKnown) {
+                    _bloodMoonLastKnown = d.lastTriggered;
+                    _moonRedTarget = 1;
+                }
+            })
+            .catch(() => {});
+    }, 5000);
+
     function generateShipDefs() {
         const defs = [];
         const periods = [75, 100];

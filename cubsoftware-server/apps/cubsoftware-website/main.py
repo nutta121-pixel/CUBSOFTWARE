@@ -1144,6 +1144,23 @@ def trigger_barrel_roll():
     _barrel_roll_trigger_ts = int(time.time() * 1000)
     return jsonify({'triggered': True, 'ts': _barrel_roll_trigger_ts})
 
+# ── Blood Moon trigger ─────────────────────────────────────────────────────────
+_blood_moon_trigger_ts = 0
+
+@app.route('/api/blood-moon-status')
+def blood_moon_status():
+    return jsonify({'lastTriggered': _blood_moon_trigger_ts})
+
+@app.route('/api/trigger-blood-moon', methods=['POST'])
+def trigger_blood_moon():
+    global _blood_moon_trigger_ts
+    secret = os.environ.get('BARREL_ROLL_SECRET', '')
+    auth   = request.headers.get('Authorization', '')
+    if not secret or auth != f'Bearer {secret}':
+        return jsonify({'error': 'Unauthorized'}), 401
+    _blood_moon_trigger_ts = int(time.time() * 1000)
+    return jsonify({'triggered': True, 'ts': _blood_moon_trigger_ts})
+
 @app.route('/api/space-members')
 def space_members_api():
     """Return {name, joinedAt} for guild members with the Member role (space background)."""
@@ -7252,6 +7269,7 @@ _CSRF_EXEMPT_PREFIXES = (
     '/overlays/source/',
     '/overlays/alerts/',
     '/api/trigger-barrel-roll',
+    '/api/trigger-blood-moon',
     '/api/pm2/',
     '/api/admin/',
 )

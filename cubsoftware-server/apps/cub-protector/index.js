@@ -1136,6 +1136,7 @@ const MAIN_BOT_ONLY_COMMANDS = new Set([
     'ip',
     'keraplast-password', 'feature',
     'scan-security',
+    'barrel-roll',
 ]);
 
 // ============================================================
@@ -1875,6 +1876,10 @@ const commands = [
                 ].map(([name, value]) => ({ name, value })))))
         .addSubcommand(sub => sub.setName('list').setDescription('Show all features and their status'))
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+
+    new SlashCommandBuilder()
+        .setName('barrel-roll')
+        .setDescription('Trigger a barrel roll on all rockets on the website (Bot Owners only)'),
 
 ];
 
@@ -7646,6 +7651,30 @@ client.on('interactionCreate', async (interaction) => {
         if (sub === 'enable') {
             if (!disabled.includes(name)) return interaction.reply({ content: `⚠️ **${name}** is not disabled.`, flags: MessageFlags.Ephemeral });
             return saveDisabledFeatures(disabled.filter(f => f !== name)) ? interaction.reply({ embeds: [new EmbedBuilder().setColor(0x22c55e).setTitle('Feature Enabled').setDescription(`**${name}** has been enabled.`).addFields({ name: 'Status', value: '🟢 Enabled', inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral }) : interaction.reply({ content: '❌ Save failed.', flags: MessageFlags.Ephemeral });
+        }
+    }
+
+    if (commandName === 'barrel-roll') {
+        if (!isOwner) return interaction.reply({ content: '❌ Restricted to bot owners.', flags: MessageFlags.Ephemeral });
+        const secret     = process.env.BARREL_ROLL_SECRET || '';
+        const websiteUrl = process.env.WEBSITE_INTERNAL_URL || 'http://127.0.0.1:5000';
+        if (!secret) return interaction.reply({ content: '❌ `BARREL_ROLL_SECRET` not set in bot env.', flags: MessageFlags.Ephemeral });
+        await interaction.deferReply();
+        try {
+            const http = require('http');
+            const url  = new URL('/api/trigger-barrel-roll', websiteUrl);
+            await new Promise((resolve, reject) => {
+                const req = http.request({ hostname: url.hostname, port: parseInt(url.port) || 80, path: url.pathname, method: 'POST', headers: { 'Authorization': `Bearer ${secret}` } }, res => {
+                    if (res.statusCode === 200) resolve();
+                    else reject(new Error(`HTTP ${res.statusCode}`));
+                    res.resume();
+                });
+                req.on('error', reject);
+                req.end();
+            });
+            return interaction.editReply({ embeds: [cubEmbed().setColor(0x9b59b6).setTitle('🚀 Barrel Roll Triggered!').setDescription('All rockets on the website are doing a barrel roll right now.').setFooter({ text: `Triggered by ${interaction.user.tag}` }).setTimestamp()] });
+        } catch (err) {
+            return interaction.editReply(`❌ Failed to trigger barrel roll: ${err.message}`);
         }
     }
 

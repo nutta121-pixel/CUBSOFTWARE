@@ -7251,6 +7251,7 @@ _CSRF_EXEMPT_PREFIXES = (
     '/overlays/auth',
     '/overlays/source/',
     '/overlays/alerts/',
+    '/api/trigger-barrel-roll',
 )
 
 @app.before_request

@@ -1127,6 +1127,23 @@ def _fetch_raw_members():
             app.logger.warning(f'[Members] Raw fetch failed: {e}')
     return _raw_members_cache['data']
 
+# ── Barrel Roll trigger ────────────────────────────────────────────────────────
+_barrel_roll_trigger_ts = 0
+
+@app.route('/api/barrel-roll-status')
+def barrel_roll_status():
+    return jsonify({'lastTriggered': _barrel_roll_trigger_ts})
+
+@app.route('/api/trigger-barrel-roll', methods=['POST'])
+def trigger_barrel_roll():
+    global _barrel_roll_trigger_ts
+    secret = os.environ.get('BARREL_ROLL_SECRET', '')
+    auth   = request.headers.get('Authorization', '')
+    if not secret or auth != f'Bearer {secret}':
+        return jsonify({'error': 'Unauthorized'}), 401
+    _barrel_roll_trigger_ts = int(time.time() * 1000)
+    return jsonify({'triggered': True, 'ts': _barrel_roll_trigger_ts})
+
 @app.route('/api/space-members')
 def space_members_api():
     """Return {name, joinedAt} for guild members with the Member role (space background)."""

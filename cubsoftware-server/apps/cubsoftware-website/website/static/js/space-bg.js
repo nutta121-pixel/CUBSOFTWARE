@@ -385,6 +385,21 @@
     ];
     let lastShuffle  = 0;
 
+    /* ── Barrel roll Discord trigger ─────────────────────── */
+    let _barrelRollLastKnown = 0;
+    setInterval(function() {
+        fetch('/api/barrel-roll-status')
+            .then(r => r.json())
+            .then(d => {
+                if (d.lastTriggered && d.lastTriggered > _barrelRollLastKnown) {
+                    _barrelRollLastKnown = d.lastTriggered;
+                    const now = performance.now() / 1000;
+                    ships.forEach(sh => { if (sh.type === 'ROCKET') sh.rollStartTs = now; });
+                }
+            })
+            .catch(() => {});
+    }, 3000);
+
     function generateShipDefs() {
         const defs = [];
         const periods = [75, 100];
@@ -516,8 +531,9 @@
     },{passive:true});
 
     /* ── Draw Rocket ─────────────────────────────────────── */
-    function drawRocket(x, y, a, s, name, hovered) {
+    function drawRocket(x, y, a, s, name, hovered, rollProg) {
         ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+        if (rollProg >= 0) ctx.scale(1, Math.cos(rollProg * Math.PI * 2));
 
         /* ── Exhaust plume ── */
         // Soft pink/purple outer glow
@@ -1193,6 +1209,8 @@
                 sh.joinedAt = m.joinedAt;
                 const _st2=['ROCKET','UFO','SHUTTLE','SATELLITE','COMET','ASTEROID','PROBE'];
                 sh.type     = _st2[Math.floor(Math.random()*_st2.length)];
+                if (sh.type === 'ROCKET' && Math.random() < 0.1)
+                    sh.rollStartTs = performance.now() / 1000;
             }
             sh._prevLT = lT;
 
@@ -1221,7 +1239,14 @@
             else if (sh.type==='COMET')    { drawComet(x,y,a,sh.s,sh.name,hovered); }
             else if (sh.type==='ASTEROID') { drawAsteroid(x,y,a,sh.s,sh.name,t,hovered); }
             else if (sh.type==='PROBE')    { drawProbe(x,y,a,sh.s,sh.name,hovered); }
-            else                           { drawRocket(x,y,a,sh.s,sh.name,hovered); }
+            else {
+                let rp = -1;
+                if (sh.rollStartTs) {
+                    rp = (performance.now()/1000 - sh.rollStartTs) / 1.5;
+                    if (rp >= 1) { sh.rollStartTs = null; rp = -1; }
+                }
+                drawRocket(x,y,a,sh.s,sh.name,hovered,rp);
+            }
 
             activeShipRects.push({x, y, hw:sh.s*3.5, hh:sh.s*2.5, idx});
         });

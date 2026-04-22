@@ -92,6 +92,7 @@ module.exports = {
                 BMAC_TOKEN: s('BMAC_TOKEN'),
                 KERAPLAST_ADMIN_PASSWORD: s('KERAPLAST_ADMIN_PASSWORD'),
                 INTERNAL_TEST_SECRET: s('INTERNAL_TEST_SECRET'),
+                BARREL_ROLL_SECRET: s('BARREL_ROLL_SECRET'),
             },
             env_development: {
                 FLASK_ENV: 'development',
@@ -139,6 +140,8 @@ module.exports = {
                 WHISPER_MODEL: s('WHISPER_MODEL', 'base'),
                 INTERNAL_TEST_SECRET: s('INTERNAL_TEST_SECRET'),
                 AUTH_TESTER_PORT: s('AUTH_TESTER_PORT', '3849'),
+                BARREL_ROLL_SECRET: s('BARREL_ROLL_SECRET'),
+                WEBSITE_INTERNAL_URL: 'http://127.0.0.1:5000',
             },
             env_development: {
                 NODE_ENV: 'development'

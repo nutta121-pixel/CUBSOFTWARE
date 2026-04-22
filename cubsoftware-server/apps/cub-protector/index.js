@@ -1136,7 +1136,6 @@ const MAIN_BOT_ONLY_COMMANDS = new Set([
     'ip',
     'keraplast-password', 'feature',
     'scan-security',
-    'barrel-roll',
 ]);
 
 // ============================================================

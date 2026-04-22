@@ -92,6 +92,11 @@ async function deployCommands() {
     }
 }
 
+// Data storage path
+const DATA_DIR = path.join(__dirname, 'data');
+const SAVES_FILE = path.join(DATA_DIR, 'server-saves.json');
+const STATUS_CHANNELS_FILE = path.join(DATA_DIR, 'status-channels.json');
+
 // Concurrency limiter + persistent queue
 // Discord global rate limit: 50 req/s. Each operation peaks at ~4-7 calls/sec,
 // so 10 concurrent = safe ceiling. Queue auto-starts the next operation when a slot opens.
@@ -181,11 +186,6 @@ async function processQueue() {
         }
     }
 }
-
-// Data storage path
-const DATA_DIR = path.join(__dirname, 'data');
-const SAVES_FILE = path.join(DATA_DIR, 'server-saves.json');
-const STATUS_CHANNELS_FILE = path.join(DATA_DIR, 'status-channels.json');
 
 function loadStatusChannels() {
     try {

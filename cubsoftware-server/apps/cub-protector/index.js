@@ -2845,10 +2845,9 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
             });
             console.log(`[TempVC] Channel created: "${tempChannel.name}" (${tempChannel.id})`);
 
-            // Race-condition guard: confirm user is still in the hub before moving
-            const freshMember = await guild.members.fetch(member.id).catch(() => null);
-            if (!freshMember?.voice?.channelId) {
-                // User disconnected during channel creation — clean up immediately
+            // Race-condition guard: confirm user is still in a voice channel using cache (no API call)
+            const hubChannel = guild.channels.cache.get(newState.channelId);
+            if (!hubChannel?.members.has(member.id)) {
                 console.warn(`[TempVC] User ${member.user.tag} left before move — deleting orphan "${tempChannel.name}"`);
                 await tempChannel.delete('User disconnected before move').catch(() => {});
                 if (errorReporter) {
@@ -5240,31 +5239,28 @@ client.on('interactionCreate', async (interaction) => {
 
     // ---- VOICE-CLAIM ----
     else if (commandName === 'voice-claim') {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'You must be in a temporary voice channel.' });
         }
 
         const { channel, data: channelData, fullData } = result;
 
-        // Check if owner is still in the channel
         if (channel.members.has(channelData.owner_id)) {
-            return interaction.reply({ content: 'The owner is still in the channel. You can\'t claim it.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'The owner is still in the channel. You can\'t claim it.' });
         }
 
-        // Check if channel is claimable
         if (!channelData.claimable && channelData.owner_id !== member.id) {
-            return interaction.reply({ content: 'This channel is not yet available for claiming. The ownership lock period hasn\'t expired.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'This channel is not yet available for claiming. The ownership lock period hasn\'t expired.' });
         }
 
-        // Transfer ownership
         const oldOwnerId = channelData.owner_id;
         channelData.owner_id = member.id;
         channelData.claimable = false;
         saveTempVoiceData(fullData);
 
-        // Update permissions
         await channel.permissionOverwrites.delete(oldOwnerId).catch(() => {});
         await channel.permissionOverwrites.create(member.id, {
             ViewChannel: true,
@@ -5276,27 +5272,28 @@ client.on('interactionCreate', async (interaction) => {
             DeafenMembers: true,
         }).catch(() => {});
 
-        await interaction.reply({ content: `You are now the owner of this voice channel!`, flags: MessageFlags.Ephemeral });
+        await interaction.editReply({ content: 'You are now the owner of this voice channel!' });
     }
 
     // ---- VOICE-TRANSFER ----
     else if (commandName === 'voice-transfer') {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const targetUser = interaction.options.getUser('user');
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'You must be in a temporary voice channel.' });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!isChannelOwner(member.id, channelData) && !member.permissions.has(PermissionFlagsBits.ManageChannels)) {
-            return interaction.reply({ content: 'Only the channel owner can transfer ownership.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'Only the channel owner can transfer ownership.' });
         }
 
         if (targetUser.id === member.id) {
-            return interaction.reply({ content: 'You already own this channel.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'You already own this channel.' });
         }
 
         const oldOwnerId = channelData.owner_id;
@@ -5304,7 +5301,6 @@ client.on('interactionCreate', async (interaction) => {
         channelData.banned_users = channelData.banned_users.filter(id => id !== targetUser.id);
         saveTempVoiceData(fullData);
 
-        // Update permissions
         await channel.permissionOverwrites.delete(oldOwnerId).catch(() => {});
         await channel.permissionOverwrites.create(targetUser.id, {
             ViewChannel: true,
@@ -5316,7 +5312,7 @@ client.on('interactionCreate', async (interaction) => {
             DeafenMembers: true,
         }).catch(() => {});
 
-        await interaction.reply({ content: `Ownership transferred to <@${targetUser.id}>.`, flags: MessageFlags.Ephemeral });
+        await interaction.editReply({ content: `Ownership transferred to <@${targetUser.id}>.` });
     }
 
     // ---- VOICE-OWNER ----
@@ -5364,22 +5360,23 @@ client.on('interactionCreate', async (interaction) => {
 
     // ---- VOICE-PERMIT ----
     else if (commandName === 'voice-permit') {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const targetUser = interaction.options.getUser('user');
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'You must be in a temporary voice channel.' });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'You don\'t have permission to do this.' });
         }
 
         if (channelData.banned_users.includes(targetUser.id)) {
-            return interaction.reply({ content: `<@${targetUser.id}> is banned from this channel. Use /voice-unban first.`, flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: `<@${targetUser.id}> is banned from this channel. Use /voice-unban first.` });
         }
 
         if (!channelData.permitted_users.includes(targetUser.id)) {
@@ -5395,23 +5392,24 @@ client.on('interactionCreate', async (interaction) => {
             UseVAD: true,
         }).catch(() => {});
 
-        await interaction.reply({ content: `<@${targetUser.id}> can now see and join this voice channel.`, flags: MessageFlags.Ephemeral });
+        await interaction.editReply({ content: `<@${targetUser.id}> can now see and join this voice channel.` });
     }
 
     // ---- VOICE-REJECT ----
     else if (commandName === 'voice-reject') {
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const targetUser = interaction.options.getUser('user');
         const result = getUserTempChannel(member);
 
         if (!result) {
-            return interaction.reply({ content: 'You must be in a temporary voice channel.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'You must be in a temporary voice channel.' });
         }
 
         const { channel, data: channelData, fullData } = result;
         const guildData = fullData.guilds[guild.id];
 
         if (!hasVoicePermission(member, channelData, guildData)) {
-            return interaction.reply({ content: 'You don\'t have permission to do this.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'You don\'t have permission to do this.' });
         }
 
         channelData.permitted_users = channelData.permitted_users.filter(id => id !== targetUser.id);
@@ -5426,7 +5424,7 @@ client.on('interactionCreate', async (interaction) => {
             await targetMember.voice.disconnect('Rejected from temp VC').catch(() => {});
         }
 
-        await interaction.reply({ content: `<@${targetUser.id}> can no longer see or join this voice channel.`, flags: MessageFlags.Ephemeral });
+        await interaction.editReply({ content: `<@${targetUser.id}> can no longer see or join this voice channel.` });
     }
 
     // ==================== MODERATION COMMAND HANDLERS ====================
@@ -5438,15 +5436,15 @@ client.on('interactionCreate', async (interaction) => {
         const durationStr = interaction.options.getString('duration');
         const deleteDays = interaction.options.getInteger('delete_days') ?? 0;
 
+        await interaction.deferReply();
+
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         if (targetMember && !targetMember.bannable) {
-            return interaction.reply({ content: 'I cannot ban this user. They may have a higher role than me.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'I cannot ban this user. They may have a higher role than me.' });
         }
         if (targetUser.id === member.id) {
-            return interaction.reply({ content: 'You cannot ban yourself.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'You cannot ban yourself.' });
         }
-
-        await interaction.deferReply();
 
         try {
             // DM user + create mod case (must happen before ban — can't DM after)
@@ -5532,18 +5530,18 @@ client.on('interactionCreate', async (interaction) => {
         const targetUser = interaction.options.getUser('user');
         const reason = interaction.options.getString('reason') || 'No reason provided';
 
+        await interaction.deferReply();
+
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         if (!targetMember) {
-            return interaction.reply({ content: 'User not found in this server.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'User not found in this server.' });
         }
         if (!targetMember.kickable) {
-            return interaction.reply({ content: 'I cannot kick this user. They may have a higher role than me.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'I cannot kick this user. They may have a higher role than me.' });
         }
         if (targetUser.id === member.id) {
-            return interaction.reply({ content: 'You cannot kick yourself.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'You cannot kick yourself.' });
         }
-
-        await interaction.deferReply();
 
         try {
             await targetMember.kick(`${reason} | Kicked by ${member.user.tag}`);
@@ -5582,21 +5580,19 @@ client.on('interactionCreate', async (interaction) => {
         if (!durationMs) {
             return interaction.reply({ content: 'Invalid duration. Use formats like: 5m, 1h, 1d, 1w', flags: MessageFlags.Ephemeral });
         }
-
-        // Discord timeout max is 28 days
         if (durationMs > 28 * 86400000) {
             return interaction.reply({ content: 'Maximum timeout duration is 28 days.', flags: MessageFlags.Ephemeral });
         }
 
+        await interaction.deferReply();
+
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         if (!targetMember) {
-            return interaction.reply({ content: 'User not found in this server.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'User not found in this server.' });
         }
         if (!targetMember.moderatable) {
-            return interaction.reply({ content: 'I cannot mute this user. They may have a higher role than me.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'I cannot mute this user. They may have a higher role than me.' });
         }
-
-        await interaction.deferReply();
 
         try {
             await targetMember.timeout(durationMs, `${reason} | Muted by ${member.user.tag}`);
@@ -5631,12 +5627,12 @@ client.on('interactionCreate', async (interaction) => {
     else if (commandName === 'unmute') {
         const targetUser = interaction.options.getUser('user');
 
+        await interaction.deferReply();
+
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         if (!targetMember) {
-            return interaction.reply({ content: 'User not found in this server.', flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: 'User not found in this server.' });
         }
-
-        await interaction.deferReply();
 
         try {
             await targetMember.timeout(null, `Unmuted by ${member.user.tag}`);
@@ -11364,6 +11360,11 @@ process.on('unhandledRejection', async (reason) => {
     }
 });
 process.on('uncaughtException', async (err) => {
+    // DiscordAPIError 10062 = interaction token expired — not a crash, just a slow response
+    if (err.code === 10062) {
+        console.warn('[Warning] Interaction token expired (10062) — ignoring');
+        return;
+    }
     console.error(`[FATAL] ${ERRORS.CUBPROTECTOR?.FATAL_EXCEPTION || 'CUBSOFTWARE_ERROR_CUBPROTECTOR_FATAL_EXCEPTION_009'} — Uncaught Exception:`, err);
     if (terminal) terminal.logEvent(`Uncaught exception: ${err.message}`, 'error');
     if (errorReporter) {

@@ -2688,6 +2688,10 @@ if (DiscordTerminal) {
     });
 }
 
+// In-flight creation guard: prevents duplicate channels when a user re-joins the hub
+// during the Discord API call (e.g. user impatient after a move timeout)
+const tempVcCreating = new Set(); // key: `${guildId}:${userId}`
+
 // ============================================================
 // Voice State Update - Create/Delete Temp Channels
 // ============================================================
@@ -2706,6 +2710,22 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
         // Skip bots (e.g. CUB Reactive OBS plugin) — don't create a temp channel for them
         if (member.user.bot) return;
+
+        // Deduplication: skip if channel creation is already in-flight for this user
+        const creationKey = `${guild.id}:${member.id}`;
+        if (tempVcCreating.has(creationKey)) {
+            console.log(`[TempVC] Skipping duplicate trigger for ${member.user.tag} — creation already in progress`);
+            return;
+        }
+
+        // Also skip if the user already owns an active temp channel in this guild
+        const existingOwned = Object.values(guildData.active_channels || {}).find(ch => ch.owner_id === member.id);
+        if (existingOwned) {
+            console.log(`[TempVC] Skipping — ${member.user.tag} already owns an active temp channel`);
+            return;
+        }
+
+        tempVcCreating.add(creationKey);
 
         const hub = guildData.hubs[newState.channelId];
 
@@ -2891,6 +2911,8 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                     e
                 );
             }
+        } finally {
+            tempVcCreating.delete(creationKey);
         }
     }
 

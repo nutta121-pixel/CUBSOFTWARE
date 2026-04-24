@@ -3913,12 +3913,12 @@ client.on('messageCreate', async (message) => {
     const item = items.find(i => i.channel_id === message.channel.id);
     if (!item) return;
 
-    const text = message.content.trim();
+    const text = message.content();
     if (text.length > 1800) return;
 
     // Detect the message language — skip if it's already in the target language (e.g. don't translate English → English)
-    //const detectedLang = await detectLanguage(text);
-    //if (detectedLang && detectedLang === item.to) return;
+    const detectedLang = await detectLanguage(text);
+    if (detectedLang && detectedLang === item.to) return;
 
     const translated = await translateText(text, item.from, item.to);
     if (!translated || translated.trim().toLowerCase() === text.toLowerCase()) return;

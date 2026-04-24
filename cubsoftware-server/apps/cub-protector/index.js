@@ -320,63 +320,76 @@ function getGuildTranslateItems(guildId) {
 // Translation: self-hosted LibreTranslate (primary, unlimited, free) → MyMemory fallback (all 90+ languages).
 // LibreTranslate runs on the same server via PM2 (7-libretranslate).
 // Optional: set MYMEMORY_EMAIL in .env to raise MyMemory fallback from 1,000 → 10,000 words/day.
-async function detectLanguage(text) {
-    const ltUrl = process.env.LIBRETRANSLATE_URL || 'http://127.0.0.1:5050';
-    console.log(`[Translate] detectLanguage: calling LibreTranslate at ${ltUrl}/detect for text "${text.slice(0, 50)}${text.length > 50 ? '...' : ''}"`);
-    try {
-        const res = await axios.post(`${ltUrl}/detect`, { q: text }, { timeout: 5000 });
-        if (Array.isArray(res.data) && res.data.length > 0) {
-            const lang = res.data[0].language;
-            const confidence = res.data[0].confidence;
-            console.log(`[Translate] detectLanguage: detected "${lang}" (confidence: ${confidence})`);
-            return lang;
-        }
-        console.log(`[Translate] detectLanguage: LibreTranslate returned empty result`);
-    } catch (e) {
-        console.error(`[Translate] detectLanguage: LibreTranslate error — ${e.message}`);
-    }
-    return null;
-}
+// translateText returns { text, detectedLang, detectedConfidence, source } or null on total failure.
+// Chain: LibreTranslate (self-hosted, primary) → Google Translate (unofficial, no key) → MyMemory (final fallback).
+// When from="auto", LibreTranslate includes detectedLanguage in its response — used instead of a separate /detect call.
 async function translateText(text, from, to) {
     const ltUrl = process.env.LIBRETRANSLATE_URL || 'http://127.0.0.1:5050';
-    console.log(`[Translate] translateText: attempting LibreTranslate (${ltUrl}) from="${from}" to="${to}" text="${text.slice(0, 60)}${text.length > 60 ? '...' : ''}"`);
+    const src = from === 'auto' ? 'auto' : from;
+
+    // ── Attempt 1: LibreTranslate ────────────────────────────
+    console.log(`[Translate] Attempt 1/3 — LibreTranslate (${ltUrl}) src="${src}" to="${to}" text="${text.slice(0, 60)}${text.length > 60 ? '...' : ''}"`);
     try {
         const res = await axios.post(`${ltUrl}/translate`, {
-            q: text,
-            source: from === 'auto' ? 'auto' : from,
-            target: to,
-            format: 'text',
+            q: text, source: src, target: to, format: 'text',
         }, { timeout: 10000 });
-        const result = res.data?.translatedText;
-        if (result) {
-            console.log(`[Translate] translateText: LibreTranslate succeeded — result="${result.slice(0, 80)}${result.length > 80 ? '...' : ''}"`);
-            return result;
+        const translated = res.data?.translatedText;
+        if (translated) {
+            const detectedLang = src === 'auto' ? (res.data?.detectedLanguage?.language ?? null) : null;
+            const detectedConfidence = src === 'auto' ? (res.data?.detectedLanguage?.confidence ?? null) : null;
+            console.log(`[Translate] LibreTranslate succeeded — detectedLang="${detectedLang}" confidence=${detectedConfidence} result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
+            return { text: translated, detectedLang, detectedConfidence, source: 'libretranslate' };
         }
-        console.log(`[Translate] translateText: LibreTranslate returned empty translatedText`);
+        console.log(`[Translate] LibreTranslate returned empty translatedText — falling back to Google`);
     } catch (e) {
         if (e?.response?.status === 400) {
-            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201 — LibreTranslate 400 bad request (unsupported lang pair? from=${from} to=${to}): ${e.message}`);
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201 — LibreTranslate 400 (unsupported lang pair? src=${src} to=${to}): ${e.message} — falling back to Google`);
         } else {
-            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201 — LibreTranslate failed (status=${e?.response?.status}): ${e.message}`);
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201 — LibreTranslate failed (status=${e?.response?.status}): ${e.message} — falling back to Google`);
         }
     }
-    // Fallback: MyMemory (no account required)
-    const src = from === 'auto' ? 'autodetect' : from;
-    const emailParam = process.env.MYMEMORY_EMAIL ? `&de=${encodeURIComponent(process.env.MYMEMORY_EMAIL)}` : '';
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(src)}|${encodeURIComponent(to)}${emailParam}`;
-    console.log(`[Translate] translateText: LibreTranslate failed — trying MyMemory fallback (src=${src}, to=${to})`);
+
+    // ── Attempt 2: Google Translate (unofficial, no API key) ─
+    // Uses the same endpoint as the @vitalets/google-translate-api package internally.
+    // Response: [[["translated","original",...]], null, "detectedLang", ...]
+    console.log(`[Translate] Attempt 2/3 — Google Translate src="${src}" to="${to}"`);
     try {
-        const res = await axios.get(url, { timeout: 8000 });
+        const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(src)}&tl=${encodeURIComponent(to)}&dt=t&q=${encodeURIComponent(text)}`;
+        const res = await axios.get(googleUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+        if (Array.isArray(res.data?.[0])) {
+            const translated = res.data[0].map(chunk => chunk?.[0]).filter(Boolean).join('');
+            const detectedLang = (src === 'auto' && typeof res.data[2] === 'string') ? res.data[2] : null;
+            if (translated) {
+                console.log(`[Translate] Google Translate succeeded — detectedLang="${detectedLang}" result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
+                // Google detection is reliable — treat it as high confidence (no numeric score returned by this endpoint)
+                return { text: translated, detectedLang, detectedConfidence: detectedLang ? 95 : null, source: 'google' };
+            }
+            console.log(`[Translate] Google Translate returned empty translated text — falling back to MyMemory`);
+        } else {
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_GOOGLE_205 — Unexpected Google Translate response shape — falling back to MyMemory`);
+        }
+    } catch (e) {
+        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_GOOGLE_205 — Google Translate failed: ${e.message} — falling back to MyMemory`);
+    }
+
+    // ── Attempt 3: MyMemory ──────────────────────────────────
+    const mmSrc = from === 'auto' ? 'autodetect' : from;
+    const emailParam = process.env.MYMEMORY_EMAIL ? `&de=${encodeURIComponent(process.env.MYMEMORY_EMAIL)}` : '';
+    const mmUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(mmSrc)}|${encodeURIComponent(to)}${emailParam}`;
+    console.log(`[Translate] Attempt 3/3 — MyMemory src="${mmSrc}" to="${to}"`);
+    try {
+        const res = await axios.get(mmUrl, { timeout: 8000 });
         if (res.data?.responseStatus === 200 && res.data?.responseData?.translatedText) {
-            const result = res.data.responseData.translatedText;
-            console.log(`[Translate] translateText: MyMemory fallback succeeded — result="${result.slice(0, 80)}${result.length > 80 ? '...' : ''}"`);
-            return result;
+            const translated = res.data.responseData.translatedText;
+            console.log(`[Translate] MyMemory succeeded — result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
+            return { text: translated, detectedLang: null, detectedConfidence: null, source: 'mymemory' };
         }
         console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202 — MyMemory returned non-200 status: ${res.data?.responseStatus} | ${res.data?.responseDetails}`);
     } catch (e) {
-        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202 — MyMemory fallback failed: ${e.message}`);
+        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202 — MyMemory failed: ${e.message}`);
     }
-    console.error(`[Translate] translateText: both LibreTranslate and MyMemory failed for from="${from}" to="${to}"`);
+
+    console.error(`[Translate] All 3 translation services failed for src="${src}" to="${to}"`);
     return null;
 }
 
@@ -3953,34 +3966,39 @@ client.on('messageCreate', async (message) => {
         return;
     }
 
-    console.log(`[Translate] Detecting language for: "${text.slice(0, 60)}${text.length > 60 ? '...' : ''}"`);
-    const detectedLang = await detectLanguage(text);
-    if (detectedLang && detectedLang === item.to) {
-        console.log(`[Translate] Skipping — detected language "${detectedLang}" matches target language "${item.to}", no translation needed`);
-        return;
-    }
-
-    console.log(`[Translate] Translating from="${item.from}" (detected="${detectedLang || 'unknown'}") to="${item.to}"`);
-    const translated = await translateText(text, item.from, item.to);
-    if (!translated) {
+    console.log(`[Translate] Translating from="${item.from}" to="${item.to}" — language will be detected by LibreTranslate during translation`);
+    const result = await translateText(text, item.from, item.to);
+    if (!result) {
         console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — translateText returned null for guild=${message.guild.name} channel=#${message.channel.name}`);
         return;
     }
-    if (translated.trim().toLowerCase() === text.toLowerCase()) {
-        console.log(`[Translate] Skipping — translated text is identical to original (likely same language or no-op translation)`);
+
+    const { text: translated, detectedLang, detectedConfidence } = result;
+
+    // Skip if LibreTranslate is confident the message is already in the target language
+    if (detectedLang && detectedLang === item.to && detectedConfidence >= 50) {
+        console.log(`[Translate] Skipping — LibreTranslate detected source as "${detectedLang}" (confidence: ${detectedConfidence}), already matches target "${item.to}"`);
         return;
     }
 
-    const detectedLabel = detectedLang ? _translateLangName(detectedLang) : _translateLangName(item.from);
+    if (!translated || translated.trim().toLowerCase() === text.toLowerCase()) {
+        console.log(`[Translate] Skipping — translated text is identical to original (detected="${detectedLang || 'unknown'}" confidence=${detectedConfidence ?? 'n/a'})`);
+        return;
+    }
+
+    // Use LibreTranslate's detected language for the footer label when available and confident
+    const detectedLabel = (detectedLang && detectedConfidence >= 50)
+        ? _translateLangName(detectedLang)
+        : _translateLangName(item.from);
     const toLabel = _translateLangName(item.to);
     const embed = cubEmbed()
         .setColor(0x5865f2)
         .setDescription(translated)
         .setFooter({ text: `${detectedLabel} → ${toLabel} • CUB SOFTWARE Translation` });
 
-    console.log(`[Translate] Sending translation reply in #${message.channel.name} — ${detectedLabel} → ${toLabel}`);
+    console.log(`[Translate] Sending translation reply in #${message.channel.name} — ${detectedLabel} (confidence: ${detectedConfidence ?? 'n/a'}) → ${toLabel} [via ${result.source}]`);
     message.channel.send({ embeds: [embed] }).then(() => {
-        console.log(`[Translate] Successfully sent translation in ${message.guild.name} #${message.channel.name} | ${detectedLabel} → ${toLabel} | author: ${message.author.tag}`);
+        console.log(`[Translate] Successfully sent translation in ${message.guild.name} #${message.channel.name} | ${detectedLabel} → ${toLabel} | via ${result.source} | author: ${message.author.tag}`);
     }).catch(e => {
         console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — Failed to send translation reply in #${message.channel.name}: ${e.message}`);
     });
@@ -8032,14 +8050,18 @@ client.on('interactionCreate', async (interaction) => {
         }
         await interaction.deferReply();
         console.log(`[Translate] /translate: calling translateText from="${from}" to="${to}"`);
-        const translated = await translateText(text, from, to);
-        if (!translated) {
+        const result = await translateText(text, from, to);
+        if (!result) {
             console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_CMD_203 — /translate failed for guild=${guild?.name} user=${interaction.user.tag} from="${from}" to="${to}"`);
             return interaction.editReply({ content: '❌ Translation failed. Please try again in a moment.' });
         }
-        const fromLabel = _translateLangName(from);
+        const { text: translated, detectedLang, detectedConfidence } = result;
+        // When from=auto, show the actual detected language if LibreTranslate is confident enough
+        const fromLabel = (from === 'auto' && detectedLang && detectedConfidence >= 50)
+            ? _translateLangName(detectedLang)
+            : _translateLangName(from);
         const toLabel = _translateLangName(to);
-        console.log(`[Translate] /translate: success — ${fromLabel} → ${toLabel} for user=${interaction.user.tag}`);
+        console.log(`[Translate] /translate: success — detected="${detectedLang || 'n/a'}" (confidence: ${detectedConfidence ?? 'n/a'}) ${fromLabel} → ${toLabel} for user=${interaction.user.tag}`);
         return interaction.editReply({ embeds: [cubEmbed().setColor(0x5865f2).setTitle('Translation').addFields(
             { name: `Original (${fromLabel})`, value: text.length > 1024 ? text.slice(0, 1021) + '...' : text },
             { name: `Translated (${toLabel})`, value: translated.length > 1024 ? translated.slice(0, 1021) + '...' : translated }

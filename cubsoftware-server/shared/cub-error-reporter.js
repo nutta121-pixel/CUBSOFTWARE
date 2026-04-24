@@ -11,7 +11,7 @@
  */
 
 // ============================================================
-// Error Code Catalog  (globally unique numbers 001–168)
+// Error Code Catalog  (globally unique numbers 001–205)
 // ============================================================
 const ERRORS = {
 
@@ -115,6 +115,13 @@ const ERRORS = {
 
         // ── CUB PROTECTOR — start.js  (112) ─────────────────
         STARTUP_DEPS:           'CUBSOFTWARE_ERROR_CUBPROTECTOR_STARTUP_DEPS_112',
+
+        // ── CUB PROTECTOR — translation  (201–205) ───────────
+        TRANSLATE_LT:           'CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201',
+        TRANSLATE_MYMEMORY:     'CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202',
+        TRANSLATE_DETECT:       'CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_DETECT_203',
+        TRANSLATE_REPLY:        'CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204',
+        TRANSLATE_CMD:          'CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_CMD_205',
     },
 
     // ── QUESTCORD — core  (011–017) ────────────────────────
@@ -384,6 +391,12 @@ const ERROR_CATALOG = [
     { code: ERRORS.CUBPROTECTOR.PODCAST_CONTINUE,      app: 'CUB PROTECTOR', severity: 'error',   desc: 'Podcast continue error' },
     { code: ERRORS.CUBPROTECTOR.PODCAST_SELECT,        app: 'CUB PROTECTOR', severity: 'error',   desc: 'Podcast select handler error' },
     { code: ERRORS.CUBPROTECTOR.STARTUP_DEPS,          app: 'CUB PROTECTOR', severity: 'fatal',   desc: 'Failed to install dependencies on startup' },
+    // ── CUB PROTECTOR — translation ─────────────────────────
+    { code: ERRORS.CUBPROTECTOR.TRANSLATE_LT,          app: 'CUB PROTECTOR', severity: 'warning', desc: 'LibreTranslate translation request failed' },
+    { code: ERRORS.CUBPROTECTOR.TRANSLATE_MYMEMORY,    app: 'CUB PROTECTOR', severity: 'warning', desc: 'MyMemory fallback translation request failed' },
+    { code: ERRORS.CUBPROTECTOR.TRANSLATE_DETECT,      app: 'CUB PROTECTOR', severity: 'info',    desc: 'Language detection request failed' },
+    { code: ERRORS.CUBPROTECTOR.TRANSLATE_REPLY,       app: 'CUB PROTECTOR', severity: 'warning', desc: 'Failed to send translation reply in Discord channel' },
+    { code: ERRORS.CUBPROTECTOR.TRANSLATE_CMD,         app: 'CUB PROTECTOR', severity: 'error',   desc: '/translate command failed' },
 
     // ── QUESTCORD ───────────────────────────────────────────
     { code: ERRORS.QUESTCORD.WS_CLIENT_ERROR,          app: 'QuestCord', severity: 'warning', desc: 'WebSocket client error (e.g. RSV1 / protocol mismatch)' },

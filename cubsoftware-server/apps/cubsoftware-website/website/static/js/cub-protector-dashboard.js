@@ -470,6 +470,7 @@
             case 'sticky-messages': await loadStickyMessages(); break;
             case 'anti-hoist': await loadAntiHoist(); break;
             case 'link-filter': await loadLinkFilter(); break;
+            case 'translate': await loadTranslate(); break;
             case 'media-channels': await loadMediaChannels(); break;
             case 'bot-masters': await loadBotMasters(); break;
             case 'custom-bot': await loadCustomBot(); break;
@@ -7166,6 +7167,141 @@
             if (data.success) { showToast('Media channel deleted!', 'success'); loadMediaChannels(); }
             else showToast(data.error || 'Failed to delete', 'error');
         } catch (e) { showToast('Failed to delete media channel', 'error'); }
+    };
+
+    // ==================== AUTO-TRANSLATION ====================
+    const TR_LANGUAGES = [
+        { name: 'Auto-Detect', value: 'auto' },
+        { name: 'Afrikaans', value: 'af' }, { name: 'Albanian', value: 'sq' },
+        { name: 'Amharic', value: 'am' }, { name: 'Arabic', value: 'ar' },
+        { name: 'Armenian', value: 'hy' }, { name: 'Azerbaijani', value: 'az' },
+        { name: 'Basque', value: 'eu' }, { name: 'Belarusian', value: 'be' },
+        { name: 'Bengali', value: 'bn' }, { name: 'Bosnian', value: 'bs' },
+        { name: 'Bulgarian', value: 'bg' }, { name: 'Catalan', value: 'ca' },
+        { name: 'Chinese (Simplified)', value: 'zh-CN' }, { name: 'Chinese (Traditional)', value: 'zh-TW' },
+        { name: 'Croatian', value: 'hr' }, { name: 'Czech', value: 'cs' },
+        { name: 'Danish', value: 'da' }, { name: 'Dutch', value: 'nl' },
+        { name: 'English', value: 'en' }, { name: 'Esperanto', value: 'eo' },
+        { name: 'Estonian', value: 'et' }, { name: 'Finnish', value: 'fi' },
+        { name: 'French', value: 'fr' }, { name: 'Galician', value: 'gl' },
+        { name: 'Georgian', value: 'ka' }, { name: 'German', value: 'de' },
+        { name: 'Greek', value: 'el' }, { name: 'Gujarati', value: 'gu' },
+        { name: 'Haitian Creole', value: 'ht' }, { name: 'Hausa', value: 'ha' },
+        { name: 'Hebrew', value: 'he' }, { name: 'Hindi', value: 'hi' },
+        { name: 'Hungarian', value: 'hu' }, { name: 'Icelandic', value: 'is' },
+        { name: 'Indonesian', value: 'id' }, { name: 'Irish', value: 'ga' },
+        { name: 'Italian', value: 'it' }, { name: 'Japanese', value: 'ja' },
+        { name: 'Javanese', value: 'jv' }, { name: 'Kannada', value: 'kn' },
+        { name: 'Kazakh', value: 'kk' }, { name: 'Khmer', value: 'km' },
+        { name: 'Korean', value: 'ko' }, { name: 'Kurdish', value: 'ku' },
+        { name: 'Kyrgyz', value: 'ky' }, { name: 'Lao', value: 'lo' },
+        { name: 'Latin', value: 'la' }, { name: 'Latvian', value: 'lv' },
+        { name: 'Lithuanian', value: 'lt' }, { name: 'Macedonian', value: 'mk' },
+        { name: 'Malagasy', value: 'mg' }, { name: 'Malay', value: 'ms' },
+        { name: 'Malayalam', value: 'ml' }, { name: 'Maltese', value: 'mt' },
+        { name: 'Maori', value: 'mi' }, { name: 'Marathi', value: 'mr' },
+        { name: 'Mongolian', value: 'mn' }, { name: 'Myanmar (Burmese)', value: 'my' },
+        { name: 'Nepali', value: 'ne' }, { name: 'Norwegian', value: 'no' },
+        { name: 'Pashto', value: 'ps' }, { name: 'Persian', value: 'fa' },
+        { name: 'Polish', value: 'pl' }, { name: 'Portuguese', value: 'pt' },
+        { name: 'Punjabi', value: 'pa' }, { name: 'Romanian', value: 'ro' },
+        { name: 'Russian', value: 'ru' }, { name: 'Samoan', value: 'sm' },
+        { name: 'Serbian', value: 'sr' }, { name: 'Sesotho', value: 'st' },
+        { name: 'Shona', value: 'sn' }, { name: 'Sinhala', value: 'si' },
+        { name: 'Slovak', value: 'sk' }, { name: 'Slovenian', value: 'sl' },
+        { name: 'Somali', value: 'so' }, { name: 'Spanish', value: 'es' },
+        { name: 'Swahili', value: 'sw' }, { name: 'Swedish', value: 'sv' },
+        { name: 'Tajik', value: 'tg' }, { name: 'Tamil', value: 'ta' },
+        { name: 'Telugu', value: 'te' }, { name: 'Thai', value: 'th' },
+        { name: 'Turkish', value: 'tr' }, { name: 'Ukrainian', value: 'uk' },
+        { name: 'Urdu', value: 'ur' }, { name: 'Uzbek', value: 'uz' },
+        { name: 'Vietnamese', value: 'vi' }, { name: 'Welsh', value: 'cy' },
+        { name: 'Xhosa', value: 'xh' }, { name: 'Yiddish', value: 'yi' },
+        { name: 'Yoruba', value: 'yo' }, { name: 'Zulu', value: 'zu' },
+    ];
+    function _trPopulateLangSelect(selectId, selectedValue, includeAuto) {
+        const el = document.getElementById(selectId);
+        if (!el) return;
+        const pool = includeAuto ? TR_LANGUAGES : TR_LANGUAGES.filter(l => l.value !== 'auto');
+        el.innerHTML = pool.map(l => `<option value="${l.value}"${l.value === selectedValue ? ' selected' : ''}>${escapeHtml(l.name)}</option>`).join('');
+    }
+    async function loadTranslate() {
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/translate`);
+            const data = await res.json();
+            const s = data.settings || {};
+            document.getElementById('tr-enabled').checked = s.enabled !== false;
+            _trPopulateLangSelect('tr-add-from', 'auto', true);
+            _trPopulateLangSelect('tr-add-to', 'en', false);
+            populateChannelSelect('tr-add-channel', null);
+            _trRenderList(data.items || []);
+        } catch (e) { showToast('Failed to load translation settings', 'error'); }
+    }
+    function _trRenderList(items) {
+        const list = document.getElementById('tr-list');
+        if (!list) return;
+        if (!items.length) { list.innerHTML = '<p style="color:rgba(255,255,255,0.4);font-size:0.875rem;">No channels configured. Use the form below to add one.</p>'; return; }
+        list.innerHTML = items.map(item => {
+            const fromName = TR_LANGUAGES.find(l => l.value === item.from)?.name || item.from || 'Auto-Detect';
+            const toName = TR_LANGUAGES.find(l => l.value === item.to)?.name || item.to || item.to;
+            const status = item.enabled === false ? '🔴' : '🟢';
+            return `<div class="list-item" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.04);border-radius:8px;">
+                <span style="font-size:0.875rem;">${status} <strong>#${escapeHtml(item.channel_name || item.channel_id)}</strong> &nbsp;—&nbsp; ${escapeHtml(fromName)} → ${escapeHtml(toName)}</span>
+                <div style="display:flex;gap:0.5rem;">
+                    <button class="control-btn small" onclick="window.cpToggleTranslateChannel('${escapeHtml(item.id)}', ${item.enabled !== false ? 'false' : 'true'})">${item.enabled === false ? 'Enable' : 'Disable'}</button>
+                    <button class="control-btn small" style="background:rgba(239,68,68,0.15);color:#ef4444;" onclick="window.cpDeleteTranslateChannel('${escapeHtml(item.id)}')">Remove</button>
+                </div>
+            </div>`;
+        }).join('');
+    }
+    window.cpToggleTranslate = async function() {
+        try {
+            const enabled = document.getElementById('tr-enabled').checked;
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/translate`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled })
+            });
+            const data = await res.json();
+            if (data.success) showToast(`Auto-translation ${enabled ? 'enabled' : 'disabled'}`, 'success');
+            else showToast(data.error || 'Failed to save', 'error');
+        } catch (e) { showToast('Failed to save', 'error'); }
+    };
+    window.cpAddTranslateChannel = async function() {
+        try {
+            const channelId = document.getElementById('tr-add-channel').value;
+            const from = document.getElementById('tr-add-from').value;
+            const to = document.getElementById('tr-add-to').value;
+            if (!channelId) return showToast('Please select a channel', 'error');
+            if (from === to) return showToast('Source and target language must be different', 'error');
+            const channels = await fetchGuildChannels();
+            const channelObj = channels.find(c => c.id === channelId);
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/translate/add`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ channel_id: channelId, channel_name: channelObj ? channelObj.name : channelId, from, to, enabled: true })
+            });
+            const data = await res.json();
+            if (data.success) { showToast('Translation channel added!', 'success'); loadTranslate(); }
+            else showToast(data.error || 'Failed to add', 'error');
+        } catch (e) { showToast('Failed to add translation channel', 'error'); }
+    };
+    window.cpToggleTranslateChannel = async function(id, newEnabled) {
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/translate/${id}`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled: newEnabled === 'true' || newEnabled === true })
+            });
+            const data = await res.json();
+            if (data.success) { showToast('Channel updated', 'success'); loadTranslate(); }
+            else showToast(data.error || 'Failed to update', 'error');
+        } catch (e) { showToast('Failed to update channel', 'error'); }
+    };
+    window.cpDeleteTranslateChannel = async function(id) {
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/translate/${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (data.success) { showToast('Channel removed', 'success'); loadTranslate(); }
+            else showToast(data.error || 'Failed to remove', 'error');
+        } catch (e) { showToast('Failed to remove channel', 'error'); }
     };
 
     // ==================== BOOST TRACKER ====================

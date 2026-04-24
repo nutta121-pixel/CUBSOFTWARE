@@ -142,6 +142,7 @@ module.exports = {
                 AUTH_TESTER_PORT: s('AUTH_TESTER_PORT', '3849'),
                 BARREL_ROLL_SECRET: s('BARREL_ROLL_SECRET'),
                 WEBSITE_INTERNAL_URL: 'http://127.0.0.1:3000',
+                LIBRETRANSLATE_URL: s('LIBRETRANSLATE_URL', 'http://127.0.0.1:5050'),
             },
             env_development: {
                 NODE_ENV: 'development'
@@ -303,6 +304,32 @@ module.exports = {
             },
             error_file: './logs/galaxy-bot-error.log',
             out_file: './logs/galaxy-bot-out.log',
+            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+            merge_logs: true
+        },
+
+        // ============================================
+        // LibreTranslate (Self-hosted translation engine)
+        // Free, unlimited, private — powers the /translate-setup feature.
+        // First run downloads language models; subsequent starts are instant.
+        // ============================================
+        {
+            name: '7-libretranslate',
+            script: 'start.sh',
+            cwd: './apps/libretranslate',
+            interpreter: 'bash',
+            watch: false,
+            autorestart: true,
+            max_restarts: 5,
+            restart_delay: 10000,
+            env: {
+                LIBRETRANSLATE_PORT: '5050',
+                LIBRETRANSLATE_LOAD_ONLY: s('LIBRETRANSLATE_LOAD_ONLY',
+                    'en,es,fr,de,it,pt,ru,ja,zh,ko,ar,nl,pl,tr,sv,da,el,cs,uk,hi,th,vi,id,he,fi,hu,ro,bg,sk,sl'
+                ),
+            },
+            error_file: './logs/libretranslate-error.log',
+            out_file: './logs/libretranslate-out.log',
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
             merge_logs: true
         },

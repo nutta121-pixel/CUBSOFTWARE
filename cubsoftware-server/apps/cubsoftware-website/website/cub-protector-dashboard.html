@@ -297,6 +297,10 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                         <span>Reminders</span>
                     </a>
+                    <a href="#translate" class="nav-item" data-section="translate">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M5 8l6 6"/><path d="M4 14l6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="M22 22l-5-10-5 10"/><path d="M14 18h6"/></svg>
+                        <span>Translation</span>
+                    </a>
                     <a href="#media-channels" class="nav-item" data-section="media-channels">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                         <span>Media Channels</span>
@@ -3310,6 +3314,47 @@
             <!-- Boost Tracker -->
 
 
+
+            <!-- Auto-Translation Section -->
+            <section class="content-section" id="translateSection" data-section="translate">
+                <div class="section-header">
+                    <div class="section-title"><h1>Auto-Translation</h1><p>Automatically translate messages posted in specific channels</p></div>
+                </div>
+
+                <!-- Master toggle -->
+                <div class="settings-card" style="margin-bottom:1rem;">
+                    <div class="settings-row">
+                        <div class="settings-info"><h4>Enable Auto-Translation</h4><p>Master switch — turns translation on or off for this server</p></div>
+                        <label class="toggle"><input type="checkbox" id="tr-enabled" onchange="window.cpToggleTranslate()"><span class="toggle-slider"></span></label>
+                    </div>
+                </div>
+
+                <!-- Configured channels list -->
+                <div class="settings-card" style="margin-bottom:1rem;">
+                    <h4 style="margin-bottom:1rem;font-size:0.95rem;color:rgba(255,255,255,0.9);">Configured Channels</h4>
+                    <div id="tr-list" style="display:flex;flex-direction:column;gap:0.6rem;">
+                        <p style="color:rgba(255,255,255,0.4);font-size:0.875rem;">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Add channel form -->
+                <div class="settings-card">
+                    <h4 style="margin-bottom:1rem;font-size:0.95rem;color:rgba(255,255,255,0.9);">Add Channel</h4>
+                    <div class="form-group">
+                        <label>Channel</label>
+                        <select id="tr-add-channel" class="form-select"><option value="">-- Select channel --</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Translate From (source language)</label>
+                        <select id="tr-add-from" class="form-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Translate To (target language)</label>
+                        <select id="tr-add-to" class="form-select"></select>
+                    </div>
+                    <button class="control-btn primary small" onclick="window.cpAddTranslateChannel()" style="margin-top:0.5rem;">+ Add Channel</button>
+                </div>
+            </section>
 
             <!-- Custom Bot Section -->
             <section class="content-section" id="customBotSection" data-section="custom-bot">

@@ -188,6 +188,7 @@ const DEBATE_FILE = path.join(DATA_DIR, 'debate.json');
 const GAMES_FILE = path.join(DATA_DIR, 'games.json');
 const MEDIA_CHANNELS_FILE = path.join(DATA_DIR, 'media_channels.json');
 const SLOWMODE_FILE = path.join(DATA_DIR, 'slowmode.json');
+const TRANSLATE_FILE = path.join(DATA_DIR, 'translate.json');
 const SUPPORT_SERVER_LINK = 'https://discord.gg/ngQXHUbnKg';
 const SUPPORT_USER_LINK = 'https://discord.com/users/523949187663585310';
 
@@ -293,6 +294,64 @@ function loadJsonFile(filePath, defaultData = { guilds: {} }) {
 function saveJsonFile(filePath, data) {
     try { fs.writeFileSync(filePath, JSON.stringify(data, null, 2)); }
     catch (e) { console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_FILE_SAVE_039 — Failed to save ${filePath}:`, e); }
+}
+
+function loadTranslateConfig() {
+    return loadJsonFile(TRANSLATE_FILE, { guilds: {} });
+}
+function saveTranslateConfig(data) {
+    saveJsonFile(TRANSLATE_FILE, data);
+}
+function getGuildTranslateItems(guildId) {
+    const data = loadTranslateConfig();
+    const gd = data.guilds?.[guildId];
+    if (!gd?.settings?.enabled) return [];
+    return (gd.items || []).filter(i => i.enabled !== false);
+}
+// Translation: self-hosted LibreTranslate (primary, unlimited, free) → MyMemory fallback (all 90+ languages).
+// LibreTranslate runs on the same server via PM2 (7-libretranslate).
+// Optional: set MYMEMORY_EMAIL in .env to raise MyMemory fallback from 1,000 → 10,000 words/day.
+async function detectLanguage(text) {
+    const ltUrl = process.env.LIBRETRANSLATE_URL || 'http://127.0.0.1:5050';
+    try {
+        const res = await axios.post(`${ltUrl}/detect`, { q: text }, { timeout: 5000 });
+        if (Array.isArray(res.data) && res.data.length > 0) {
+            return res.data[0].language; // highest-confidence result
+        }
+    } catch (_) {}
+    return null;
+}
+
+async function translateText(text, from, to) {
+    const ltUrl = process.env.LIBRETRANSLATE_URL || 'http://127.0.0.1:5050';
+    try {
+        const res = await axios.post(`${ltUrl}/translate`, {
+            q: text,
+            source: from === 'auto' ? 'auto' : from,
+            target: to,
+            format: 'text',
+        }, { timeout: 10000 });
+        const result = res.data?.translatedText;
+        if (result) return result;
+    } catch (e) {
+        // 400 = language pair not supported by this LibreTranslate install — fall through silently
+        if (e?.response?.status !== 400) {
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_097 — LibreTranslate failed:', e.message);
+        }
+    }
+    // Fallback: MyMemory (handles all 90+ languages; no account or key required)
+    const src = from === 'auto' ? 'autodetect' : from;
+    const emailParam = process.env.MYMEMORY_EMAIL ? `&de=${encodeURIComponent(process.env.MYMEMORY_EMAIL)}` : '';
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(src + '|' + to)}${emailParam}`;
+    try {
+        const res = await axios.get(url, { timeout: 8000 });
+        if (res.data?.responseStatus === 200 && res.data?.responseData?.translatedText) {
+            return res.data.responseData.translatedText;
+        }
+    } catch (e) {
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_095 — MyMemory fallback failed:', e.message);
+    }
+    return null;
 }
 
 function loadSlowmodeConfig() {
@@ -1139,6 +1198,110 @@ const MAIN_BOT_ONLY_COMMANDS = new Set([
 ]);
 
 // ============================================================
+// Translation — full language list used for autocomplete
+// (No 25-entry Discord choice limit — autocomplete handles all of these)
+// ============================================================
+const TRANSLATE_ALL_LANGUAGES = [
+    { name: 'Afrikaans', value: 'af' },
+    { name: 'Albanian', value: 'sq' },
+    { name: 'Amharic', value: 'am' },
+    { name: 'Arabic', value: 'ar' },
+    { name: 'Armenian', value: 'hy' },
+    { name: 'Azerbaijani', value: 'az' },
+    { name: 'Basque', value: 'eu' },
+    { name: 'Belarusian', value: 'be' },
+    { name: 'Bengali', value: 'bn' },
+    { name: 'Bosnian', value: 'bs' },
+    { name: 'Bulgarian', value: 'bg' },
+    { name: 'Catalan', value: 'ca' },
+    { name: 'Chinese (Simplified)', value: 'zh-CN' },
+    { name: 'Chinese (Traditional)', value: 'zh-TW' },
+    { name: 'Croatian', value: 'hr' },
+    { name: 'Czech', value: 'cs' },
+    { name: 'Danish', value: 'da' },
+    { name: 'Dutch', value: 'nl' },
+    { name: 'English', value: 'en' },
+    { name: 'Esperanto', value: 'eo' },
+    { name: 'Estonian', value: 'et' },
+    { name: 'Finnish', value: 'fi' },
+    { name: 'French', value: 'fr' },
+    { name: 'Galician', value: 'gl' },
+    { name: 'Georgian', value: 'ka' },
+    { name: 'German', value: 'de' },
+    { name: 'Greek', value: 'el' },
+    { name: 'Gujarati', value: 'gu' },
+    { name: 'Haitian Creole', value: 'ht' },
+    { name: 'Hausa', value: 'ha' },
+    { name: 'Hebrew', value: 'he' },
+    { name: 'Hindi', value: 'hi' },
+    { name: 'Hungarian', value: 'hu' },
+    { name: 'Icelandic', value: 'is' },
+    { name: 'Indonesian', value: 'id' },
+    { name: 'Irish', value: 'ga' },
+    { name: 'Italian', value: 'it' },
+    { name: 'Japanese', value: 'ja' },
+    { name: 'Javanese', value: 'jv' },
+    { name: 'Kannada', value: 'kn' },
+    { name: 'Kazakh', value: 'kk' },
+    { name: 'Khmer', value: 'km' },
+    { name: 'Korean', value: 'ko' },
+    { name: 'Kurdish', value: 'ku' },
+    { name: 'Kyrgyz', value: 'ky' },
+    { name: 'Lao', value: 'lo' },
+    { name: 'Latin', value: 'la' },
+    { name: 'Latvian', value: 'lv' },
+    { name: 'Lithuanian', value: 'lt' },
+    { name: 'Macedonian', value: 'mk' },
+    { name: 'Malagasy', value: 'mg' },
+    { name: 'Malay', value: 'ms' },
+    { name: 'Malayalam', value: 'ml' },
+    { name: 'Maltese', value: 'mt' },
+    { name: 'Maori', value: 'mi' },
+    { name: 'Marathi', value: 'mr' },
+    { name: 'Mongolian', value: 'mn' },
+    { name: 'Myanmar (Burmese)', value: 'my' },
+    { name: 'Nepali', value: 'ne' },
+    { name: 'Norwegian', value: 'no' },
+    { name: 'Pashto', value: 'ps' },
+    { name: 'Persian', value: 'fa' },
+    { name: 'Polish', value: 'pl' },
+    { name: 'Portuguese', value: 'pt' },
+    { name: 'Punjabi', value: 'pa' },
+    { name: 'Romanian', value: 'ro' },
+    { name: 'Russian', value: 'ru' },
+    { name: 'Samoan', value: 'sm' },
+    { name: 'Serbian', value: 'sr' },
+    { name: 'Sesotho', value: 'st' },
+    { name: 'Shona', value: 'sn' },
+    { name: 'Sinhala', value: 'si' },
+    { name: 'Slovak', value: 'sk' },
+    { name: 'Slovenian', value: 'sl' },
+    { name: 'Somali', value: 'so' },
+    { name: 'Spanish', value: 'es' },
+    { name: 'Swahili', value: 'sw' },
+    { name: 'Swedish', value: 'sv' },
+    { name: 'Tajik', value: 'tg' },
+    { name: 'Tamil', value: 'ta' },
+    { name: 'Telugu', value: 'te' },
+    { name: 'Thai', value: 'th' },
+    { name: 'Turkish', value: 'tr' },
+    { name: 'Ukrainian', value: 'uk' },
+    { name: 'Urdu', value: 'ur' },
+    { name: 'Uzbek', value: 'uz' },
+    { name: 'Vietnamese', value: 'vi' },
+    { name: 'Welsh', value: 'cy' },
+    { name: 'Xhosa', value: 'xh' },
+    { name: 'Yiddish', value: 'yi' },
+    { name: 'Yoruba', value: 'yo' },
+    { name: 'Zulu', value: 'zu' },
+];
+const TRANSLATE_SOURCE_WITH_AUTO = [{ name: 'Auto-Detect', value: 'auto' }, ...TRANSLATE_ALL_LANGUAGES];
+function _translateLangName(code) {
+    if (code === 'auto') return 'Auto-Detect';
+    return TRANSLATE_ALL_LANGUAGES.find(l => l.value === code)?.name || code;
+}
+
+// ============================================================
 // Slash Commands Definition
 // ============================================================
 const commands = [
@@ -1883,6 +2046,40 @@ const commands = [
     new SlashCommandBuilder()
         .setName('blood-moon')
         .setDescription('Trigger a blood moon on the website (Bot Owners only)'),
+
+    new SlashCommandBuilder()
+        .setName('translate')
+        .setDescription('Translate text to another language right now')
+        .addStringOption(o => o.setName('text').setDescription('Text to translate').setRequired(true))
+        .addStringOption(o => o.setName('to').setDescription('Target language').setRequired(true).setAutocomplete(true))
+        .addStringOption(o => o.setName('from').setDescription('Source language (default: Auto-Detect)').setRequired(false).setAutocomplete(true)),
+
+    new SlashCommandBuilder()
+        .setName('translate-setup')
+        .setDescription('Set up automatic message translation for a channel')
+        .addSubcommand(sub => sub
+            .setName('add')
+            .setDescription('Add a channel for auto-translation')
+            .addChannelOption(o => o.setName('channel').setDescription('Text channel to monitor').addChannelTypes(ChannelType.GuildText).setRequired(true))
+            .addStringOption(o => o.setName('to').setDescription('Target language to translate messages into').setRequired(true).setAutocomplete(true))
+            .addStringOption(o => o.setName('from').setDescription('Source language (default: Auto-Detect)').setRequired(false).setAutocomplete(true)))
+        .addSubcommand(sub => sub
+            .setName('remove')
+            .setDescription('Remove auto-translation from a channel')
+            .addChannelOption(o => o.setName('channel').setDescription('Channel to remove').addChannelTypes(ChannelType.GuildText).setRequired(true)))
+        .addSubcommand(sub => sub
+            .setName('list')
+            .setDescription('List all channels configured for auto-translation'))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+
+    new SlashCommandBuilder()
+        .setName('translate-edit')
+        .setDescription('Edit translation settings for an existing channel')
+        .addChannelOption(o => o.setName('channel').setDescription('Channel to edit').addChannelTypes(ChannelType.GuildText).setRequired(true))
+        .addStringOption(o => o.setName('to').setDescription('New target language').setRequired(false).setAutocomplete(true))
+        .addStringOption(o => o.setName('from').setDescription('New source language').setRequired(false).setAutocomplete(true))
+        .addBooleanOption(o => o.setName('enabled').setDescription('Enable or disable translation for this channel').setRequired(false))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
 ];
 
@@ -3704,6 +3901,44 @@ client.on('messageCreate', async (message) => {
 });
 
 // ============================================================
+// Auto-Translation (messageCreate)
+// ============================================================
+client.on('messageCreate', async (message) => {
+    if (!message.guild) return;
+    if (message.author.bot) return;
+    if (!message.content || !message.content.trim()) return;
+    if (CUSTOM_GUILD_ID && message.guildId !== CUSTOM_GUILD_ID) return;
+    if (!CUSTOM_GUILD_ID && guildHasCustomBot(message.guildId)) return;
+
+    const items = getGuildTranslateItems(message.guildId);
+    if (!items.length) return;
+    const item = items.find(i => i.channel_id === message.channel.id);
+    if (!item) return;
+
+    const text = message.content.trim();
+    if (text.length > 1800) return;
+
+    // Detect the message language — skip if it's already in the target language (e.g. don't translate English → English)
+    const detectedLang = await detectLanguage(text);
+    if (detectedLang && detectedLang === item.to) return;
+
+    const translated = await translateText(text, item.from, item.to);
+    if (!translated || translated.trim().toLowerCase() === text.toLowerCase()) return;
+
+    const detectedLabel = detectedLang ? _translateLangName(detectedLang) : _translateLangName(item.from);
+    const toLabel = _translateLangName(item.to);
+    const embed = cubEmbed()
+        .setColor(0x5865f2)
+        .setDescription(translated)
+        .setFooter({ text: `${detectedLabel} → ${toLabel} • CUB SOFTWARE Translation` });
+    message.reply({ embeds: [embed] }).then(() => {
+        console.log(`[Translate] ${message.guild.name} (${message.guildId}) #${message.channel.name}: ${detectedLabel} → ${toLabel} | author: ${message.author.tag}`);
+    }).catch(e => {
+        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — Failed to send translation reply: ${e.message}`);
+    });
+});
+
+// ============================================================
 // Achievement Checker
 // ============================================================
 const ACHIEVEMENT_DEFS = {
@@ -4711,6 +4946,23 @@ client.on('messageReactionRemove', async (reaction, user) => {
 // Interaction Handler (Slash Commands + Buttons)
 // ============================================================
 client.on('interactionCreate', async (interaction) => {
+    // ── Autocomplete handler (translate language search) ──
+    if (interaction.isAutocomplete()) {
+        if (CUSTOM_GUILD_ID && interaction.guildId !== CUSTOM_GUILD_ID) return;
+        const { commandName } = interaction;
+        if (commandName === 'translate' || commandName === 'translate-setup' || commandName === 'translate-edit') {
+            const focused = interaction.options.getFocused(true);
+            const isFromField = focused.name === 'from';
+            const pool = isFromField ? TRANSLATE_SOURCE_WITH_AUTO : TRANSLATE_ALL_LANGUAGES;
+            const query = focused.value.toLowerCase();
+            const results = query
+                ? pool.filter(l => l.name.toLowerCase().includes(query) || l.value.toLowerCase().includes(query)).slice(0, 25)
+                : pool.slice(0, 25);
+            return interaction.respond(results);
+        }
+        return;
+    }
+
     if (!interaction.isChatInputCommand()) return;
     if (CUSTOM_GUILD_ID && interaction.guildId !== CUSTOM_GUILD_ID) return;
     if (CUSTOM_GUILD_ID && MAIN_BOT_ONLY_COMMANDS.has(interaction.commandName)) return;
@@ -7704,6 +7956,84 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 
+    if (commandName === 'translate') {
+        const text = interaction.options.getString('text');
+        const to = interaction.options.getString('to');
+        const from = interaction.options.getString('from') || 'auto';
+        if (!TRANSLATE_ALL_LANGUAGES.find(l => l.value === to)) return interaction.reply({ content: `❌ Unknown target language: \`${to}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
+        if (from !== 'auto' && !TRANSLATE_ALL_LANGUAGES.find(l => l.value === from)) return interaction.reply({ content: `❌ Unknown source language: \`${from}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
+        await interaction.deferReply();
+        const translated = await translateText(text, from, to);
+        if (!translated) return interaction.editReply({ content: '❌ Translation failed. Please try again in a moment.' });
+        const fromLabel = _translateLangName(from);
+        const toLabel = _translateLangName(to);
+        return interaction.editReply({ embeds: [cubEmbed().setColor(0x5865f2).setTitle('Translation').addFields(
+            { name: `Original (${fromLabel})`, value: text.length > 1024 ? text.slice(0, 1021) + '...' : text },
+            { name: `Translated (${toLabel})`, value: translated.length > 1024 ? translated.slice(0, 1021) + '...' : translated }
+        ).setFooter({ text: `${fromLabel} → ${toLabel} • CUB SOFTWARE Translation` }).setTimestamp()] });
+    }
+
+    if (commandName === 'translate-setup') {
+        const sub = interaction.options.getSubcommand();
+        const data = loadTranslateConfig();
+        if (!data.guilds) data.guilds = {};
+        if (!data.guilds[guild.id]) data.guilds[guild.id] = { settings: { enabled: true }, items: [] };
+        const gd = data.guilds[guild.id];
+
+        if (sub === 'add') {
+            const channel = interaction.options.getChannel('channel');
+            const to = interaction.options.getString('to');
+            const from = interaction.options.getString('from') || 'auto';
+            const toValid = TRANSLATE_ALL_LANGUAGES.find(l => l.value === to);
+            const fromValid = from === 'auto' || TRANSLATE_ALL_LANGUAGES.find(l => l.value === from);
+            if (!toValid) return interaction.reply({ content: `❌ Unknown target language: \`${to}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
+            if (!fromValid) return interaction.reply({ content: `❌ Unknown source language: \`${from}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
+            const existing = gd.items.find(i => i.channel_id === channel.id);
+            if (existing) {
+                existing.to = to; existing.from = from; existing.enabled = true;
+                saveTranslateConfig(data);
+                return interaction.reply({ embeds: [cubEmbed().setColor(0x22c55e).setTitle('Translation Updated').setDescription(`Updated auto-translation for <#${channel.id}>.`).addFields({ name: 'From', value: _translateLangName(from), inline: true }, { name: 'To', value: _translateLangName(to), inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral });
+            }
+            gd.items.push({ id: String(Date.now()), channel_id: channel.id, from, to, enabled: true, created_at: new Date().toISOString() });
+            saveTranslateConfig(data);
+            return interaction.reply({ embeds: [cubEmbed().setColor(0x22c55e).setTitle('Translation Setup').setDescription(`Messages in <#${channel.id}> will now be automatically translated.`).addFields({ name: 'From', value: _translateLangName(from), inline: true }, { name: 'To', value: _translateLangName(to), inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral });
+        }
+
+        if (sub === 'remove') {
+            const channel = interaction.options.getChannel('channel');
+            const before = gd.items.length;
+            gd.items = gd.items.filter(i => i.channel_id !== channel.id);
+            if (gd.items.length === before) return interaction.reply({ content: `❌ <#${channel.id}> is not configured for translation.`, flags: MessageFlags.Ephemeral });
+            saveTranslateConfig(data);
+            return interaction.reply({ embeds: [cubEmbed().setColor(0xef4444).setTitle('Translation Removed').setDescription(`Auto-translation disabled for <#${channel.id}>.`).setTimestamp()], flags: MessageFlags.Ephemeral });
+        }
+
+        if (sub === 'list') {
+            const items = gd.items;
+            if (!items.length) return interaction.reply({ content: 'No channels configured for translation. Use `/translate-setup add` to get started.', flags: MessageFlags.Ephemeral });
+            const desc = items.map(i => `${i.enabled === false ? '🔴' : '🟢'} <#${i.channel_id}> — ${_translateLangName(i.from)} → ${_translateLangName(i.to)}`).join('\n');
+            return interaction.reply({ embeds: [cubEmbed().setColor(0x5865f2).setTitle('Translation Channels').setDescription(desc).setFooter({ text: `${items.length} channel(s) configured` }).setTimestamp()], flags: MessageFlags.Ephemeral });
+        }
+    }
+
+    if (commandName === 'translate-edit') {
+        const channel = interaction.options.getChannel('channel');
+        const to = interaction.options.getString('to');
+        const from = interaction.options.getString('from');
+        const enabled = interaction.options.getBoolean('enabled');
+        if (to === null && from === null && enabled === null) return interaction.reply({ content: '❌ Provide at least one setting to change (to, from, or enabled).', flags: MessageFlags.Ephemeral });
+        if (to && !TRANSLATE_ALL_LANGUAGES.find(l => l.value === to)) return interaction.reply({ content: `❌ Unknown target language: \`${to}\`.`, flags: MessageFlags.Ephemeral });
+        if (from && from !== 'auto' && !TRANSLATE_ALL_LANGUAGES.find(l => l.value === from)) return interaction.reply({ content: `❌ Unknown source language: \`${from}\`.`, flags: MessageFlags.Ephemeral });
+        const data = loadTranslateConfig();
+        const item = data.guilds?.[guild.id]?.items?.find(i => i.channel_id === channel.id);
+        if (!item) return interaction.reply({ content: `❌ <#${channel.id}> is not configured for translation. Use \`/translate-setup add\` first.`, flags: MessageFlags.Ephemeral });
+        if (to !== null) item.to = to;
+        if (from !== null) item.from = from;
+        if (enabled !== null) item.enabled = enabled;
+        saveTranslateConfig(data);
+        return interaction.reply({ embeds: [cubEmbed().setColor(0x22c55e).setTitle('Translation Updated').setDescription(`Settings updated for <#${channel.id}>.`).addFields({ name: 'From', value: _translateLangName(item.from), inline: true }, { name: 'To', value: _translateLangName(item.to), inline: true }, { name: 'Status', value: item.enabled !== false ? '🟢 Enabled' : '🔴 Disabled', inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral });
+    }
+
     const _cmdMs = Date.now() - _cmdStart;
     if (_cmdMs > 2000) console.log(`[Slow] /${commandName} took ${_cmdMs}ms in ${guild?.name || 'DM'}`);
 });
@@ -7801,6 +8131,8 @@ function buildHelpCategories(member) {
                 { name: 'ticket', desc: 'Set up the ticket system' },
                 { name: 'giveaway', desc: 'Start and manage giveaways' },
                 { name: 'suggestion', desc: 'Manage the suggestion system' },
+                { name: 'translate-setup', desc: 'Set up auto-translation for a channel' },
+                { name: 'translate-edit', desc: 'Edit a channel\'s translation settings' },
             ]
         });
     }
@@ -7826,6 +8158,7 @@ function buildHelpCategories(member) {
             { name: 'userinfo', desc: 'View user information' },
             { name: 'serverinfo', desc: 'View server information' },
             { name: 'avatar', desc: 'Get a user\'s avatar' },
+            { name: 'translate', desc: 'Translate text to another language' },
             { name: 'ping', desc: 'Check bot latency' },
             { name: 'invite', desc: 'Get bot invite link' },
             { name: 'website', desc: 'Get the CUB SOFTWARE website link' },

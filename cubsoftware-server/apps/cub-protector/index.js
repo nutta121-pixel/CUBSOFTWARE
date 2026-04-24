@@ -331,8 +331,13 @@ function getGuildTranslateItems(guildId) {
 // Japanese Hepburn: has long-vowel macrons (ā ī ū ē ō) but NOT pinyin tone marks, no Japanese script
 //   → force source='ja' so Google/LT recognises the romaji directly (no conversion package needed).
 function _looksLikePinyin(text) {
-    // Pinyin uses tones 1-4 on every vowel; tones 2/3/4 are uniquely distinctive
-    return /[áǎàéěèíǐìóǒòúǔùǘǚǜ]/i.test(text) && !/[一-鿿]/.test(text);
+    // Pinyin tones 2/3/4. Require ≥2 marks AND ≥30% of vowels are tone-marked —
+    // Spanish/French/etc. have at most 1 accent per word so their ratio stays well below 0.3.
+    if (/[一-鿿]/.test(text)) return false;
+    const marked = (text.match(/[áǎàéěèíǐìóǒòúǔùǘǚǜ]/ig) || []).length;
+    if (marked < 2) return false;
+    const vowels = (text.match(/[aeiouáǎàéěèíǐìóǒòúǔùǘǚǜ]/ig) || []).length;
+    return vowels > 0 && marked / vowels >= 0.3;
 }
 function _looksLikeRomaji(text) {
     // Japanese Hepburn macrons — only macrons, no pinyin tones 2/3/4, no Japanese/Chinese characters

@@ -24,8 +24,17 @@ const readline = require('readline');
 const fs = require('fs');
 const path = require('path');
 
-const DEVELOPER_IDS = (process.env.OWNER_IDS || '378501056008683530,738723658352296017').split(',').map(id => id.trim());
-const DEVELOPER_ID = DEVELOPER_IDS[0];
+const _BOT_OWNERS_FILE = path.join(__dirname, '..', 'cubsoftware-website', 'data', 'bot_owners.json');
+const _FALLBACK_OWNER_IDS = (process.env.OWNER_IDS || '378501056008683530,738723658352296017').split(',').map(id => id.trim());
+function getOwnerIds() {
+    try {
+        if (fs.existsSync(_BOT_OWNERS_FILE)) {
+            const data = JSON.parse(fs.readFileSync(_BOT_OWNERS_FILE, 'utf8'));
+            if (Array.isArray(data.owners) && data.owners.length) return data.owners;
+        }
+    } catch (e) {}
+    return _FALLBACK_OWNER_IDS;
+}
 
 // ── Feature registry ─────────────────────────────────────────────────────────
 const CUBAI_FEATURES = {
@@ -1130,7 +1139,7 @@ async function processUtterance(pcmChunks, state, userId) {
             if (state.impersonate.voiceSamples.length > 30) state.impersonate.voiceSamples.shift();
         }
 
-        if (DEVELOPER_IDS.includes(userId) && lowerText.includes('change personality to')) {
+        if (getOwnerIds().includes(userId) && lowerText.includes('change personality to')) {
             const matched = PERSONALITIES.find(p => lowerText.includes(p.name.toLowerCase()));
             if (matched) {
                 state.personality = matched;
@@ -1275,7 +1284,7 @@ async function announceReady(guildId) {
 // Join voice channel
 // ---------------------------------------------------------------------------
 async function cubAiJoin(interaction) {
-    if (!DEVELOPER_IDS.includes(interaction.user.id)) {
+    if (!getOwnerIds().includes(interaction.user.id)) {
         return interaction.reply({
             content: '🔒 **CUB AI** is currently restricted to the bot owner.\n\nWant access? Join the CUB SOFTWARE Discord server and ask for access: **discord.gg/ngQXHUbnKg**',
             flags: MessageFlags.Ephemeral
@@ -1363,7 +1372,7 @@ async function cubAiJoin(interaction) {
 // Leave voice channel
 // ---------------------------------------------------------------------------
 async function cubAiLeave(interaction) {
-    if (!DEVELOPER_IDS.includes(interaction.user.id)) {
+    if (!getOwnerIds().includes(interaction.user.id)) {
         return interaction.reply({
             content: '🔒 **CUB AI** is currently restricted to the bot owner.\n\nWant access? Join the CUB SOFTWARE Discord server and ask for access: **discord.gg/ngQXHUbnKg**',
             flags: MessageFlags.Ephemeral

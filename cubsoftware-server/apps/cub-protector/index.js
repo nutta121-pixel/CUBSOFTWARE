@@ -3913,7 +3913,7 @@ client.on('messageCreate', async (message) => {
     const item = items.find(i => i.channel_id === message.channel.id);
     if (!item) return;
 
-    const text = message.content();
+    const text = message();
     if (text.length > 1800) return;
 
     // Detect the message language — skip if it's already in the target language (e.g. don't translate English → English)

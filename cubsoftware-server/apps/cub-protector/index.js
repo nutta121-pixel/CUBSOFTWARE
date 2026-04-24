@@ -4132,10 +4132,11 @@ client.on('messageCreate', (message) => {
             ? '\n\n*⚠️ Japanese romaji input detected — translation accuracy may vary.*'
             : '';
         const description = translated + transliterationNote;
+        const confidenceText = (detectedConfidence != null) ? ` • ${detectedConfidence}% confidence` : '';
         const embed = cubEmbed()
             .setColor(0x5865f2)
             .setDescription(description)
-            .setFooter({ text: `${detectedLabel} → ${toLabel} • CUB SOFTWARE Translation` });
+            .setFooter({ text: `${detectedLabel} → ${toLabel}${confidenceText} • CUB SOFTWARE Translation` });
 
         console.log(`[Translate] Sending translation reply in #${message.channel.name} — ${detectedLabel} (confidence: ${detectedConfidence ?? 'n/a'}) → ${toLabel} [via ${result.source}]`);
         message.reply({ embeds: [embed] }).then(() => {

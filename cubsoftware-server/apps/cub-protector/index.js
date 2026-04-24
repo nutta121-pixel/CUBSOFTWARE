@@ -21,8 +21,6 @@ try { _errorReporterModule = require('../../shared/cub-error-reporter'); } catch
 const ERRORS = _errorReporterModule?.ERRORS || {};
 let generateRankCard = null;
 try { generateRankCard = require('./rankCard').generateRankCard; } catch (e) { console.warn('[RankCard] @napi-rs/canvas not available — run npm install'); }
-let _pinyin2hanzi = null;
-try { _pinyin2hanzi = require('pinyin2hanzi'); } catch (e) { console.warn('[Translate] pinyin2hanzi not available — run: npm install pinyin2hanzi (needed for pinyin→hanzi conversion)'); }
 
 let cubAiJoin = null, cubAiLeave = null, cubAiPersonality = null, cubAiAsk = null, CUBAI_PERSONALITIES = [], CUBAI_FEATURES = {}, cubAiGetState = null;
 let cubAiRapBattle = null, cubAiBurnBookAdd = null, cubAiBurnBookRead = null;
@@ -386,19 +384,10 @@ function _segmentPinyin(bareText) {
     }
     return syllables;
 }
-// Wraps pinyin2hanzi callback API in a Promise. Returns the most probable Hanzi string or null.
-async function _pinyinToHanzi(syllables) {
-    if (!_pinyin2hanzi || !syllables.length) return null;
-    return new Promise(resolve => {
-        try {
-            _pinyin2hanzi.pinyinToHanziArray(syllables, _pinyin2hanzi.defaultOptions, results => {
-                resolve(results?.[0]?.hanzi || null);
-            });
-        } catch (e) {
-            console.error(`[Translate] _pinyinToHanzi error: ${e.message}`);
-            resolve(null);
-        }
-    });
+// Pinyin → Hanzi conversion — returns null (no package available).
+// Fallback: translateText forces src='zh' so Google handles raw pinyin natively.
+async function _pinyinToHanzi(_syllables) {
+    return null;
 }
 
 // Translation chain: LibreTranslate (primary) → Google (fallback) → MyMemory (final fallback).

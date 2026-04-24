@@ -507,7 +507,12 @@ async function translateText(text, from, to) {
             console.log(`[Translate] MyMemory succeeded — result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
             return { text: translated, detectedLang: null, detectedConfidence: null, source: 'mymemory', isPinyinInput, isRomajiInput };
         }
-        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202 — MyMemory returned non-200 status: ${res.data?.responseStatus} | ${res.data?.responseDetails}`);
+        if (res.data?.responseStatus === 403 && typeof res.data?.responseDetails === 'string' && res.data.responseDetails.includes('DISTINCT LANGUAGES')) {
+            console.log(`[Translate] MyMemory 403 — detected same language as target, skipping`);
+            sameAsInputFlag = true;
+        } else {
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202 — MyMemory returned non-200 status: ${res.data?.responseStatus} | ${res.data?.responseDetails}`);
+        }
     } catch (e) {
         console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202 — MyMemory failed: ${e.message}`);
     }

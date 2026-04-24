@@ -305,26 +305,41 @@ function saveTranslateConfig(data) {
 function getGuildTranslateItems(guildId) {
     const data = loadTranslateConfig();
     const gd = data.guilds?.[guildId];
-    if (!gd?.settings?.enabled) return [];
-    return (gd.items || []).filter(i => i.enabled !== false);
+    if (!gd) {
+        console.log(`[Translate] getGuildTranslateItems(${guildId}): no config entry for this guild — returning empty`);
+        return [];
+    }
+    if (!gd.settings?.enabled) {
+        console.log(`[Translate] getGuildTranslateItems(${guildId}): translation is disabled (settings.enabled=${gd.settings?.enabled}) — returning empty`);
+        return [];
+    }
+    const active = (gd.items || []).filter(i => i.enabled !== false);
+    console.log(`[Translate] getGuildTranslateItems(${guildId}): found ${active.length} active channel(s) out of ${(gd.items || []).length} total`);
+    return active;
 }
 // Translation: self-hosted LibreTranslate (primary, unlimited, free) → MyMemory fallback (all 90+ languages).
 // LibreTranslate runs on the same server via PM2 (7-libretranslate).
 // Optional: set MYMEMORY_EMAIL in .env to raise MyMemory fallback from 1,000 → 10,000 words/day.
 async function detectLanguage(text) {
     const ltUrl = process.env.LIBRETRANSLATE_URL || 'http://127.0.0.1:5050';
+    console.log(`[Translate] detectLanguage: calling LibreTranslate at ${ltUrl}/detect for text "${text.slice(0, 50)}${text.length > 50 ? '...' : ''}"`);
     try {
         const res = await axios.post(`${ltUrl}/detect`, { q: text }, { timeout: 5000 });
         if (Array.isArray(res.data) && res.data.length > 0) {
-            return res.data[0].language; // highest-confidence result
+            const lang = res.data[0].language;
+            const confidence = res.data[0].confidence;
+            console.log(`[Translate] detectLanguage: detected "${lang}" (confidence: ${confidence})`);
+            return lang;
         }
+        console.log(`[Translate] detectLanguage: LibreTranslate returned empty result`);
     } catch (e) {
-        console.error('ERROR: detectLanguage', e.message);
+        console.error(`[Translate] detectLanguage: LibreTranslate error — ${e.message}`);
     }
     return null;
 }
 async function translateText(text, from, to) {
     const ltUrl = process.env.LIBRETRANSLATE_URL || 'http://127.0.0.1:5050';
+    console.log(`[Translate] translateText: attempting LibreTranslate (${ltUrl}) from="${from}" to="${to}" text="${text.slice(0, 60)}${text.length > 60 ? '...' : ''}"`);
     try {
         const res = await axios.post(`${ltUrl}/translate`, {
             q: text,
@@ -333,24 +348,35 @@ async function translateText(text, from, to) {
             format: 'text',
         }, { timeout: 10000 });
         const result = res.data?.translatedText;
-        if (result) return result;
+        if (result) {
+            console.log(`[Translate] translateText: LibreTranslate succeeded — result="${result.slice(0, 80)}${result.length > 80 ? '...' : ''}"`);
+            return result;
+        }
+        console.log(`[Translate] translateText: LibreTranslate returned empty translatedText`);
     } catch (e) {
-        if (e?.response?.status !== 400) {
-            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201 — LibreTranslate failed:', e.message);
+        if (e?.response?.status === 400) {
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201 — LibreTranslate 400 bad request (unsupported lang pair? from=${from} to=${to}): ${e.message}`);
+        } else {
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201 — LibreTranslate failed (status=${e?.response?.status}): ${e.message}`);
         }
     }
     // Fallback: MyMemory (no account required)
     const src = from === 'auto' ? 'autodetect' : from;
     const emailParam = process.env.MYMEMORY_EMAIL ? `&de=${encodeURIComponent(process.env.MYMEMORY_EMAIL)}` : '';
     const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(src)}|${encodeURIComponent(to)}${emailParam}`;
+    console.log(`[Translate] translateText: LibreTranslate failed — trying MyMemory fallback (src=${src}, to=${to})`);
     try {
         const res = await axios.get(url, { timeout: 8000 });
         if (res.data?.responseStatus === 200 && res.data?.responseData?.translatedText) {
-            return res.data.responseData.translatedText;
+            const result = res.data.responseData.translatedText;
+            console.log(`[Translate] translateText: MyMemory fallback succeeded — result="${result.slice(0, 80)}${result.length > 80 ? '...' : ''}"`);
+            return result;
         }
+        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202 — MyMemory returned non-200 status: ${res.data?.responseStatus} | ${res.data?.responseDetails}`);
     } catch (e) {
-        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202 — MyMemory fallback failed:', e.message);
+        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202 — MyMemory fallback failed: ${e.message}`);
     }
+    console.error(`[Translate] translateText: both LibreTranslate and MyMemory failed for from="${from}" to="${to}"`);
     return null;
 }
 
@@ -3912,18 +3938,38 @@ client.on('messageCreate', async (message) => {
 
     const items = getGuildTranslateItems(message.guildId);
     if (!items.length) return;
+
     const item = items.find(i => i.channel_id === message.channel.id);
-    if (!item) return;
+    if (!item) {
+        // Only log at debug level — this fires for every message in non-translate channels, so skip to avoid spam
+        return;
+    }
+
+    console.log(`[Translate] Auto-translate triggered in #${message.channel.name} (${message.channel.id}) guild=${message.guild.name} author=${message.author.tag} from="${item.from}" to="${item.to}"`);
 
     const text = message.content.trim();
-    if (text.length > 1800) return;
+    if (text.length > 1800) {
+        console.log(`[Translate] Skipping — message too long (${text.length} chars, max 1800)`);
+        return;
+    }
 
-    // Detect the message language — skip if it's already in the target language (e.g. don't translate English → English)
+    console.log(`[Translate] Detecting language for: "${text.slice(0, 60)}${text.length > 60 ? '...' : ''}"`);
     const detectedLang = await detectLanguage(text);
-    if (detectedLang && detectedLang === item.to) return;
+    if (detectedLang && detectedLang === item.to) {
+        console.log(`[Translate] Skipping — detected language "${detectedLang}" matches target language "${item.to}", no translation needed`);
+        return;
+    }
 
+    console.log(`[Translate] Translating from="${item.from}" (detected="${detectedLang || 'unknown'}") to="${item.to}"`);
     const translated = await translateText(text, item.from, item.to);
-    if (!translated || translated.trim().toLowerCase() === text.toLowerCase()) return;
+    if (!translated) {
+        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — translateText returned null for guild=${message.guild.name} channel=#${message.channel.name}`);
+        return;
+    }
+    if (translated.trim().toLowerCase() === text.toLowerCase()) {
+        console.log(`[Translate] Skipping — translated text is identical to original (likely same language or no-op translation)`);
+        return;
+    }
 
     const detectedLabel = detectedLang ? _translateLangName(detectedLang) : _translateLangName(item.from);
     const toLabel = _translateLangName(item.to);
@@ -3931,10 +3977,12 @@ client.on('messageCreate', async (message) => {
         .setColor(0x5865f2)
         .setDescription(translated)
         .setFooter({ text: `${detectedLabel} → ${toLabel} • CUB SOFTWARE Translation` });
-    message.send({ embeds: [embed] }).then(() => {
-        console.log(`[Translate] ${message.guild.name} (${message.guildId}) #${message.channel.name}: ${detectedLabel} → ${toLabel} | author: ${message.author.tag}`);
+
+    console.log(`[Translate] Sending translation reply in #${message.channel.name} — ${detectedLabel} → ${toLabel}`);
+    message.channel.send({ embeds: [embed] }).then(() => {
+        console.log(`[Translate] Successfully sent translation in ${message.guild.name} #${message.channel.name} | ${detectedLabel} → ${toLabel} | author: ${message.author.tag}`);
     }).catch(e => {
-        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — Failed to send translation reply: ${e.message}`);
+        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — Failed to send translation reply in #${message.channel.name}: ${e.message}`);
     });
 });
 
@@ -7973,13 +8021,25 @@ client.on('interactionCreate', async (interaction) => {
         const text = interaction.options.getString('text');
         const to = interaction.options.getString('to');
         const from = interaction.options.getString('from') || 'auto';
-        if (!TRANSLATE_ALL_LANGUAGES.find(l => l.value === to)) return interaction.reply({ content: `❌ Unknown target language: \`${to}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
-        if (from !== 'auto' && !TRANSLATE_ALL_LANGUAGES.find(l => l.value === from)) return interaction.reply({ content: `❌ Unknown source language: \`${from}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
+        console.log(`[Translate] /translate command: guild=${guild?.name} user=${interaction.user.tag} from="${from}" to="${to}" text="${text.slice(0, 60)}${text.length > 60 ? '...' : ''}"`);
+        if (!TRANSLATE_ALL_LANGUAGES.find(l => l.value === to)) {
+            console.log(`[Translate] /translate rejected — unknown target language: "${to}"`);
+            return interaction.reply({ content: `❌ Unknown target language: \`${to}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
+        }
+        if (from !== 'auto' && !TRANSLATE_ALL_LANGUAGES.find(l => l.value === from)) {
+            console.log(`[Translate] /translate rejected — unknown source language: "${from}"`);
+            return interaction.reply({ content: `❌ Unknown source language: \`${from}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
+        }
         await interaction.deferReply();
+        console.log(`[Translate] /translate: calling translateText from="${from}" to="${to}"`);
         const translated = await translateText(text, from, to);
-        if (!translated) return interaction.editReply({ content: '❌ Translation failed. Please try again in a moment.' });
+        if (!translated) {
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_CMD_203 — /translate failed for guild=${guild?.name} user=${interaction.user.tag} from="${from}" to="${to}"`);
+            return interaction.editReply({ content: '❌ Translation failed. Please try again in a moment.' });
+        }
         const fromLabel = _translateLangName(from);
         const toLabel = _translateLangName(to);
+        console.log(`[Translate] /translate: success — ${fromLabel} → ${toLabel} for user=${interaction.user.tag}`);
         return interaction.editReply({ embeds: [cubEmbed().setColor(0x5865f2).setTitle('Translation').addFields(
             { name: `Original (${fromLabel})`, value: text.length > 1024 ? text.slice(0, 1021) + '...' : text },
             { name: `Translated (${toLabel})`, value: translated.length > 1024 ? translated.slice(0, 1021) + '...' : translated }
@@ -7988,41 +8048,62 @@ client.on('interactionCreate', async (interaction) => {
 
     if (commandName === 'translate-setup') {
         const sub = interaction.options.getSubcommand();
+        console.log(`[Translate] /translate-setup ${sub}: guild=${guild?.name} (${guild?.id}) user=${interaction.user.tag}`);
         const data = loadTranslateConfig();
         if (!data.guilds) data.guilds = {};
-        if (!data.guilds[guild.id]) data.guilds[guild.id] = { settings: { enabled: true }, items: [] };
+        if (!data.guilds[guild.id]) {
+            console.log(`[Translate] /translate-setup: no config for guild ${guild.id} — creating new entry with settings.enabled=true`);
+            data.guilds[guild.id] = { settings: { enabled: true }, items: [] };
+        }
         const gd = data.guilds[guild.id];
+        console.log(`[Translate] /translate-setup: guild config — settings.enabled=${gd.settings?.enabled}, items=${gd.items?.length ?? 0}`);
 
         if (sub === 'add') {
             const channel = interaction.options.getChannel('channel');
             const to = interaction.options.getString('to');
             const from = interaction.options.getString('from') || 'auto';
+            console.log(`[Translate] /translate-setup add: channel=#${channel.name} (${channel.id}) from="${from}" to="${to}"`);
             const toValid = TRANSLATE_ALL_LANGUAGES.find(l => l.value === to);
             const fromValid = from === 'auto' || TRANSLATE_ALL_LANGUAGES.find(l => l.value === from);
-            if (!toValid) return interaction.reply({ content: `❌ Unknown target language: \`${to}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
-            if (!fromValid) return interaction.reply({ content: `❌ Unknown source language: \`${from}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
+            if (!toValid) {
+                console.log(`[Translate] /translate-setup add rejected — unknown target language: "${to}"`);
+                return interaction.reply({ content: `❌ Unknown target language: \`${to}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
+            }
+            if (!fromValid) {
+                console.log(`[Translate] /translate-setup add rejected — unknown source language: "${from}"`);
+                return interaction.reply({ content: `❌ Unknown source language: \`${from}\`. Start typing to see suggestions.`, flags: MessageFlags.Ephemeral });
+            }
             const existing = gd.items.find(i => i.channel_id === channel.id);
             if (existing) {
+                console.log(`[Translate] /translate-setup add: channel ${channel.id} already configured — updating from "${existing.from}"→"${existing.to}" to "${from}"→"${to}"`);
                 existing.to = to; existing.from = from; existing.enabled = true;
                 saveTranslateConfig(data);
+                console.log(`[Translate] /translate-setup add: config saved for guild ${guild.id}`);
                 return interaction.reply({ embeds: [cubEmbed().setColor(0x22c55e).setTitle('Translation Updated').setDescription(`Updated auto-translation for <#${channel.id}>.`).addFields({ name: 'From', value: _translateLangName(from), inline: true }, { name: 'To', value: _translateLangName(to), inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral });
             }
             gd.items.push({ id: String(Date.now()), channel_id: channel.id, from, to, enabled: true, created_at: new Date().toISOString() });
             saveTranslateConfig(data);
+            console.log(`[Translate] /translate-setup add: new entry saved — guild ${guild.id} channel=${channel.id} from="${from}" to="${to}"`);
             return interaction.reply({ embeds: [cubEmbed().setColor(0x22c55e).setTitle('Translation Setup').setDescription(`Messages in <#${channel.id}> will now be automatically translated.`).addFields({ name: 'From', value: _translateLangName(from), inline: true }, { name: 'To', value: _translateLangName(to), inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral });
         }
 
         if (sub === 'remove') {
             const channel = interaction.options.getChannel('channel');
+            console.log(`[Translate] /translate-setup remove: channel=#${channel.name} (${channel.id})`);
             const before = gd.items.length;
             gd.items = gd.items.filter(i => i.channel_id !== channel.id);
-            if (gd.items.length === before) return interaction.reply({ content: `❌ <#${channel.id}> is not configured for translation.`, flags: MessageFlags.Ephemeral });
+            if (gd.items.length === before) {
+                console.log(`[Translate] /translate-setup remove: channel ${channel.id} not found in config`);
+                return interaction.reply({ content: `❌ <#${channel.id}> is not configured for translation.`, flags: MessageFlags.Ephemeral });
+            }
             saveTranslateConfig(data);
+            console.log(`[Translate] /translate-setup remove: removed channel ${channel.id} from guild ${guild.id}`);
             return interaction.reply({ embeds: [cubEmbed().setColor(0xef4444).setTitle('Translation Removed').setDescription(`Auto-translation disabled for <#${channel.id}>.`).setTimestamp()], flags: MessageFlags.Ephemeral });
         }
 
         if (sub === 'list') {
             const items = gd.items;
+            console.log(`[Translate] /translate-setup list: guild ${guild.id} has ${items.length} channel(s) configured`);
             if (!items.length) return interaction.reply({ content: 'No channels configured for translation. Use `/translate-setup add` to get started.', flags: MessageFlags.Ephemeral });
             const desc = items.map(i => `${i.enabled === false ? '🔴' : '🟢'} <#${i.channel_id}> — ${_translateLangName(i.from)} → ${_translateLangName(i.to)}`).join('\n');
             return interaction.reply({ embeds: [cubEmbed().setColor(0x5865f2).setTitle('Translation Channels').setDescription(desc).setFooter({ text: `${items.length} channel(s) configured` }).setTimestamp()], flags: MessageFlags.Ephemeral });
@@ -8034,16 +8115,29 @@ client.on('interactionCreate', async (interaction) => {
         const to = interaction.options.getString('to');
         const from = interaction.options.getString('from');
         const enabled = interaction.options.getBoolean('enabled');
+        console.log(`[Translate] /translate-edit: guild=${guild?.name} user=${interaction.user.tag} channel=#${channel?.name} (${channel?.id}) to="${to}" from="${from}" enabled=${enabled}`);
         if (to === null && from === null && enabled === null) return interaction.reply({ content: '❌ Provide at least one setting to change (to, from, or enabled).', flags: MessageFlags.Ephemeral });
-        if (to && !TRANSLATE_ALL_LANGUAGES.find(l => l.value === to)) return interaction.reply({ content: `❌ Unknown target language: \`${to}\`.`, flags: MessageFlags.Ephemeral });
-        if (from && from !== 'auto' && !TRANSLATE_ALL_LANGUAGES.find(l => l.value === from)) return interaction.reply({ content: `❌ Unknown source language: \`${from}\`.`, flags: MessageFlags.Ephemeral });
+        if (to && !TRANSLATE_ALL_LANGUAGES.find(l => l.value === to)) {
+            console.log(`[Translate] /translate-edit rejected — unknown target language: "${to}"`);
+            return interaction.reply({ content: `❌ Unknown target language: \`${to}\`.`, flags: MessageFlags.Ephemeral });
+        }
+        if (from && from !== 'auto' && !TRANSLATE_ALL_LANGUAGES.find(l => l.value === from)) {
+            console.log(`[Translate] /translate-edit rejected — unknown source language: "${from}"`);
+            return interaction.reply({ content: `❌ Unknown source language: \`${from}\`.`, flags: MessageFlags.Ephemeral });
+        }
         const data = loadTranslateConfig();
+        console.log(`[Translate] /translate-edit: guild config — settings.enabled=${data.guilds?.[guild.id]?.settings?.enabled}, items=${data.guilds?.[guild.id]?.items?.length ?? 0}`);
         const item = data.guilds?.[guild.id]?.items?.find(i => i.channel_id === channel.id);
-        if (!item) return interaction.reply({ content: `❌ <#${channel.id}> is not configured for translation. Use \`/translate-setup add\` first.`, flags: MessageFlags.Ephemeral });
+        if (!item) {
+            console.log(`[Translate] /translate-edit: channel ${channel.id} not found in config for guild ${guild.id}`);
+            return interaction.reply({ content: `❌ <#${channel.id}> is not configured for translation. Use \`/translate-setup add\` first.`, flags: MessageFlags.Ephemeral });
+        }
+        const prev = { from: item.from, to: item.to, enabled: item.enabled };
         if (to !== null) item.to = to;
         if (from !== null) item.from = from;
         if (enabled !== null) item.enabled = enabled;
         saveTranslateConfig(data);
+        console.log(`[Translate] /translate-edit: updated channel ${channel.id} — from "${prev.from}"→"${item.from}", to "${prev.to}"→"${item.to}", enabled ${prev.enabled}→${item.enabled}`);
         return interaction.reply({ embeds: [cubEmbed().setColor(0x22c55e).setTitle('Translation Updated').setDescription(`Settings updated for <#${channel.id}>.`).addFields({ name: 'From', value: _translateLangName(item.from), inline: true }, { name: 'To', value: _translateLangName(item.to), inline: true }, { name: 'Status', value: item.enabled !== false ? '🟢 Enabled' : '🔴 Disabled', inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral });
     }
 

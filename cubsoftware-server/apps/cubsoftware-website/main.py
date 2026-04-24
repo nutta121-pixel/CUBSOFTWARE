@@ -18592,8 +18592,8 @@ def api_codebase_info():
             return 'unknown'
 
     try:
-        import flask as _flask
-        flask_ver = _flask.__version__
+        import importlib.metadata
+        flask_ver = importlib.metadata.version('flask')
     except Exception:
         flask_ver = 'unknown'
 

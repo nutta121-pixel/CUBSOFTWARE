@@ -406,6 +406,7 @@ async function translateText(text, from, to) {
     let src = from === 'auto' ? 'auto' : from;
     let isPinyinInput = false;
     let isRomajiInput = false;
+    let sameAsInputFlag = false;
 
     // ── Romanisation preprocessing ───────────────────────────
     if (from === 'auto') {
@@ -448,7 +449,7 @@ async function translateText(text, from, to) {
         if (!translated) return null;
         const detectedLang = src === 'auto' ? (res.data?.detectedLanguage?.language ?? null) : null;
         const detectedConfidence = src === 'auto' ? (res.data?.detectedLanguage?.confidence ?? null) : null;
-        if (translated.trim().toLowerCase() === text.trim().toLowerCase()) return null;
+        if (translated.trim().toLowerCase() === text.trim().toLowerCase()) { sameAsInputFlag = true; return null; }
         console.log(`[Translate] LibreTranslate succeeded — detectedLang="${detectedLang}" confidence=${detectedConfidence} result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
         return { text: translated, detectedLang, detectedConfidence, source: 'libretranslate', isPinyinInput, isRomajiInput };
     };
@@ -474,7 +475,8 @@ async function translateText(text, from, to) {
                     : null;
             }
         }
-        if (!translated || translated.trim().toLowerCase() === text.trim().toLowerCase()) return null;
+        if (!translated) return null;
+        if (translated.trim().toLowerCase() === text.trim().toLowerCase()) { sameAsInputFlag = true; return null; }
         console.log(`[Translate] Google succeeded — detectedLang="${detectedLang}" result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
         return { text: translated, detectedLang, detectedConfidence: detectedLang ? 95 : null, source: 'google', isPinyinInput, isRomajiInput };
     };
@@ -511,7 +513,7 @@ async function translateText(text, from, to) {
     }
 
     console.error(`[Translate] All 3 translation services failed for src="${src}" to="${to}"`);
-    return null;
+    return sameAsInputFlag ? { sameAsInput: true } : null;
 }
 
 function loadSlowmodeConfig() {
@@ -4102,6 +4104,7 @@ client.on('messageCreate', (message) => {
 
         console.log(`[Translate] Translating from="${item.from}" to="${item.to}" — language will be detected by LibreTranslate during translation`);
         const result = await translateText(text, item.from, item.to);
+        if (result?.sameAsInput) return;
         if (!result) {
             console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — translateText returned null for guild=${message.guild.name} channel=#${message.channel.name}`);
             const confused = CONFUSED_RESPONSES[Math.floor(Math.random() * CONFUSED_RESPONSES.length)];

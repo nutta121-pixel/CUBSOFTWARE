@@ -1362,7 +1362,7 @@ const client = new Client({
 const MAIN_BOT_SHARED_COMMANDS = new Set(['help', 'website', 'invite']);
 // Commands that only run on the main cub-protector — never on custom bot instances
 const MAIN_BOT_ONLY_COMMANDS = new Set([
-    'cubsoftware',
+    'cubai', 'cubsoftware',
     'link-find', 'link-ban', 'link-unban', 'link-bans', 'link-delete',
     'ip',
     'keraplast-password', 'feature',
@@ -1984,7 +1984,8 @@ const commands = [
                     { name: 'Formal', value: 'Formal' },
                     { name: 'Wholesome', value: 'Wholesome' },
                     { name: 'Conspiracy', value: 'Conspiracy' },
-                    { name: 'Gen Z', value: 'Gen Z' }
+                    { name: 'Gen Z', value: 'Gen Z' },
+                    { name: 'Demon', value: 'Demon' }
                 )
             )
         )

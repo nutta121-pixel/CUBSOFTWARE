@@ -8233,11 +8233,12 @@ client.on('interactionCreate', async (interaction) => {
             if (existing) {
                 console.log(`[Translate] /translate-setup add: channel ${channel.id} already configured — updating from "${existing.from}"→"${existing.to}" to "${from}"→"${to}"`);
                 existing.to = to; existing.from = from; existing.enabled = true;
+                existing.channel_name = channel.name;
                 saveTranslateConfig(data);
                 console.log(`[Translate] /translate-setup add: config saved for guild ${guild.id}`);
                 return interaction.reply({ embeds: [cubEmbed().setColor(0x22c55e).setTitle('Translation Updated').setDescription(`Updated auto-translation for <#${channel.id}>.`).addFields({ name: 'From', value: _translateLangName(from), inline: true }, { name: 'To', value: _translateLangName(to), inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral });
             }
-            gd.items.push({ id: String(Date.now()), channel_id: channel.id, from, to, enabled: true, created_at: new Date().toISOString() });
+            gd.items.push({ id: String(Date.now()), channel_id: channel.id, channel_name: channel.name, from, to, enabled: true, created_at: new Date().toISOString() });
             saveTranslateConfig(data);
             console.log(`[Translate] /translate-setup add: new entry saved — guild ${guild.id} channel=${channel.id} from="${from}" to="${to}"`);
             return interaction.reply({ embeds: [cubEmbed().setColor(0x22c55e).setTitle('Translation Setup').setDescription(`Messages in <#${channel.id}> will now be automatically translated.`).addFields({ name: 'From', value: _translateLangName(from), inline: true }, { name: 'To', value: _translateLangName(to), inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral });
@@ -8292,6 +8293,7 @@ client.on('interactionCreate', async (interaction) => {
         if (to !== null) item.to = to;
         if (from !== null) item.from = from;
         if (enabled !== null) item.enabled = enabled;
+        item.channel_name = channel.name;
         saveTranslateConfig(data);
         console.log(`[Translate] /translate-edit: updated channel ${channel.id} — from "${prev.from}"→"${item.from}", to "${prev.to}"→"${item.to}", enabled ${prev.enabled}→${item.enabled}`);
         return interaction.reply({ embeds: [cubEmbed().setColor(0x22c55e).setTitle('Translation Updated').setDescription(`Settings updated for <#${channel.id}>.`).addFields({ name: 'From', value: _translateLangName(item.from), inline: true }, { name: 'To', value: _translateLangName(item.to), inline: true }, { name: 'Status', value: item.enabled !== false ? '🟢 Enabled' : '🔴 Disabled', inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral });

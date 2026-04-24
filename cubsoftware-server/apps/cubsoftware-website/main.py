@@ -6331,7 +6331,7 @@ def pm2_get_processes():
 
         for proc in processes_data:
             # Custom bot processes are shown on their own page, not here
-            if str(proc.get('name', '')).startswith('7-cp-custom-'):
+            if str(proc.get('name', '')).startswith('8-cp-custom-'):
                 continue
 
             cpu = proc.get('monit', {}).get('cpu', 0)
@@ -6389,7 +6389,7 @@ def pm2_launch_all_custom_bots():
     for guild_id, entry in cb_data.get('guilds', {}).items():
         if not entry.get('enabled') or not entry.get('token'):
             continue
-        process_name = f'7-cp-custom-{guild_id}'
+        process_name = f'8-cp-custom-{guild_id}'
         wrapper_file = os.path.join(CUB_PROTECTOR_DIR, f'custom_bot_{guild_id}.js')
         if not os.path.exists(wrapper_file):
             results.append({'guild_id': guild_id, 'name': process_name, 'status': 'error', 'message': 'Wrapper file missing — re-activate via CUB PROTECTOR dashboard'})
@@ -6415,7 +6415,7 @@ def pm2_launch_custom_bot(guild_id):
     entry = cb_data.get('guilds', {}).get(guild_id, {})
     if not entry.get('enabled') or not entry.get('token'):
         return jsonify({'error': 'No custom bot configured for this guild'}), 404
-    process_name = f'7-cp-custom-{guild_id}'
+    process_name = f'8-cp-custom-{guild_id}'
     wrapper_file = os.path.join(CUB_PROTECTOR_DIR, f'custom_bot_{guild_id}.js')
     if not os.path.exists(wrapper_file):
         return jsonify({'error': 'Wrapper file missing — re-activate via CUB PROTECTOR dashboard'}), 404
@@ -6444,9 +6444,9 @@ def pm2_get_custom_bots():
         bots = []
         for proc in processes_data:
             name = str(proc.get('name', ''))
-            if not name.startswith('7-cp-custom-'):
+            if not name.startswith('8-cp-custom-'):
                 continue
-            guild_id = name[len('7-cp-custom-'):]
+            guild_id = name[len('8-cp-custom-'):]
             pm2_env = proc.get('pm2_env', {})
             cpu = proc.get('monit', {}).get('cpu', 0)
             memory = proc.get('monit', {}).get('memory', 0)
@@ -15418,7 +15418,7 @@ def custom_bot_get(guild_id):
         'bot_avatar_url': avatar_url,
         'has_token': bool(entry.get('token')),
         'invite_url': invite_url,
-        'pm2_name': f"7-cp-custom-{guild_id}",
+        'pm2_name': f"8-cp-custom-{guild_id}",
         'presence': presence,
     })
 
@@ -15476,7 +15476,7 @@ def custom_bot_save(guild_id):
 
     # Start or restart the custom bot PM2 process
     import subprocess, json as _json
-    process_name = f'7-cp-custom-{guild_id}'
+    process_name = f'8-cp-custom-{guild_id}'
 
     # Write a small Node.js wrapper that sets env vars at the process level
     # before requiring index.js. This is more reliable than PM2 ecosystem files,
@@ -15604,7 +15604,7 @@ def custom_bot_delete(guild_id):
 
     # Stop and remove PM2 process
     import subprocess
-    process_name = f'7-cp-custom-{guild_id}'
+    process_name = f'8-cp-custom-{guild_id}'
     subprocess.run(['pm2', 'delete', process_name], capture_output=True)
 
     # Remove wrapper launcher file
@@ -15628,7 +15628,7 @@ def custom_bot_status(guild_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
     import subprocess
-    process_name = f'7-cp-custom-{guild_id}'
+    process_name = f'8-cp-custom-{guild_id}'
     result = subprocess.run(['pm2', 'jlist'], capture_output=True, text=True)
     status = 'stopped'
     try:
@@ -20088,7 +20088,7 @@ def _auto_launch_custom_bots():
         for guild_id, entry in guilds.items():
             if not entry.get('enabled') or not entry.get('token'):
                 continue
-            process_name = f'7-cp-custom-{guild_id}'
+            process_name = f'8-cp-custom-{guild_id}'
             if process_name in running:
                 skipped += 1
                 continue

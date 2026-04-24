@@ -507,7 +507,7 @@ async function translateText(text, from, to) {
             console.log(`[Translate] MyMemory succeeded — result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
             return { text: translated, detectedLang: null, detectedConfidence: null, source: 'mymemory', isPinyinInput, isRomajiInput };
         }
-        if (res.data?.responseStatus === 403 && typeof res.data?.responseDetails === 'string' && res.data.responseDetails.includes('DISTINCT LANGUAGES')) {
+        if (res.data?.responseStatus == 403 && String(res.data?.responseDetails ?? '').includes('DISTINCT LANGUAGES')) {
             console.log(`[Translate] MyMemory 403 — detected same language as target, skipping`);
             sameAsInputFlag = true;
         } else {

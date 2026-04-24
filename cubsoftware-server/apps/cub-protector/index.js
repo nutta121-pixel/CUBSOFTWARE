@@ -357,23 +357,34 @@ async function translateText(text, from, to) {
     }
 
     // ── Attempt 2: Google Translate (unofficial, no API key) ─
-    // Uses the same endpoint as the @vitalets/google-translate-api package internally.
-    // Response: [[["translated","original",...]], null, "detectedLang", ...]
+    // dt=t → translation segments, dt=ld → language detection data
+    // Response: [[["translated","original",...]], null, "detectedLang", ..., [["detectedLang",...], ...]]
+    // Detected language: data[8][0][0] is most reliable (from dt=ld); data[2] is a fallback.
     console.log(`[Translate] Attempt 2/3 — Google Translate src="${src}" to="${to}"`);
     try {
-        const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(src)}&tl=${encodeURIComponent(to)}&dt=t&q=${encodeURIComponent(text)}`;
+        const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(src)}&tl=${encodeURIComponent(to)}&dt=t&dt=ld&q=${encodeURIComponent(text)}`;
         const res = await axios.get(googleUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+        console.log(`[Translate] Google raw response shape: data[2]="${res.data?.[2]}" data[8][0][0]="${res.data?.[8]?.[0]?.[0]}"`);
         if (Array.isArray(res.data?.[0])) {
             const translated = res.data[0].map(chunk => chunk?.[0]).filter(Boolean).join('');
-            const detectedLang = (src === 'auto' && typeof res.data[2] === 'string') ? res.data[2] : null;
+            // Prefer data[8][0][0] (dt=ld detection result) over data[2] — more reliable
+            const detectedLang = src === 'auto'
+                ? (res.data?.[8]?.[0]?.[0] ?? (typeof res.data[2] === 'string' ? res.data[2] : null))
+                : null;
             if (translated) {
-                console.log(`[Translate] Google Translate succeeded — detectedLang="${detectedLang}" result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
-                // Google detection is reliable — treat it as high confidence (no numeric score returned by this endpoint)
-                return { text: translated, detectedLang, detectedConfidence: detectedLang ? 95 : null, source: 'google' };
+                // Same echo check as LT: if Google returned the text unchanged, it also failed
+                const googleEchoed = translated.trim().toLowerCase() === text.trim().toLowerCase();
+                if (googleEchoed) {
+                    console.log(`[Translate] Google Translate returned original text unchanged (detectedLang="${detectedLang}") — falling back to MyMemory`);
+                } else {
+                    console.log(`[Translate] Google Translate succeeded — detectedLang="${detectedLang}" result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
+                    return { text: translated, detectedLang, detectedConfidence: detectedLang ? 95 : null, source: 'google' };
+                }
+            } else {
+                console.log(`[Translate] Google Translate returned empty translated text — falling back to MyMemory`);
             }
-            console.log(`[Translate] Google Translate returned empty translated text — falling back to MyMemory`);
         } else {
-            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_GOOGLE_205 — Unexpected Google Translate response shape — falling back to MyMemory`);
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_GOOGLE_205 — Unexpected Google Translate response shape: ${JSON.stringify(res.data).slice(0, 200)} — falling back to MyMemory`);
         }
     } catch (e) {
         console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_GOOGLE_205 — Google Translate failed: ${e.message} — falling back to MyMemory`);

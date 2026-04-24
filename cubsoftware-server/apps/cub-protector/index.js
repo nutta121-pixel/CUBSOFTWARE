@@ -7464,7 +7464,7 @@ client.on('interactionCreate', async (interaction) => {
 
     else if (commandName === 'cubai') {
         try {
-            if (interaction.user.id !== '378501056008683530') {
+            if (!getOwnerIds().includes(interaction.user.id)) {
                 return await interaction.reply({ content: 'Only the bot owner can use this command.', flags: MessageFlags.Ephemeral });
             }
             if (!cubAiJoin || !cubAiLeave || !cubAiPersonality) {

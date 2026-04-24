@@ -448,7 +448,7 @@ async function translateText(text, from, to) {
         if (!translated) return null;
         const detectedLang = src === 'auto' ? (res.data?.detectedLanguage?.language ?? null) : null;
         const detectedConfidence = src === 'auto' ? (res.data?.detectedLanguage?.confidence ?? null) : null;
-        if (translated.trim().toLowerCase() === text.trim().toLowerCase() && detectedConfidence === 0) return null;
+        if (translated.trim().toLowerCase() === text.trim().toLowerCase()) return null;
         console.log(`[Translate] LibreTranslate succeeded — detectedLang="${detectedLang}" confidence=${detectedConfidence} result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
         return { text: translated, detectedLang, detectedConfidence, source: 'libretranslate', isPinyinInput, isRomajiInput };
     };

@@ -321,7 +321,6 @@ async function detectLanguage(text) {
     } catch (_) {}
     return null;
 }
-
 async function translateText(text, from, to) {
     const ltUrl = process.env.LIBRETRANSLATE_URL || 'http://127.0.0.1:5050';
     try {
@@ -341,7 +340,7 @@ async function translateText(text, from, to) {
     // Fallback: MyMemory (no account required)
     const src = from === 'auto' ? 'autodetect' : from;
     const emailParam = process.env.MYMEMORY_EMAIL ? `&de=${encodeURIComponent(process.env.MYMEMORY_EMAIL)}` : '';
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(src)}|${encodeURIComponent(to)}${emailParam}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(src)}|${encodeURIComponent(to)}`;
     try {
         const res = await axios.get(url, { timeout: 8000 });
         if (res.data?.responseStatus === 200 && res.data?.responseData?.translatedText) {

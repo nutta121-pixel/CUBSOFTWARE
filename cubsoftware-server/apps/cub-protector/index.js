@@ -1292,7 +1292,7 @@ const TRANSLATE_ALL_LANGUAGES = [
     { name: 'Xhosa', value: 'xh' },
     { name: 'Yiddish', value: 'yi' },
     { name: 'Yoruba', value: 'yo' },
-    { name: 'Zulu', value: 'zu' },
+    { name: 'Zulu', value: 'zu' }
 ];
 const TRANSLATE_SOURCE_WITH_AUTO = [{ name: 'Auto-Detect', value: 'auto' }, ...TRANSLATE_ALL_LANGUAGES];
 function _translateLangName(code) {

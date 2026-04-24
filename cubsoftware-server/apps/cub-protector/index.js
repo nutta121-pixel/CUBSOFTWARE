@@ -318,7 +318,9 @@ async function detectLanguage(text) {
         if (Array.isArray(res.data) && res.data.length > 0) {
             return res.data[0].language; // highest-confidence result
         }
-    } catch (_) {}
+    } catch (e) {
+        console.error('ERROR: detectLanguage', e.message);
+    }
     return null;
 }
 async function translateText(text, from, to) {
@@ -3923,7 +3925,7 @@ client.on('messageCreate', async (message) => {
     const translated = await translateText(text, item.from, item.to);
     if (!translated || translated.trim().toLowerCase() === text.toLowerCase()) return;
 
-    //const detectedLabel = detectedLang ? _translateLangName(detectedLang) : _translateLangName(item.from);
+    const detectedLabel = detectedLang ? _translateLangName(detectedLang) : _translateLangName(item.from);
     const toLabel = _translateLangName(item.to);
     const embed = cubEmbed()
         .setColor(0x5865f2)

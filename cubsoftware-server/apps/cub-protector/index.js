@@ -1362,7 +1362,7 @@ const client = new Client({
 const MAIN_BOT_SHARED_COMMANDS = new Set(['help', 'website', 'invite']);
 // Commands that only run on the main cub-protector — never on custom bot instances
 const MAIN_BOT_ONLY_COMMANDS = new Set([
-    'cubai', 'cubsoftware',
+    'cubsoftware',
     'link-find', 'link-ban', 'link-unban', 'link-bans', 'link-delete',
     'ip',
     'keraplast-password', 'feature',

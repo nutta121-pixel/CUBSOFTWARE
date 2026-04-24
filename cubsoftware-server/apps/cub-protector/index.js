@@ -424,7 +424,11 @@ async function translateText(text, from, to) {
                 src = 'zh';
                 isPinyinInput = true;
             } else {
-                console.log(`[Translate] Pinyin preprocessing failed (pinyin2hanzi unavailable or no match) — proceeding with original text`);
+                // Conversion failed but we still know it's Chinese — force src='zh' so Google
+                // treats the raw pinyin as Chinese input rather than misidentifying it as Vietnamese
+                console.log(`[Translate] Pinyin preprocessing failed (pinyin2hanzi unavailable or no match) — forcing src='zh' so Google handles raw pinyin`);
+                src = 'zh';
+                isPinyinInput = true;
             }
         } else if (_looksLikeRomaji(text)) {
             // Japanese Hepburn romaji — Google handles romaji natively when source is forced to 'ja'

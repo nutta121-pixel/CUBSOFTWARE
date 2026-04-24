@@ -334,22 +334,21 @@ async function translateText(text, from, to) {
         const result = res.data?.translatedText;
         if (result) return result;
     } catch (e) {
-        // 400 = language pair not supported by this LibreTranslate install — fall through silently
         if (e?.response?.status !== 400) {
-            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_097 — LibreTranslate failed:', e.message);
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201 — LibreTranslate failed:', e.message);
         }
     }
-    // Fallback: MyMemory (handles all 90+ languages; no account or key required)
+    // Fallback: MyMemory (no account required)
     const src = from === 'auto' ? 'autodetect' : from;
     const emailParam = process.env.MYMEMORY_EMAIL ? `&de=${encodeURIComponent(process.env.MYMEMORY_EMAIL)}` : '';
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(src + '|' + to)}${emailParam}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(src)}|${encodeURIComponent(to)}${emailParam}`;
     try {
         const res = await axios.get(url, { timeout: 8000 });
         if (res.data?.responseStatus === 200 && res.data?.responseData?.translatedText) {
             return res.data.responseData.translatedText;
         }
     } catch (e) {
-        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_095 — MyMemory fallback failed:', e.message);
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202 — MyMemory fallback failed:', e.message);
     }
     return null;
 }
@@ -4437,6 +4436,19 @@ client.on('channelDelete', async (channel) => {
     if (!channel.guild) return;
     if (CUSTOM_GUILD_ID && channel.guild.id !== CUSTOM_GUILD_ID) return;
     if (guildHasCustomBot(channel.guild.id)) return;
+
+    // Auto-remove translate channel config if the channel is deleted
+    const trData = loadTranslateConfig();
+    const guildTr = trData.guilds?.[channel.guild.id];
+    if (guildTr?.items?.length) {
+        const before = guildTr.items.length;
+        guildTr.items = guildTr.items.filter(i => i.channel_id !== channel.id);
+        if (guildTr.items.length !== before) {
+            saveTranslateConfig(trData);
+            console.log(`[Translate] Auto-removed deleted channel ${channel.name} (${channel.id}) from translate config in guild ${channel.guild.id}`);
+        }
+    }
+
     await sendLog(channel.guild, 'channelChanges', cubEmbed()
         .setColor(0xED4245)
         .setTitle('Channel Deleted')

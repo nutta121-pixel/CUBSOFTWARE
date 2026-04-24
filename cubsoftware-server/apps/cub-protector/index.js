@@ -71,6 +71,15 @@ let _slowmodeCfgCache = null;
 let _slowmodeCfgCacheTime = 0;
 const SLOWMODE_CFG_TTL = 5000;
 
+const CONFUSED_RESPONSES = [
+    'HUH?',
+    'What are you even saying?',
+    'What language even is this?',
+    'Are you even trying?',
+    'Try English....or French...Something??',
+    'Me no comprende'
+];
+
 function _refreshCbCache() {
     const now = Date.now();
     if (_cbGuildsCache && now - _cbGuildsCacheTime <= CB_CACHE_TTL) return;
@@ -4095,6 +4104,8 @@ client.on('messageCreate', (message) => {
         const result = await translateText(text, item.from, item.to);
         if (!result) {
             console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — translateText returned null for guild=${message.guild.name} channel=#${message.channel.name}`);
+            const confused = CONFUSED_RESPONSES[Math.floor(Math.random() * CONFUSED_RESPONSES.length)];
+            message.reply(confused).catch(() => {});
             return;
         }
 

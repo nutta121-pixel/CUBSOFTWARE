@@ -32,4 +32,4 @@ exec ./venv/bin/libretranslate \
     --port "$PORT" \
     --load-only "$LOAD_ONLY" \
     --disable-files-translation \
-    --disable-web-browser-access
+    --disable-web-ui

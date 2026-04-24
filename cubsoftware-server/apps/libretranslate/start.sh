@@ -10,7 +10,7 @@
 set -e
 cd "$(dirname "$0")"
 
-LOAD_ONLY="${LIBRETRANSLATE_LOAD_ONLY:-en,es,fr,de,it,pt,ru,ja,zh,ko,ar,nl,pl,tr,sv,da,el,cs,uk,hi,th,vi,id,he,fi,hu,ro,bg,sk,sl}"
+LOAD_ONLY="${LIBRETRANSLATE_LOAD_ONLY:-en}"
 PORT="${LIBRETRANSLATE_PORT:-5050}"
 
 # Create venv on first run

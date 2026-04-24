@@ -10,7 +10,7 @@
 set -e
 cd "$(dirname "$0")"
 
-LOAD_ONLY="${LIBRETRANSLATE_LOAD_ONLY:-en}"
+LOAD_ONLY="${LIBRETRANSLATE_LOAD_ONLY:-en,es,fr,de,it,pt,ru,ja,zh,ko,ar,nl,pl,tr,sv,da,el,cs,uk,hi,th,vi,id,he,fi,hu,ro,bg,sk,sl}"
 PORT="${LIBRETRANSLATE_PORT:-5050}"
 
 # Create venv on first run
@@ -35,5 +35,4 @@ exec ./venv/bin/libretranslate \
     --host 127.0.0.1 \
     --port "$PORT" \
     --load-only "$LOAD_ONLY" \
-    --disable-files-translation \
-    --disable-web-ui
+    --disable-files-translation

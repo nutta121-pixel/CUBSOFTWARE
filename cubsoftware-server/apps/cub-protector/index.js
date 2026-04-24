@@ -21,6 +21,8 @@ try { _errorReporterModule = require('../../shared/cub-error-reporter'); } catch
 const ERRORS = _errorReporterModule?.ERRORS || {};
 let generateRankCard = null;
 try { generateRankCard = require('./rankCard').generateRankCard; } catch (e) { console.warn('[RankCard] @napi-rs/canvas not available — run npm install'); }
+let _pinyin2hanzi = null;
+try { _pinyin2hanzi = require('pinyin2hanzi'); } catch (e) { console.warn('[Translate] pinyin2hanzi not available — run: npm install pinyin2hanzi (needed for pinyin→hanzi conversion)'); }
 
 let cubAiJoin = null, cubAiLeave = null, cubAiPersonality = null, cubAiAsk = null, CUBAI_PERSONALITIES = [], CUBAI_FEATURES = {}, cubAiGetState = null;
 let cubAiRapBattle = null, cubAiBurnBookAdd = null, cubAiBurnBookRead = null;
@@ -317,15 +319,120 @@ function getGuildTranslateItems(guildId) {
     console.log(`[Translate] getGuildTranslateItems(${guildId}): found ${active.length} active channel(s) out of ${(gd.items || []).length} total`);
     return active;
 }
-// Translation: self-hosted LibreTranslate (primary, unlimited, free) → MyMemory fallback (all 90+ languages).
-// LibreTranslate runs on the same server via PM2 (7-libretranslate).
-// Optional: set MYMEMORY_EMAIL in .env to raise MyMemory fallback from 1,000 → 10,000 words/day.
-// translateText returns { text, detectedLang, detectedConfidence, source } or null on total failure.
-// Chain: LibreTranslate (self-hosted, primary) → Google Translate (unofficial, no key) → MyMemory (final fallback).
-// When from="auto", LibreTranslate includes detectedLanguage in its response — used instead of a separate /detect call.
+// ── Romanisation helpers (Pinyin + Japanese Hepburn romaji) ──
+// Chinese pinyin: has tone marks (á ǎ à etc.) and no Hanzi → convert to Hanzi via pinyin2hanzi, then translate.
+// Japanese Hepburn: has long-vowel macrons (ā ī ū ē ō) but NOT pinyin tone marks, no Japanese script
+//   → force source='ja' so Google/LT recognises the romaji directly (no conversion package needed).
+function _looksLikePinyin(text) {
+    // Pinyin uses tones 1-4 on every vowel; tones 2/3/4 are uniquely distinctive
+    return /[áǎàéěèíǐìóǒòúǔùǘǚǜ]/i.test(text) && !/[一-鿿]/.test(text);
+}
+function _looksLikeRomaji(text) {
+    // Japanese Hepburn macrons — only macrons, no pinyin tones 2/3/4, no Japanese/Chinese characters
+    return /[āīūēō]/i.test(text)
+        && !/[áǎàéěèíǐìóǒòúǔùǘǚǜ]/i.test(text)
+        && !/[　-鿿＀-￯]/.test(text);
+}
+// Strips tone marks + diacritics (NFD decomposition removes combining chars; ü→u, macrons removed).
+function _stripPinyinTones(text) {
+    return text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+// All valid Mandarin pinyin syllables (toneless). Used for greedy left-to-right segmentation.
+// Source: https://yoyochinese.com/chinese-learning-tools/Mandarin-Chinese-pronunciation-lesson/pinyin-chart-table
+const _PINYIN_SYLLABLE_SET = new Set([
+    'a','o','e','er','ai','ei','ao','ou','an','en','ang','eng',
+    'yi','ya','ye','yao','you','yan','yin','yang','ying','yong','yu','yue','yuan','yun',
+    'wu','wa','wo','wai','wei','wan','wen','wang','weng',
+    'ba','bo','bai','bei','bao','ban','ben','bang','beng','bi','bie','biao','bian','bin','bing',
+    'pa','po','pai','pei','pao','pou','pan','pen','pang','peng','pi','pie','piao','pian','pin','ping',
+    'ma','mo','me','mai','mei','mao','mou','man','men','mang','meng','mi','mie','miao','miu','mian','min','ming',
+    'fa','fo','fei','fou','fan','fen','fang','feng',
+    'da','de','dai','dei','dao','dou','dan','den','dang','deng','dong','di','dia','die','diao','diu','dian','ding','duan','dui','dun','duo',
+    'ta','te','tai','tao','tou','tan','tang','teng','tong','ti','tie','tiao','tian','ting','tuan','tui','tun','tuo',
+    'na','ne','nai','nei','nao','nou','nan','nen','nang','neng','nong','ni','nie','niao','niu','nian','niang','nin','ning','nuan','nun','nuo','nv','nve',
+    'la','le','lai','lei','lao','lou','lan','lang','leng','long','li','lia','lie','liao','liu','lian','liang','lin','ling','luan','lun','luo','lv','lve',
+    'ga','ge','gai','gei','gao','gou','gan','gen','gang','geng','gong','gua','guai','guan','guang','gui','gun','guo',
+    'ka','ke','kai','kei','kao','kou','kan','ken','kang','keng','kong','kua','kuai','kuan','kuang','kui','kun','kuo',
+    'ha','he','hai','hei','hao','hou','han','hen','hang','heng','hong','hua','huai','huan','huang','hui','hun','huo',
+    'ji','jia','jie','jiao','jiu','jian','jiang','jin','jing','jiong','ju','jue','juan','jun',
+    'qi','qia','qie','qiao','qiu','qian','qiang','qin','qing','qiong','qu','que','quan','qun',
+    'xi','xia','xie','xiao','xiu','xian','xiang','xin','xing','xiong','xu','xue','xuan','xun',
+    'zha','zhe','zhi','zhao','zhou','zhan','zhen','zhang','zheng','zhong','zhua','zhuai','zhuan','zhuang','zhui','zhun','zhuo','zhei',
+    'cha','che','chi','chao','chou','chan','chen','chang','cheng','chong','chua','chuai','chuan','chuang','chui','chun','chuo',
+    'sha','she','shi','shao','shou','shan','shen','shang','sheng','shua','shuai','shuan','shuang','shui','shun','shuo','shai','shei',
+    're','ri','rao','rou','ran','ren','rang','reng','rong','ruan','rui','run','ruo',
+    'za','ze','zi','zao','zou','zan','zen','zang','zeng','zong','zuan','zun','zuo','zui',
+    'ca','ce','ci','cao','cou','can','cen','cang','ceng','cong','cuan','cun','cuo','cui',
+    'sa','se','si','sao','sou','san','sen','sang','seng','song','suan','sun','suo','sui',
+]);
+// Greedy left-to-right syllable segmenter (tries longest match first, max 6 chars).
+function _segmentPinyin(bareText) {
+    const syllables = [];
+    const words = bareText.replace(/[^a-z]/g, ' ').trim().split(/\s+/).filter(Boolean);
+    for (const word of words) {
+        let i = 0;
+        while (i < word.length) {
+            let matched = false;
+            for (let len = Math.min(6, word.length - i); len >= 1; len--) {
+                if (_PINYIN_SYLLABLE_SET.has(word.slice(i, i + len))) {
+                    syllables.push(word.slice(i, i + len));
+                    i += len;
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) i++;
+        }
+    }
+    return syllables;
+}
+// Wraps pinyin2hanzi callback API in a Promise. Returns the most probable Hanzi string or null.
+async function _pinyinToHanzi(syllables) {
+    if (!_pinyin2hanzi || !syllables.length) return null;
+    return new Promise(resolve => {
+        try {
+            _pinyin2hanzi.pinyinToHanziArray(syllables, _pinyin2hanzi.defaultOptions, results => {
+                resolve(results?.[0]?.hanzi || null);
+            });
+        } catch (e) {
+            console.error(`[Translate] _pinyinToHanzi error: ${e.message}`);
+            resolve(null);
+        }
+    });
+}
+
+// Translation chain: LibreTranslate (primary) → Google (fallback) → MyMemory (final fallback).
+// Returns { text, detectedLang, detectedConfidence, source, isPinyinInput, isRomajiInput } or null on total failure.
 async function translateText(text, from, to) {
     const ltUrl = process.env.LIBRETRANSLATE_URL || 'http://127.0.0.1:5050';
-    const src = from === 'auto' ? 'auto' : from;
+    let src = from === 'auto' ? 'auto' : from;
+    let isPinyinInput = false;
+    let isRomajiInput = false;
+
+    // ── Romanisation preprocessing ───────────────────────────
+    if (from === 'auto') {
+        if (_looksLikePinyin(text)) {
+            // Chinese pinyin — convert to Hanzi first so translation services can identify the language
+            console.log(`[Translate] Pinyin input detected — preprocessing "${text.slice(0, 60)}"`);
+            const bare = _stripPinyinTones(text);
+            const syllables = _segmentPinyin(bare);
+            console.log(`[Translate] Pinyin syllables segmented: [${syllables.join(', ')}]`);
+            const hanzi = await _pinyinToHanzi(syllables);
+            if (hanzi) {
+                console.log(`[Translate] Pinyin → Hanzi: "${text}" → "${hanzi}"`);
+                text = hanzi;
+                src = 'zh';
+                isPinyinInput = true;
+            } else {
+                console.log(`[Translate] Pinyin preprocessing failed (pinyin2hanzi unavailable or no match) — proceeding with original text`);
+            }
+        } else if (_looksLikeRomaji(text)) {
+            // Japanese Hepburn romaji — Google handles romaji natively when source is forced to 'ja'
+            console.log(`[Translate] Japanese Hepburn romaji detected — forcing source='ja' for "${text.slice(0, 60)}"`);
+            src = 'ja';
+            isRomajiInput = true;
+        }
+    }
 
     // ── Attempt 1: LibreTranslate ────────────────────────────
     console.log(`[Translate] Attempt 1/3 — LibreTranslate (${ltUrl}) src="${src}" to="${to}" text="${text.slice(0, 60)}${text.length > 60 ? '...' : ''}"`);
@@ -337,13 +444,12 @@ async function translateText(text, from, to) {
         if (translated) {
             const detectedLang = src === 'auto' ? (res.data?.detectedLanguage?.language ?? null) : null;
             const detectedConfidence = src === 'auto' ? (res.data?.detectedLanguage?.confidence ?? null) : null;
-            // confidence=0 + identical result means LT had no idea what language this is and did nothing — fall through to Google
             const ltEchoed = translated.trim().toLowerCase() === text.trim().toLowerCase();
             if (ltEchoed && detectedConfidence === 0) {
-                console.log(`[Translate] LibreTranslate returned original text unchanged with confidence=0 — LT couldn't identify the language, falling back to Google`);
+                console.log(`[Translate] LibreTranslate returned original text unchanged with confidence=0 — falling back to Google`);
             } else {
                 console.log(`[Translate] LibreTranslate succeeded — detectedLang="${detectedLang}" confidence=${detectedConfidence} result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
-                return { text: translated, detectedLang, detectedConfidence, source: 'libretranslate' };
+                return { text: translated, detectedLang, detectedConfidence, source: 'libretranslate', isPinyinInput, isRomajiInput };
             }
         } else {
             console.log(`[Translate] LibreTranslate returned empty translatedText — falling back to Google`);
@@ -356,42 +462,60 @@ async function translateText(text, from, to) {
         }
     }
 
-    // ── Attempt 2: Google Translate (unofficial, no API key) ─
-    // dt=t → translation segments, dt=ld → language detection data
-    // Response: [[["translated","original",...]], null, "detectedLang", ..., [["detectedLang",...], ...]]
-    // Detected language: data[8][0][0] is most reliable (from dt=ld); data[2] is a fallback.
-    console.log(`[Translate] Attempt 2/3 — Google Translate src="${src}" to="${to}"`);
+    // ── Attempt 2: Google Translate ──────────────────────────
+    // Uses the official Cloud Translation API v2 when GOOGLE_TRANSLATE_KEY is set in .env.
+    // Falls back to the unofficial gtx endpoint when no key is present.
+    console.log(`[Translate] Attempt 2/3 — Google Translate src="${src}" to="${to}" (mode: ${process.env.GOOGLE_TRANSLATE_KEY ? 'official API' : 'unofficial fallback'})`);
     try {
-        const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(src)}&tl=${encodeURIComponent(to)}&dt=t&dt=ld&q=${encodeURIComponent(text)}`;
-        const res = await axios.get(googleUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
-        console.log(`[Translate] Google raw response shape: data[2]="${res.data?.[2]}" data[8][0][0]="${res.data?.[8]?.[0]?.[0]}"`);
-        if (Array.isArray(res.data?.[0])) {
-            const translated = res.data[0].map(chunk => chunk?.[0]).filter(Boolean).join('');
-            // Prefer data[8][0][0] (dt=ld detection result) over data[2] — more reliable
-            const detectedLang = src === 'auto'
-                ? (res.data?.[8]?.[0]?.[0] ?? (typeof res.data[2] === 'string' ? res.data[2] : null))
-                : null;
+        let translated = null;
+        let detectedLang = null;
+
+        if (process.env.GOOGLE_TRANSLATE_KEY) {
+            const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=${process.env.GOOGLE_TRANSLATE_KEY}`;
+            const res = await axios.post(apiUrl, {
+                q: text, target: to, source: src === 'auto' ? undefined : src, format: 'text',
+            }, { timeout: 8000 });
+            const t = res.data?.data?.translations?.[0];
+            translated = t?.translatedText ?? null;
+            detectedLang = src === 'auto' ? (t?.detectedSourceLanguage ?? null) : null;
             if (translated) {
-                // Same echo check as LT: if Google returned the text unchanged, it also failed
-                const googleEchoed = translated.trim().toLowerCase() === text.trim().toLowerCase();
-                if (googleEchoed) {
-                    console.log(`[Translate] Google Translate returned original text unchanged (detectedLang="${detectedLang}") — falling back to MyMemory`);
-                } else {
-                    console.log(`[Translate] Google Translate succeeded — detectedLang="${detectedLang}" result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
-                    return { text: translated, detectedLang, detectedConfidence: detectedLang ? 95 : null, source: 'google' };
-                }
+                console.log(`[Translate] Google API succeeded — detectedLang="${detectedLang}" result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
             } else {
-                console.log(`[Translate] Google Translate returned empty translated text — falling back to MyMemory`);
+                console.log(`[Translate] Google API returned empty result — falling back to MyMemory`);
             }
         } else {
-            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_GOOGLE_205 — Unexpected Google Translate response shape: ${JSON.stringify(res.data).slice(0, 200)} — falling back to MyMemory`);
+            const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(src)}&tl=${encodeURIComponent(to)}&dt=t&dt=ld&q=${encodeURIComponent(text)}`;
+            const res = await axios.get(googleUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+            console.log(`[Translate] Google unofficial raw: data[2]="${res.data?.[2]}" data[8][0][0]="${res.data?.[8]?.[0]?.[0]}"`);
+            if (Array.isArray(res.data?.[0])) {
+                translated = res.data[0].map(chunk => chunk?.[0]).filter(Boolean).join('') || null;
+                detectedLang = src === 'auto'
+                    ? (res.data?.[8]?.[0]?.[0] ?? (typeof res.data[2] === 'string' ? res.data[2] : null))
+                    : null;
+                if (translated) {
+                    console.log(`[Translate] Google unofficial succeeded — detectedLang="${detectedLang}" result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
+                } else {
+                    console.log(`[Translate] Google unofficial returned empty result — falling back to MyMemory`);
+                }
+            } else {
+                console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_GOOGLE_205 — Unexpected gtx response shape: ${JSON.stringify(res.data).slice(0, 200)} — falling back to MyMemory`);
+            }
+        }
+
+        if (translated) {
+            const googleEchoed = translated.trim().toLowerCase() === text.trim().toLowerCase();
+            if (googleEchoed) {
+                console.log(`[Translate] Google returned original text unchanged (detectedLang="${detectedLang}") — falling back to MyMemory`);
+            } else {
+                return { text: translated, detectedLang, detectedConfidence: detectedLang ? 95 : null, source: 'google', isPinyinInput, isRomajiInput };
+            }
         }
     } catch (e) {
         console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_GOOGLE_205 — Google Translate failed: ${e.message} — falling back to MyMemory`);
     }
 
     // ── Attempt 3: MyMemory ──────────────────────────────────
-    const mmSrc = from === 'auto' ? 'autodetect' : from;
+    const mmSrc = src === 'auto' ? 'autodetect' : src;
     const emailParam = process.env.MYMEMORY_EMAIL ? `&de=${encodeURIComponent(process.env.MYMEMORY_EMAIL)}` : '';
     const mmUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(mmSrc)}|${encodeURIComponent(to)}${emailParam}`;
     console.log(`[Translate] Attempt 3/3 — MyMemory src="${mmSrc}" to="${to}"`);
@@ -400,7 +524,7 @@ async function translateText(text, from, to) {
         if (res.data?.responseStatus === 200 && res.data?.responseData?.translatedText) {
             const translated = res.data.responseData.translatedText;
             console.log(`[Translate] MyMemory succeeded — result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
-            return { text: translated, detectedLang: null, detectedConfidence: null, source: 'mymemory' };
+            return { text: translated, detectedLang: null, detectedConfidence: null, source: 'mymemory', isPinyinInput, isRomajiInput };
         }
         console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_MYMEMORY_202 — MyMemory returned non-200 status: ${res.data?.responseStatus} | ${res.data?.responseDetails}`);
     } catch (e) {
@@ -3991,11 +4115,11 @@ client.on('messageCreate', async (message) => {
         return;
     }
 
-    const { text: translated, detectedLang, detectedConfidence } = result;
+    const { text: translated, detectedLang, detectedConfidence, isPinyinInput, isRomajiInput } = result;
 
-    // Skip if LibreTranslate is confident the message is already in the target language
+    // Skip if we're confident the message is already in the target language
     if (detectedLang && detectedLang === item.to && detectedConfidence >= 50) {
-        console.log(`[Translate] Skipping — LibreTranslate detected source as "${detectedLang}" (confidence: ${detectedConfidence}), already matches target "${item.to}"`);
+        console.log(`[Translate] Skipping — detected source as "${detectedLang}" (confidence: ${detectedConfidence}), already matches target "${item.to}"`);
         return;
     }
 
@@ -4004,14 +4128,19 @@ client.on('messageCreate', async (message) => {
         return;
     }
 
-    // Use LibreTranslate's detected language for the footer label when available and confident
     const detectedLabel = (detectedLang && detectedConfidence >= 50)
         ? _translateLangName(detectedLang)
         : _translateLangName(item.from);
     const toLabel = _translateLangName(item.to);
+    const transliterationNote = isPinyinInput
+        ? '\n\n*⚠️ Pinyin input detected — translation accuracy may vary.*'
+        : isRomajiInput
+        ? '\n\n*⚠️ Japanese romaji input detected — translation accuracy may vary.*'
+        : '';
+    const description = translated + transliterationNote;
     const embed = cubEmbed()
         .setColor(0x5865f2)
-        .setDescription(translated)
+        .setDescription(description)
         .setFooter({ text: `${detectedLabel} → ${toLabel} • CUB SOFTWARE Translation` });
 
     console.log(`[Translate] Sending translation reply in #${message.channel.name} — ${detectedLabel} (confidence: ${detectedConfidence ?? 'n/a'}) → ${toLabel} [via ${result.source}]`);
@@ -8073,17 +8202,20 @@ client.on('interactionCreate', async (interaction) => {
             console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_CMD_203 — /translate failed for guild=${guild?.name} user=${interaction.user.tag} from="${from}" to="${to}"`);
             return interaction.editReply({ content: '❌ Translation failed. Please try again in a moment.' });
         }
-        const { text: translated, detectedLang, detectedConfidence } = result;
-        // When from=auto, show the actual detected language if LibreTranslate is confident enough
+        const { text: translated, detectedLang, detectedConfidence, isPinyinInput, isRomajiInput } = result;
         const fromLabel = (from === 'auto' && detectedLang && detectedConfidence >= 50)
             ? _translateLangName(detectedLang)
             : _translateLangName(from);
         const toLabel = _translateLangName(to);
-        console.log(`[Translate] /translate: success — detected="${detectedLang || 'n/a'}" (confidence: ${detectedConfidence ?? 'n/a'}) ${fromLabel} → ${toLabel} for user=${interaction.user.tag}`);
-        return interaction.editReply({ embeds: [cubEmbed().setColor(0x5865f2).setTitle('Translation').addFields(
+        console.log(`[Translate] /translate: success — detected="${detectedLang || 'n/a'}" (confidence: ${detectedConfidence ?? 'n/a'}) ${fromLabel} → ${toLabel} isPinyin=${isPinyinInput} isRomaji=${isRomajiInput} via=${result.source} user=${interaction.user.tag}`);
+        const translatedValue = translated.length > 1024 ? translated.slice(0, 1021) + '...' : translated;
+        const embed = cubEmbed().setColor(0x5865f2).setTitle('Translation').addFields(
             { name: `Original (${fromLabel})`, value: text.length > 1024 ? text.slice(0, 1021) + '...' : text },
-            { name: `Translated (${toLabel})`, value: translated.length > 1024 ? translated.slice(0, 1021) + '...' : translated }
-        ).setFooter({ text: `${fromLabel} → ${toLabel} • CUB SOFTWARE Translation` }).setTimestamp()] });
+            { name: `Translated (${toLabel})`, value: translatedValue }
+        ).setFooter({ text: `${fromLabel} → ${toLabel} • CUB SOFTWARE Translation` }).setTimestamp();
+        if (isPinyinInput) embed.addFields({ name: '⚠️ Note', value: 'Pinyin input was detected and converted to Chinese characters — translation accuracy may vary.' });
+        if (isRomajiInput) embed.addFields({ name: '⚠️ Note', value: 'Japanese romaji input was detected — translation accuracy may vary.' });
+        return interaction.editReply({ embeds: [embed] });
     }
 
     if (commandName === 'translate-setup') {

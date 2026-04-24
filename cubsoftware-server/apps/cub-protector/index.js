@@ -340,7 +340,7 @@ async function translateText(text, from, to) {
     // Fallback: MyMemory (no account required)
     const src = from === 'auto' ? 'autodetect' : from;
     const emailParam = process.env.MYMEMORY_EMAIL ? `&de=${encodeURIComponent(process.env.MYMEMORY_EMAIL)}` : '';
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(src)}|${encodeURIComponent(to)}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(src)}|${encodeURIComponent(to)}${emailParam}`;
     try {
         const res = await axios.get(url, { timeout: 8000 });
         if (res.data?.responseStatus === 200 && res.data?.responseData?.translatedText) {
@@ -3929,7 +3929,7 @@ client.on('messageCreate', async (message) => {
         .setColor(0x5865f2)
         .setDescription(translated)
         .setFooter({ text: `${detectedLabel} → ${toLabel} • CUB SOFTWARE Translation` });
-    message.reply({ embeds: [embed] }).then(() => {
+    message.send({ embeds: [embed] }).then(() => {
         console.log(`[Translate] ${message.guild.name} (${message.guildId}) #${message.channel.name}: ${detectedLabel} → ${toLabel} | author: ${message.author.tag}`);
     }).catch(e => {
         console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — Failed to send translation reply: ${e.message}`);

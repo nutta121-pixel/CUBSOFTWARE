@@ -26,6 +26,10 @@ if ! ./venv/bin/python3 -c "import libretranslate" 2>/dev/null; then
     ./venv/bin/pip install --quiet libretranslate
 fi
 
+# Clear any stale process still holding the port from a previous crash
+fuser -k "${PORT}/tcp" 2>/dev/null || true
+sleep 1
+
 echo "[LibreTranslate] Starting on 127.0.0.1:${PORT} — loading: ${LOAD_ONLY}"
 exec ./venv/bin/libretranslate \
     --host 127.0.0.1 \

@@ -35,4 +35,5 @@ exec ./venv/bin/libretranslate \
     --host 127.0.0.1 \
     --port "$PORT" \
     --load-only "$LOAD_ONLY" \
-    --disable-files-translation
+    --disable-files-translation \
+    --disable-web-ui

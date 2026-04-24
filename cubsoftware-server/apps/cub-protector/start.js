@@ -61,6 +61,53 @@ if (!hasOpus()) {
     }
 }
 
+// ── Sodium encryption (required for voice UDP — @discordjs/voice won't connect without it) ──
+function hasSodium() {
+    try { require('sodium-native'); return true; } catch (e) {}
+    try { require('libsodium-wrappers'); return true; } catch (e) {}
+    try { require('tweetnacl'); return true; } catch (e) {}
+    return false;
+}
+if (!hasSodium()) {
+    console.log('[Startup] Sodium encryption not found — installing libsodium-wrappers...');
+    let sodiumOk = false;
+    try {
+        execSync('npm install sodium-native --legacy-peer-deps', { cwd: botDir, stdio: 'inherit' });
+        console.log('[Startup] sodium-native installed!');
+        sodiumOk = true;
+    } catch (err) {
+        console.warn('[Startup] sodium-native native build failed — trying libsodium-wrappers (pure JS fallback)...');
+    }
+    if (!sodiumOk) {
+        try {
+            execSync('npm install libsodium-wrappers --legacy-peer-deps', { cwd: botDir, stdio: 'inherit' });
+            console.log('[Startup] libsodium-wrappers installed!');
+            sodiumOk = true;
+        } catch (err2) {
+            console.warn('[Startup] libsodium-wrappers failed — trying tweetnacl...');
+        }
+    }
+    if (!sodiumOk) {
+        try {
+            execSync('npm install tweetnacl --legacy-peer-deps', { cwd: botDir, stdio: 'inherit' });
+            console.log('[Startup] tweetnacl installed!');
+        } catch (err3) {
+            console.warn('[Startup] Could not install any sodium library — CUB AI voice connections unavailable:', err3.message);
+        }
+    }
+}
+
+// ── FFmpeg (required for TTS audio playback via @discordjs/voice) ─────────────
+function hasFFmpeg() {
+    try { execSync('ffmpeg -version', { stdio: 'pipe' }); return true; } catch (e) {}
+    try { execSync('ffmpeg.exe -version', { stdio: 'pipe' }); return true; } catch (e) {}
+    return false;
+}
+if (!hasFFmpeg()) {
+    console.warn('[Startup] WARNING: ffmpeg not found — CUB AI TTS voice playback will be unavailable.');
+    console.warn('[Startup] Install ffmpeg: sudo apt install ffmpeg  (or equivalent for your OS)');
+}
+
 // ── Piper TTS binary + voice model ───────────────────────────────────────────
 const PIPER_DIR   = path.join(botDir, 'piper');
 const PIPER_BIN   = path.join(PIPER_DIR, 'piper');

@@ -1411,7 +1411,15 @@ function startReceiving(connection, guildId) {
             end: { behavior: EndBehaviorType.AfterSilence, duration: 500 }
         });
 
-        const decoder = new prism.opus.Decoder({ rate: 48000, channels: 2, frameSize: 960 });
+        let decoder;
+        try {
+            decoder = new prism.opus.Decoder({ rate: 48000, channels: 2, frameSize: 960 });
+        } catch (opusErr) {
+            console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_CUBAI_OPUS_095 — [CUB AI] Opus decoder unavailable (missing @discordjs/opus or opusscript):', opusErr.message);
+            activeUsers.delete(userId);
+            opusStream.destroy();
+            return;
+        }
         const pcmChunks = [];
 
         opusStream.pipe(decoder);

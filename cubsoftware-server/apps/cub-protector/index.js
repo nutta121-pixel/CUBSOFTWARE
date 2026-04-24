@@ -337,10 +337,17 @@ async function translateText(text, from, to) {
         if (translated) {
             const detectedLang = src === 'auto' ? (res.data?.detectedLanguage?.language ?? null) : null;
             const detectedConfidence = src === 'auto' ? (res.data?.detectedLanguage?.confidence ?? null) : null;
-            console.log(`[Translate] LibreTranslate succeeded — detectedLang="${detectedLang}" confidence=${detectedConfidence} result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
-            return { text: translated, detectedLang, detectedConfidence, source: 'libretranslate' };
+            // confidence=0 + identical result means LT had no idea what language this is and did nothing — fall through to Google
+            const ltEchoed = translated.trim().toLowerCase() === text.trim().toLowerCase();
+            if (ltEchoed && detectedConfidence === 0) {
+                console.log(`[Translate] LibreTranslate returned original text unchanged with confidence=0 — LT couldn't identify the language, falling back to Google`);
+            } else {
+                console.log(`[Translate] LibreTranslate succeeded — detectedLang="${detectedLang}" confidence=${detectedConfidence} result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
+                return { text: translated, detectedLang, detectedConfidence, source: 'libretranslate' };
+            }
+        } else {
+            console.log(`[Translate] LibreTranslate returned empty translatedText — falling back to Google`);
         }
-        console.log(`[Translate] LibreTranslate returned empty translatedText — falling back to Google`);
     } catch (e) {
         if (e?.response?.status === 400) {
             console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201 — LibreTranslate 400 (unsupported lang pair? src=${src} to=${to}): ${e.message} — falling back to Google`);

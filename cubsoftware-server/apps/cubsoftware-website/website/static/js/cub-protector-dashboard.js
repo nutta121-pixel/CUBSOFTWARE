@@ -7424,18 +7424,42 @@
                     const dot = document.getElementById('custom-bot-status-dot');
                     const txt = document.getElementById('custom-bot-status-text');
                     const ring = document.getElementById('custom-bot-status-ring');
+                    const intentErr = document.getElementById('custom-bot-intent-error');
+                    const startBtn = document.getElementById('custom-bot-start-btn');
+                    const stopBtn = document.getElementById('custom-bot-stop-btn');
+                    const restartBtn = document.getElementById('custom-bot-restart-btn');
                     if (sData.status === 'online') {
                         if (dot) dot.style.background = '#57f287';
                         if (txt) txt.textContent = 'Online';
                         if (ring) ring.className = 'custom-bot-status-ring online';
+                        if (intentErr) intentErr.style.display = 'none';
+                        if (startBtn) startBtn.style.display = 'none';
+                        if (stopBtn) stopBtn.style.display = '';
+                        if (restartBtn) restartBtn.style.display = '';
+                    } else if (sData.status === 'intent_error') {
+                        if (dot) dot.style.background = '#ed4245';
+                        if (txt) txt.textContent = 'Error — Intents';
+                        if (ring) ring.className = 'custom-bot-status-ring offline';
+                        if (intentErr) intentErr.style.display = '';
+                        if (startBtn) startBtn.style.display = 'none';
+                        if (stopBtn) stopBtn.style.display = 'none';
+                        if (restartBtn) restartBtn.style.display = 'none';
                     } else if (sData.status === 'stopped') {
                         if (dot) dot.style.background = '#faa61a';
                         if (txt) txt.textContent = 'Stopped';
                         if (ring) ring.className = 'custom-bot-status-ring stopped';
+                        if (intentErr) intentErr.style.display = 'none';
+                        if (startBtn) startBtn.style.display = '';
+                        if (stopBtn) stopBtn.style.display = 'none';
+                        if (restartBtn) restartBtn.style.display = 'none';
                     } else {
                         if (dot) dot.style.background = '#ed4245';
                         if (txt) txt.textContent = 'Offline';
                         if (ring) ring.className = 'custom-bot-status-ring offline';
+                        if (intentErr) intentErr.style.display = 'none';
+                        if (startBtn) startBtn.style.display = '';
+                        if (stopBtn) stopBtn.style.display = 'none';
+                        if (restartBtn) restartBtn.style.display = 'none';
                     }
                 } catch (e) {}
             } else {
@@ -7569,6 +7593,63 @@
                 showToast(data.error || 'Failed to remove', 'error');
             }
         } catch (e) { showToast('Failed to remove custom bot', 'error'); }
+    };
+
+    window.cpStartBot = async function() {
+        try {
+            showToast('Starting bot...', 'info');
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/custom-bot/start`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                showToast('Bot started', 'success');
+                setTimeout(loadCustomBot, 2000);
+            } else {
+                showToast(data.error || 'Failed to start bot', 'error');
+            }
+        } catch (e) { showToast('Failed to start bot', 'error'); }
+    };
+
+    window.cpStopBot = async function() {
+        if (!confirm('Stop the custom bot? It will go offline until restarted.')) return;
+        try {
+            showToast('Stopping bot...', 'info');
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/custom-bot/stop`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                showToast('Bot stopped', 'success');
+                setTimeout(loadCustomBot, 1500);
+            } else {
+                showToast(data.error || 'Failed to stop bot', 'error');
+            }
+        } catch (e) { showToast('Failed to stop bot', 'error'); }
+    };
+
+    window.cpRestartBot = async function() {
+        try {
+            showToast('Restarting bot...', 'info');
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/custom-bot/restart`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                showToast('Bot restarted', 'success');
+                setTimeout(loadCustomBot, 2000);
+            } else {
+                showToast(data.error || 'Failed to restart bot', 'error');
+            }
+        } catch (e) { showToast('Failed to restart bot', 'error'); }
+    };
+
+    window.cpRetryBot = async function() {
+        try {
+            showToast('Retrying bot start...', 'info');
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/custom-bot/start`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                showToast('Bot restarted — checking status...', 'success');
+                setTimeout(loadCustomBot, 3000);
+            } else {
+                showToast(data.error || 'Failed to restart bot', 'error');
+            }
+        } catch (e) { showToast('Failed to retry bot', 'error'); }
     };
 
     // ==================== UTILITIES ====================

@@ -427,85 +427,62 @@ async function translateText(text, from, to) {
         }
     }
 
-    // ── Attempt 1: LibreTranslate ────────────────────────────
-    console.log(`[Translate] Attempt 1/3 — LibreTranslate (${ltUrl}) src="${src}" to="${to}" text="${text.slice(0, 60)}${text.length > 60 ? '...' : ''}"`);
-    try {
+    // ── Attempts 1 & 2: LibreTranslate + Google raced in parallel ──────────
+    // Both requests start simultaneously; the first one to return a valid
+    // (non-echoed) result wins. This cuts latency vs. the old sequential chain
+    // when LibreTranslate is slow or unavailable.
+    const _tryLibreTranslate = async () => {
         const res = await axios.post(`${ltUrl}/translate`, {
             q: text, source: src, target: to, format: 'text',
-        }, { timeout: 10000 });
+        }, { timeout: 5000 });
         const translated = res.data?.translatedText;
-        if (translated) {
-            const detectedLang = src === 'auto' ? (res.data?.detectedLanguage?.language ?? null) : null;
-            const detectedConfidence = src === 'auto' ? (res.data?.detectedLanguage?.confidence ?? null) : null;
-            const ltEchoed = translated.trim().toLowerCase() === text.trim().toLowerCase();
-            if (ltEchoed && detectedConfidence === 0) {
-                console.log(`[Translate] LibreTranslate returned original text unchanged with confidence=0 — falling back to Google`);
-            } else {
-                console.log(`[Translate] LibreTranslate succeeded — detectedLang="${detectedLang}" confidence=${detectedConfidence} result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
-                return { text: translated, detectedLang, detectedConfidence, source: 'libretranslate', isPinyinInput, isRomajiInput };
-            }
-        } else {
-            console.log(`[Translate] LibreTranslate returned empty translatedText — falling back to Google`);
-        }
-    } catch (e) {
-        if (e?.response?.status === 400) {
-            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201 — LibreTranslate 400 (unsupported lang pair? src=${src} to=${to}): ${e.message} — falling back to Google`);
-        } else {
-            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_LT_201 — LibreTranslate failed (status=${e?.response?.status}): ${e.message} — falling back to Google`);
-        }
-    }
+        if (!translated) return null;
+        const detectedLang = src === 'auto' ? (res.data?.detectedLanguage?.language ?? null) : null;
+        const detectedConfidence = src === 'auto' ? (res.data?.detectedLanguage?.confidence ?? null) : null;
+        if (translated.trim().toLowerCase() === text.trim().toLowerCase() && detectedConfidence === 0) return null;
+        console.log(`[Translate] LibreTranslate succeeded — detectedLang="${detectedLang}" confidence=${detectedConfidence} result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
+        return { text: translated, detectedLang, detectedConfidence, source: 'libretranslate', isPinyinInput, isRomajiInput };
+    };
 
-    // ── Attempt 2: Google Translate ──────────────────────────
-    // Uses the official Cloud Translation API v2 when GOOGLE_TRANSLATE_KEY is set in .env.
-    // Falls back to the unofficial gtx endpoint when no key is present.
-    console.log(`[Translate] Attempt 2/3 — Google Translate src="${src}" to="${to}" (mode: ${process.env.GOOGLE_TRANSLATE_KEY ? 'official API' : 'unofficial fallback'})`);
-    try {
+    const _tryGoogle = async () => {
         let translated = null;
         let detectedLang = null;
-
         if (process.env.GOOGLE_TRANSLATE_KEY) {
             const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=${process.env.GOOGLE_TRANSLATE_KEY}`;
             const res = await axios.post(apiUrl, {
                 q: text, target: to, source: src === 'auto' ? undefined : src, format: 'text',
-            }, { timeout: 8000 });
+            }, { timeout: 7000 });
             const t = res.data?.data?.translations?.[0];
             translated = t?.translatedText ?? null;
             detectedLang = src === 'auto' ? (t?.detectedSourceLanguage ?? null) : null;
-            if (translated) {
-                console.log(`[Translate] Google API succeeded — detectedLang="${detectedLang}" result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
-            } else {
-                console.log(`[Translate] Google API returned empty result — falling back to MyMemory`);
-            }
         } else {
             const googleUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(src)}&tl=${encodeURIComponent(to)}&dt=t&dt=ld&q=${encodeURIComponent(text)}`;
-            const res = await axios.get(googleUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
-            console.log(`[Translate] Google unofficial raw: data[2]="${res.data?.[2]}" data[8][0][0]="${res.data?.[8]?.[0]?.[0]}"`);
+            const res = await axios.get(googleUrl, { timeout: 7000, headers: { 'User-Agent': 'Mozilla/5.0' } });
             if (Array.isArray(res.data?.[0])) {
                 translated = res.data[0].map(chunk => chunk?.[0]).filter(Boolean).join('') || null;
                 detectedLang = src === 'auto'
                     ? (res.data?.[8]?.[0]?.[0] ?? (typeof res.data[2] === 'string' ? res.data[2] : null))
                     : null;
-                if (translated) {
-                    console.log(`[Translate] Google unofficial succeeded — detectedLang="${detectedLang}" result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
-                } else {
-                    console.log(`[Translate] Google unofficial returned empty result — falling back to MyMemory`);
-                }
-            } else {
-                console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_GOOGLE_205 — Unexpected gtx response shape: ${JSON.stringify(res.data).slice(0, 200)} — falling back to MyMemory`);
             }
         }
+        if (!translated || translated.trim().toLowerCase() === text.trim().toLowerCase()) return null;
+        console.log(`[Translate] Google succeeded — detectedLang="${detectedLang}" result="${translated.slice(0, 80)}${translated.length > 80 ? '...' : ''}"`);
+        return { text: translated, detectedLang, detectedConfidence: detectedLang ? 95 : null, source: 'google', isPinyinInput, isRomajiInput };
+    };
 
-        if (translated) {
-            const googleEchoed = translated.trim().toLowerCase() === text.trim().toLowerCase();
-            if (googleEchoed) {
-                console.log(`[Translate] Google returned original text unchanged (detectedLang="${detectedLang}") — falling back to MyMemory`);
-            } else {
-                return { text: translated, detectedLang, detectedConfidence: detectedLang ? 95 : null, source: 'google', isPinyinInput, isRomajiInput };
-            }
-        }
-    } catch (e) {
-        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_GOOGLE_205 — Google Translate failed: ${e.message} — falling back to MyMemory`);
-    }
+    // Race LT and Google — resolve with first non-null result, ignore errors
+    const raceResult = await new Promise((resolve) => {
+        let settled = false;
+        let pending = 2;
+        const tryResolve = (val) => {
+            if (settled) return;
+            if (val) { settled = true; resolve(val); return; }
+            if (--pending === 0) resolve(null);
+        };
+        _tryLibreTranslate().then(tryResolve).catch(() => tryResolve(null));
+        _tryGoogle().then(tryResolve).catch(() => tryResolve(null));
+    });
+    if (raceResult) return raceResult;
 
     // ── Attempt 3: MyMemory ──────────────────────────────────
     const mmSrc = src === 'auto' ? 'autodetect' : src;
@@ -4077,7 +4054,22 @@ client.on('messageCreate', async (message) => {
 // ============================================================
 // Auto-Translation (messageCreate)
 // ============================================================
-client.on('messageCreate', async (message) => {
+
+// Per-channel queue: ensures only one translation runs at a time per channel
+// so concurrent messages don't race and send out-of-order replies.
+const _translateQueue = new Map(); // channelId → Promise (tail of chain)
+
+function _enqueueTranslation(channelId, fn) {
+    const prev = _translateQueue.get(channelId) || Promise.resolve();
+    const next = prev.then(fn).catch(() => {});
+    _translateQueue.set(channelId, next);
+    // Clean up after job finishes so the Map doesn't grow forever
+    next.finally(() => {
+        if (_translateQueue.get(channelId) === next) _translateQueue.delete(channelId);
+    });
+}
+
+client.on('messageCreate', (message) => {
     if (!message.guild) return;
     if (message.author.bot) return;
     if (!message.content || !message.content.trim()) return;
@@ -4088,59 +4080,58 @@ client.on('messageCreate', async (message) => {
     if (!items.length) return;
 
     const item = items.find(i => i.channel_id === message.channel.id);
-    if (!item) {
-        // Only log at debug level — this fires for every message in non-translate channels, so skip to avoid spam
-        return;
-    }
+    if (!item) return;
 
-    console.log(`[Translate] Auto-translate triggered in #${message.channel.name} (${message.channel.id}) guild=${message.guild.name} author=${message.author.tag} from="${item.from}" to="${item.to}"`);
+    _enqueueTranslation(message.channel.id, async () => {
+        console.log(`[Translate] Auto-translate triggered in #${message.channel.name} (${message.channel.id}) guild=${message.guild.name} author=${message.author.tag} from="${item.from}" to="${item.to}"`);
 
-    const text = message.content.trim();
-    if (text.length > 1800) {
-        console.log(`[Translate] Skipping — message too long (${text.length} chars, max 1800)`);
-        return;
-    }
+        const text = message.content.trim();
+        if (text.length > 1800) {
+            console.log(`[Translate] Skipping — message too long (${text.length} chars, max 1800)`);
+            return;
+        }
 
-    console.log(`[Translate] Translating from="${item.from}" to="${item.to}" — language will be detected by LibreTranslate during translation`);
-    const result = await translateText(text, item.from, item.to);
-    if (!result) {
-        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — translateText returned null for guild=${message.guild.name} channel=#${message.channel.name}`);
-        return;
-    }
+        console.log(`[Translate] Translating from="${item.from}" to="${item.to}" — language will be detected by LibreTranslate during translation`);
+        const result = await translateText(text, item.from, item.to);
+        if (!result) {
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — translateText returned null for guild=${message.guild.name} channel=#${message.channel.name}`);
+            return;
+        }
 
-    const { text: translated, detectedLang, detectedConfidence, isPinyinInput, isRomajiInput } = result;
+        const { text: translated, detectedLang, detectedConfidence, isPinyinInput, isRomajiInput } = result;
 
-    // Skip if we're confident the message is already in the target language
-    if (detectedLang && detectedLang === item.to && detectedConfidence >= 50) {
-        console.log(`[Translate] Skipping — detected source as "${detectedLang}" (confidence: ${detectedConfidence}), already matches target "${item.to}"`);
-        return;
-    }
+        // Skip if we're confident the message is already in the target language
+        if (detectedLang && detectedLang === item.to && detectedConfidence >= 50) {
+            console.log(`[Translate] Skipping — detected source as "${detectedLang}" (confidence: ${detectedConfidence}), already matches target "${item.to}"`);
+            return;
+        }
 
-    if (!translated || translated.trim().toLowerCase() === text.toLowerCase()) {
-        console.log(`[Translate] Skipping — translated text is identical to original (detected="${detectedLang || 'unknown'}" confidence=${detectedConfidence ?? 'n/a'})`);
-        return;
-    }
+        if (!translated || translated.trim().toLowerCase() === text.toLowerCase()) {
+            console.log(`[Translate] Skipping — translated text is identical to original (detected="${detectedLang || 'unknown'}" confidence=${detectedConfidence ?? 'n/a'})`);
+            return;
+        }
 
-    const detectedLabel = (detectedLang && detectedConfidence >= 50)
-        ? _translateLangName(detectedLang)
-        : _translateLangName(item.from);
-    const toLabel = _translateLangName(item.to);
-    const transliterationNote = isPinyinInput
-        ? '\n\n*⚠️ Pinyin input detected — translation accuracy may vary.*'
-        : isRomajiInput
-        ? '\n\n*⚠️ Japanese romaji input detected — translation accuracy may vary.*'
-        : '';
-    const description = translated + transliterationNote;
-    const embed = cubEmbed()
-        .setColor(0x5865f2)
-        .setDescription(description)
-        .setFooter({ text: `${detectedLabel} → ${toLabel} • CUB SOFTWARE Translation` });
+        const detectedLabel = (detectedLang && detectedConfidence >= 50)
+            ? _translateLangName(detectedLang)
+            : _translateLangName(item.from);
+        const toLabel = _translateLangName(item.to);
+        const transliterationNote = isPinyinInput
+            ? '\n\n*⚠️ Pinyin input detected — translation accuracy may vary.*'
+            : isRomajiInput
+            ? '\n\n*⚠️ Japanese romaji input detected — translation accuracy may vary.*'
+            : '';
+        const description = translated + transliterationNote;
+        const embed = cubEmbed()
+            .setColor(0x5865f2)
+            .setDescription(description)
+            .setFooter({ text: `${detectedLabel} → ${toLabel} • CUB SOFTWARE Translation` });
 
-    console.log(`[Translate] Sending translation reply in #${message.channel.name} — ${detectedLabel} (confidence: ${detectedConfidence ?? 'n/a'}) → ${toLabel} [via ${result.source}]`);
-    message.channel.send({ embeds: [embed] }).then(() => {
-        console.log(`[Translate] Successfully sent translation in ${message.guild.name} #${message.channel.name} | ${detectedLabel} → ${toLabel} | via ${result.source} | author: ${message.author.tag}`);
-    }).catch(e => {
-        console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — Failed to send translation reply in #${message.channel.name}: ${e.message}`);
+        console.log(`[Translate] Sending translation reply in #${message.channel.name} — ${detectedLabel} (confidence: ${detectedConfidence ?? 'n/a'}) → ${toLabel} [via ${result.source}]`);
+        message.reply({ embeds: [embed] }).then(() => {
+            console.log(`[Translate] Successfully sent translation in ${message.guild.name} #${message.channel.name} | ${detectedLabel} → ${toLabel} | via ${result.source} | author: ${message.author.tag}`);
+        }).catch(e => {
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_TRANSLATE_REPLY_204 — Failed to send translation reply in #${message.channel.name}: ${e.message}`);
+        });
     });
 });
 
@@ -12043,5 +12034,8 @@ client.once('clientReady', async () => {
 client.login(TOKEN).catch(err => {
     console.error(`[FATAL] ${ERRORS.CUBPROTECTOR?.LOGIN_FAILED || 'CUBSOFTWARE_ERROR_CUBPROTECTOR_LOGIN_FAILED_010'} — client.login() failed:`, err.message);
     console.log('TOKEN present:', !!TOKEN, '| CLIENT_ID:', CLIENT_ID, '| CUSTOM_GUILD_ID:', CUSTOM_GUILD_ID);
+    // Exit code 2 = privileged intents not enabled in Discord Developer Portal.
+    // PM2 checks this code to stop the crash loop and surface a clear dashboard error.
+    if (err.message && err.message.includes('disallowed intents')) process.exit(2);
     process.exit(1);
 });

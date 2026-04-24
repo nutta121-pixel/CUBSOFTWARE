@@ -3395,9 +3395,31 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Intent error banner -->
+                    <div id="custom-bot-intent-error" style="display:none;background:rgba(237,66,69,0.12);border:1px solid rgba(237,66,69,0.35);border-radius:8px;padding:0.85rem 1rem;margin-bottom:1rem;">
+                        <div style="font-weight:600;color:#ed4245;margin-bottom:0.35rem;font-size:0.9rem;">Privileged Intents Not Enabled</div>
+                        <div style="color:rgba(255,255,255,0.6);font-size:0.83rem;line-height:1.6;">
+                            Your bot failed to start because <strong style="color:rgba(255,255,255,0.85);">Privileged Gateway Intents</strong> are not enabled in the Discord Developer Portal.<br>
+                            Go to <strong style="color:rgba(255,255,255,0.85);">discord.com/developers/applications</strong> &rarr; <strong style="color:rgba(255,255,255,0.85);">Bot</strong> &rarr; enable <strong style="color:rgba(255,255,255,0.85);">Presence Intent</strong>, <strong style="color:rgba(255,255,255,0.85);">Server Members Intent</strong>, and <strong style="color:rgba(255,255,255,0.85);">Message Content Intent</strong>, then click Retry below.
+                        </div>
+                        <div style="margin-top:0.65rem;">
+                            <button class="control-btn primary" onclick="window.cpRetryBot()" style="font-size:0.8rem;padding:5px 14px;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13" style="margin-right:4px;"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.75"/></svg>Retry
+                            </button>
+                        </div>
+                    </div>
                     <div class="custom-bot-hero-actions">
                         <button class="control-btn primary" id="custom-bot-add-btn" onclick="window.cpOpenInvite()">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="margin-right:5px;"><path d="M12 5v14M5 12h14"/></svg>Add to Server
+                        </button>
+                        <button class="control-btn start" id="custom-bot-start-btn" onclick="window.cpStartBot()" style="display:none;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="margin-right:5px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start
+                        </button>
+                        <button class="control-btn stop" id="custom-bot-stop-btn" onclick="window.cpStopBot()" style="display:none;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="margin-right:5px;"><rect x="6" y="6" width="12" height="12"/></svg>Stop
+                        </button>
+                        <button class="control-btn secondary" id="custom-bot-restart-btn" onclick="window.cpRestartBot()" style="display:none;">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="margin-right:5px;"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.75"/></svg>Restart
                         </button>
                         <button class="control-btn secondary" onclick="window.cpEditCustomBot()">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="margin-right:5px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Edit

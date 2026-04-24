@@ -15627,7 +15627,6 @@ def custom_bot_delete(guild_id):
 def custom_bot_status(guild_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
-    import subprocess
     process_name = f'8-cp-custom-{guild_id}'
     result = subprocess.run(['pm2', 'jlist'], capture_output=True, text=True)
     status = 'stopped'
@@ -15635,11 +15634,86 @@ def custom_bot_status(guild_id):
         processes = json.loads(result.stdout)
         for p in processes:
             if p.get('name') == process_name:
-                status = p.get('pm2_env', {}).get('status', 'stopped')
+                pm2_env = p.get('pm2_env', {})
+                status = pm2_env.get('status', 'stopped')
+                exit_code = pm2_env.get('exit_code')
+                restart_time = pm2_env.get('restart_time', 0)
+                # Detect intent error: exit code 2 means "Used disallowed intents"
+                if exit_code == 2 and restart_time > 0:
+                    status = 'intent_error'
+                    # Stop the crash loop and record the error state
+                    subprocess.run(['pm2', 'stop', process_name], capture_output=True)
+                    cb_data = _load_custom_bots()
+                    if guild_id in cb_data.get('guilds', {}):
+                        cb_data['guilds'][guild_id]['intent_error'] = True
+                        _save_custom_bots(cb_data)
                 break
     except Exception:
         pass
+    # Also surface intent_error flag from stored data (persists across page reloads)
+    if status != 'intent_error':
+        try:
+            cb_data = _load_custom_bots()
+            if cb_data.get('guilds', {}).get(guild_id, {}).get('intent_error'):
+                status = 'intent_error'
+        except Exception:
+            pass
     return jsonify({'status': status})
+
+@app.route('/api/cub-protector/guilds/<guild_id>/custom-bot/start', methods=['POST'])
+@cub_protector_auth_required
+def custom_bot_start(guild_id):
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    process_name = f'8-cp-custom-{guild_id}'
+    try:
+        # Clear any stored intent_error so a fresh attempt can be made
+        cb_data = _load_custom_bots()
+        if guild_id in cb_data.get('guilds', {}):
+            cb_data['guilds'][guild_id].pop('intent_error', None)
+            _save_custom_bots(cb_data)
+        result = subprocess.run(['pm2', 'restart', process_name], capture_output=True, text=True, timeout=30)
+        if result.returncode != 0:
+            # Process may not exist yet — try start via wrapper
+            wrapper_file = os.path.join(CUB_PROTECTOR_DIR, f'custom_bot_{guild_id}.js')
+            if os.path.exists(wrapper_file):
+                result = subprocess.run(
+                    ['pm2', 'start', wrapper_file, '--name', process_name, '--node-args=--max-old-space-size=256', '--max-memory-restart=256M'],
+                    capture_output=True, text=True, timeout=30, cwd=CUB_PROTECTOR_DIR
+                )
+            if result.returncode != 0:
+                return jsonify({'error': result.stderr or 'Failed to start bot'}), 500
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/cub-protector/guilds/<guild_id>/custom-bot/stop', methods=['POST'])
+@cub_protector_auth_required
+def custom_bot_stop(guild_id):
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    process_name = f'8-cp-custom-{guild_id}'
+    try:
+        result = subprocess.run(['pm2', 'stop', process_name], capture_output=True, text=True, timeout=30)
+        if result.returncode != 0:
+            return jsonify({'error': result.stderr or 'Failed to stop bot'}), 500
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/cub-protector/guilds/<guild_id>/custom-bot/restart', methods=['POST'])
+@cub_protector_auth_required
+def custom_bot_restart(guild_id):
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    process_name = f'8-cp-custom-{guild_id}'
+    try:
+        result = subprocess.run(['pm2', 'restart', process_name], capture_output=True, text=True, timeout=30)
+        if result.returncode != 0:
+            return jsonify({'error': result.stderr or 'Failed to restart bot'}), 500
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # ==================== CUB PROTECTOR - SERVER BACKUP API ====================
 
@@ -20070,6 +20144,78 @@ def _run_and_reschedule_security_check():
     _run_security_check()
     _schedule_next_security_check()
 
+def _retry_intent_error_bots():
+    """Periodically retry custom bots that failed due to disallowed intents.
+    If intents have been enabled in the Developer Portal since the last attempt,
+    the bot will come online and the error flag is cleared."""
+    import json as _json
+    RETRY_INTERVAL = 300  # 5 minutes
+    CHECK_DELAY = 8       # seconds to wait after restart before checking status
+
+    def _do_retry():
+        try:
+            cb_data = _load_custom_bots()
+            guilds = cb_data.get('guilds', {})
+            changed = False
+            for guild_id, entry in guilds.items():
+                if not entry.get('intent_error') or not entry.get('enabled') or not entry.get('token'):
+                    continue
+                process_name = f'8-cp-custom-{guild_id}'
+                wrapper_file = os.path.join(CUB_PROTECTOR_DIR, f'custom_bot_{guild_id}.js')
+                if not os.path.exists(wrapper_file):
+                    continue
+                print(f'[CustomBot] Retrying intent-error bot for guild {guild_id}', flush=True)
+                # Stop any existing crash-looping instance first
+                subprocess.run(['pm2', 'stop', process_name], capture_output=True)
+                # Attempt restart via wrapper
+                r = subprocess.run(
+                    ['pm2', 'start', wrapper_file, '--name', process_name, '--node-args=--max-old-space-size=256', '--max-memory-restart=256M'],
+                    capture_output=True, text=True, cwd=CUB_PROTECTOR_DIR
+                )
+                if r.returncode != 0:
+                    # Process already registered in PM2 — use restart
+                    subprocess.run(['pm2', 'restart', process_name], capture_output=True)
+
+                # Wait a moment then check if it stayed online
+                import time as _time
+                _time.sleep(CHECK_DELAY)
+                status_r = subprocess.run(['pm2', 'jlist'], capture_output=True, text=True)
+                came_online = False
+                still_errored = False
+                try:
+                    for p in _json.loads(status_r.stdout or '[]'):
+                        if p.get('name') == process_name:
+                            pm2_env = p.get('pm2_env', {})
+                            if pm2_env.get('status') == 'online':
+                                came_online = True
+                            elif pm2_env.get('exit_code') == 2:
+                                still_errored = True
+                            break
+                except Exception:
+                    pass
+
+                if came_online:
+                    print(f'[CustomBot] Intent error resolved for guild {guild_id} — bot is online', flush=True)
+                    cb_data['guilds'][guild_id]['intent_error'] = False
+                    changed = True
+                elif still_errored:
+                    # Still failing — stop to prevent crash loop
+                    subprocess.run(['pm2', 'stop', process_name], capture_output=True)
+                    print(f'[CustomBot] Intents still not enabled for guild {guild_id}', flush=True)
+
+            if changed:
+                _save_custom_bots(cb_data)
+        except Exception as e:
+            print(f'[CustomBot] Intent-error retry failed: {e}', flush=True)
+        finally:
+            t = threading.Timer(RETRY_INTERVAL, _do_retry)
+            t.daemon = True
+            t.start()
+
+    t = threading.Timer(RETRY_INTERVAL, _do_retry)
+    t.daemon = True
+    t.start()
+
 def _auto_launch_custom_bots():
     """On startup, re-launch all enabled custom bots that aren't already running."""
     try:
@@ -20169,6 +20315,10 @@ if __name__ == '__main__':
     _cb_timer.daemon = True
     _cb_timer.start()
     print('[CustomBot] Auto-launch scheduled (in 15s)', flush=True)
+
+    # Background retry for bots stuck on intent errors (checks every 5 min)
+    _retry_intent_error_bots()
+    print('[CustomBot] Intent-error retry thread started', flush=True)
 
     # Run production server with Waitress
     # 16 threads: allows SSE connections (each holds a thread) + regular requests simultaneously

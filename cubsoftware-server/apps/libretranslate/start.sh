@@ -22,8 +22,8 @@ fi
 # Install/upgrade LibreTranslate if needed
 if ! ./venv/bin/python3 -c "import libretranslate" 2>/dev/null; then
     echo "[LibreTranslate] Installing LibreTranslate (this takes a moment)..."
-    ./venv/bin/pip install --quiet --upgrade pip
-    ./venv/bin/pip install --quiet libretranslate
+    ./venv/bin/pip install --upgrade pip
+    ./venv/bin/pip install libretranslate
 fi
 
 # Clear any stale process still holding the port from a previous crash

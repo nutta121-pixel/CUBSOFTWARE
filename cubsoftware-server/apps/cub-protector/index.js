@@ -5224,7 +5224,8 @@ async function _postReactionBoardResults(guildId, item, data) {
     const entries = Object.entries(tracked);
     const labels = {};
     for (const rl of (item.stats?.reaction_labels || [])) labels[rl.emoji] = rl.label;
-    const topN = item.stats?.top_n || 0;
+    const rawTopN = item.stats?.top_n;
+    const topN = (rawTopN && rawTopN !== 'all') ? parseInt(rawTopN, 10) : 0;
     const sorted = entries.map(([msgId, msg]) => {
         const total = Object.values(msg.reactions || {}).reduce((a, b) => a + b, 0);
         return { msgId, msg, total };
@@ -5240,7 +5241,7 @@ async function _postReactionBoardResults(guildId, item, data) {
     });
     const embed = cubEmbed()
         .setColor(0xF1C40F)
-        .setTitle(topN > 0 ? `🏆 Top ${topN} — Reaction Leaderboard` : '🏆 Reaction Leaderboard Results')
+        .setTitle(topN > 0 ? `🏆 Top ${topN} — Reaction Board Results` : '🏆 Reaction Board Results')
         .setDescription(description.slice(0, 4096))
         .setTimestamp();
     await channel.send({ embeds: [embed] }).catch(e => console.error('[ReactionBoard] Failed to post results:', e.message));
@@ -5302,12 +5303,20 @@ client.once('ready', () => {
         const now = new Date();
         const nowH = now.getUTCHours();
         const nowM = now.getUTCMinutes();
+        const nowDay = now.getUTCDay(); // 0=Sunday … 6=Saturday
         for (const [gId, gd] of Object.entries(data.guilds || {})) {
             if (!gd?.settings?.enabled) continue;
             for (const item of (gd.items || [])) {
-                if (!item.enabled || !item.stats?.enabled || !item.stats?.display_time) continue;
+                if (!item.enabled || !item.stats?.enabled) continue;
+                const freq = item.stats.frequency || 'daily';
+                if (freq === 'manual') continue;
+                if (!item.stats.display_time) continue;
                 const [h, m] = item.stats.display_time.split(':').map(Number);
                 if (isNaN(h) || isNaN(m) || nowH !== h || nowM !== m) continue;
+                if (freq === 'weekly') {
+                    const targetDay = parseInt(item.stats.day_of_week ?? 1, 10);
+                    if (nowDay !== targetDay) continue;
+                }
                 if (item.stats.last_reset) {
                     const lr = new Date(item.stats.last_reset);
                     if (lr.getUTCFullYear() === now.getUTCFullYear() &&
@@ -8665,7 +8674,7 @@ client.on('interactionCreate', async (interaction) => {
             gd.items.push({
                 id: String(Date.now()), channel_id: channel.id, channel_name: channel.name,
                 auto_reactions, filter, enabled: true,
-                stats: { enabled: false, reaction_labels: [], display_time: '', top_n: 10, last_reset: null },
+                stats: { enabled: false, reaction_labels: [], frequency: 'daily', day_of_week: 1, display_time: '', top_n: 'all', last_reset: null },
                 tracked_messages: {}, created_at: new Date().toISOString(),
             });
             saveReactionBoard(data);

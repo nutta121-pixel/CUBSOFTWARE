@@ -8630,14 +8630,42 @@
                 <label class="toggle"><input type="checkbox" id="rb-stats-${item.id}" ${statsEnabled ? 'checked' : ''} onchange="window.cpRBToggleStats('${item.id}',this.checked)"><span class="toggle-slider"></span></label>
             </div>
             <div id="rb-stats-cfg-${item.id}" ${statsEnabled ? '' : 'style="display:none"'}>
-                <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;">
-                    <div class="form-group" style="flex:1;min-width:140px;">
-                        <label class="form-label">Results Time (UTC)</label>
-                        <input type="time" class="form-input" id="rb-time-${item.id}" value="${escapeHtml(item.stats?.display_time||'')}" onchange="window.cpRBSaveStats('${item.id}')">
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;align-items:flex-end;">
+                    <div class="form-group" style="flex:1;min-width:160px;">
+                        <label class="form-label">Frequency</label>
+                        <select class="form-select" id="rb-freq-${item.id}" onchange="window.cpRBToggleFreqOptions('${item.id}')">
+                            <option value="manual" ${(item.stats?.frequency||'daily') === 'manual' ? 'selected' : ''}>Manual only</option>
+                            <option value="daily" ${(item.stats?.frequency||'daily') === 'daily' ? 'selected' : ''}>Daily</option>
+                            <option value="weekly" ${(item.stats?.frequency) === 'weekly' ? 'selected' : ''}>Weekly</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="rb-day-group-${item.id}" style="flex:1;min-width:140px;${(item.stats?.frequency) === 'weekly' ? '' : 'display:none'}">
+                        <label class="form-label">Day of Week</label>
+                        <select class="form-select" id="rb-day-${item.id}">
+                            <option value="0" ${(item.stats?.day_of_week??1) == 0 ? 'selected' : ''}>Sunday</option>
+                            <option value="1" ${(item.stats?.day_of_week??1) == 1 ? 'selected' : ''}>Monday</option>
+                            <option value="2" ${(item.stats?.day_of_week) == 2 ? 'selected' : ''}>Tuesday</option>
+                            <option value="3" ${(item.stats?.day_of_week) == 3 ? 'selected' : ''}>Wednesday</option>
+                            <option value="4" ${(item.stats?.day_of_week) == 4 ? 'selected' : ''}>Thursday</option>
+                            <option value="5" ${(item.stats?.day_of_week) == 5 ? 'selected' : ''}>Friday</option>
+                            <option value="6" ${(item.stats?.day_of_week) == 6 ? 'selected' : ''}>Saturday</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="rb-time-group-${item.id}" style="flex:1;min-width:140px;${(item.stats?.frequency||'daily') === 'manual' ? 'display:none' : ''}">
+                        <label class="form-label">Time (UTC)</label>
+                        <input type="time" class="form-input" id="rb-time-${item.id}" value="${escapeHtml(item.stats?.display_time||'')}">
                     </div>
                     <div class="form-group" style="flex:1;min-width:140px;">
-                        <label class="form-label">Show Top N (0 = all)</label>
-                        <input type="number" class="form-input" id="rb-topn-${item.id}" value="${item.stats?.top_n??10}" min="0" max="100" onchange="window.cpRBSaveStats('${item.id}')">
+                        <label class="form-label">Show in Results</label>
+                        <select class="form-select" id="rb-topn-${item.id}">
+                            <option value="0" ${(item.stats?.top_n??10) == 0 ? 'selected' : ''}>All entries</option>
+                            <option value="3" ${(item.stats?.top_n) == 3 ? 'selected' : ''}>Top 3</option>
+                            <option value="5" ${(item.stats?.top_n) == 5 ? 'selected' : ''}>Top 5</option>
+                            <option value="10" ${(item.stats?.top_n??10) == 10 ? 'selected' : ''}>Top 10</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <button class="control-btn primary small" onclick="window.cpRBSaveStats('${item.id}')">Save Settings</button>
                     </div>
                 </div>
                 <div style="margin-top:1rem;">
@@ -8702,8 +8730,10 @@
 
     function _rbGetStats(itemId) {
         const enabled = document.getElementById(`rb-stats-${itemId}`)?.checked || false;
+        const frequency = document.getElementById(`rb-freq-${itemId}`)?.value || 'daily';
+        const day_of_week = parseInt(document.getElementById(`rb-day-${itemId}`)?.value ?? '1', 10);
         const display_time = document.getElementById(`rb-time-${itemId}`)?.value || '';
-        const top_n = parseInt(document.getElementById(`rb-topn-${itemId}`)?.value || '10', 10);
+        const top_n = document.getElementById(`rb-topn-${itemId}`)?.value || 'all';
         const labelRows = document.querySelectorAll(`#rb-labels-${itemId} .rb-label-row`);
         const reaction_labels = [];
         labelRows.forEach(row => {
@@ -8712,8 +8742,16 @@
             const label = inputs[1]?.value?.trim();
             if (emoji && label) reaction_labels.push({ emoji, label });
         });
-        return { enabled, display_time, top_n, reaction_labels };
+        return { enabled, frequency, day_of_week, display_time, top_n, reaction_labels };
     }
+
+    window.cpRBToggleFreqOptions = function(itemId) {
+        const freq = document.getElementById(`rb-freq-${itemId}`)?.value || 'daily';
+        const dayGroup = document.getElementById(`rb-day-group-${itemId}`);
+        const timeGroup = document.getElementById(`rb-time-group-${itemId}`);
+        if (dayGroup) dayGroup.style.display = freq === 'weekly' ? '' : 'none';
+        if (timeGroup) timeGroup.style.display = freq === 'manual' ? 'none' : '';
+    };
 
     window.cpRBAddLabel = function(itemId) {
         const container = document.getElementById(`rb-labels-${itemId}`);

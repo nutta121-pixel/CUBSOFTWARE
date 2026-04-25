@@ -125,6 +125,50 @@
     background: rgba(237,66,69,0.1);
 }
 
+.server-picker-user-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sp-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.55);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.18s;
+    white-space: nowrap;
+}
+
+.sp-action-btn:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border-color: rgba(255,255,255,0.2);
+}
+
+.sp-action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.sp-action-btn svg {
+    flex-shrink: 0;
+}
+
+.sp-reauth-btn:hover {
+    color: #5865f2;
+    background: rgba(88,101,242,0.12);
+    border-color: rgba(88,101,242,0.3);
+}
+
 .server-picker-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));

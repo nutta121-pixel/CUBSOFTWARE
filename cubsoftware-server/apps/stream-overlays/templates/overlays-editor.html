@@ -3015,5 +3015,15 @@ function testEmoteSpawn(btn) {
     setTimeout(() => { btn.textContent = '▶ Test Spawn Emotes'; btn.style.color = ''; }, 2000);
 }
 </script>
+<script>
+// Normalize any color inputs that ended up with an empty or invalid value
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('input[type="color"]').forEach(function (el) {
+        if (!el.value || !/^#[0-9a-fA-F]{6}$/.test(el.value)) {
+            el.value = '#000000';
+        }
+    });
+});
+</script>
 </body>
 </html>

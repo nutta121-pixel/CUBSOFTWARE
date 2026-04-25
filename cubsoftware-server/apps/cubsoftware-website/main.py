@@ -905,7 +905,42 @@ def _add_security_headers(response):
     # Content Security Policy — allow our own assets + Google Fonts + Discord CDN for avatars
     if not request.path.startswith('/static/'):
         _path = request.path.rstrip('/')
-        if _path.startswith('/cubdeck'):
+        if _path.startswith('/overlays/source/') or _path.startswith('/overlays/alerts/'):
+            # Overlay source/alert pages load in OBS Browser Source or the editor preview iframe
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' "
+                    "https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'self' https://fonts.gstatic.com; "
+                "img-src 'self' data: https://cdn.discordapp.com https://cubsoftware.site "
+                    "https://i.imgur.com https://static-cdn.jtvnw.net; "
+                "connect-src 'self' wss://cubsoftware.site ws://cubsoftware.site; "
+                "worker-src 'self' blob:; "
+                "object-src 'none'; "
+                "base-uri 'self'; "
+                "frame-ancestors 'self' https://cubsoftware.site;"
+            )
+            response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+        elif _path.startswith('/overlays/scenes/'):
+            # Overlay editor — needs to embed same-origin preview iframe
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' "
+                    "https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                "font-src 'self' https://fonts.gstatic.com; "
+                "img-src 'self' data: https://cdn.discordapp.com https://static-cdn.jtvnw.net "
+                    "https://cubsoftware.site https://i.imgur.com; "
+                "frame-src 'self'; "
+                "connect-src 'self' https://api.github.com wss://cubsoftware.site; "
+                "worker-src 'self' blob:; "
+                "object-src 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self'; "
+                "frame-ancestors 'none';"
+            )
+        elif _path.startswith('/cubdeck'):
             # CubDeck needs WebSocket to OBS (localhost) + Twitch APIs + various plugins
             response.headers['Content-Security-Policy'] = (
                 "default-src 'self'; "
@@ -7032,6 +7067,71 @@ def admin_remove_cubai_server():
     save_cubai_servers(guilds)
     return jsonify({'success': True, 'guilds': guilds})
 
+# Admin Message Reactions Digest
+_MR_DEFAULT_CONFIG = {
+    'enabled': False, 'guild_id': '', 'monitor_channels': [],
+    'digest_channel': '', 'digest_interval': 'daily',
+    'digest_hour': 9, 'min_reactions': 3, 'top_count': 5,
+}
+
+def _load_msg_reactions():
+    try:
+        if os.path.exists(CUB_PROTECTOR_MSG_REACTIONS_FILE):
+            with open(CUB_PROTECTOR_MSG_REACTIONS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return {'config': dict(_MR_DEFAULT_CONFIG), 'tracked': {}, 'last_digest': 0}
+
+def _save_msg_reactions(data):
+    os.makedirs(CUB_PROTECTOR_DATA_DIR, exist_ok=True)
+    with open(CUB_PROTECTOR_MSG_REACTIONS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2)
+
+@app.route('/api/admin/message-reactions', methods=['GET'])
+@pm2_auth_required
+def admin_get_msg_reactions():
+    data = _load_msg_reactions()
+    tracked = data.get('tracked', {})
+    stats = {
+        'tracked_count': len(tracked),
+        'top_messages': sorted(
+            [{'id': k, **v} for k, v in tracked.items()],
+            key=lambda x: x.get('total', 0), reverse=True
+        )[:10],
+        'last_digest': data.get('last_digest', 0),
+    }
+    return jsonify({'config': data.get('config', _MR_DEFAULT_CONFIG), 'stats': stats})
+
+@app.route('/api/admin/message-reactions', methods=['POST'])
+@pm2_auth_required
+def admin_save_msg_reactions():
+    body = request.get_json(silent=True) or {}
+    cfg = body.get('config', {})
+    data = _load_msg_reactions()
+    # Validate and merge
+    data['config'] = {
+        'enabled': bool(cfg.get('enabled', False)),
+        'guild_id': str(cfg.get('guild_id', '')).strip(),
+        'monitor_channels': [str(c).strip() for c in cfg.get('monitor_channels', []) if str(c).strip()],
+        'digest_channel': str(cfg.get('digest_channel', '')).strip(),
+        'digest_interval': cfg.get('digest_interval', 'daily') if cfg.get('digest_interval') in ('daily', 'weekly') else 'daily',
+        'digest_hour': max(0, min(23, int(cfg.get('digest_hour', 9)))),
+        'min_reactions': max(1, int(cfg.get('min_reactions', 3))),
+        'top_count': max(1, min(20, int(cfg.get('top_count', 5)))),
+    }
+    _save_msg_reactions(data)
+    return jsonify({'success': True, 'config': data['config']})
+
+@app.route('/api/admin/message-reactions/clear', methods=['POST'])
+@pm2_auth_required
+def admin_clear_msg_reactions():
+    data = _load_msg_reactions()
+    data['tracked'] = {}
+    _save_msg_reactions(data)
+    return jsonify({'success': True})
+
+
 # Admin IP Bans Management
 @app.route('/api/admin/ipbans', methods=['GET'])
 @pm2_auth_required
@@ -12431,6 +12531,7 @@ CUB_PROTECTOR_DATA_DIR = os.path.join(CUB_PROTECTOR_DIR, 'data')
 CUB_PROTECTOR_TEMP_VOICE_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'temp_voice.json')
 CUB_PROTECTOR_REDIRECT_URI = os.environ.get('CUB_PROTECTOR_REDIRECT_URI', 'https://cubsoftware.site/cub-protector/auth/callback')
 CUB_PROTECTOR_BOT_MASTERS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'bot_masters.json')
+CUB_PROTECTOR_MSG_REACTIONS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'message_reactions.json')
 
 def load_bot_masters():
     """Load bot masters data: {guild_id: [user_id, ...]}"""
@@ -12965,6 +13066,14 @@ def cub_protector_guilds():
     setup_guilds = session.get('cub_protector_setup_guilds', [])
 
     return jsonify({'guilds': shared_guilds, 'setup_guilds': setup_guilds})
+
+@app.route('/api/cub-protector/guilds/force-refresh', methods=['POST'])
+@cub_protector_auth_required
+def cub_protector_guilds_force_refresh():
+    """Force-refresh the user's guild list from Discord immediately, bypassing the 5-min TTL."""
+    _refresh_user_guild_lists()
+    return jsonify({'ok': True})
+
 
 @app.route('/api/cub-protector/guilds/<guild_id>/hubs')
 @cub_protector_auth_required

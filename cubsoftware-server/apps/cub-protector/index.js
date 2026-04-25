@@ -227,6 +227,7 @@ const TOURNAMENTS_FILE = path.join(DATA_DIR, 'tournaments.json');
 const FEEDS_FILE = path.join(DATA_DIR, 'feeds.json');
 const DEBATE_FILE = path.join(DATA_DIR, 'debate.json');
 const GAMES_FILE = path.join(DATA_DIR, 'games.json');
+const MSG_REACTIONS_FILE = path.join(DATA_DIR, 'message_reactions.json');
 const MEDIA_CHANNELS_FILE = path.join(DATA_DIR, 'media_channels.json');
 const SLOWMODE_FILE = path.join(DATA_DIR, 'slowmode.json');
 const TRANSLATE_FILE = path.join(DATA_DIR, 'translate.json');
@@ -732,6 +733,11 @@ function getRankCardTheme(guildId, userId) {
     return { ...guildTheme, ...userTheme };
 }
 function saveLiveAlertsData(data) { saveJsonFile(LIVE_ALERTS_FILE, data); }
+
+// Message Reaction Digest
+const _MR_DEFAULT = { config: { enabled: false, guild_id: '', monitor_channels: [], digest_channel: '', digest_interval: 'daily', digest_hour: 9, min_reactions: 3, top_count: 5 }, tracked: {}, last_digest: 0 };
+function loadMsgReactionsData() { return loadJsonFile(MSG_REACTIONS_FILE, _MR_DEFAULT); }
+function saveMsgReactionsData(d) { saveJsonFile(MSG_REACTIONS_FILE, d); }
 
 // Modmail
 function loadModmailData() { return loadJsonFile(MODMAIL_FILE); }
@@ -2379,11 +2385,16 @@ async function registerCommands() {
     try {
         if (CUSTOM_GUILD_ID) {
             // Custom bot mode: register guild-specific commands (instant, no propagation delay)
-            console.log(`[Commands] Registering guild commands for custom bot (guild: ${CUSTOM_GUILD_ID})...`);
+            const isCubAiEnabled = guildHasCubAI(CUSTOM_GUILD_ID);
+            console.log(`[Commands] Registering guild commands for custom bot (guild: ${CUSTOM_GUILD_ID}, cubai=${isCubAiEnabled})...`);
             await rest.put(Routes.applicationGuildCommands(CLIENT_ID, CUSTOM_GUILD_ID), {
-                body: commands.filter(c => !MAIN_BOT_ONLY_COMMANDS.has(c.name)).map(c => c.toJSON()),
+                body: commands.filter(c => {
+                    if (!MAIN_BOT_ONLY_COMMANDS.has(c.name)) return true;
+                    if (c.name === 'cubai' && isCubAiEnabled) return true;
+                    return false;
+                }).map(c => c.toJSON()),
             });
-            console.log('[Commands] Custom bot guild commands registered!');
+            console.log(`[Commands] Custom bot guild commands registered!${isCubAiEnabled ? ' (CubAI included)' : ''}`);
         } else {
             // Main bot: clear global commands and register per-guild instead.
             // Guild-specific commands take priority over globals immediately; the global
@@ -4221,6 +4232,19 @@ client.on('messageCreate', (message) => {
             return;
         }
 
+        // Skip if the detected language code isn't in our supported list — almost always a false
+        // positive from slang or short informal text (e.g. "Say sumn" detected as "pag").
+        if (detectedLang && !TRANSLATE_ALL_LANGUAGES.some(l => l.value === detectedLang)) {
+            console.log(`[Translate] Skipping — detected language "${detectedLang}" is not a supported language (likely slang/false positive, confidence: ${detectedConfidence})`);
+            return;
+        }
+
+        // Skip if confidence is too low to be reliable
+        if (detectedLang && detectedConfidence != null && detectedConfidence < 70) {
+            console.log(`[Translate] Skipping — low confidence detection "${detectedLang}" at ${detectedConfidence}% (threshold: 70%)`);
+            return;
+        }
+
         if (!translated || translated.trim().toLowerCase() === text.toLowerCase()) {
             console.log(`[Translate] Skipping — translated text is identical to original (detected="${detectedLang || 'unknown'}" confidence=${detectedConfidence ?? 'n/a'})`);
             return;
@@ -5199,6 +5223,32 @@ client.on('messageReactionAdd', async (reaction, user) => {
         } catch (_e) {}
     }
 
+    // ── Message Reaction Digest tracking ──
+    try {
+        const mrData = loadMsgReactionsData();
+        const mrCfg = mrData.config || {};
+        if (mrCfg.enabled && mrCfg.guild_id === _srGuild.id && reaction.message.channelId &&
+            (mrCfg.monitor_channels || []).includes(reaction.message.channelId)) {
+            const msg = reaction.message;
+            const msgId = msg.id;
+            if (!mrData.tracked[msgId]) {
+                mrData.tracked[msgId] = {
+                    channel_id: msg.channelId,
+                    guild_id: _srGuild.id,
+                    author_name: msg.author?.username || 'Unknown',
+                    content: (msg.content || '').slice(0, 200),
+                    url: `https://discord.com/channels/${_srGuild.id}/${msg.channelId}/${msgId}`,
+                    total: 0,
+                    timestamp: msg.createdTimestamp || Date.now(),
+                };
+            }
+            // Count total reactions across all emoji
+            const total = msg.reactions.cache.reduce((s, r) => s + (r.count || 0), 0);
+            mrData.tracked[msgId].total = total;
+            saveMsgReactionsData(mrData);
+        }
+    } catch (_mrE) {}
+
     const sbData = loadStarboardData();
     const guildSB = sbData.guilds[_srGuild.id];
     if (!guildSB || !guildSB.enabled || !guildSB.channel_id) return;
@@ -5291,7 +5341,9 @@ client.on('interactionCreate', async (interaction) => {
 
     if (!interaction.isChatInputCommand()) return;
     if (CUSTOM_GUILD_ID && interaction.guildId !== CUSTOM_GUILD_ID) return;
-    if (CUSTOM_GUILD_ID && MAIN_BOT_ONLY_COMMANDS.has(interaction.commandName)) return;
+    if (CUSTOM_GUILD_ID && MAIN_BOT_ONLY_COMMANDS.has(interaction.commandName)) {
+        if (!(interaction.commandName === 'cubai' && guildHasCubAI(CUSTOM_GUILD_ID))) return;
+    }
     if (guildHasCustomBot(interaction.guildId) && !MAIN_BOT_SHARED_COMMANDS.has(interaction.commandName)) {
         const botName = getCustomBotName(interaction.guildId);
         return interaction.reply({ content: `This server uses **${botName}**. Please use that bot for commands instead.`, flags: MessageFlags.Ephemeral });
@@ -12107,7 +12159,66 @@ client.once('clientReady', async () => {
     }
     setInterval(processBotQueue, 5000);
     processBotQueue(); // run once immediately on ready
+
+    // ── Message Reaction Digest scheduler (checks every 10 min) ──
+    async function sendReactionDigest() {
+        try {
+            const mrData = loadMsgReactionsData();
+            const cfg = mrData.config || {};
+            if (!cfg.enabled || !cfg.guild_id || !cfg.digest_channel) return;
+
+            const minReactions = cfg.min_reactions || 3;
+            const topCount = Math.min(cfg.top_count || 5, 20);
+            const entries = Object.values(mrData.tracked)
+                .filter(e => e.guild_id === cfg.guild_id && e.total >= minReactions)
+                .sort((a, b) => b.total - a.total)
+                .slice(0, topCount);
+
+            if (!entries.length) return;
+
+            const guild = await client.guilds.fetch(cfg.guild_id).catch(() => null);
+            if (!guild) return;
+            const channel = await guild.channels.fetch(cfg.digest_channel).catch(() => null);
+            if (!channel || !channel.isTextBased()) return;
+
+            const periodLabel = cfg.digest_interval === 'weekly' ? 'Weekly' : 'Daily';
+            const embed = cubEmbed()
+                .setTitle(`${periodLabel} Top Reacted Messages`)
+                .setColor(0x7c3aed)
+                .setTimestamp();
+
+            const lines = entries.map((e, i) => {
+                const preview = e.content ? `> ${e.content.slice(0, 80)}${e.content.length > 80 ? '…' : ''}` : '';
+                return `**${i + 1}.** [Jump](${e.url}) — **${e.total}** reactions\n${preview}`;
+            });
+            embed.setDescription(lines.join('\n\n'));
+
+            await channel.send({ embeds: [embed] }).catch(() => {});
+
+            // Clear tracked messages after digest
+            mrData.tracked = {};
+            mrData.last_digest = Date.now();
+            saveMsgReactionsData(mrData);
+        } catch (e) {
+            console.error('[MsgReactions] Digest error:', e.message);
+        }
+    }
+
+    setInterval(async () => {
+        const mrData = loadMsgReactionsData();
+        const cfg = mrData.config || {};
+        if (!cfg.enabled || !cfg.guild_id || !cfg.digest_channel) return;
+        const now = new Date();
+        const lastDigest = mrData.last_digest || 0;
+        const hoursSinceLast = (Date.now() - lastDigest) / 3600000;
+        const digestHour = cfg.digest_hour ?? 9;
+        const isRightHour = now.getHours() === digestHour;
+        const isDaily = cfg.digest_interval === 'daily' && hoursSinceLast >= 23 && isRightHour;
+        const isWeekly = cfg.digest_interval === 'weekly' && hoursSinceLast >= 167 && isRightHour;
+        if (isDaily || isWeekly) await sendReactionDigest();
+    }, 10 * 60 * 1000);
 });
+
 
 // ============================================================
 // Error handlers — ensure crashes appear in PM2 logs

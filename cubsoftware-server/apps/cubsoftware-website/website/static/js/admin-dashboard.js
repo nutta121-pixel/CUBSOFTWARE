@@ -192,6 +192,9 @@
             case 'cubai-servers':
                 loadCubAiServers();
                 break;
+            case 'message-reactions':
+                loadMessageReactions();
+                break;
             case 'passwords':
                 loadPasswords();
                 break;
@@ -1353,6 +1356,105 @@
             }
         } catch (e) {
             showToast('Failed to remove server', 'error');
+        }
+    };
+
+    // ==================== MESSAGE REACTIONS ====================
+    window.loadMessageReactions = async function() {
+        const list = document.getElementById('mrTrackedList');
+        if (!list) return;
+        list.innerHTML = '<div class="loading">Loading…</div>';
+        try {
+            const res = await fetch('/api/admin/message-reactions');
+            if (!res.ok) throw new Error('Failed');
+            const data = await res.json();
+            const cfg = data.config || {};
+            // Populate config fields
+            const enabled = document.getElementById('mrEnabled');
+            const guildId = document.getElementById('mrGuildId');
+            const monitor = document.getElementById('mrMonitorChannels');
+            const digestCh = document.getElementById('mrDigestChannel');
+            const interval = document.getElementById('mrInterval');
+            const hour = document.getElementById('mrHour');
+            const minR = document.getElementById('mrMinReactions');
+            const topN = document.getElementById('mrTopCount');
+            if (enabled) enabled.checked = cfg.enabled || false;
+            if (guildId) guildId.value = cfg.guild_id || '';
+            if (monitor) monitor.value = (cfg.monitor_channels || []).join(', ');
+            if (digestCh) digestCh.value = cfg.digest_channel || '';
+            if (interval) interval.value = cfg.digest_interval || 'daily';
+            if (hour) hour.value = cfg.digest_hour ?? 9;
+            if (minR) minR.value = cfg.min_reactions ?? 3;
+            if (topN) topN.value = cfg.top_count ?? 5;
+
+            // Render stats
+            const stats = data.stats || {};
+            const countEl = document.getElementById('mrTrackedCount');
+            if (countEl) countEl.textContent = `(${stats.tracked_count || 0} tracked)`;
+            const lastDigestEl = document.getElementById('mrLastDigestLabel');
+            if (lastDigestEl && stats.last_digest) {
+                const d = new Date(stats.last_digest);
+                lastDigestEl.textContent = `Last digest: ${d.toLocaleString()}`;
+            }
+            const top = stats.top_messages || [];
+            if (!top.length) {
+                list.innerHTML = '<div class="empty-state">No tracked messages yet</div>';
+            } else {
+                list.innerHTML = top.map(m => `
+                    <div class="whitelist-user" style="flex-direction:column;align-items:flex-start;gap:0.2rem;padding:0.6rem 0.75rem;">
+                        <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+                            <a href="${m.url}" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--accent);text-decoration:none;word-break:break-all;">#${m.channel_id}</a>
+                            <span style="font-size:0.8rem;font-weight:600;color:var(--text-primary);">${m.total} 👍</span>
+                        </div>
+                        ${m.content ? `<div style="font-size:0.75rem;color:var(--text-muted);word-break:break-all;">${escapeHtml(m.content.slice(0, 100))}</div>` : ''}
+                        <div style="font-size:0.7rem;color:rgba(255,255,255,0.25);">by ${escapeHtml(m.author_name || 'Unknown')}</div>
+                    </div>`).join('');
+            }
+        } catch (e) {
+            if (list) list.innerHTML = '<div class="loading">Failed to load</div>';
+        }
+    };
+
+    window.saveMessageReactions = async function() {
+        const cfg = {
+            enabled: document.getElementById('mrEnabled')?.checked || false,
+            guild_id: document.getElementById('mrGuildId')?.value?.trim() || '',
+            monitor_channels: (document.getElementById('mrMonitorChannels')?.value || '')
+                .split(',').map(s => s.trim()).filter(Boolean),
+            digest_channel: document.getElementById('mrDigestChannel')?.value?.trim() || '',
+            digest_interval: document.getElementById('mrInterval')?.value || 'daily',
+            digest_hour: parseInt(document.getElementById('mrHour')?.value) || 9,
+            min_reactions: parseInt(document.getElementById('mrMinReactions')?.value) || 3,
+            top_count: parseInt(document.getElementById('mrTopCount')?.value) || 5,
+        };
+        try {
+            const res = await fetch('/api/admin/message-reactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ config: cfg }),
+            });
+            if (res.ok) {
+                showToast('Message Reactions config saved', 'success');
+            } else {
+                showToast('Failed to save', 'error');
+            }
+        } catch (e) {
+            showToast('Failed to save', 'error');
+        }
+    };
+
+    window.clearMsgReactionsTracked = async function() {
+        if (!confirm('Clear all currently tracked messages? The next digest will have no data.')) return;
+        try {
+            const res = await fetch('/api/admin/message-reactions/clear', { method: 'POST' });
+            if (res.ok) {
+                showToast('Tracked messages cleared', 'success');
+                loadMessageReactions();
+            } else {
+                showToast('Failed to clear', 'error');
+            }
+        } catch (e) {
+            showToast('Failed to clear', 'error');
         }
     };
 

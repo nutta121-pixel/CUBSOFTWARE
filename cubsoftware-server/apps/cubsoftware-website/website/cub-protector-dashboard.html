@@ -39,6 +39,16 @@
                         <span class="server-picker-user-hint">Select a server to manage</span>
                     </div>
                 </div>
+                <div class="server-picker-user-actions">
+                    <button class="sp-action-btn" id="cpRefreshBtn" onclick="cpRefreshServers()" title="Refresh server list">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                        Refresh
+                    </button>
+                    <a href="/login/discord?next=/cub-protector" class="sp-action-btn sp-reauth-btn" title="Re-login with Discord to pick up new servers">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                        Re-login
+                    </a>
+                </div>
             </div>
 
             <div class="server-picker-grid" id="serverPickerGrid">

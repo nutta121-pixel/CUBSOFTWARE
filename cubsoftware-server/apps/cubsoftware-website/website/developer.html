@@ -467,7 +467,7 @@ meme = JSON.<span class="fn">parse</span>(Net::HTTP.<span class="fn">get</span>(
         <div class="code-block-wrap">
             <button class="code-copy" onclick="copyCode(this)">copy</button>
 
-            <div class="code-block" data-group="tabsBot" data-tab="djs"><span class="cmt">// npm install discord.js node-fetch</span>
+            <div class="code-block" data-group="tabsBot" data-tab="djs"><span class="cmt">// npm install discord.js</span>
 <span class="kw">const</span> { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder } = <span class="fn">require</span>(<span class="str">'discord.js'</span>);
 
 <span class="kw">const</span> client = <span class="kw">new</span> <span class="fn">Client</span>({ intents: [GatewayIntentBits.Guilds] });
@@ -479,7 +479,7 @@ client.<span class="fn">once</span>(<span class="str">'ready'</span>, <span clas
             .<span class="fn">setDescription</span>(<span class="str">'Get a random meme'</span>)
             .<span class="fn">addStringOption</span>(o => o
                 .<span class="fn">setName</span>(<span class="str">'category'</span>)
-                .<span class="fn">setDescription</span>(<span class="str">'Meme category'</span>)
+                .<span class="fn">setDescription</span>(<span class="str">'Meme category (optional)'</span>)
                 .<span class="fn">setRequired</span>(<span class="kw">false</span>))
     );
     console.<span class="fn">log</span>(<span class="str">'Ready!'</span>);
@@ -552,7 +552,7 @@ client.<span class="fn">run</span>(<span class="str">"YOUR_BOT_TOKEN"</span>)</d
 
 <span class="kw">public class</span> <span class="fn">MemeBot</span> <span class="kw">extends</span> <span class="fn">ListenerAdapter</span> {
     <span class="kw">static final</span> ObjectMapper JSON = <span class="kw">new</span> <span class="fn">ObjectMapper</span>();
-    <span class="kw">static final</span> HttpClient HTTP  = HttpClient.<span class="fn">newHttpClient</span>();
+    <span class="kw">static final</span> HttpClient    HTTP = HttpClient.<span class="fn">newHttpClient</span>();
 
     @Override
     <span class="kw">public void</span> <span class="fn">onSlashCommandInteraction</span>(SlashCommandInteractionEvent e) {
@@ -625,6 +625,102 @@ client.Ready += <span class="kw">async</span> () => {
 <span class="kw">await</span> client.<span class="fn">StartAsync</span>();
 <span class="kw">await</span> Task.<span class="fn">Delay</span>(-<span class="num">1</span>);</div>
 
+        </div>
+
+        <!-- Subcommand tip -->
+        <div class="dev-card" style="margin-top:1rem;">
+            <p style="font-size:.85rem;font-weight:600;color:#fff;margin-bottom:.6rem;">
+                Want <code style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#f59e0b">/meme dank</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:#f59e0b">/meme cat</code> etc. as separate subcommands?
+            </p>
+            <p style="font-size:.83rem;color:var(--text-muted);line-height:1.7;margin-bottom:.75rem;">
+                Instead of a string option, register each category as its own subcommand. Replace the command registration in the examples above with the snippet below, then read <code style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#f59e0b">getSubcommand()</code> / <code style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#f59e0b">interaction.data.options[0].name</code> in your handler instead of <code style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#f59e0b">getString('category')</code>.
+            </p>
+            <div class="code-tabs" id="tabsSub">
+                <button class="code-tab active" data-tab="djs" onclick="switchTab('tabsSub',this)">discord.js</button>
+                <button class="code-tab"        data-tab="dpy" onclick="switchTab('tabsSub',this)">discord.py</button>
+                <button class="code-tab"        data-tab="jda" onclick="switchTab('tabsSub',this)">Java (JDA)</button>
+                <button class="code-tab"        data-tab="dnet" onclick="switchTab('tabsSub',this)">C# (.NET)</button>
+            </div>
+            <div class="code-block-wrap" style="margin-top:0;">
+                <button class="code-copy" onclick="copyCode(this)">copy</button>
+
+                <div class="code-block" style="border-radius:0 8px 8px 8px;" data-group="tabsSub" data-tab="djs"><span class="kw">const</span> CATEGORIES = [
+    <span class="str">'random'</span>, <span class="str">'dank'</span>, <span class="str">'dark'</span>, <span class="str">'wholesome'</span>, <span class="str">'cursed'</span>, <span class="str">'gaming'</span>,
+    <span class="str">'programmer'</span>, <span class="str">'genz'</span>, <span class="str">'surreal'</span>, <span class="str">'anime'</span>, <span class="str">'cat'</span>, <span class="str">'dog'</span>,
+    <span class="str">'shitpost'</span>, <span class="str">'deep-fried'</span>, <span class="str">'pun'</span>, <span class="str">'dad'</span>, <span class="str">'twitter'</span>, <span class="str">'vibe'</span>,
+    <span class="str">'based'</span>, <span class="str">'skull'</span>, <span class="str">'cringe'</span>, <span class="str">'boomer'</span>, <span class="str">'npc'</span>, <span class="str">'trending'</span>, <span class="str">'irl'</span>
+];
+
+<span class="cmt">// Replace the commands.create() call with this:</span>
+<span class="kw">const</span> cmd = <span class="kw">new</span> <span class="fn">SlashCommandBuilder</span>().<span class="fn">setName</span>(<span class="str">'meme'</span>).<span class="fn">setDescription</span>(<span class="str">'Get a meme'</span>);
+<span class="kw">for</span> (<span class="kw">const</span> cat <span class="kw">of</span> CATEGORIES) {
+    cmd.<span class="fn">addSubcommand</span>(sub => sub.<span class="fn">setName</span>(cat).<span class="fn">setDescription</span>(<span class="str">`Get a ${cat} meme`</span>));
+}
+<span class="kw">await</span> client.application.commands.<span class="fn">create</span>(cmd);
+
+<span class="cmt">// In your handler, replace getString('category') with:</span>
+<span class="kw">const</span> category = interaction.options.<span class="fn">getSubcommand</span>();</div>
+
+                <div class="code-block" style="border-radius:0 8px 8px 8px;" data-group="tabsSub" data-tab="dpy" style="display:none">CATEGORIES = [
+    <span class="str">'random'</span>, <span class="str">'dank'</span>, <span class="str">'dark'</span>, <span class="str">'wholesome'</span>, <span class="str">'cursed'</span>, <span class="str">'gaming'</span>,
+    <span class="str">'programmer'</span>, <span class="str">'genz'</span>, <span class="str">'surreal'</span>, <span class="str">'anime'</span>, <span class="str">'cat'</span>, <span class="str">'dog'</span>,
+    <span class="str">'shitpost'</span>, <span class="str">'deep-fried'</span>, <span class="str">'pun'</span>, <span class="str">'dad'</span>, <span class="str">'twitter'</span>, <span class="str">'vibe'</span>,
+    <span class="str">'based'</span>, <span class="str">'skull'</span>, <span class="str">'cringe'</span>, <span class="str">'boomer'</span>, <span class="str">'npc'</span>, <span class="str">'trending'</span>, <span class="str">'irl'</span>
+]
+
+<span class="cmt"># Replace the @tree.command block with a group + loop:</span>
+meme_group = app_commands.<span class="fn">Group</span>(name=<span class="str">"meme"</span>, description=<span class="str">"Get a meme"</span>)
+
+<span class="kw">def</span> <span class="fn">_register</span>(cat):
+    @meme_group.<span class="fn">command</span>(name=cat, description=<span class="str">f"Get a {cat} meme"</span>)
+    <span class="kw">async def</span> <span class="fn">_cmd</span>(interaction: discord.Interaction):
+        <span class="kw">await</span> <span class="fn">meme</span>(interaction, cat)  <span class="cmt"># reuse your existing handler</span>
+
+<span class="kw">for</span> cat <span class="kw">in</span> CATEGORIES:
+    <span class="fn">_register</span>(cat)
+
+tree.<span class="fn">add_command</span>(meme_group)</div>
+
+                <div class="code-block" style="border-radius:0 8px 8px 8px;" data-group="tabsSub" data-tab="jda" style="display:none"><span class="kw">import</span> net.dv8tion.jda.api.interactions.commands.build.*;
+<span class="kw">import</span> java.util.List;
+
+<span class="kw">static final</span> List&lt;String&gt; CATS = List.<span class="fn">of</span>(
+    <span class="str">"random"</span>, <span class="str">"dank"</span>, <span class="str">"dark"</span>, <span class="str">"wholesome"</span>, <span class="str">"cursed"</span>, <span class="str">"gaming"</span>,
+    <span class="str">"programmer"</span>, <span class="str">"genz"</span>, <span class="str">"surreal"</span>, <span class="str">"anime"</span>, <span class="str">"cat"</span>, <span class="str">"dog"</span>,
+    <span class="str">"shitpost"</span>, <span class="str">"deep-fried"</span>, <span class="str">"pun"</span>, <span class="str">"dad"</span>, <span class="str">"twitter"</span>, <span class="str">"vibe"</span>,
+    <span class="str">"based"</span>, <span class="str">"skull"</span>, <span class="str">"cringe"</span>, <span class="str">"boomer"</span>, <span class="str">"npc"</span>, <span class="str">"trending"</span>, <span class="str">"irl"</span>
+);
+
+<span class="cmt">// Replace upsertCommand("meme", ...) with:</span>
+<span class="kw">var</span> cmd = Commands.<span class="fn">slash</span>(<span class="str">"meme"</span>, <span class="str">"Get a meme"</span>);
+<span class="kw">for</span> (String cat : CATS) {
+    cmd.<span class="fn">addSubcommands</span>(<span class="kw">new</span> <span class="fn">SubcommandData</span>(cat, <span class="str">"Get a "</span> + cat + <span class="str">" meme"</span>));
+}
+jda.<span class="fn">upsertCommand</span>(cmd).<span class="fn">queue</span>();
+
+<span class="cmt">// In your handler, replace getOption("category") with:</span>
+String cat = e.<span class="fn">getSubcommandName</span>();</div>
+
+                <div class="code-block" style="border-radius:0 8px 8px 8px;" data-group="tabsSub" data-tab="dnet" style="display:none"><span class="kw">var</span> CATS = <span class="kw">new</span>[] {
+    <span class="str">"random"</span>, <span class="str">"dank"</span>, <span class="str">"dark"</span>, <span class="str">"wholesome"</span>, <span class="str">"cursed"</span>, <span class="str">"gaming"</span>,
+    <span class="str">"programmer"</span>, <span class="str">"genz"</span>, <span class="str">"surreal"</span>, <span class="str">"anime"</span>, <span class="str">"cat"</span>, <span class="str">"dog"</span>,
+    <span class="str">"shitpost"</span>, <span class="str">"deep-fried"</span>, <span class="str">"pun"</span>, <span class="str">"dad"</span>, <span class="str">"twitter"</span>, <span class="str">"vibe"</span>,
+    <span class="str">"based"</span>, <span class="str">"skull"</span>, <span class="str">"cringe"</span>, <span class="str">"boomer"</span>, <span class="str">"npc"</span>, <span class="str">"trending"</span>, <span class="str">"irl"</span>
+};
+
+<span class="cmt">// Replace CreateGlobalApplicationCommandAsync with:</span>
+<span class="kw">var</span> cmd = <span class="kw">new</span> <span class="fn">SlashCommandBuilder</span>().<span class="fn">WithName</span>(<span class="str">"meme"</span>).<span class="fn">WithDescription</span>(<span class="str">"Get a meme"</span>);
+<span class="kw">foreach</span> (<span class="kw">var</span> cat <span class="kw">in</span> CATS) {
+    cmd.<span class="fn">AddOption</span>(<span class="kw">new</span> <span class="fn">SlashCommandOptionBuilder</span>()
+        .<span class="fn">WithName</span>(cat).<span class="fn">WithDescription</span>(<span class="str">$"Get a {cat} meme"</span>)
+        .<span class="fn">WithType</span>(ApplicationCommandOptionType.SubCommand));
+}
+<span class="kw">await</span> client.<span class="fn">CreateGlobalApplicationCommandAsync</span>(cmd.<span class="fn">Build</span>());
+
+<span class="cmt">// In your handler, replace the Options lookup with:</span>
+<span class="kw">var</span> cat = ((SocketSlashCommandDataOption)cmd.Data.Options.<span class="fn">First</span>()).Name;</div>
+
+            </div>
         </div>
     </div>
 

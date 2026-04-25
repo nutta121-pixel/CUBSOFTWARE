@@ -54,6 +54,7 @@
             { id: 'suggestions', label: 'Suggestions' },
             { id: 'polls', label: 'Polls' },
             { id: 'afk', label: 'AFK' },
+            { id: 'reaction-board', label: 'React Board' },
         ]},
         'messaging': { subtabs: [
             { id: 'custom-commands', label: 'Commands' },
@@ -472,6 +473,7 @@
             case 'auto-thread': await loadAutoThread(); break;
             case 'server-rules': await loadServerRules(); break;
             case 'polls': await loadPolls(); break;
+            case 'reaction-board': await loadReactionBoard(); break;
             case 'reminders': await loadReminders(); break;
             case 'color-roles': await loadColorRoles(); break;
             case 'self-roles': await loadSelfRoles(); break;
@@ -8577,6 +8579,222 @@
             });
             showToast('Debate settings saved', 'success');
         } catch (e) { showToast('Failed to save', 'error'); }
+    };
+
+    // ==================== REACTION BOARD ====================
+    let _rbLiveInterval = null;
+
+    async function loadReactionBoard() {
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board`);
+            const data = await res.json();
+            const s = data.settings || {};
+            document.getElementById('rb-enabled').checked = s.enabled !== false;
+            const items = data.items || [];
+            const list = document.getElementById('rb-items-list');
+            list.innerHTML = '';
+            if (!items.length) {
+                list.innerHTML = '<p style="color:var(--text-muted);padding:1rem 0;">No channels configured. Add one below.</p>';
+            } else {
+                for (const item of items) renderRBItem(item, list);
+            }
+            // Stop any previous live interval
+            if (_rbLiveInterval) { clearInterval(_rbLiveInterval); _rbLiveInterval = null; }
+        } catch (e) { showToast('Failed to load Reaction Board', 'error'); }
+    }
+
+    function renderRBItem(item, container) {
+        const card = document.createElement('div');
+        card.className = 'settings-card';
+        card.dataset.rbId = item.id;
+        card.style.marginBottom = '1rem';
+        const statsEnabled = item.stats?.enabled || false;
+        const labels = (item.stats?.reaction_labels || []);
+        const labelsHtml = labels.map((rl, i) => `
+            <div class="rb-label-row" style="display:flex;gap:.5rem;align-items:center;margin-bottom:.4rem;">
+                <input class="form-input" style="width:70px;" placeholder="😀" value="${escapeHtml(rl.emoji || '')}" oninput="window.cpRBUpdateLabels('${item.id}')">
+                <input class="form-input" style="flex:1;" placeholder="Meaning (e.g. Love it)" value="${escapeHtml(rl.label || '')}" oninput="window.cpRBUpdateLabels('${item.id}')">
+                <button class="control-btn danger small" onclick="this.closest('.rb-label-row').remove();window.cpRBUpdateLabels('${item.id}')">✕</button>
+            </div>`).join('');
+        card.innerHTML = `
+            <div class="settings-row">
+                <div class="settings-info"><h4>#${escapeHtml(item.channel_name || item.channel_id)}</h4>
+                    <p>Reactions: ${(item.auto_reactions||[]).join(' ')}${item.filter ? ` • Filter: <code>${escapeHtml(item.filter)}</code>` : ''}</p></div>
+                <div style="display:flex;gap:.5rem;align-items:center;">
+                    <label class="toggle"><input type="checkbox" ${item.enabled !== false ? 'checked' : ''} onchange="window.cpRBToggleItem('${item.id}',this.checked)"><span class="toggle-slider"></span></label>
+                    <button class="control-btn danger small" onclick="window.cpRBDeleteItem('${item.id}')">Remove</button>
+                </div>
+            </div>
+            <div class="settings-row" style="margin-top:1rem;">
+                <div class="settings-info"><h4>📊 Stats & Leaderboard</h4><p>Track reactions and post ranked results at a set time each day</p></div>
+                <label class="toggle"><input type="checkbox" id="rb-stats-${item.id}" ${statsEnabled ? 'checked' : ''} onchange="window.cpRBToggleStats('${item.id}',this.checked)"><span class="toggle-slider"></span></label>
+            </div>
+            <div id="rb-stats-cfg-${item.id}" ${statsEnabled ? '' : 'style="display:none"'}>
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;">
+                    <div class="form-group" style="flex:1;min-width:140px;">
+                        <label class="form-label">Results Time (UTC)</label>
+                        <input type="time" class="form-input" id="rb-time-${item.id}" value="${escapeHtml(item.stats?.display_time||'')}" onchange="window.cpRBSaveStats('${item.id}')">
+                    </div>
+                    <div class="form-group" style="flex:1;min-width:140px;">
+                        <label class="form-label">Show Top N (0 = all)</label>
+                        <input type="number" class="form-input" id="rb-topn-${item.id}" value="${item.stats?.top_n??10}" min="0" max="100" onchange="window.cpRBSaveStats('${item.id}')">
+                    </div>
+                </div>
+                <div style="margin-top:1rem;">
+                    <label class="form-label">Reaction Labels <span style="color:var(--text-muted);font-size:.8em;">(emoji → meaning shown in results)</span></label>
+                    <div id="rb-labels-${item.id}">${labelsHtml}</div>
+                    <button class="control-btn secondary small" style="margin-top:.5rem;" onclick="window.cpRBAddLabel('${item.id}')">+ Add Label</button>
+                </div>
+                <div style="margin-top:1.25rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+                        <strong style="font-size:.95em;">📡 Live Standings</strong>
+                        <button class="control-btn secondary small" onclick="window.cpRBRefreshLive('${item.id}')">Refresh</button>
+                    </div>
+                    <div id="rb-live-${item.id}" style="background:var(--bg-tertiary);border-radius:8px;padding:.75rem;font-size:.88em;color:var(--text-muted);">No data yet — refresh to load.</div>
+                </div>
+            </div>`;
+        container.appendChild(card);
+        if (statsEnabled) window.cpRBRefreshLive(item.id);
+    }
+
+    window.cpRBSaveEnabled = async function() {
+        const enabled = document.getElementById('rb-enabled').checked;
+        try {
+            await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled }),
+            });
+            showToast('Reaction Board ' + (enabled ? 'enabled' : 'disabled'), 'success');
+        } catch (e) { showToast('Failed to save', 'error'); }
+    };
+
+    window.cpRBToggleItem = async function(itemId, enabled) {
+        try {
+            await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/${itemId}`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ enabled }),
+            });
+        } catch (e) { showToast('Failed to update', 'error'); }
+    };
+
+    window.cpRBToggleStats = async function(itemId, enabled) {
+        document.getElementById(`rb-stats-cfg-${itemId}`).style.display = enabled ? '' : 'none';
+        try {
+            const stats = _rbGetStats(itemId);
+            stats.enabled = enabled;
+            await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/${itemId}`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stats }),
+            });
+        } catch (e) { showToast('Failed to save stats', 'error'); }
+    };
+
+    window.cpRBSaveStats = async function(itemId) {
+        try {
+            const stats = _rbGetStats(itemId);
+            await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/${itemId}`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stats }),
+            });
+            showToast('Stats settings saved', 'success');
+        } catch (e) { showToast('Failed to save', 'error'); }
+    };
+
+    function _rbGetStats(itemId) {
+        const enabled = document.getElementById(`rb-stats-${itemId}`)?.checked || false;
+        const display_time = document.getElementById(`rb-time-${itemId}`)?.value || '';
+        const top_n = parseInt(document.getElementById(`rb-topn-${itemId}`)?.value || '10', 10);
+        const labelRows = document.querySelectorAll(`#rb-labels-${itemId} .rb-label-row`);
+        const reaction_labels = [];
+        labelRows.forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            const emoji = inputs[0]?.value?.trim();
+            const label = inputs[1]?.value?.trim();
+            if (emoji && label) reaction_labels.push({ emoji, label });
+        });
+        return { enabled, display_time, top_n, reaction_labels };
+    }
+
+    window.cpRBAddLabel = function(itemId) {
+        const container = document.getElementById(`rb-labels-${itemId}`);
+        const row = document.createElement('div');
+        row.className = 'rb-label-row';
+        row.style.cssText = 'display:flex;gap:.5rem;align-items:center;margin-bottom:.4rem;';
+        row.innerHTML = `
+            <input class="form-input" style="width:70px;" placeholder="😀" oninput="window.cpRBUpdateLabels('${itemId}')">
+            <input class="form-input" style="flex:1;" placeholder="Meaning (e.g. Love it)" oninput="window.cpRBUpdateLabels('${itemId}')">
+            <button class="control-btn danger small" onclick="this.closest('.rb-label-row').remove();window.cpRBUpdateLabels('${itemId}')">✕</button>`;
+        container.appendChild(row);
+    };
+
+    window.cpRBUpdateLabels = async function(itemId) {
+        try {
+            const stats = _rbGetStats(itemId);
+            await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/${itemId}`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stats }),
+            });
+        } catch (_) {}
+    };
+
+    window.cpRBDeleteItem = async function(itemId) {
+        if (!confirm('Remove this channel from the reaction board?')) return;
+        try {
+            await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/${itemId}`, { method: 'DELETE' });
+            showToast('Channel removed', 'success');
+            await loadReactionBoard();
+        } catch (e) { showToast('Failed to remove', 'error'); }
+    };
+
+    window.cpRBAddChannel = async function() {
+        const channels = await fetchGuildChannels();
+        const channelSel = document.getElementById('rb-add-channel').value;
+        const reactions = document.getElementById('rb-add-reactions').value.trim();
+        const filter = document.getElementById('rb-add-filter').value.trim();
+        if (!channelSel) return showToast('Select a channel', 'error');
+        if (!reactions) return showToast('Enter at least one reaction emoji', 'error');
+        const auto_reactions = reactions.split(',').map(e => e.trim()).filter(Boolean);
+        const ch = channels.find(c => c.id === channelSel);
+        try {
+            await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/add`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ channel_id: channelSel, channel_name: ch?.name || channelSel, auto_reactions, filter, enabled: true, stats: { enabled: false, reaction_labels: [], display_time: '', top_n: 10, last_reset: null }, tracked_messages: {} }),
+            });
+            showToast('Channel added', 'success');
+            document.getElementById('rb-add-channel').value = '';
+            document.getElementById('rb-add-reactions').value = '';
+            document.getElementById('rb-add-filter').value = '';
+            await loadReactionBoard();
+        } catch (e) { showToast('Failed to add channel', 'error'); }
+    };
+
+    window.cpRBRefreshLive = async function(itemId) {
+        const container = document.getElementById(`rb-live-${itemId}`);
+        if (!container) return;
+        container.textContent = 'Loading...';
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/${itemId}/live`);
+            const data = await res.json();
+            const entries = data.entries || [];
+            const labels = data.labels || {};
+            if (!entries.length) { container.textContent = 'No entries yet.'; return; }
+            container.innerHTML = entries.slice(0, 20).map((e, i) => {
+                const reactionStr = Object.entries(e.reactions || {}).filter(([,c]) => c > 0)
+                    .map(([em, c]) => `${em} <strong>${c}</strong>${labels[em] ? ` <em>(${escapeHtml(labels[em])})</em>` : ''}`).join(' &bull; ') || 'No reactions';
+                return `<div style="padding:.4rem 0;border-bottom:1px solid var(--border-color);"><strong>#${i+1}</strong> <a href="${escapeHtml(e.url)}" target="_blank" rel="noopener" style="color:var(--accent-color);word-break:break-all;">${escapeHtml(e.url)}</a><br><span style="color:var(--text-secondary);">👤 ${escapeHtml(e.author_display)}</span> &mdash; ${reactionStr}</div>`;
+            }).join('');
+        } catch (e) { container.textContent = 'Failed to load live standings.'; }
+    };
+
+    // Populate channel select in add form when section is loaded
+    const _rbOrigLoadReactionBoard = loadReactionBoard;
+    loadReactionBoard = async function() {
+        await _rbOrigLoadReactionBoard();
+        const sel = document.getElementById('rb-add-channel');
+        if (!sel) return;
+        const channels = await fetchGuildChannels();
+        sel.innerHTML = '<option value="">Select channel...</option>' +
+            channels.filter(c => c.type === 0).map(c => `<option value="${c.id}">#${escapeHtml(c.name)}</option>`).join('');
     };
 
     // ==================== INIT ====================

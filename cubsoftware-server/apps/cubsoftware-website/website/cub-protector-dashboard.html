@@ -1870,6 +1870,47 @@
                 </div>
             </section>
 
+            <!-- Reaction Board Section -->
+            <section class="content-section" id="reaction-boardSection" data-section="reaction-board">
+                <div class="section-header">
+                    <div class="section-title"><h1>Reaction Board</h1><p>Auto-react to messages in a channel and run a daily reaction leaderboard</p></div>
+                    <label class="toggle" style="margin-left:auto;">
+                        <input type="checkbox" id="rb-enabled" onchange="window.cpRBSaveEnabled()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <!-- Configured channels -->
+                <div class="settings-card" style="margin-bottom:1.5rem;">
+                    <h3 style="margin-bottom:1rem;">Configured Channels</h3>
+                    <div id="rb-items-list"><p style="color:var(--text-muted);">Loading...</p></div>
+                </div>
+
+                <!-- Add channel form -->
+                <div class="settings-card">
+                    <h3 style="margin-bottom:1rem;">Add Channel</h3>
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">
+                        <div class="form-group" style="flex:2;min-width:160px;">
+                            <label class="form-label">Channel</label>
+                            <select class="form-select" id="rb-add-channel">
+                                <option value="">Select channel...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:2;min-width:200px;">
+                            <label class="form-label">Reactions (comma-separated emoji)</label>
+                            <input type="text" class="form-input" id="rb-add-reactions" placeholder="👍,🔥,💩">
+                        </div>
+                        <div class="form-group" style="flex:2;min-width:180px;">
+                            <label class="form-label">Filter (optional — e.g. spotify.com)</label>
+                            <input type="text" class="form-input" id="rb-add-filter" placeholder="Leave blank to react to all messages">
+                        </div>
+                        <div class="form-group">
+                            <button class="control-btn primary" onclick="window.cpRBAddChannel()">Add Channel</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- AFK Section -->
             <section class="content-section" id="afkSection" data-section="afk">
                 <div class="section-header">

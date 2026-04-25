@@ -13607,6 +13607,7 @@ CUB_PROTECTOR_ANTI_HOIST_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'anti_hoist
 CUB_PROTECTOR_LINK_FILTER_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'link_filter.json')
 CUB_PROTECTOR_MEDIA_CHANNELS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'media_channels.json')
 CUB_PROTECTOR_TRANSLATE_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'translate.json')
+CUB_PROTECTOR_REACTION_BOARD_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'reaction_board.json')
 CUB_PROTECTOR_BOOST_TRACKER_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'boost_tracker.json')
 CUB_PROTECTOR_ROLE_LOGGER_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'role_logger.json')
 CUB_PROTECTOR_COUNTERS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'counters.json')
@@ -17659,6 +17660,69 @@ def cp_translate_item_update(guild_id, item_id):
 @cub_protector_auth_required
 def cp_translate_delete(guild_id, item_id):
     return _cp_feature_delete_item(guild_id, item_id, CUB_PROTECTOR_TRANSLATE_FILE)
+
+@app.route('/api/cub-protector/guilds/<guild_id>/reaction-board', methods=['GET'])
+@cub_protector_auth_required
+def cp_reaction_board_get(guild_id):
+    return _cp_feature_get(guild_id, CUB_PROTECTOR_REACTION_BOARD_FILE)
+
+@app.route('/api/cub-protector/guilds/<guild_id>/reaction-board', methods=['PATCH'])
+@cub_protector_auth_required
+def cp_reaction_board_update(guild_id):
+    return _cp_feature_update(guild_id, CUB_PROTECTOR_REACTION_BOARD_FILE)
+
+@app.route('/api/cub-protector/guilds/<guild_id>/reaction-board/add', methods=['POST'])
+@cub_protector_auth_required
+def cp_reaction_board_add(guild_id):
+    return _cp_feature_add_item(guild_id, CUB_PROTECTOR_REACTION_BOARD_FILE)
+
+@app.route('/api/cub-protector/guilds/<guild_id>/reaction-board/<item_id>', methods=['PATCH'])
+@cub_protector_auth_required
+def cp_reaction_board_item_update(guild_id, item_id):
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    data = load_cp_json(CUB_PROTECTOR_REACTION_BOARD_FILE)
+    items = data.get('guilds', {}).get(guild_id, {}).get('items', [])
+    item = next((i for i in items if str(i.get('id')) == str(item_id)), None)
+    if not item:
+        return jsonify({'error': 'Item not found'}), 404
+    body = request.get_json(silent=True) or {}
+    for key, value in body.items():
+        if key not in ('id', 'created_at', 'tracked_messages'):
+            item[key] = value
+    save_cp_json(CUB_PROTECTOR_REACTION_BOARD_FILE, data)
+    return jsonify({'success': True})
+
+@app.route('/api/cub-protector/guilds/<guild_id>/reaction-board/<item_id>', methods=['DELETE'])
+@cub_protector_auth_required
+def cp_reaction_board_delete(guild_id, item_id):
+    return _cp_feature_delete_item(guild_id, item_id, CUB_PROTECTOR_REACTION_BOARD_FILE)
+
+@app.route('/api/cub-protector/guilds/<guild_id>/reaction-board/<item_id>/live', methods=['GET'])
+@cub_protector_auth_required
+def cp_reaction_board_live(guild_id, item_id):
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    data = load_cp_json(CUB_PROTECTOR_REACTION_BOARD_FILE)
+    items = data.get('guilds', {}).get(guild_id, {}).get('items', [])
+    item = next((i for i in items if str(i.get('id')) == str(item_id)), None)
+    if not item:
+        return jsonify({'error': 'Item not found'}), 404
+    tracked = item.get('tracked_messages', {})
+    auto_reactions = item.get('auto_reactions', [])
+    labels = {rl['emoji']: rl['label'] for rl in item.get('stats', {}).get('reaction_labels', []) if 'emoji' in rl}
+    entries = []
+    for msg_id, msg in tracked.items():
+        total = sum(msg.get('reactions', {}).values())
+        entries.append({
+            'msg_id': msg_id,
+            'url': msg.get('url', ''),
+            'author_display': msg.get('author_display', msg.get('author_name', 'Unknown')),
+            'reactions': msg.get('reactions', {}),
+            'total': total,
+        })
+    entries.sort(key=lambda x: x['total'], reverse=True)
+    return jsonify({'entries': entries, 'labels': labels, 'auto_reactions': auto_reactions})
 
 @app.route('/api/cub-protector/guilds/<guild_id>/boost-tracker', methods=['GET'])
 @cub_protector_auth_required

@@ -231,6 +231,7 @@ const MSG_REACTIONS_FILE = path.join(DATA_DIR, 'message_reactions.json');
 const MEDIA_CHANNELS_FILE = path.join(DATA_DIR, 'media_channels.json');
 const SLOWMODE_FILE = path.join(DATA_DIR, 'slowmode.json');
 const TRANSLATE_FILE = path.join(DATA_DIR, 'translate.json');
+const REACTION_BOARD_FILE = path.join(DATA_DIR, 'reaction_board.json');
 const SUPPORT_SERVER_LINK = 'https://discord.gg/ngQXHUbnKg';
 const SUPPORT_USER_LINK = 'https://discord.com/users/523949187663585310';
 
@@ -343,6 +344,14 @@ function loadTranslateConfig() {
 }
 function saveTranslateConfig(data) {
     saveJsonFile(TRANSLATE_FILE, data);
+}
+function loadReactionBoard() { return loadJsonFile(REACTION_BOARD_FILE, { guilds: {} }); }
+function saveReactionBoard(data) { saveJsonFile(REACTION_BOARD_FILE, data); }
+function getGuildReactionBoardItems(guildId) {
+    const data = loadReactionBoard();
+    const gd = data.guilds?.[guildId];
+    if (!gd?.settings?.enabled) return [];
+    return (gd.items || []).filter(i => i.enabled !== false);
 }
 function getGuildTranslateItems(guildId) {
     const data = loadTranslateConfig();
@@ -2308,6 +2317,29 @@ const commands = [
         .addStringOption(o => o.setName('to').setDescription('New target language').setRequired(false).setAutocomplete(true))
         .addStringOption(o => o.setName('from').setDescription('New source language').setRequired(false).setAutocomplete(true))
         .addBooleanOption(o => o.setName('enabled').setDescription('Enable or disable translation for this channel').setRequired(false))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+
+    new SlashCommandBuilder()
+        .setName('reaction-board')
+        .setDescription('Manage reaction leaderboard channels')
+        .addSubcommand(sub => sub
+            .setName('add')
+            .setDescription('Add a channel to the reaction board')
+            .addChannelOption(o => o.setName('channel').setDescription('Channel to monitor').addChannelTypes(ChannelType.GuildText).setRequired(true))
+            .addStringOption(o => o.setName('reactions').setDescription('Reactions to auto-add, comma-separated (e.g. 👍,🔥,💩)').setRequired(true))
+            .addStringOption(o => o.setName('filter').setDescription('Only react to messages containing this text (e.g. spotify.com)').setRequired(false))
+        )
+        .addSubcommand(sub => sub
+            .setName('remove')
+            .setDescription('Remove a channel from the reaction board')
+            .addChannelOption(o => o.setName('channel').setDescription('Channel to remove').addChannelTypes(ChannelType.GuildText).setRequired(true))
+        )
+        .addSubcommand(sub => sub.setName('list').setDescription('List all reaction board channels'))
+        .addSubcommand(sub => sub
+            .setName('trigger')
+            .setDescription('Manually post results now for a channel')
+            .addChannelOption(o => o.setName('channel').setDescription('Channel to post results for').addChannelTypes(ChannelType.GuildText).setRequired(true))
+        )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     new SlashCommandBuilder()
@@ -4313,7 +4345,20 @@ function checkAchievements(guild, userId, type, value) {
 client.on('messageDelete', async (message) => {
     if (CUSTOM_GUILD_ID && message.guildId !== CUSTOM_GUILD_ID) return;
     if (guildHasCustomBot(message.guildId)) return;
-    if (!message.guild || message.author?.bot) return;
+    if (!message.guild) return;
+    // Reaction board cleanup
+    try {
+        const rbData = loadReactionBoard();
+        const gd = rbData.guilds?.[message.guildId];
+        if (gd) {
+            let changed = false;
+            for (const item of (gd.items || [])) {
+                if (item.tracked_messages?.[message.id]) { delete item.tracked_messages[message.id]; changed = true; }
+            }
+            if (changed) saveReactionBoard(rbData);
+        }
+    } catch (_) {}
+    if (message.author?.bot) return;
     const logData = loadLoggingData();
     const guildLog = getLoggingGuild(logData, message.guild.id);
     if (guildLog.ignore_channels?.includes(message.channel.id)) return;
@@ -5168,6 +5213,116 @@ function _selfRoleEmojiMatch(storedEmoji, reactionEmoji) {
     return storedEmoji === reactionEmoji.name || storedEmoji.trim() === reactionEmoji.name;
 }
 
+// ============================================================
+// Reaction Board — Core
+// ============================================================
+
+async function _postReactionBoardResults(guildId, item, data) {
+    const channel = client.channels.cache.get(item.channel_id);
+    if (!channel) return;
+    const tracked = item.tracked_messages || {};
+    const entries = Object.entries(tracked);
+    const labels = {};
+    for (const rl of (item.stats?.reaction_labels || [])) labels[rl.emoji] = rl.label;
+    const topN = item.stats?.top_n || 0;
+    const sorted = entries.map(([msgId, msg]) => {
+        const total = Object.values(msg.reactions || {}).reduce((a, b) => a + b, 0);
+        return { msgId, msg, total };
+    }).sort((a, b) => b.total - a.total);
+    const displayed = topN > 0 ? sorted.slice(0, topN) : sorted;
+    let description = displayed.length === 0 ? 'No entries this round.' : '';
+    displayed.forEach(({ msg, total }, idx) => {
+        const reactionStr = Object.entries(msg.reactions || {})
+            .filter(([, c]) => c > 0)
+            .map(([e, c]) => `${e} **${c}**${labels[e] ? ` *(${labels[e]})*` : ''}`)
+            .join(' • ') || 'No reactions';
+        description += `**${idx + 1}.** ${msg.url}\n👤 **${msg.author_display}** • ${reactionStr}\n\n`;
+    });
+    const embed = cubEmbed()
+        .setColor(0xF1C40F)
+        .setTitle(topN > 0 ? `🏆 Top ${topN} — Reaction Leaderboard` : '🏆 Reaction Leaderboard Results')
+        .setDescription(description.slice(0, 4096))
+        .setTimestamp();
+    await channel.send({ embeds: [embed] }).catch(e => console.error('[ReactionBoard] Failed to post results:', e.message));
+    // Remove bot reactions from all tracked messages
+    for (const [msgId] of entries) {
+        const msg = await channel.messages.fetch(msgId).catch(() => null);
+        if (!msg) continue;
+        for (const emoji of (item.auto_reactions || [])) {
+            const r = msg.reactions.cache.find(rc => rc.emoji.name === emoji || rc.emoji.toString() === emoji);
+            if (r) await r.users.remove(client.user.id).catch(() => {});
+            await new Promise(res => setTimeout(res, 250));
+        }
+    }
+    item.tracked_messages = {};
+    item.stats.last_reset = new Date().toISOString();
+    saveReactionBoard(data);
+    console.log(`[ReactionBoard] Results posted and reset for channel ${item.channel_id} in guild ${guildId}`);
+}
+
+// Auto-react when a message is posted in a monitored channel
+client.on('messageCreate', async (message) => {
+    if (!message.guild || message.author.bot) return;
+    if (!message.content?.trim()) return;
+    if (CUSTOM_GUILD_ID && message.guildId !== CUSTOM_GUILD_ID) return;
+    if (!CUSTOM_GUILD_ID && guildHasCustomBot(message.guildId)) return;
+    const rbItems = getGuildReactionBoardItems(message.guildId);
+    const rbItem = rbItems.find(i => i.channel_id === message.channel.id);
+    if (!rbItem) return;
+    const text = message.content.trim();
+    if (rbItem.filter && !text.toLowerCase().includes(rbItem.filter.toLowerCase())) return;
+    for (const emoji of (rbItem.auto_reactions || [])) {
+        try { await message.react(emoji); } catch (_) {}
+        await new Promise(res => setTimeout(res, 300));
+    }
+    if (rbItem.stats?.enabled) {
+        const data = loadReactionBoard();
+        const it = data.guilds?.[message.guildId]?.items?.find(i => i.id === rbItem.id);
+        if (it) {
+            if (!it.tracked_messages) it.tracked_messages = {};
+            const urlMatch = text.match(/https?:\/\/\S+/);
+            it.tracked_messages[message.id] = {
+                url: urlMatch ? urlMatch[0] : text.slice(0, 100),
+                content_preview: text.slice(0, 200),
+                author_id: message.author.id,
+                author_name: message.author.username,
+                author_display: message.member?.displayName || message.author.username,
+                reactions: {},
+                added_at: new Date().toISOString(),
+            };
+            saveReactionBoard(data);
+        }
+    }
+});
+
+// Scheduled results poster (every 60s)
+client.once('ready', () => {
+    setInterval(async () => {
+        const data = loadReactionBoard();
+        const now = new Date();
+        const nowH = now.getUTCHours();
+        const nowM = now.getUTCMinutes();
+        for (const [gId, gd] of Object.entries(data.guilds || {})) {
+            if (!gd?.settings?.enabled) continue;
+            for (const item of (gd.items || [])) {
+                if (!item.enabled || !item.stats?.enabled || !item.stats?.display_time) continue;
+                const [h, m] = item.stats.display_time.split(':').map(Number);
+                if (isNaN(h) || isNaN(m) || nowH !== h || nowM !== m) continue;
+                if (item.stats.last_reset) {
+                    const lr = new Date(item.stats.last_reset);
+                    if (lr.getUTCFullYear() === now.getUTCFullYear() &&
+                        lr.getUTCMonth() === now.getUTCMonth() &&
+                        lr.getUTCDate() === now.getUTCDate() &&
+                        lr.getUTCHours() === h && lr.getUTCMinutes() === m) continue;
+                }
+                await _postReactionBoardResults(gId, item, data).catch(e =>
+                    console.error(`[ReactionBoard] Scheduled post failed for guild ${gId}:`, e.message)
+                );
+            }
+        }
+    }, 60000);
+});
+
 client.on('messageReactionAdd', async (reaction, user) => {
     if (user.bot) return;
     if (reaction.partial) await reaction.fetch().catch(() => {});
@@ -5238,6 +5393,24 @@ client.on('messageReactionAdd', async (reaction, user) => {
         }
     } catch (_mrE) {}
 
+    // ── Reaction Board tracking ──
+    try {
+        const rbItems = getGuildReactionBoardItems(reaction.message.guildId);
+        const rbItem = rbItems.find(i => i.channel_id === reaction.message.channelId && i.stats?.enabled);
+        if (rbItem) {
+            const emojiKey = reaction.emoji.name;
+            if ((rbItem.auto_reactions || []).some(e => e === emojiKey || e === reaction.emoji.toString())) {
+                const data = loadReactionBoard();
+                const it = data.guilds?.[reaction.message.guildId]?.items?.find(i => i.id === rbItem.id);
+                if (it?.tracked_messages?.[reaction.message.id]) {
+                    if (!it.tracked_messages[reaction.message.id].reactions) it.tracked_messages[reaction.message.id].reactions = {};
+                    it.tracked_messages[reaction.message.id].reactions[emojiKey] = (it.tracked_messages[reaction.message.id].reactions[emojiKey] || 0) + 1;
+                    saveReactionBoard(data);
+                }
+            }
+        }
+    } catch (_rbE) {}
+
     const sbData = loadStarboardData();
     const guildSB = sbData.guilds[_srGuild.id];
     if (!guildSB || !guildSB.enabled || !guildSB.channel_id) return;
@@ -5290,6 +5463,23 @@ client.on('messageReactionRemove', async (reaction, user) => {
     if (!srGuildId) return;
     if (CUSTOM_GUILD_ID && srGuildId !== CUSTOM_GUILD_ID) return;
     if (guildHasCustomBot(srGuildId)) return;
+
+    // ── Reaction Board tracking ──
+    try {
+        const rbItems = getGuildReactionBoardItems(srGuildId);
+        const rbItem = rbItems.find(i => i.channel_id === reaction.message.channelId && i.stats?.enabled);
+        if (rbItem) {
+            const emojiKey = reaction.emoji.name;
+            if ((rbItem.auto_reactions || []).some(e => e === emojiKey || e === reaction.emoji.toString())) {
+                const data = loadReactionBoard();
+                const it = data.guilds?.[srGuildId]?.items?.find(i => i.id === rbItem.id);
+                if (it?.tracked_messages?.[reaction.message.id]?.reactions?.[emojiKey]) {
+                    it.tracked_messages[reaction.message.id].reactions[emojiKey] = Math.max(0, (it.tracked_messages[reaction.message.id].reactions[emojiKey] || 1) - 1);
+                    saveReactionBoard(data);
+                }
+            }
+        }
+    } catch (_rbE) {}
 
     try {
         const rmData = loadRoleMenusData();
@@ -8454,6 +8644,60 @@ client.on('interactionCreate', async (interaction) => {
         saveTranslateConfig(data);
         console.log(`[CUB MEGABRAIN] /translate-edit: updated channel ${channel.id} — from "${prev.from}"→"${item.from}", to "${prev.to}"→"${item.to}", enabled ${prev.enabled}→${item.enabled}`);
         return interaction.reply({ embeds: [cubEmbed().setColor(0x22c55e).setTitle('Translation Updated').setDescription(`Settings updated for <#${channel.id}>.`).addFields({ name: 'From', value: _translateLangName(item.from), inline: true }, { name: 'To', value: _translateLangName(item.to), inline: true }, { name: 'Status', value: item.enabled !== false ? '🟢 Enabled' : '🔴 Disabled', inline: true }).setTimestamp()], flags: MessageFlags.Ephemeral });
+    }
+
+    if (commandName === 'reaction-board') {
+        const sub = interaction.options.getSubcommand();
+        const data = loadReactionBoard();
+        if (!data.guilds[guild.id]) data.guilds[guild.id] = { settings: { enabled: true }, items: [] };
+        const gd = data.guilds[guild.id];
+        if (!gd.settings) gd.settings = { enabled: true };
+        if (!gd.items) gd.items = [];
+
+        if (sub === 'add') {
+            const channel = interaction.options.getChannel('channel');
+            const reactionsStr = interaction.options.getString('reactions');
+            const filter = interaction.options.getString('filter') || '';
+            const auto_reactions = reactionsStr.split(',').map(e => e.trim()).filter(Boolean);
+            if (!auto_reactions.length) return interaction.reply({ content: '❌ Provide at least one reaction emoji.', flags: MessageFlags.Ephemeral });
+            if (gd.items.find(i => i.channel_id === channel.id))
+                return interaction.reply({ content: `❌ <#${channel.id}> is already in the reaction board. Use \`/reaction-board remove\` first.`, flags: MessageFlags.Ephemeral });
+            gd.items.push({
+                id: String(Date.now()), channel_id: channel.id, channel_name: channel.name,
+                auto_reactions, filter, enabled: true,
+                stats: { enabled: false, reaction_labels: [], display_time: '', top_n: 10, last_reset: null },
+                tracked_messages: {}, created_at: new Date().toISOString(),
+            });
+            saveReactionBoard(data);
+            return interaction.reply({ content: `✅ <#${channel.id}> added to the reaction board.\nReactions: ${auto_reactions.join(' ')}${filter ? `\nFilter: \`${filter}\`` : ''}`, flags: MessageFlags.Ephemeral });
+        }
+
+        if (sub === 'remove') {
+            const channel = interaction.options.getChannel('channel');
+            const idx = gd.items.findIndex(i => i.channel_id === channel.id);
+            if (idx === -1) return interaction.reply({ content: `❌ <#${channel.id}> is not in the reaction board.`, flags: MessageFlags.Ephemeral });
+            gd.items.splice(idx, 1);
+            saveReactionBoard(data);
+            return interaction.reply({ content: `✅ <#${channel.id}> removed from the reaction board.`, flags: MessageFlags.Ephemeral });
+        }
+
+        if (sub === 'list') {
+            if (!gd.items.length) return interaction.reply({ content: '📋 No reaction board channels configured.', flags: MessageFlags.Ephemeral });
+            const list = gd.items.map(i =>
+                `• <#${i.channel_id}> — ${i.auto_reactions.join(' ')}${i.filter ? ` | Filter: \`${i.filter}\`` : ''}${i.stats?.enabled ? ' | 📊 Stats on' : ''}`
+            ).join('\n');
+            return interaction.reply({ content: `📋 **Reaction Board Channels:**\n${list}`, flags: MessageFlags.Ephemeral });
+        }
+
+        if (sub === 'trigger') {
+            const channel = interaction.options.getChannel('channel');
+            const item = gd.items.find(i => i.channel_id === channel.id);
+            if (!item) return interaction.reply({ content: `❌ <#${channel.id}> is not in the reaction board.`, flags: MessageFlags.Ephemeral });
+            if (!item.stats?.enabled) return interaction.reply({ content: `❌ Stats are not enabled for <#${channel.id}>.`, flags: MessageFlags.Ephemeral });
+            await interaction.reply({ content: `⏳ Posting results for <#${channel.id}>...`, flags: MessageFlags.Ephemeral });
+            await _postReactionBoardResults(guild.id, item, data).catch(() => {});
+            return;
+        }
     }
 
     const _cmdMs = Date.now() - _cmdStart;

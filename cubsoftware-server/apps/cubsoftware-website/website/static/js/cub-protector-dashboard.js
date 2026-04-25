@@ -8625,14 +8625,10 @@
                     <button class="control-btn danger small" onclick="window.cpRBDeleteItem('${item.id}')">Remove</button>
                 </div>
             </div>
-            <div class="settings-row" style="margin-top:1rem;">
-                <div class="settings-info"><h4>📊 Stats & Leaderboard</h4><p>Track reactions and post ranked results at a set time each day</p></div>
-                <label class="toggle"><input type="checkbox" id="rb-stats-${item.id}" ${statsEnabled ? 'checked' : ''} onchange="window.cpRBToggleStats('${item.id}',this.checked)"><span class="toggle-slider"></span></label>
-            </div>
-            <div id="rb-stats-cfg-${item.id}" ${statsEnabled ? '' : 'style="display:none"'}>
-                <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem;align-items:flex-end;">
+            <div style="margin-top:1rem;border-top:1px solid var(--border-color);padding-top:1rem;">
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">
                     <div class="form-group" style="flex:1;min-width:160px;">
-                        <label class="form-label">Frequency</label>
+                        <label class="form-label">Post Results</label>
                         <select class="form-select" id="rb-freq-${item.id}" onchange="window.cpRBToggleFreqOptions('${item.id}')">
                             <option value="manual" ${(item.stats?.frequency||'daily') === 'manual' ? 'selected' : ''}>Manual only</option>
                             <option value="daily" ${(item.stats?.frequency||'daily') === 'daily' ? 'selected' : ''}>Daily</option>
@@ -8658,16 +8654,21 @@
                     <div class="form-group" style="flex:1;min-width:140px;">
                         <label class="form-label">Show in Results</label>
                         <select class="form-select" id="rb-topn-${item.id}">
-                            <option value="0" ${(item.stats?.top_n??10) == 0 ? 'selected' : ''}>All entries</option>
-                            <option value="3" ${(item.stats?.top_n) == 3 ? 'selected' : ''}>Top 3</option>
-                            <option value="5" ${(item.stats?.top_n) == 5 ? 'selected' : ''}>Top 5</option>
-                            <option value="10" ${(item.stats?.top_n??10) == 10 ? 'selected' : ''}>Top 10</option>
+                            <option value="all" ${(!item.stats?.top_n || item.stats?.top_n === 'all') ? 'selected' : ''}>All entries</option>
+                            <option value="3" ${item.stats?.top_n == 3 ? 'selected' : ''}>Top 3</option>
+                            <option value="5" ${item.stats?.top_n == 5 ? 'selected' : ''}>Top 5</option>
+                            <option value="10" ${item.stats?.top_n == 10 ? 'selected' : ''}>Top 10</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <button class="control-btn primary small" onclick="window.cpRBSaveStats('${item.id}')">Save Settings</button>
                     </div>
                 </div>
+                <div class="settings-row" style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border-color);">
+                    <div class="settings-info"><h4>📊 Track Reaction Stats</h4><p>Store per-message counts and post a ranked leaderboard at the scheduled time</p></div>
+                    <label class="toggle"><input type="checkbox" id="rb-stats-${item.id}" ${statsEnabled ? 'checked' : ''} onchange="window.cpRBToggleStats('${item.id}',this.checked)"><span class="toggle-slider"></span></label>
+                </div>
+            <div id="rb-stats-cfg-${item.id}" ${statsEnabled ? '' : 'style="display:none"'}>
                 <div style="margin-top:1rem;">
                     <label class="form-label">Reaction Labels <span style="color:var(--text-muted);font-size:.8em;">(emoji → meaning shown in results)</span></label>
                     <div id="rb-labels-${item.id}">${labelsHtml}</div>
@@ -8680,6 +8681,7 @@
                     </div>
                     <div id="rb-live-${item.id}" style="background:var(--bg-tertiary);border-radius:8px;padding:.75rem;font-size:.88em;color:var(--text-muted);">No data yet — refresh to load.</div>
                 </div>
+            </div>
             </div>`;
         container.appendChild(card);
         if (statsEnabled) window.cpRBRefreshLive(item.id);

@@ -449,38 +449,6 @@ meme = JSON.<span class="fn">parse</span>(Net::HTTP.<span class="fn">get</span>(
         </div>
     </div>
 
-    <!-- Categories -->
-    <div class="dev-section">
-        <div class="dev-section-title">Categories</div>
-        <div class="cat-grid">
-            <div class="cat-chip"><span class="cat-emoji">🎲</span><code>random</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🔥</span><code>dank</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🖤</span><code>dark</code></div>
-            <div class="cat-chip"><span class="cat-emoji">💛</span><code>wholesome</code></div>
-            <div class="cat-chip"><span class="cat-emoji">😱</span><code>cursed</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🎮</span><code>gaming</code></div>
-            <div class="cat-chip"><span class="cat-emoji">💻</span><code>programmer</code></div>
-            <div class="cat-chip"><span class="cat-emoji">✨</span><code>genz</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🌀</span><code>surreal</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🎌</span><code>anime</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🐱</span><code>cat</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🐶</span><code>dog</code></div>
-            <div class="cat-chip"><span class="cat-emoji">💩</span><code>shitpost</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🍳</span><code>deep-fried</code></div>
-            <div class="cat-chip"><span class="cat-emoji">😄</span><code>pun</code></div>
-            <div class="cat-chip"><span class="cat-emoji">👨</span><code>dad</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🐦</span><code>twitter</code></div>
-            <div class="cat-chip"><span class="cat-emoji">😎</span><code>vibe</code></div>
-            <div class="cat-chip"><span class="cat-emoji">📗</span><code>based</code></div>
-            <div class="cat-chip"><span class="cat-emoji">💀</span><code>skull</code></div>
-            <div class="cat-chip"><span class="cat-emoji">😬</span><code>cringe</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🧓</span><code>boomer</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🤖</span><code>npc</code></div>
-            <div class="cat-chip"><span class="cat-emoji">📈</span><code>trending</code></div>
-            <div class="cat-chip"><span class="cat-emoji">🤓</span><code>irl</code></div>
-        </div>
-    </div>
-
     <!-- Discord Bot Examples -->
     <div class="dev-section">
         <div class="dev-section-title">Discord Bot Examples</div>
@@ -526,10 +494,15 @@ client.<span class="fn">on</span>(<span class="str">'interactionCreate'</span>, 
     <span class="kw">const</span> meme = <span class="kw">await</span> res.<span class="fn">json</span>();
 
     <span class="kw">if</span> (meme.type === <span class="str">'text'</span>) {
-        <span class="kw">const</span> embed = <span class="kw">new</span> <span class="fn">EmbedBuilder</span>().<span class="fn">setTitle</span>(meme.title).<span class="fn">setDescription</span>(meme.text).<span class="fn">setColor</span>(<span class="num">0x5865F2</span>);
+        <span class="kw">const</span> embed = <span class="kw">new</span> <span class="fn">EmbedBuilder</span>()
+            .<span class="fn">setTitle</span>(meme.title)
+            .<span class="fn">setDescription</span>(meme.text)
+            .<span class="fn">setColor</span>(<span class="num">0x5865F2</span>);
         <span class="kw">return</span> interaction.<span class="fn">editReply</span>({ embeds: [embed] });
     }
-    <span class="kw">const</span> embed = <span class="kw">new</span> <span class="fn">EmbedBuilder</span>().<span class="fn">setImage</span>(meme.url).<span class="fn">setColor</span>(<span class="num">0x5865F2</span>);
+    <span class="kw">const</span> embed = <span class="kw">new</span> <span class="fn">EmbedBuilder</span>()
+        .<span class="fn">setImage</span>(meme.url)
+        .<span class="fn">setColor</span>(<span class="num">0x5865F2</span>);
     <span class="kw">return</span> interaction.<span class="fn">editReply</span>({ embeds: [embed] });
 });
 
@@ -579,17 +552,19 @@ client.<span class="fn">run</span>(<span class="str">"YOUR_BOT_TOKEN"</span>)</d
 
 <span class="kw">public class</span> <span class="fn">MemeBot</span> <span class="kw">extends</span> <span class="fn">ListenerAdapter</span> {
     <span class="kw">static final</span> ObjectMapper JSON = <span class="kw">new</span> <span class="fn">ObjectMapper</span>();
-    <span class="kw">static final</span> HttpClient HTTP = HttpClient.<span class="fn">newHttpClient</span>();
+    <span class="kw">static final</span> HttpClient HTTP  = HttpClient.<span class="fn">newHttpClient</span>();
 
     @Override
     <span class="kw">public void</span> <span class="fn">onSlashCommandInteraction</span>(SlashCommandInteractionEvent e) {
         <span class="kw">if</span> (!e.<span class="fn">getName</span>().<span class="fn">equals</span>(<span class="str">"meme"</span>)) <span class="kw">return</span>;
         e.<span class="fn">deferReply</span>().<span class="fn">queue</span>();
         String cat = e.<span class="fn">getOption</span>(<span class="str">"category"</span>) != <span class="kw">null</span>
-            ? e.<span class="fn">getOption</span>(<span class="str">"category"</span>).<span class="fn">getAsString</span>() : <span class="str">"random"</span>;
+            ? e.<span class="fn">getOption</span>(<span class="str">"category"</span>).<span class="fn">getAsString</span>()
+            : <span class="str">"random"</span>;
         <span class="kw">try</span> {
-            <span class="kw">var</span> req = HttpRequest.<span class="fn">newBuilder</span>()
-                .<span class="fn">uri</span>(URI.<span class="fn">create</span>(<span class="str">"https://cubsoftware.site/api/memes/"</span> + cat)).<span class="fn">build</span>();
+            <span class="kw">var</span> req  = HttpRequest.<span class="fn">newBuilder</span>()
+                .<span class="fn">uri</span>(URI.<span class="fn">create</span>(<span class="str">"https://cubsoftware.site/api/memes/"</span> + cat))
+                .<span class="fn">build</span>();
             <span class="kw">var</span> body = HTTP.<span class="fn">send</span>(req, HttpResponse.BodyHandlers.<span class="fn">ofString</span>()).<span class="fn">body</span>();
             <span class="kw">var</span> meme = JSON.<span class="fn">readTree</span>(body);
             <span class="kw">var</span> embed = <span class="kw">new</span> <span class="fn">EmbedBuilder</span>().<span class="fn">setColor</span>(<span class="num">0x5865F2</span>);
@@ -624,8 +599,10 @@ client.<span class="fn">run</span>(<span class="str">"YOUR_BOT_TOKEN"</span>)</d
 client.SlashCommandExecuted += <span class="kw">async</span> cmd => {
     <span class="kw">if</span> (cmd.CommandName != <span class="str">"meme"</span>) <span class="kw">return</span>;
     <span class="kw">await</span> cmd.<span class="fn">DeferAsync</span>();
-    <span class="kw">var</span> cat  = cmd.Data.Options.<span class="fn">FirstOrDefault</span>(o => o.Name == <span class="str">"category"</span>)?.Value?.ToString() ?? <span class="str">"random"</span>;
-    <span class="kw">var</span> meme = <span class="kw">await</span> http.<span class="fn">GetFromJsonAsync</span>&lt;JsonElement&gt;(<span class="str">$"https://cubsoftware.site/api/memes/{cat}"</span>);
+    <span class="kw">var</span> cat  = cmd.Data.Options
+        .<span class="fn">FirstOrDefault</span>(o => o.Name == <span class="str">"category"</span>)?.Value?.ToString() ?? <span class="str">"random"</span>;
+    <span class="kw">var</span> meme = <span class="kw">await</span> http.<span class="fn">GetFromJsonAsync</span>&lt;JsonElement&gt;(
+        <span class="str">$"https://cubsoftware.site/api/memes/{cat}"</span>);
     <span class="kw">var</span> embed = <span class="kw">new</span> <span class="fn">EmbedBuilder</span>().<span class="fn">WithColor</span>(<span class="num">0x5865F2</span>);
     <span class="kw">if</span> (meme.<span class="fn">GetProperty</span>(<span class="str">"type"</span>).<span class="fn">GetString</span>() == <span class="str">"text"</span>) {
         embed.<span class="fn">WithTitle</span>(meme.<span class="fn">GetProperty</span>(<span class="str">"title"</span>).<span class="fn">GetString</span>())
@@ -637,14 +614,49 @@ client.SlashCommandExecuted += <span class="kw">async</span> cmd => {
 };
 
 client.Ready += <span class="kw">async</span> () => {
-    <span class="kw">await</span> client.<span class="fn">CreateGlobalApplicationCommandAsync</span>(<span class="kw">new</span> <span class="fn">SlashCommandBuilder</span>()
-        .<span class="fn">WithName</span>(<span class="str">"meme"</span>).<span class="fn">WithDescription</span>(<span class="str">"Get a random meme"</span>).<span class="fn">Build</span>());
+    <span class="kw">await</span> client.<span class="fn">CreateGlobalApplicationCommandAsync</span>(
+        <span class="kw">new</span> <span class="fn">SlashCommandBuilder</span>()
+            .<span class="fn">WithName</span>(<span class="str">"meme"</span>)
+            .<span class="fn">WithDescription</span>(<span class="str">"Get a random meme"</span>)
+            .<span class="fn">Build</span>());
 };
 
 <span class="kw">await</span> client.<span class="fn">LoginAsync</span>(TokenType.Bot, <span class="str">"YOUR_BOT_TOKEN"</span>);
 <span class="kw">await</span> client.<span class="fn">StartAsync</span>();
 <span class="kw">await</span> Task.<span class="fn">Delay</span>(-<span class="num">1</span>);</div>
 
+        </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="dev-section">
+        <div class="dev-section-title">Categories</div>
+        <div class="cat-grid">
+            <div class="cat-chip"><span class="cat-emoji">🎲</span><code>random</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🔥</span><code>dank</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🖤</span><code>dark</code></div>
+            <div class="cat-chip"><span class="cat-emoji">💛</span><code>wholesome</code></div>
+            <div class="cat-chip"><span class="cat-emoji">😱</span><code>cursed</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🎮</span><code>gaming</code></div>
+            <div class="cat-chip"><span class="cat-emoji">💻</span><code>programmer</code></div>
+            <div class="cat-chip"><span class="cat-emoji">✨</span><code>genz</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🌀</span><code>surreal</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🎌</span><code>anime</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🐱</span><code>cat</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🐶</span><code>dog</code></div>
+            <div class="cat-chip"><span class="cat-emoji">💩</span><code>shitpost</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🍳</span><code>deep-fried</code></div>
+            <div class="cat-chip"><span class="cat-emoji">😄</span><code>pun</code></div>
+            <div class="cat-chip"><span class="cat-emoji">👨</span><code>dad</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🐦</span><code>twitter</code></div>
+            <div class="cat-chip"><span class="cat-emoji">😎</span><code>vibe</code></div>
+            <div class="cat-chip"><span class="cat-emoji">📗</span><code>based</code></div>
+            <div class="cat-chip"><span class="cat-emoji">💀</span><code>skull</code></div>
+            <div class="cat-chip"><span class="cat-emoji">😬</span><code>cringe</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🧓</span><code>boomer</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🤖</span><code>npc</code></div>
+            <div class="cat-chip"><span class="cat-emoji">📈</span><code>trending</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🤓</span><code>irl</code></div>
         </div>
     </div>
 

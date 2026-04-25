@@ -189,6 +189,9 @@
             case 'botowners':
                 loadBotOwners();
                 break;
+            case 'cubai-servers':
+                loadCubAiServers();
+                break;
             case 'passwords':
                 loadPasswords();
                 break;
@@ -282,6 +285,12 @@
         document.getElementById('refreshBotOwnersBtn')?.addEventListener('click', loadBotOwners);
         document.getElementById('newOwnerId')?.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') addBotOwner();
+        });
+
+        // CubAI Servers
+        document.getElementById('refreshCubAiServersBtn')?.addEventListener('click', loadCubAiServers);
+        document.getElementById('newCubAiGuildId')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addCubAiServer();
         });
     }
 
@@ -1269,6 +1278,81 @@
             }
         } catch (e) {
             showToast('Failed to remove bot owner', 'error');
+        }
+    };
+
+    // ==================== CUBAI SERVERS ====================
+    async function loadCubAiServers() {
+        const list = document.getElementById('cubAiServersList');
+        if (!list) return;
+        try {
+            const res = await fetch('/api/admin/cubai-servers');
+            if (!res.ok) throw new Error('Failed');
+            const data = await res.json();
+            renderCubAiServers(data.guilds || []);
+        } catch (e) {
+            list.innerHTML = '<div class="loading">Failed to load CubAI servers</div>';
+        }
+    }
+
+    function renderCubAiServers(guilds) {
+        const list = document.getElementById('cubAiServersList');
+        if (!list) return;
+        if (!guilds.length) {
+            list.innerHTML = '<div class="empty-state">No servers have CubAI enabled</div>';
+            return;
+        }
+        list.innerHTML = guilds.map(id => `
+            <div class="whitelist-user">
+                <span class="whitelist-id">${id}</span>
+                <button class="whitelist-remove" onclick="removeCubAiServer('${id}')" title="Remove server">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                </button>
+            </div>`).join('');
+    }
+
+    window.addCubAiServer = async function() {
+        const input = document.getElementById('newCubAiGuildId');
+        const id = input?.value?.trim();
+        if (!id || !/^\d+$/.test(id)) {
+            showToast('Please enter a valid Discord server ID (numbers only)', 'error');
+            return;
+        }
+        try {
+            const res = await fetch('/api/admin/cubai-servers/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ guild_id: id })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast(`CubAI enabled for server: ${id}`, 'success');
+                if (input) input.value = '';
+                loadCubAiServers();
+            } else {
+                showToast(data.error || 'Failed to add server', 'error');
+            }
+        } catch (e) {
+            showToast('Failed to add server', 'error');
+        }
+    };
+
+    window.removeCubAiServer = async function(id) {
+        if (!confirm(`Remove server ${id} from CubAI servers? The /cubai command will disappear from that Discord.`)) return;
+        try {
+            const res = await fetch('/api/admin/cubai-servers/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ guild_id: id })
+            });
+            if (res.ok) {
+                showToast(`CubAI disabled for server: ${id}`, 'success');
+                loadCubAiServers();
+            } else {
+                throw new Error('Failed');
+            }
+        } catch (e) {
+            showToast('Failed to remove server', 'error');
         }
     };
 

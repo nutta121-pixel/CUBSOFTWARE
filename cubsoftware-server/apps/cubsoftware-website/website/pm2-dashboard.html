@@ -94,6 +94,12 @@
 
                 <div class="nav-section">
                     <span class="nav-section-title">System</span>
+                    <a href="#cubai-servers" class="nav-item" data-section="cubai-servers">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/>
+                        </svg>
+                        <span>CubAI Servers</span>
+                    </a>
                     <a href="#custom-bots" class="nav-item" data-section="custom-bots">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><circle cx="15" cy="9" r="2"/><path d="M9 15s1 1 3 1 3-1 3-1"/>
@@ -537,6 +543,40 @@
                         <div class="ipbans-list" id="ipbansList">
                             <div class="loading">Loading IP bans...</div>
                         </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CubAI Servers Section -->
+            <section class="content-section" id="cubaiServersSection" data-section="cubai-servers">
+                <div class="section-header">
+                    <div class="section-title">
+                        <h1>CubAI Servers</h1>
+                        <p>Discord servers that have the /cubai command enabled</p>
+                    </div>
+                    <div class="section-actions">
+                        <button id="refreshCubAiServersBtn" class="control-btn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"></polyline>
+                                <polyline points="1 20 1 14 7 14"></polyline>
+                                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+                <div class="whitelist-container">
+                    <div class="whitelist-add-card">
+                        <h3>Add Server</h3>
+                        <div class="add-user-form">
+                            <input type="text" id="newCubAiGuildId" placeholder="Discord Server ID" class="input-field">
+                            <button class="control-btn primary" onclick="addCubAiServer()">Add Server</button>
+                        </div>
+                        <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;">Adding a server ID enables /cubai commands in that Discord. The bot picks up the change within 5 seconds.</p>
+                    </div>
+                    <div class="whitelist-users-card">
+                        <h3>Enabled Servers</h3>
+                        <div class="whitelist-list" id="cubAiServersList"><div class="loading">Loading...</div></div>
                     </div>
                 </div>
             </section>

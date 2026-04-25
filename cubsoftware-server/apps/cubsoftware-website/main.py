@@ -2320,6 +2320,11 @@ def press():
     """Serve the press / media kit page"""
     return render_template('press.html')
 
+@app.route('/developer')
+def developer():
+    """Serve the public developer / API docs page"""
+    return render_template('developer.html')
+
 @app.route('/cubpresence-wiki')
 def cubpresence_wiki():
     """Serve the CubPresence wiki page"""
@@ -6973,6 +6978,59 @@ def admin_set_bot_owners():
         return jsonify({'error': 'At least one valid Discord user ID is required'}), 400
     save_bot_owners(owners)
     return jsonify({'success': True, 'owners': owners})
+
+# ==================== CUBAI SERVERS ====================
+
+CUBAI_SERVERS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'cubai_servers.json')
+
+def load_cubai_servers():
+    if os.path.exists(CUBAI_SERVERS_FILE):
+        try:
+            with open(CUBAI_SERVERS_FILE, 'r') as f:
+                data = json.load(f)
+                return [str(g) for g in data.get('guilds', [])]
+        except Exception:
+            pass
+    return []
+
+def save_cubai_servers(guilds):
+    try:
+        os.makedirs(os.path.dirname(CUBAI_SERVERS_FILE), exist_ok=True)
+        with open(CUBAI_SERVERS_FILE, 'w') as f:
+            json.dump({'guilds': guilds}, f, indent=2)
+    except Exception:
+        pass
+
+@app.route('/api/admin/cubai-servers', methods=['GET'])
+@pm2_auth_required
+def admin_get_cubai_servers():
+    return jsonify({'guilds': load_cubai_servers()})
+
+@app.route('/api/admin/cubai-servers/add', methods=['POST'])
+@pm2_auth_required
+def admin_add_cubai_server():
+    data = request.get_json(silent=True) or {}
+    guild_id = str(data.get('guild_id', '')).strip()
+    if not guild_id or not guild_id.isdigit():
+        return jsonify({'error': 'Invalid guild ID'}), 400
+    guilds = load_cubai_servers()
+    if guild_id in guilds:
+        return jsonify({'error': 'Guild already in list'}), 409
+    guilds.append(guild_id)
+    save_cubai_servers(guilds)
+    return jsonify({'success': True, 'guilds': guilds})
+
+@app.route('/api/admin/cubai-servers/remove', methods=['POST'])
+@pm2_auth_required
+def admin_remove_cubai_server():
+    data = request.get_json(silent=True) or {}
+    guild_id = str(data.get('guild_id', '')).strip()
+    guilds = load_cubai_servers()
+    if guild_id not in guilds:
+        return jsonify({'error': 'Guild not found'}), 404
+    guilds = [g for g in guilds if g != guild_id]
+    save_cubai_servers(guilds)
+    return jsonify({'success': True, 'guilds': guilds})
 
 # Admin IP Bans Management
 @app.route('/api/admin/ipbans', methods=['GET'])
@@ -20018,6 +20076,100 @@ def admin_fetch_affiliate_avatar(aff_id):
         return jsonify({'error': str(e)}), 500
 
 # Appeal list for dashboard
+# ==================== MEME API ====================
+# Public API — no authentication required.
+# Bot uses Reddit directly; this endpoint is for external developers.
+# Usage: GET /api/memes/<category>
+# Response: { url, title, category, subreddit, author, source_url, ups }
+
+_MEME_SUBREDDITS = {
+    'random':     None,  # resolved at request time
+    'dank':       'dankmemes',
+    'dark':       'darkhumor',
+    'wholesome':  'wholesomememes',
+    'cursed':     'cursedimages',
+    'gaming':     'gaming',
+    'programmer': 'ProgrammerHumor',
+    'genz':       'GenZ',
+    'surreal':    'surrealmemes',
+    'anime':      'animememes',
+    'cat':        'catmemes',
+    'dog':        'dogmemes',
+    'shitpost':   'shitposting',
+    'deep-fried': 'deepfriedmemes',
+    'pun':        'puns',
+    'dad':        'dadjokes',
+    'twitter':    'WhitePeopleTwitter',
+    'vibe':       'VibeCheck',
+    'based':      'greentext',
+    'skull':      'HolUp',
+    'cringe':     'cringetopia',
+    'boomer':     'BoomersBeingFools',
+    'npc':        'NPCMemes',
+    'trending':   'memes',
+    'irl':        'technicallythetruth',
+}
+
+_MEME_RANDOM_POOL = [
+    'dankmemes', 'memes', 'ProgrammerHumor', 'gaming', 'wholesomememes',
+    'shitposting', 'technicallythetruth', 'animememes', 'surrealmemes',
+    'GenZ', 'deepfriedmemes', 'HolUp', 'darkhumor', 'catmemes', 'dogmemes',
+]
+
+_MEME_TEXT_SUBS = {'puns', 'dadjokes'}
+
+def _fetch_reddit_meme(subreddit):
+    url = f'https://www.reddit.com/r/{subreddit}/hot.json?limit=100'
+    resp = requests.get(url, headers={'User-Agent': 'CUB-SOFTWARE-MemeAPI/1.0'}, timeout=10)
+    resp.raise_for_status()
+    posts = [p['data'] for p in resp.json()['data']['children']]
+    posts = [p for p in posts if not p.get('stickied') and not p.get('over_18') and not p.get('spoiler')]
+    is_text = subreddit in _MEME_TEXT_SUBS
+    if is_text:
+        posts = [p for p in posts if p.get('selftext') and len(p['selftext']) > 5 and p['selftext'] not in ('[removed]', '[deleted]')]
+    else:
+        posts = [p for p in posts if re.search(r'\.(jpg|jpeg|png|gif|webp)$', p.get('url',''), re.I)
+                 or 'i.redd.it' in p.get('url','') or 'i.imgur.com' in p.get('url','')]
+    if not posts:
+        raise ValueError('No suitable posts found')
+    post = random.choice(posts[:25])
+    return {
+        'url':        post.get('url'),
+        'title':      post.get('title', ''),
+        'text':       post.get('selftext', '') if is_text else None,
+        'subreddit':  post.get('subreddit', subreddit),
+        'author':     post.get('author', ''),
+        'source_url': f"https://reddit.com{post.get('permalink', '')}",
+        'ups':        post.get('ups', 0),
+        'type':       'text' if is_text else 'image',
+    }
+
+@app.route('/api/memes', methods=['GET'], strict_slashes=False)
+@app.route('/api/memes/<category>', methods=['GET'])
+def api_memes(category='random'):
+    category = category.lower()
+    if category not in _MEME_SUBREDDITS:
+        return jsonify({
+            'error': 'Unknown category',
+            'categories': sorted(_MEME_SUBREDDITS.keys()),
+        }), 404
+    subreddit = _MEME_SUBREDDITS[category]
+    if subreddit is None:
+        subreddit = random.choice(_MEME_RANDOM_POOL)
+    for attempt in range(2):
+        try:
+            meme = _fetch_reddit_meme(subreddit)
+            meme['category'] = category
+            return jsonify(meme)
+        except Exception:
+            if attempt == 0:
+                continue
+    return jsonify({'error': 'Meme service temporarily unavailable — try again shortly'}), 503
+
+@app.route('/api/memes/categories', methods=['GET'])
+def api_memes_categories():
+    return jsonify({'categories': sorted(_MEME_SUBREDDITS.keys())})
+
 # ==================== ERROR HANDLERS ====================
 
 @app.errorhandler(404)

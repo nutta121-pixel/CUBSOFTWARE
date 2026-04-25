@@ -55,6 +55,7 @@ const DEV_GUILD_ID = process.env.DEV_GUILD_ID || null;
 
 // Path to the website's custom_bots.json — used to read presence settings
 const CUSTOM_BOTS_FILE = path.join(__dirname, '..', 'cubsoftware-website', 'data', 'custom_bots.json');
+const CUBAI_SERVERS_FILE = path.join(__dirname, '..', 'cubsoftware-website', 'data', 'cubai_servers.json');
 
 // Cache of guilds that have an active custom bot (main bot skips these guilds)
 let _cbGuildsCache = null;
@@ -116,6 +117,37 @@ function guildHasCustomBot(guildId) {
     if (CUSTOM_GUILD_ID) return false; // we ARE a custom bot instance — never skip
     _refreshCbCache();
     return _cbGuildsCache.has(String(guildId));
+}
+
+// ── CubAI servers cache (mirrors _refreshCbCache pattern) ────────────────────
+let _cubaiGuildsCache = null;
+let _cubaiGuildsCacheTime = 0;
+const CUBAI_CACHE_TTL = 5000;
+
+function _refreshCubAiCache() {
+    const now = Date.now();
+    if (_cubaiGuildsCache && now - _cubaiGuildsCacheTime <= CUBAI_CACHE_TTL) return;
+    const prevGuilds = _cubaiGuildsCache ? new Set(_cubaiGuildsCache) : null;
+    try {
+        const raw = fs.readFileSync(CUBAI_SERVERS_FILE, 'utf8');
+        const data = JSON.parse(raw);
+        _cubaiGuildsCache = new Set((data.guilds || []).map(String));
+    } catch (_) {
+        _cubaiGuildsCache = new Set();
+    }
+    _cubaiGuildsCacheTime = now;
+    if (!CUSTOM_GUILD_ID && prevGuilds && client.isReady()) {
+        const added = [..._cubaiGuildsCache].filter(g => !prevGuilds.has(g));
+        const removed = [...prevGuilds].filter(g => !_cubaiGuildsCache.has(g));
+        for (const gid of [...added, ...removed]) {
+            syncGuildCommands(gid).catch(e => console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_CMDSYNC_CUBAI_034 — [Commands] CubAI sync failed for ${gid}:`, e.message));
+        }
+    }
+}
+
+function guildHasCubAI(guildId) {
+    _refreshCubAiCache();
+    return _cubaiGuildsCache.has(String(guildId));
 }
 
 function getCustomBotName(guildId) {
@@ -1362,7 +1394,7 @@ const client = new Client({
 const MAIN_BOT_SHARED_COMMANDS = new Set(['help', 'website', 'invite']);
 // Commands that only run on the main cub-protector — never on custom bot instances
 const MAIN_BOT_ONLY_COMMANDS = new Set([
-    'cubsoftware',
+    'cubai', 'cubsoftware',
     'link-find', 'link-ban', 'link-unban', 'link-bans', 'link-delete',
     'ip',
     'keraplast-password', 'feature',
@@ -1472,6 +1504,35 @@ function _translateLangName(code) {
     if (code === 'auto') return 'Auto-Detect';
     return TRANSLATE_ALL_LANGUAGES.find(l => l.value === code)?.name || code;
 }
+
+// ── Meme category config (subreddit + display metadata) ──────────────────────
+const MEME_CATEGORIES = {
+    random:       { subreddits: ['dankmemes','memes','ProgrammerHumor','gaming','wholesomememes','shitposting','technicallythetruth','animememes','surrealmemes','GenZ','deepfriedmemes','HolUp'], type: 'image', emoji: '🎲', color: 0x5865F2 },
+    dank:         { subreddit: 'dankmemes',             type: 'image', emoji: '🔥', color: 0xFF4500 },
+    dark:         { subreddit: 'darkhumor',             type: 'image', emoji: '🖤', color: 0x2C2F33 },
+    wholesome:    { subreddit: 'wholesomememes',        type: 'image', emoji: '💛', color: 0xF1C40F },
+    cursed:       { subreddit: 'cursedimages',          type: 'image', emoji: '😱', color: 0x8B0000 },
+    gaming:       { subreddit: 'gaming',                type: 'image', emoji: '🎮', color: 0x00B0F4 },
+    programmer:   { subreddit: 'ProgrammerHumor',       type: 'image', emoji: '💻', color: 0x57F287 },
+    genz:         { subreddit: 'GenZ',                  type: 'image', emoji: '✨', color: 0xFF73FA },
+    surreal:      { subreddit: 'surrealmemes',          type: 'image', emoji: '🌀', color: 0x9B59B6 },
+    anime:        { subreddit: 'animememes',            type: 'image', emoji: '🎌', color: 0xFF6B9D },
+    cat:          { subreddit: 'catmemes',              type: 'image', emoji: '🐱', color: 0xFFA500 },
+    dog:          { subreddit: 'dogmemes',              type: 'image', emoji: '🐶', color: 0xC8914A },
+    shitpost:     { subreddit: 'shitposting',           type: 'image', emoji: '💩', color: 0x8B6914 },
+    'deep-fried': { subreddit: 'deepfriedmemes',        type: 'image', emoji: '🍳', color: 0xFF6B35 },
+    pun:          { subreddit: 'puns',                  type: 'text',  emoji: '😄', color: 0xFFD700 },
+    dad:          { subreddit: 'dadjokes',              type: 'text',  emoji: '👨', color: 0xD4A017 },
+    twitter:      { subreddit: 'WhitePeopleTwitter',    type: 'image', emoji: '🐦', color: 0x1DA1F2 },
+    vibe:         { subreddit: 'VibeCheck',             type: 'image', emoji: '😎', color: 0x00CED1 },
+    based:        { subreddit: 'greentext',             type: 'image', emoji: '📗', color: 0x00B300 },
+    skull:        { subreddit: 'HolUp',                 type: 'image', emoji: '💀', color: 0x36393F },
+    cringe:       { subreddit: 'cringetopia',           type: 'image', emoji: '😬', color: 0xFF6B6B },
+    boomer:       { subreddit: 'BoomersBeingFools',     type: 'image', emoji: '🧓', color: 0xC0C0C0 },
+    npc:          { subreddit: 'NPCMemes',              type: 'image', emoji: '🤖', color: 0x7289DA },
+    trending:     { subreddit: 'memes',                 type: 'image', emoji: '📈', color: 0xED4245 },
+    irl:          { subreddit: 'technicallythetruth',   type: 'image', emoji: '🤓', color: 0x2ECC71 },
+};
 
 // ============================================================
 // Slash Commands Definition
@@ -2254,6 +2315,35 @@ const commands = [
         .addBooleanOption(o => o.setName('enabled').setDescription('Enable or disable translation for this channel').setRequired(false))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
+    new SlashCommandBuilder()
+        .setName('meme')
+        .setDescription('Get a random meme from a category')
+        .addSubcommand(s => s.setName('random').setDescription('Random meme from the best subreddits'))
+        .addSubcommand(s => s.setName('dank').setDescription('Dank memes'))
+        .addSubcommand(s => s.setName('dark').setDescription('Dark humor memes'))
+        .addSubcommand(s => s.setName('wholesome').setDescription('Wholesome feel-good memes'))
+        .addSubcommand(s => s.setName('cursed').setDescription('Cursed images'))
+        .addSubcommand(s => s.setName('gaming').setDescription('Gaming memes'))
+        .addSubcommand(s => s.setName('programmer').setDescription('Programming & tech humor'))
+        .addSubcommand(s => s.setName('genz').setDescription('Gen Z memes'))
+        .addSubcommand(s => s.setName('surreal').setDescription('Surreal and abstract memes'))
+        .addSubcommand(s => s.setName('anime').setDescription('Anime memes'))
+        .addSubcommand(s => s.setName('cat').setDescription('Cat memes'))
+        .addSubcommand(s => s.setName('dog').setDescription('Dog memes'))
+        .addSubcommand(s => s.setName('shitpost').setDescription('Shitposts'))
+        .addSubcommand(s => s.setName('deep-fried').setDescription('Deep fried memes'))
+        .addSubcommand(s => s.setName('pun').setDescription('Puns and wordplay'))
+        .addSubcommand(s => s.setName('dad').setDescription('Dad jokes'))
+        .addSubcommand(s => s.setName('twitter').setDescription('Twitter screenshots & fails'))
+        .addSubcommand(s => s.setName('vibe').setDescription('Vibe check memes'))
+        .addSubcommand(s => s.setName('based').setDescription('Greentext & based memes'))
+        .addSubcommand(s => s.setName('skull').setDescription('Hold up / skull emoji moments'))
+        .addSubcommand(s => s.setName('cringe').setDescription('Cringe memes'))
+        .addSubcommand(s => s.setName('boomer').setDescription('Boomer moments'))
+        .addSubcommand(s => s.setName('npc').setDescription('NPC memes'))
+        .addSubcommand(s => s.setName('trending').setDescription('Currently trending memes'))
+        .addSubcommand(s => s.setName('irl').setDescription('Technically the truth / IRL memes')),
+
 ];
 
 // ============================================================
@@ -2264,8 +2354,8 @@ function _commandsForGuild(guildId) {
     if (guildHasCustomBot(guildId)) {
         return commands.filter(c => MAIN_BOT_SHARED_COMMANDS.has(c.name));
     }
-    // Admin/owner commands only register in the designated admin guild
-    if (ADMIN_GUILD_ID && guildId !== ADMIN_GUILD_ID) {
+    // Admin/owner commands only register in the designated admin guild or CubAI-enabled guilds
+    if (ADMIN_GUILD_ID && guildId !== ADMIN_GUILD_ID && !guildHasCubAI(guildId)) {
         return commands.filter(c => !MAIN_BOT_ONLY_COMMANDS.has(c.name));
     }
     return commands;
@@ -10186,6 +10276,55 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     // ==================== DEBATE ====================
+    else if (commandName === 'meme') {
+        const sub = interaction.options.getSubcommand();
+        await interaction.deferReply();
+        const cat = MEME_CATEGORIES[sub];
+        if (!cat) return interaction.editReply({ content: '❌ Unknown meme category.' });
+
+        const subreddit = cat.subreddits
+            ? cat.subreddits[Math.floor(Math.random() * cat.subreddits.length)]
+            : cat.subreddit;
+
+        try {
+            const json = await fetchJson(`https://www.reddit.com/r/${subreddit}/hot.json?limit=100`);
+            const posts = (json?.data?.children || [])
+                .map(p => p.data)
+                .filter(p => !p.stickied && !p.over_18 && !p.spoiler);
+
+            if (cat.type === 'text') {
+                const textPosts = posts.filter(p => p.selftext && p.selftext.length > 5 && p.selftext.length < 1500 && p.selftext !== '[removed]' && p.selftext !== '[deleted]');
+                if (!textPosts.length) throw new Error('no posts');
+                const post = textPosts[Math.floor(Math.random() * Math.min(textPosts.length, 25))];
+                const embed = cubEmbed()
+                    .setColor(cat.color)
+                    .setTitle(`${cat.emoji} ${post.title}`.slice(0, 256))
+                    .setDescription(post.selftext.slice(0, 2000))
+                    .setURL(`https://reddit.com${post.permalink}`)
+                    .setFooter({ text: `r/${post.subreddit} • ⬆️ ${post.ups.toLocaleString()} • /meme ${sub}` });
+                return interaction.editReply({ embeds: [embed] });
+            } else {
+                const imgPosts = posts.filter(p =>
+                    /\.(jpg|jpeg|png|gif|webp)$/i.test(p.url) ||
+                    p.url.includes('i.redd.it') ||
+                    p.url.includes('i.imgur.com')
+                );
+                if (!imgPosts.length) throw new Error('no image posts');
+                const post = imgPosts[Math.floor(Math.random() * Math.min(imgPosts.length, 25))];
+                const embed = cubEmbed()
+                    .setColor(cat.color)
+                    .setTitle(`${cat.emoji} ${post.title}`.slice(0, 256))
+                    .setImage(post.url)
+                    .setURL(`https://reddit.com${post.permalink}`)
+                    .setFooter({ text: `r/${post.subreddit} • ⬆️ ${post.ups.toLocaleString()} • /meme ${sub}` });
+                return interaction.editReply({ embeds: [embed] });
+            }
+        } catch (err) {
+            console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_MEME_096 — [Meme] Failed to fetch /meme ${sub}:`, err.message);
+            return interaction.editReply({ content: `❌ Couldn't grab a meme right now — Reddit might be slow. Try again!` });
+        }
+    }
+
     else if (commandName === 'debate') {
         const sub = interaction.options.getSubcommand();
         if (sub === 'start') {

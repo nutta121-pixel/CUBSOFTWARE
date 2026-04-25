@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#5865f2">
+    <title>Developer API - CUB SOFTWARE</title>
+    <meta name="description" content="CUB SOFTWARE public API documentation. Free meme API with 25 categories — use it in your bots, apps, and projects.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Developer API - CUB SOFTWARE">
+    <meta property="og:description" content="Free public API from CUB SOFTWARE. Memes, and more coming soon.">
+    <meta property="og:url" content="https://cubsoftware.site/developer">
+    <meta property="og:image" content="https://cubsoftware.site/static/images/company-logo.png">
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <style>
+        :root {
+            --accent:      #5865f2;
+            --accent-dim:  rgba(88,101,242,0.15);
+            --accent-glow: rgba(88,101,242,0.35);
+            --surface:     rgba(255,255,255,0.04);
+            --surface-2:   rgba(255,255,255,0.07);
+            --border:      rgba(255,255,255,0.08);
+            --border-2:    rgba(255,255,255,0.14);
+            --text:        #e8e8f0;
+            --text-muted:  rgba(232,232,240,0.55);
+            --green:       #22c55e;
+            --code-bg:     #0d0d1a;
+        }
+
+        body { background: #0a0a14; color: var(--text); font-family: 'Poppins', sans-serif; }
+
+        /* ── Hero ── */
+        .dev-hero {
+            padding: 7rem 1.5rem 4rem;
+            text-align: center;
+            background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(88,101,242,0.18) 0%, transparent 70%);
+        }
+        .dev-hero-badge {
+            display: inline-flex; align-items: center; gap: .45rem;
+            background: var(--accent-dim); border: 1px solid var(--accent-glow);
+            border-radius: 999px; padding: .3rem .9rem;
+            font-size: .75rem; font-weight: 600; color: #a5b4fc;
+            margin-bottom: 1.5rem; letter-spacing: .04em; text-transform: uppercase;
+        }
+        .dev-hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+        .dev-hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.4rem);
+            font-weight: 900; line-height: 1.1;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; margin-bottom: 1rem;
+        }
+        .dev-hero p { font-size: 1.1rem; color: var(--text-muted); max-width: 560px; margin: 0 auto 2rem; line-height: 1.7; }
+        .dev-hero-stats { display: flex; justify-content: center; gap: 2.5rem; flex-wrap: wrap; margin-top: 2.5rem; }
+        .dev-stat { text-align: center; }
+        .dev-stat-val { font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+        .dev-stat-label { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+
+        /* ── Layout ── */
+        .dev-wrap { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem 6rem; }
+
+        /* ── Sections ── */
+        .dev-section { margin-bottom: 4rem; }
+        .dev-section-title {
+            font-family: 'Orbitron', sans-serif; font-size: 1.1rem; font-weight: 700;
+            color: #fff; letter-spacing: .05em; text-transform: uppercase;
+            display: flex; align-items: center; gap: .6rem; margin-bottom: 1.25rem;
+        }
+        .dev-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* ── Cards ── */
+        .dev-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 1.5rem;
+        }
+        .dev-card + .dev-card { margin-top: 1rem; }
+
+        /* ── Base URL strip ── */
+        .base-url-strip {
+            background: var(--accent-dim); border: 1px solid var(--accent-glow);
+            border-radius: 10px; padding: 1rem 1.25rem;
+            display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+        }
+        .base-url-label { font-size: .7rem; font-weight: 700; color: #a5b4fc; text-transform: uppercase; letter-spacing: .08em; white-space: nowrap; }
+        .base-url-val { font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: #fff; word-break: break-all; }
+
+        /* ── Endpoint block ── */
+        .endpoint-block {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; overflow: hidden; margin-bottom: 1.25rem;
+        }
+        .endpoint-head {
+            display: flex; align-items: center; gap: .75rem;
+            padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+            flex-wrap: wrap; gap: .6rem;
+        }
+        .method-badge {
+            font-family: 'JetBrains Mono', monospace; font-size: .7rem; font-weight: 600;
+            padding: .25rem .6rem; border-radius: 6px; text-transform: uppercase;
+            background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3);
+            white-space: nowrap;
+        }
+        .endpoint-path {
+            font-family: 'JetBrains Mono', monospace; font-size: .92rem; color: #e2e8f0;
+        }
+        .endpoint-path .param { color: #f59e0b; }
+        .endpoint-desc { font-size: .82rem; color: var(--text-muted); margin-left: auto; }
+        .endpoint-body { padding: 1.25rem; }
+        .endpoint-body p { font-size: .88rem; color: var(--text-muted); line-height: 1.7; margin-bottom: 1rem; }
+
+        /* ── Params table ── */
+        .param-table { width: 100%; border-collapse: collapse; font-size: .83rem; margin-bottom: 1rem; }
+        .param-table th { text-align: left; padding: .5rem .75rem; color: var(--text-muted); font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--border); }
+        .param-table td { padding: .55rem .75rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+        .param-table tr:last-child td { border-bottom: none; }
+        .param-name { font-family: 'JetBrains Mono', monospace; color: #f59e0b; }
+        .param-type { font-family: 'JetBrains Mono', monospace; color: #a5b4fc; font-size: .78rem; }
+        .param-opt  { font-size: .7rem; color: var(--text-muted); background: var(--surface-2); border-radius: 4px; padding: .1rem .4rem; }
+        .param-req  { font-size: .7rem; color: #f87171; background: rgba(248,113,113,.1); border-radius: 4px; padding: .1rem .4rem; }
+
+        /* ── Code block ── */
+        .code-tabs { display: flex; gap: .25rem; margin-bottom: 0; padding: .6rem .75rem 0; }
+        .code-tab {
+            font-family: 'JetBrains Mono', monospace; font-size: .72rem; font-weight: 600;
+            padding: .35rem .8rem; border-radius: 6px 6px 0 0; cursor: pointer;
+            color: var(--text-muted); background: transparent; border: none; transition: all .15s;
+        }
+        .code-tab.active { background: var(--code-bg); color: #fff; }
+        .code-tab:hover:not(.active) { color: var(--text); }
+        .code-block-wrap { position: relative; }
+        .code-block {
+            background: var(--code-bg); border-radius: 0 8px 8px 8px;
+            padding: 1.1rem 1.25rem; overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace; font-size: .8rem; line-height: 1.65;
+            color: #cdd6f4;
+        }
+        .code-block.top-flush { border-radius: 8px; }
+        .code-copy {
+            position: absolute; top: .5rem; right: .5rem;
+            background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 6px;
+            padding: .3rem .6rem; cursor: pointer; font-size: .7rem; color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace; transition: all .15s;
+        }
+        .code-copy:hover { color: #fff; background: var(--surface); }
+        .code-copy.copied { color: var(--green); }
+
+        /* Syntax colours */
+        .kw  { color: #cba6f7; }  /* keyword / method */
+        .str { color: #a6e3a1; }  /* string */
+        .num { color: #fab387; }  /* number */
+        .cmt { color: #6c7086; font-style: italic; }
+        .fn  { color: #89b4fa; }  /* function name */
+        .key { color: #f38ba8; }  /* JSON key */
+        .val { color: #a6e3a1; }  /* JSON value */
+
+        /* ── Response example ── */
+        .response-label { font-size: .72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: .4rem; }
+
+        /* ── Categories grid ── */
+        .cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .6rem; }
+        .cat-chip {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: .5rem .75rem;
+            display: flex; align-items: center; gap: .5rem;
+            font-size: .82rem; color: var(--text);
+            transition: border-color .15s, background .15s; cursor: default;
+        }
+        .cat-chip:hover { border-color: var(--accent-glow); background: var(--accent-dim); }
+        .cat-chip .cat-emoji { font-size: 1rem; }
+        .cat-chip code { font-family: 'JetBrains Mono', monospace; font-size: .76rem; color: #a5b4fc; }
+
+        /* ── Playground ── */
+        .playground-card {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 1.5rem;
+        }
+        .playground-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .25rem; }
+        .playground-card p  { font-size: .84rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+        .playground-controls { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+        .playground-select {
+            background: var(--surface-2) !important; border: 1px solid var(--border-2) !important;
+            border-radius: 8px; padding: .55rem .85rem; color: #fff !important;
+            font-family: 'Poppins', sans-serif; font-size: .85rem; cursor: pointer; flex: 1; min-width: 160px;
+            appearance: none; -webkit-appearance: none;
+        }
+        .playground-btn {
+            background: var(--accent); border: none; border-radius: 8px;
+            padding: .55rem 1.4rem; color: #fff; font-family: 'Poppins', sans-serif;
+            font-size: .85rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+            transition: opacity .15s;
+        }
+        .playground-btn:hover { opacity: .85; }
+        .playground-btn:disabled { opacity: .5; cursor: not-allowed; }
+        #playgroundResult { min-height: 80px; }
+        .playground-meme { border-radius: 10px; overflow: hidden; }
+        .playground-meme img { width: 100%; max-height: 400px; object-fit: contain; background: #000; border-radius: 8px; display: block; }
+        .playground-meme-title { font-size: .9rem; font-weight: 600; margin-top: .75rem; }
+        .playground-meme-meta { font-size: .76rem; color: var(--text-muted); margin-top: .25rem; }
+        .playground-meme-meta a { color: #a5b4fc; text-decoration: none; }
+        .playground-meme-meta a:hover { text-decoration: underline; }
+        .playground-meme-text { font-size: .9rem; line-height: 1.7; background: var(--code-bg); border-radius: 8px; padding: 1rem; margin-top: .5rem; }
+        .playground-error { color: #f87171; font-size: .85rem; }
+        .playground-loading { color: var(--text-muted); font-size: .85rem; }
+
+        /* ── Info strip ── */
+        .info-strip { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .info-chip {
+            display: flex; align-items: center; gap: .5rem;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 8px; padding: .6rem 1rem; font-size: .83rem;
+        }
+        .info-chip svg { flex-shrink: 0; }
+        .info-chip strong { color: #fff; }
+        .info-chip span { color: var(--text-muted); }
+
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .dev-hero { padding: 5rem 1.25rem 3rem; }
+            .endpoint-head { flex-direction: column; align-items: flex-start; }
+            .endpoint-desc { margin-left: 0; }
+            .cat-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+
+{% include 'header.html' %}
+
+<!-- Hero -->
+<section class="dev-hero">
+    <div class="dev-hero-badge">
+        <span class="dot"></span>
+        Public API — Free to Use
+    </div>
+    <h1>CUB SOFTWARE<br>Developer API</h1>
+    <p>Free, open API built for developers. Use it in your Discord bots, websites, apps — no account required.</p>
+    <div class="dev-hero-stats">
+        <div class="dev-stat">
+            <div class="dev-stat-val">25</div>
+            <div class="dev-stat-label">Meme Categories</div>
+        </div>
+        <div class="dev-stat">
+            <div class="dev-stat-val">FREE</div>
+            <div class="dev-stat-label">No API Key Needed</div>
+        </div>
+        <div class="dev-stat">
+            <div class="dev-stat-val">JSON</div>
+            <div class="dev-stat-label">Response Format</div>
+        </div>
+    </div>
+</section>
+
+<div class="dev-wrap">
+
+    <!-- Base URL -->
+    <div class="dev-section">
+        <div class="dev-section-title">Base URL</div>
+        <div class="base-url-strip">
+            <span class="base-url-label">Base</span>
+            <span class="base-url-val">https://cubsoftware.site</span>
+        </div>
+    </div>
+
+    <!-- Authentication -->
+    <div class="dev-section">
+        <div class="dev-section-title">Authentication</div>
+        <div class="dev-card">
+            <div class="info-strip">
+                <div class="info-chip">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span><strong>No API key required</strong> — all listed endpoints are publicly accessible.</span>
+                </div>
+                <div class="info-chip">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>Please include a descriptive <strong>User-Agent</strong> header identifying your app.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Meme API -->
+    <div class="dev-section">
+        <div class="dev-section-title">Meme API</div>
+
+        <!-- Endpoint 1 -->
+        <div class="endpoint-block">
+            <div class="endpoint-head">
+                <span class="method-badge">GET</span>
+                <span class="endpoint-path">/api/memes/<span class="param">{category}</span></span>
+                <span class="endpoint-desc">Fetch a random meme</span>
+            </div>
+            <div class="endpoint-body">
+                <p>Returns a random meme from the specified category. The meme is sourced from Reddit and is always SFW and non-spoiler.</p>
+
+                <table class="param-table">
+                    <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td class="param-name">category</td>
+                            <td class="param-type">string</td>
+                            <td><span class="param-opt">optional</span></td>
+                            <td style="font-size:.82rem;color:var(--text-muted)">Meme category (see list below). Defaults to <code style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#f59e0b">random</code> if omitted.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="response-label">Example Response</div>
+                <div class="code-block-wrap">
+                    <button class="code-copy" onclick="copyCode(this)">copy</button>
+                    <pre class="code-block top-flush"><span class="key">"url"</span>:        <span class="str">"https://i.redd.it/abc123.jpg"</span>,
+<span class="key">"title"</span>:      <span class="str">"When the code works first try"</span>,
+<span class="key">"category"</span>:   <span class="str">"programmer"</span>,
+<span class="key">"subreddit"</span>:  <span class="str">"ProgrammerHumor"</span>,
+<span class="key">"author"</span>:     <span class="str">"some_redditor"</span>,
+<span class="key">"source_url"</span>: <span class="str">"https://reddit.com/r/ProgrammerHumor/comments/..."</span>,
+<span class="key">"ups"</span>:        <span class="num">14823</span>,
+<span class="key">"type"</span>:       <span class="str">"image"</span>  <span class="cmt">// "image" | "text"</span></pre>
+                </div>
+
+                <div style="margin-top:1.25rem">
+                    <div class="code-tabs" id="tabs1">
+                        <button class="code-tab active" data-tab="curl"   onclick="switchTab('tabs1',this)">curl</button>
+                        <button class="code-tab"        data-tab="js"     onclick="switchTab('tabs1',this)">JavaScript</button>
+                        <button class="code-tab"        data-tab="nodejs" onclick="switchTab('tabs1',this)">Node.js</button>
+                        <button class="code-tab"        data-tab="py"     onclick="switchTab('tabs1',this)">Python</button>
+                        <button class="code-tab"        data-tab="php"    onclick="switchTab('tabs1',this)">PHP</button>
+                        <button class="code-tab"        data-tab="go"     onclick="switchTab('tabs1',this)">Go</button>
+                        <button class="code-tab"        data-tab="cs"     onclick="switchTab('tabs1',this)">C#</button>
+                        <button class="code-tab"        data-tab="java"   onclick="switchTab('tabs1',this)">Java</button>
+                        <button class="code-tab"        data-tab="ruby"   onclick="switchTab('tabs1',this)">Ruby</button>
+                    </div>
+                    <div class="code-block-wrap">
+                        <button class="code-copy" onclick="copyCode(this)">copy</button>
+
+                        <div class="code-block" data-group="tabs1" data-tab="curl">curl <span class="str">https://cubsoftware.site/api/memes/dank</span></div>
+
+                        <div class="code-block" data-group="tabs1" data-tab="js" style="display:none"><span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'https://cubsoftware.site/api/memes/dank'</span>);
+<span class="kw">const</span> meme = <span class="kw">await</span> res.<span class="fn">json</span>();
+console.<span class="fn">log</span>(meme.url, meme.title);</div>
+
+                        <div class="code-block" data-group="tabs1" data-tab="nodejs" style="display:none"><span class="kw">const</span> https = <span class="fn">require</span>(<span class="str">'https'</span>);
+
+https.<span class="fn">get</span>(<span class="str">'https://cubsoftware.site/api/memes/dank'</span>, (res) =&gt; {
+    <span class="kw">let</span> data = <span class="str">''</span>;
+    res.<span class="fn">on</span>(<span class="str">'data'</span>, chunk =&gt; data += chunk);
+    res.<span class="fn">on</span>(<span class="str">'end'</span>, () =&gt; {
+        <span class="kw">const</span> meme = JSON.<span class="fn">parse</span>(data);
+        console.<span class="fn">log</span>(meme.url, meme.title);
+    });
+});</div>
+
+                        <div class="code-block" data-group="tabs1" data-tab="py" style="display:none"><span class="kw">import</span> requests
+
+res = requests.<span class="fn">get</span>(<span class="str">'https://cubsoftware.site/api/memes/dank'</span>)
+meme = res.<span class="fn">json</span>()
+<span class="fn">print</span>(meme[<span class="str">'url'</span>], meme[<span class="str">'title'</span>])</div>
+
+                        <div class="code-block" data-group="tabs1" data-tab="php" style="display:none"><span class="kw">&lt;?php</span>
+$res  = <span class="fn">file_get_contents</span>(<span class="str">'https://cubsoftware.site/api/memes/dank'</span>);
+$meme = <span class="fn">json_decode</span>($res, <span class="kw">true</span>);
+<span class="fn">echo</span> $meme[<span class="str">'url'</span>] . <span class="str">' — '</span> . $meme[<span class="str">'title'</span>];</div>
+
+                        <div class="code-block" data-group="tabs1" data-tab="go" style="display:none"><span class="kw">package</span> main
+
+<span class="kw">import</span> (
+    <span class="str">"encoding/json"</span>
+    <span class="str">"fmt"</span>
+    <span class="str">"net/http"</span>
+    <span class="str">"io"</span>
+)
+
+<span class="kw">func</span> <span class="fn">main</span>() {
+    resp, _ := http.<span class="fn">Get</span>(<span class="str">"https://cubsoftware.site/api/memes/dank"</span>)
+    defer resp.Body.<span class="fn">Close</span>()
+    body, _ := io.<span class="fn">ReadAll</span>(resp.Body)
+    <span class="kw">var</span> meme <span class="kw">map</span>[<span class="kw">string</span>]<span class="kw">any</span>
+    json.<span class="fn">Unmarshal</span>(body, &amp;meme)
+    fmt.<span class="fn">Println</span>(meme[<span class="str">"url"</span>], meme[<span class="str">"title"</span>])
+}</div>
+
+                        <div class="code-block" data-group="tabs1" data-tab="cs" style="display:none"><span class="kw">using</span> System.Net.Http.Json;
+
+<span class="kw">var</span> client = <span class="kw">new</span> <span class="fn">HttpClient</span>();
+<span class="kw">var</span> meme = <span class="kw">await</span> client.<span class="fn">GetFromJsonAsync</span>&lt;Dictionary&lt;<span class="kw">string</span>, <span class="kw">object</span>&gt;&gt;(
+    <span class="str">"https://cubsoftware.site/api/memes/dank"</span>
+);
+Console.<span class="fn">WriteLine</span>($<span class="str">"{meme["url"]} — {meme["title"]}"</span>);</div>
+
+                        <div class="code-block" data-group="tabs1" data-tab="java" style="display:none"><span class="kw">import</span> java.net.URI;
+<span class="kw">import</span> java.net.http.*;
+<span class="kw">import</span> com.fasterxml.jackson.databind.ObjectMapper;
+
+<span class="kw">var</span> client = HttpClient.<span class="fn">newHttpClient</span>();
+<span class="kw">var</span> req    = HttpRequest.<span class="fn">newBuilder</span>()
+    .<span class="fn">uri</span>(URI.<span class="fn">create</span>(<span class="str">"https://cubsoftware.site/api/memes/dank"</span>))
+    .<span class="fn">build</span>();
+<span class="kw">var</span> res  = client.<span class="fn">send</span>(req, HttpResponse.BodyHandlers.<span class="fn">ofString</span>());
+<span class="kw">var</span> meme = <span class="kw">new</span> <span class="fn">ObjectMapper</span>().<span class="fn">readValue</span>(res.<span class="fn">body</span>(), Map.<span class="kw">class</span>);
+System.out.<span class="fn">println</span>(meme.<span class="fn">get</span>(<span class="str">"url"</span>));</div>
+
+                        <div class="code-block" data-group="tabs1" data-tab="ruby" style="display:none"><span class="kw">require</span> <span class="str">'net/http'</span>
+<span class="kw">require</span> <span class="str">'json'</span>
+
+uri  = URI(<span class="str">'https://cubsoftware.site/api/memes/dank'</span>)
+meme = JSON.<span class="fn">parse</span>(Net::HTTP.<span class="fn">get</span>(uri))
+<span class="fn">puts</span> meme[<span class="str">'url'</span>], meme[<span class="str">'title'</span>]</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Endpoint 2 -->
+        <div class="endpoint-block">
+            <div class="endpoint-head">
+                <span class="method-badge">GET</span>
+                <span class="endpoint-path">/api/memes/categories</span>
+                <span class="endpoint-desc">List all categories</span>
+            </div>
+            <div class="endpoint-body">
+                <p>Returns a sorted list of all valid category names.</p>
+                <div class="response-label">Example Response</div>
+                <div class="code-block-wrap">
+                    <button class="code-copy" onclick="copyCode(this)">copy</button>
+                    <pre class="code-block top-flush"><span class="key">"categories"</span>: [
+  <span class="str">"anime"</span>, <span class="str">"based"</span>, <span class="str">"boomer"</span>, <span class="str">"cat"</span>, <span class="str">"cringe"</span>,
+  <span class="str">"cursed"</span>, <span class="str">"dad"</span>, <span class="str">"dank"</span>, <span class="str">"dark"</span>, <span class="str">"deep-fried"</span>,
+  <span class="str">"dog"</span>, <span class="str">"gaming"</span>, <span class="str">"genz"</span>, <span class="str">"irl"</span>, <span class="str">"npc"</span>,
+  <span class="str">"programmer"</span>, <span class="str">"pun"</span>, <span class="str">"random"</span>, <span class="str">"shitpost"</span>, <span class="str">"skull"</span>,
+  <span class="str">"surreal"</span>, <span class="str">"trending"</span>, <span class="str">"twitter"</span>, <span class="str">"vibe"</span>, <span class="str">"wholesome"</span>
+]</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Endpoint 3 -->
+        <div class="endpoint-block">
+            <div class="endpoint-head">
+                <span class="method-badge">GET</span>
+                <span class="endpoint-path">/api/memes</span>
+                <span class="endpoint-desc">Random meme (no category)</span>
+            </div>
+            <div class="endpoint-body">
+                <p>Shorthand for <code style="font-family:'JetBrains Mono',monospace;font-size:.82rem;color:#f59e0b">/api/memes/random</code> — picks from the best subreddits automatically.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Categories -->
+    <div class="dev-section">
+        <div class="dev-section-title">Categories</div>
+        <div class="cat-grid">
+            <div class="cat-chip"><span class="cat-emoji">🎲</span><code>random</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🔥</span><code>dank</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🖤</span><code>dark</code></div>
+            <div class="cat-chip"><span class="cat-emoji">💛</span><code>wholesome</code></div>
+            <div class="cat-chip"><span class="cat-emoji">😱</span><code>cursed</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🎮</span><code>gaming</code></div>
+            <div class="cat-chip"><span class="cat-emoji">💻</span><code>programmer</code></div>
+            <div class="cat-chip"><span class="cat-emoji">✨</span><code>genz</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🌀</span><code>surreal</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🎌</span><code>anime</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🐱</span><code>cat</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🐶</span><code>dog</code></div>
+            <div class="cat-chip"><span class="cat-emoji">💩</span><code>shitpost</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🍳</span><code>deep-fried</code></div>
+            <div class="cat-chip"><span class="cat-emoji">😄</span><code>pun</code></div>
+            <div class="cat-chip"><span class="cat-emoji">👨</span><code>dad</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🐦</span><code>twitter</code></div>
+            <div class="cat-chip"><span class="cat-emoji">😎</span><code>vibe</code></div>
+            <div class="cat-chip"><span class="cat-emoji">📗</span><code>based</code></div>
+            <div class="cat-chip"><span class="cat-emoji">💀</span><code>skull</code></div>
+            <div class="cat-chip"><span class="cat-emoji">😬</span><code>cringe</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🧓</span><code>boomer</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🤖</span><code>npc</code></div>
+            <div class="cat-chip"><span class="cat-emoji">📈</span><code>trending</code></div>
+            <div class="cat-chip"><span class="cat-emoji">🤓</span><code>irl</code></div>
+        </div>
+    </div>
+
+    <!-- Live Playground -->
+    <div class="dev-section">
+        <div class="dev-section-title">Try it Live</div>
+        <div class="playground-card">
+            <h3>Playground</h3>
+            <p>Pick a category and fetch a real meme right now.</p>
+            <div class="playground-controls">
+                <select class="playground-select" id="pgCat">
+                    <option value="random">🎲 random</option>
+                    <option value="dank">🔥 dank</option>
+                    <option value="dark">🖤 dark</option>
+                    <option value="wholesome">💛 wholesome</option>
+                    <option value="cursed">😱 cursed</option>
+                    <option value="gaming">🎮 gaming</option>
+                    <option value="programmer">💻 programmer</option>
+                    <option value="genz">✨ genz</option>
+                    <option value="surreal">🌀 surreal</option>
+                    <option value="anime">🎌 anime</option>
+                    <option value="cat">🐱 cat</option>
+                    <option value="dog">🐶 dog</option>
+                    <option value="shitpost">💩 shitpost</option>
+                    <option value="deep-fried">🍳 deep-fried</option>
+                    <option value="pun">😄 pun</option>
+                    <option value="dad">👨 dad</option>
+                    <option value="twitter">🐦 twitter</option>
+                    <option value="vibe">😎 vibe</option>
+                    <option value="based">📗 based</option>
+                    <option value="skull">💀 skull</option>
+                    <option value="cringe">😬 cringe</option>
+                    <option value="boomer">🧓 boomer</option>
+                    <option value="npc">🤖 npc</option>
+                    <option value="trending">📈 trending</option>
+                    <option value="irl">🤓 irl</option>
+                </select>
+                <button class="playground-btn" id="pgBtn" onclick="fetchPlayground()">Fetch Meme</button>
+            </div>
+            <div id="playgroundResult"></div>
+        </div>
+    </div>
+
+    <!-- Rate Limits -->
+    <div class="dev-section">
+        <div class="dev-section-title">Fair Use</div>
+        <div class="dev-card">
+            <div class="info-strip">
+                <div class="info-chip">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>No hard rate limit right now. Please be reasonable — <strong>don't hammer the endpoint</strong>.</span>
+                </div>
+                <div class="info-chip">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    <span>Meme content is sourced from <strong>Reddit</strong>. All results are SFW and non-spoiler filtered.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coming soon -->
+    <div class="dev-section">
+        <div class="dev-section-title">Coming Soon</div>
+        <div class="dev-card" style="text-align:center;padding:2rem;">
+            <p style="color:var(--text-muted);font-size:.9rem;">More APIs are planned. Check back — we'll document everything here as it ships.</p>
+        </div>
+    </div>
+
+</div>
+
+{% include 'footer.html' %}
+
+<script>
+function switchTab(groupId, btn) {
+    const tab = btn.dataset.tab;
+    document.querySelectorAll(`[data-group="${groupId}"]`).forEach(el => {
+        el.style.display = el.dataset.tab === tab ? 'block' : 'none';
+    });
+    document.querySelectorAll(`#${groupId} .code-tab`).forEach(b => b.classList.toggle('active', b === btn));
+}
+
+function copyCode(btn) {
+    const wrap = btn.parentElement;
+    const visible = wrap.querySelector('.code-block:not([style*="display: none"]):not([style*="display:none"])') || wrap.querySelector('.code-block');
+    if (!visible) return;
+    navigator.clipboard.writeText(visible.innerText.trim()).then(() => {
+        btn.textContent = 'copied!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+    }).catch(() => {});
+}
+
+async function fetchPlayground() {
+    const cat  = document.getElementById('pgCat').value;
+    const btn  = document.getElementById('pgBtn');
+    const out  = document.getElementById('playgroundResult');
+    btn.disabled = true;
+    out.innerHTML = '<div class="playground-loading">Fetching...</div>';
+    try {
+        const res  = await fetch(`/api/memes/${cat}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed');
+        if (data.type === 'text') {
+            out.innerHTML = `
+                <div class="playground-meme">
+                    <div class="playground-meme-title">${esc(data.title)}</div>
+                    <div class="playground-meme-text">${esc(data.text || '')}</div>
+                    <div class="playground-meme-meta" style="margin-top:.5rem;">
+                        r/${esc(data.subreddit)} &nbsp;·&nbsp; ⬆️ ${(data.ups||0).toLocaleString()} &nbsp;·&nbsp;
+                        <a href="${esc(data.source_url)}" target="_blank" rel="noopener">View on Reddit ↗</a>
+                    </div>
+                </div>`;
+        } else {
+            out.innerHTML = `
+                <div class="playground-meme">
+                    <img src="${esc(data.url)}" alt="${esc(data.title)}" loading="lazy">
+                    <div class="playground-meme-title">${esc(data.title)}</div>
+                    <div class="playground-meme-meta">
+                        r/${esc(data.subreddit)} &nbsp;·&nbsp; ⬆️ ${(data.ups||0).toLocaleString()} &nbsp;·&nbsp;
+                        <a href="${esc(data.source_url)}" target="_blank" rel="noopener">View on Reddit ↗</a>
+                    </div>
+                </div>`;
+        }
+    } catch (e) {
+        out.innerHTML = `<div class="playground-error">Error: ${esc(e.message)} — try a different category.</div>`;
+    }
+    btn.disabled = false;
+}
+
+function esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

@@ -20080,10 +20080,10 @@ def admin_fetch_affiliate_avatar(aff_id):
 # Public API — no authentication required.
 # Bot uses Reddit directly; this endpoint is for external developers.
 # Usage: GET /api/memes/<category>
-# Response: { url, title, category, subreddit, author, source_url, ups }
+# Response: { url, title, text, type, category }
 
 _MEME_SUBREDDITS = {
-    'random':     None,  # resolved at request time
+    'random':     None,
     'dank':       'dankmemes',
     'dark':       'darkhumor',
     'wholesome':  'wholesomememes',
@@ -20093,8 +20093,8 @@ _MEME_SUBREDDITS = {
     'genz':       'GenZ',
     'surreal':    'surrealmemes',
     'anime':      'animememes',
-    'cat':        'catmemes',
-    'dog':        'dogmemes',
+    'cat':        None,  # handled by dedicated fetcher
+    'dog':        None,  # handled by dedicated fetcher
     'shitpost':   'shitposting',
     'deep-fried': 'deepfriedmemes',
     'pun':        'puns',
@@ -20113,7 +20113,7 @@ _MEME_SUBREDDITS = {
 _MEME_RANDOM_POOL = [
     'dankmemes', 'memes', 'ProgrammerHumor', 'gaming', 'wholesomememes',
     'shitposting', 'technicallythetruth', 'animememes', 'surrealmemes',
-    'GenZ', 'deepfriedmemes', 'HolUp', 'darkhumor', 'catmemes', 'dogmemes',
+    'GenZ', 'deepfriedmemes', 'HolUp', 'darkhumor',
 ]
 
 _MEME_TEXT_SUBS = {'puns', 'dadjokes'}
@@ -20137,29 +20137,81 @@ def _fetch_reddit_meme(subreddit):
         'url':        post.get('url'),
         'title':      post.get('title', ''),
         'text':       post.get('selftext', '') if is_text else None,
-        'subreddit':  post.get('subreddit', subreddit),
-        'author':     post.get('author', ''),
-        'source_url': f"https://reddit.com{post.get('permalink', '')}",
-        'ups':        post.get('ups', 0),
         'type':       'text' if is_text else 'image',
     }
+
+def _fetch_cat_meme():
+    # 50/50: cataas.com (real cats) vs r/catmemes
+    if random.random() < 0.5:
+        resp = requests.get('https://cataas.com/cat?json=true', timeout=8)
+        resp.raise_for_status()
+        data = resp.json()
+        cat_id = data.get('_id') or data.get('id', '')
+        return {
+            'url':   f'https://cataas.com/cat/{cat_id}',
+            'title': 'Random Cat',
+            'type':  'image',
+        }
+    else:
+        return _fetch_reddit_meme('catmemes')
+
+def _fetch_dog_meme():
+    # 50/50: dog.ceo (real dogs) vs r/dogmemes
+    if random.random() < 0.5:
+        resp = requests.get('https://dog.ceo/api/breeds/image/random', timeout=8)
+        resp.raise_for_status()
+        data = resp.json()
+        return {
+            'url':   data.get('message', ''),
+            'title': 'Random Dog',
+            'type':  'image',
+        }
+    else:
+        return _fetch_reddit_meme('dogmemes')
+
+_MEME_DEDICATED = {
+    'cat': _fetch_cat_meme,
+    'dog': _fetch_dog_meme,
+}
+
+# Rate limiting: 10 requests per second per IP (sliding window)
+_meme_rl_lock = threading.Lock()
+_meme_rl_data = {}  # ip -> [timestamps]
+
+def _meme_rate_ok(ip):
+    now = time.time()
+    with _meme_rl_lock:
+        ts = [t for t in _meme_rl_data.get(ip, []) if now - t < 1.0]
+        if len(ts) >= 10:
+            _meme_rl_data[ip] = ts
+            return False
+        ts.append(now)
+        _meme_rl_data[ip] = ts
+        return True
 
 @app.route('/api/memes', methods=['GET'], strict_slashes=False)
 @app.route('/api/memes/<category>', methods=['GET'])
 def api_memes(category='random'):
+    ip = (request.headers.get('X-Forwarded-For', '') or request.remote_addr or '').split(',')[0].strip()
+    if not _meme_rate_ok(ip):
+        return jsonify({'error': 'Rate limit exceeded — max 10 requests per second per IP'}), 429
     category = category.lower()
     if category not in _MEME_SUBREDDITS:
         return jsonify({
             'error': 'Unknown category',
             'categories': sorted(_MEME_SUBREDDITS.keys()),
         }), 404
-    subreddit = _MEME_SUBREDDITS[category]
-    if subreddit is None:
-        subreddit = random.choice(_MEME_RANDOM_POOL)
     for attempt in range(2):
         try:
-            meme = _fetch_reddit_meme(subreddit)
+            if category in _MEME_DEDICATED:
+                meme = _MEME_DEDICATED[category]()
+            else:
+                subreddit = _MEME_SUBREDDITS[category]
+                if subreddit is None:
+                    subreddit = random.choice(_MEME_RANDOM_POOL)
+                meme = _fetch_reddit_meme(subreddit)
             meme['category'] = category
+            meme['author'] = 'CUBSOFTWARE'
             return jsonify(meme)
         except Exception:
             if attempt == 0:

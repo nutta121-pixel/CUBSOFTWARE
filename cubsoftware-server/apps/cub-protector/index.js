@@ -10299,9 +10299,7 @@ client.on('interactionCreate', async (interaction) => {
                 const embed = cubEmbed()
                     .setColor(cat.color)
                     .setTitle(`${cat.emoji} ${post.title}`.slice(0, 256))
-                    .setDescription(post.selftext.slice(0, 2000))
-                    .setURL(`https://reddit.com${post.permalink}`)
-                    .setFooter({ text: `r/${post.subreddit} • ⬆️ ${post.ups.toLocaleString()} • /meme ${sub}` });
+                    .setDescription(post.selftext.slice(0, 2000));
                 return interaction.editReply({ embeds: [embed] });
             } else {
                 const imgPosts = posts.filter(p =>
@@ -10313,10 +10311,7 @@ client.on('interactionCreate', async (interaction) => {
                 const post = imgPosts[Math.floor(Math.random() * Math.min(imgPosts.length, 25))];
                 const embed = cubEmbed()
                     .setColor(cat.color)
-                    .setTitle(`${cat.emoji} ${post.title}`.slice(0, 256))
-                    .setImage(post.url)
-                    .setURL(`https://reddit.com${post.permalink}`)
-                    .setFooter({ text: `r/${post.subreddit} • ⬆️ ${post.ups.toLocaleString()} • /meme ${sub}` });
+                    .setImage(post.url);
                 return interaction.editReply({ embeds: [embed] });
             }
         } catch (err) {

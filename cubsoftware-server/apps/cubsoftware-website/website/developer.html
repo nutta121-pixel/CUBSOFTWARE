@@ -295,7 +295,7 @@
                 <span class="endpoint-desc">Fetch a random meme</span>
             </div>
             <div class="endpoint-body">
-                <p>Returns a random meme from the specified category. The meme is sourced from Reddit and is always SFW and non-spoiler.</p>
+                <p>Returns a random meme from the specified category. Results are always SFW and non-spoiler filtered.</p>
 
                 <table class="param-table">
                     <thead><tr><th>Parameter</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
@@ -312,14 +312,12 @@
                 <div class="response-label">Example Response</div>
                 <div class="code-block-wrap">
                     <button class="code-copy" onclick="copyCode(this)">copy</button>
-                    <pre class="code-block top-flush"><span class="key">"url"</span>:        <span class="str">"https://i.redd.it/abc123.jpg"</span>,
-<span class="key">"title"</span>:      <span class="str">"When the code works first try"</span>,
-<span class="key">"category"</span>:   <span class="str">"programmer"</span>,
-<span class="key">"subreddit"</span>:  <span class="str">"ProgrammerHumor"</span>,
-<span class="key">"author"</span>:     <span class="str">"some_redditor"</span>,
-<span class="key">"source_url"</span>: <span class="str">"https://reddit.com/r/ProgrammerHumor/comments/..."</span>,
-<span class="key">"ups"</span>:        <span class="num">14823</span>,
-<span class="key">"type"</span>:       <span class="str">"image"</span>  <span class="cmt">// "image" | "text"</span></pre>
+                    <pre class="code-block top-flush"><span class="key">"url"</span>:      <span class="str">"https://i.redd.it/abc123.jpg"</span>,
+<span class="key">"title"</span>:    <span class="str">"When the code works first try"</span>,
+<span class="key">"text"</span>:     <span class="val">null</span>,
+<span class="key">"type"</span>:     <span class="str">"image"</span>,  <span class="cmt">// "image" | "text"</span>
+<span class="key">"category"</span>: <span class="str">"programmer"</span>,
+<span class="key">"author"</span>:   <span class="str">"CUBSOFTWARE"</span></pre>
                 </div>
 
                 <div style="margin-top:1.25rem">
@@ -483,6 +481,173 @@ meme = JSON.<span class="fn">parse</span>(Net::HTTP.<span class="fn">get</span>(
         </div>
     </div>
 
+    <!-- Discord Bot Examples -->
+    <div class="dev-section">
+        <div class="dev-section-title">Discord Bot Examples</div>
+        <div class="dev-card" style="margin-bottom:1rem;">
+            <p style="font-size:.88rem;color:var(--text-muted);line-height:1.7;margin-bottom:0;">
+                Drop-in examples for adding a <code style="font-family:'JetBrains Mono',monospace;font-size:.82rem;color:#f59e0b">/meme</code> slash command to your Discord bot using the CUB SOFTWARE API. Each example registers the command and sends the image — copy, paste, add your token.
+            </p>
+        </div>
+
+        <div class="code-tabs" id="tabsBot">
+            <button class="code-tab active" data-tab="djs"   onclick="switchTab('tabsBot',this)">discord.js</button>
+            <button class="code-tab"        data-tab="dpy"   onclick="switchTab('tabsBot',this)">discord.py</button>
+            <button class="code-tab"        data-tab="jda"   onclick="switchTab('tabsBot',this)">Java (JDA)</button>
+            <button class="code-tab"        data-tab="dnet"  onclick="switchTab('tabsBot',this)">C# (.NET)</button>
+        </div>
+        <div class="code-block-wrap">
+            <button class="code-copy" onclick="copyCode(this)">copy</button>
+
+            <div class="code-block" data-group="tabsBot" data-tab="djs"><span class="cmt">// npm install discord.js node-fetch</span>
+<span class="kw">const</span> { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder } = <span class="fn">require</span>(<span class="str">'discord.js'</span>);
+
+<span class="kw">const</span> client = <span class="kw">new</span> <span class="fn">Client</span>({ intents: [GatewayIntentBits.Guilds] });
+
+client.<span class="fn">once</span>(<span class="str">'ready'</span>, <span class="kw">async</span> () => {
+    <span class="kw">await</span> client.application.commands.<span class="fn">create</span>(
+        <span class="kw">new</span> <span class="fn">SlashCommandBuilder</span>()
+            .<span class="fn">setName</span>(<span class="str">'meme'</span>)
+            .<span class="fn">setDescription</span>(<span class="str">'Get a random meme'</span>)
+            .<span class="fn">addStringOption</span>(o => o
+                .<span class="fn">setName</span>(<span class="str">'category'</span>)
+                .<span class="fn">setDescription</span>(<span class="str">'Meme category'</span>)
+                .<span class="fn">setRequired</span>(<span class="kw">false</span>))
+    );
+    console.<span class="fn">log</span>(<span class="str">'Ready!'</span>);
+});
+
+client.<span class="fn">on</span>(<span class="str">'interactionCreate'</span>, <span class="kw">async</span> interaction => {
+    <span class="kw">if</span> (!interaction.<span class="fn">isChatInputCommand</span>() || interaction.commandName !== <span class="str">'meme'</span>) <span class="kw">return</span>;
+    <span class="kw">await</span> interaction.<span class="fn">deferReply</span>();
+
+    <span class="kw">const</span> category = interaction.options.<span class="fn">getString</span>(<span class="str">'category'</span>) || <span class="str">'random'</span>;
+    <span class="kw">const</span> res  = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`https://cubsoftware.site/api/memes/${category}`</span>);
+    <span class="kw">const</span> meme = <span class="kw">await</span> res.<span class="fn">json</span>();
+
+    <span class="kw">if</span> (meme.type === <span class="str">'text'</span>) {
+        <span class="kw">const</span> embed = <span class="kw">new</span> <span class="fn">EmbedBuilder</span>().<span class="fn">setTitle</span>(meme.title).<span class="fn">setDescription</span>(meme.text).<span class="fn">setColor</span>(<span class="num">0x5865F2</span>);
+        <span class="kw">return</span> interaction.<span class="fn">editReply</span>({ embeds: [embed] });
+    }
+    <span class="kw">const</span> embed = <span class="kw">new</span> <span class="fn">EmbedBuilder</span>().<span class="fn">setImage</span>(meme.url).<span class="fn">setColor</span>(<span class="num">0x5865F2</span>);
+    <span class="kw">return</span> interaction.<span class="fn">editReply</span>({ embeds: [embed] });
+});
+
+client.<span class="fn">login</span>(<span class="str">'YOUR_BOT_TOKEN'</span>);</div>
+
+            <div class="code-block" data-group="tabsBot" data-tab="dpy" style="display:none"><span class="cmt"># pip install discord.py aiohttp</span>
+<span class="kw">import</span> discord
+<span class="kw">from</span> discord <span class="kw">import</span> app_commands
+<span class="kw">import</span> aiohttp
+
+intents = discord.Intents.<span class="fn">default</span>()
+client  = discord.<span class="fn">Client</span>(intents=intents)
+tree    = app_commands.<span class="fn">CommandTree</span>(client)
+
+@tree.<span class="fn">command</span>(name=<span class="str">"meme"</span>, description=<span class="str">"Get a random meme"</span>)
+@app_commands.<span class="fn">describe</span>(category=<span class="str">"Meme category (optional)"</span>)
+<span class="kw">async def</span> <span class="fn">meme</span>(interaction: discord.Interaction, category: str = <span class="str">"random"</span>):
+    <span class="kw">await</span> interaction.response.<span class="fn">defer</span>()
+    <span class="kw">async with</span> aiohttp.<span class="fn">ClientSession</span>() <span class="kw">as</span> s:
+        <span class="kw">async with</span> s.<span class="fn">get</span>(<span class="str">f"https://cubsoftware.site/api/memes/{category}"</span>) <span class="kw">as</span> r:
+            data = <span class="kw">await</span> r.<span class="fn">json</span>()
+
+    embed = discord.<span class="fn">Embed</span>(color=<span class="num">0x5865F2</span>)
+    <span class="kw">if</span> data[<span class="str">"type"</span>] == <span class="str">"text"</span>:
+        embed.title       = data[<span class="str">"title"</span>]
+        embed.description = data[<span class="str">"text"</span>]
+    <span class="kw">else</span>:
+        embed.<span class="fn">set_image</span>(url=data[<span class="str">"url"</span>])
+    <span class="kw">await</span> interaction.followup.<span class="fn">send</span>(embed=embed)
+
+@client.event
+<span class="kw">async def</span> <span class="fn">on_ready</span>():
+    <span class="kw">await</span> tree.<span class="fn">sync</span>()
+    <span class="fn">print</span>(<span class="str">f"Logged in as {client.user}"</span>)
+
+client.<span class="fn">run</span>(<span class="str">"YOUR_BOT_TOKEN"</span>)</div>
+
+            <div class="code-block" data-group="tabsBot" data-tab="jda" style="display:none"><span class="cmt">// build.gradle: implementation 'net.dv8tion:JDA:5.x.x'</span>
+<span class="kw">import</span> net.dv8tion.jda.api.*;
+<span class="kw">import</span> net.dv8tion.jda.api.events.interaction.command.*;
+<span class="kw">import</span> net.dv8tion.jda.api.hooks.*;
+<span class="kw">import</span> net.dv8tion.jda.api.interactions.commands.*;
+<span class="kw">import</span> net.dv8tion.jda.api.EmbedBuilder;
+<span class="kw">import</span> java.net.http.*;
+<span class="kw">import</span> java.net.URI;
+<span class="kw">import</span> com.fasterxml.jackson.databind.ObjectMapper;
+
+<span class="kw">public class</span> <span class="fn">MemeBot</span> <span class="kw">extends</span> <span class="fn">ListenerAdapter</span> {
+    <span class="kw">static final</span> ObjectMapper JSON = <span class="kw">new</span> <span class="fn">ObjectMapper</span>();
+    <span class="kw">static final</span> HttpClient HTTP = HttpClient.<span class="fn">newHttpClient</span>();
+
+    @Override
+    <span class="kw">public void</span> <span class="fn">onSlashCommandInteraction</span>(SlashCommandInteractionEvent e) {
+        <span class="kw">if</span> (!e.<span class="fn">getName</span>().<span class="fn">equals</span>(<span class="str">"meme"</span>)) <span class="kw">return</span>;
+        e.<span class="fn">deferReply</span>().<span class="fn">queue</span>();
+        String cat = e.<span class="fn">getOption</span>(<span class="str">"category"</span>) != <span class="kw">null</span>
+            ? e.<span class="fn">getOption</span>(<span class="str">"category"</span>).<span class="fn">getAsString</span>() : <span class="str">"random"</span>;
+        <span class="kw">try</span> {
+            <span class="kw">var</span> req = HttpRequest.<span class="fn">newBuilder</span>()
+                .<span class="fn">uri</span>(URI.<span class="fn">create</span>(<span class="str">"https://cubsoftware.site/api/memes/"</span> + cat)).<span class="fn">build</span>();
+            <span class="kw">var</span> body = HTTP.<span class="fn">send</span>(req, HttpResponse.BodyHandlers.<span class="fn">ofString</span>()).<span class="fn">body</span>();
+            <span class="kw">var</span> meme = JSON.<span class="fn">readTree</span>(body);
+            <span class="kw">var</span> embed = <span class="kw">new</span> <span class="fn">EmbedBuilder</span>().<span class="fn">setColor</span>(<span class="num">0x5865F2</span>);
+            <span class="kw">if</span> (<span class="str">"text"</span>.<span class="fn">equals</span>(meme.<span class="fn">get</span>(<span class="str">"type"</span>).<span class="fn">asText</span>())) {
+                embed.<span class="fn">setTitle</span>(meme.<span class="fn">get</span>(<span class="str">"title"</span>).<span class="fn">asText</span>())
+                     .<span class="fn">setDescription</span>(meme.<span class="fn">get</span>(<span class="str">"text"</span>).<span class="fn">asText</span>());
+            } <span class="kw">else</span> {
+                embed.<span class="fn">setImage</span>(meme.<span class="fn">get</span>(<span class="str">"url"</span>).<span class="fn">asText</span>());
+            }
+            e.<span class="fn">getHook</span>().<span class="fn">editOriginalEmbeds</span>(embed.<span class="fn">build</span>()).<span class="fn">queue</span>();
+        } <span class="kw">catch</span> (Exception ex) {
+            e.<span class="fn">getHook</span>().<span class="fn">editOriginal</span>(<span class="str">"❌ Couldn't grab a meme right now."</span>).<span class="fn">queue</span>();
+        }
+    }
+
+    <span class="kw">public static void</span> <span class="fn">main</span>(String[] args) <span class="kw">throws</span> Exception {
+        JDABuilder.<span class="fn">createDefault</span>(<span class="str">"YOUR_BOT_TOKEN"</span>)
+            .<span class="fn">addEventListeners</span>(<span class="kw">new</span> <span class="fn">MemeBot</span>())
+            .<span class="fn">build</span>().<span class="fn">upsertCommand</span>(<span class="str">"meme"</span>, <span class="str">"Get a random meme"</span>).<span class="fn">queue</span>();
+    }
+}</div>
+
+            <div class="code-block" data-group="tabsBot" data-tab="dnet" style="display:none"><span class="cmt">// dotnet add package Discord.Net</span>
+<span class="kw">using</span> Discord;
+<span class="kw">using</span> Discord.WebSocket;
+<span class="kw">using</span> System.Net.Http.Json;
+<span class="kw">using</span> System.Text.Json;
+
+<span class="kw">var</span> client = <span class="kw">new</span> <span class="fn">DiscordSocketClient</span>();
+<span class="kw">var</span> http   = <span class="kw">new</span> <span class="fn">HttpClient</span>();
+
+client.SlashCommandExecuted += <span class="kw">async</span> cmd => {
+    <span class="kw">if</span> (cmd.CommandName != <span class="str">"meme"</span>) <span class="kw">return</span>;
+    <span class="kw">await</span> cmd.<span class="fn">DeferAsync</span>();
+    <span class="kw">var</span> cat  = cmd.Data.Options.<span class="fn">FirstOrDefault</span>(o => o.Name == <span class="str">"category"</span>)?.Value?.ToString() ?? <span class="str">"random"</span>;
+    <span class="kw">var</span> meme = <span class="kw">await</span> http.<span class="fn">GetFromJsonAsync</span>&lt;JsonElement&gt;(<span class="str">$"https://cubsoftware.site/api/memes/{cat}"</span>);
+    <span class="kw">var</span> embed = <span class="kw">new</span> <span class="fn">EmbedBuilder</span>().<span class="fn">WithColor</span>(<span class="num">0x5865F2</span>);
+    <span class="kw">if</span> (meme.<span class="fn">GetProperty</span>(<span class="str">"type"</span>).<span class="fn">GetString</span>() == <span class="str">"text"</span>) {
+        embed.<span class="fn">WithTitle</span>(meme.<span class="fn">GetProperty</span>(<span class="str">"title"</span>).<span class="fn">GetString</span>())
+             .<span class="fn">WithDescription</span>(meme.<span class="fn">GetProperty</span>(<span class="str">"text"</span>).<span class="fn">GetString</span>());
+    } <span class="kw">else</span> {
+        embed.<span class="fn">WithImageUrl</span>(meme.<span class="fn">GetProperty</span>(<span class="str">"url"</span>).<span class="fn">GetString</span>());
+    }
+    <span class="kw">await</span> cmd.<span class="fn">FollowupAsync</span>(embed: embed.<span class="fn">Build</span>());
+};
+
+client.Ready += <span class="kw">async</span> () => {
+    <span class="kw">await</span> client.<span class="fn">CreateGlobalApplicationCommandAsync</span>(<span class="kw">new</span> <span class="fn">SlashCommandBuilder</span>()
+        .<span class="fn">WithName</span>(<span class="str">"meme"</span>).<span class="fn">WithDescription</span>(<span class="str">"Get a random meme"</span>).<span class="fn">Build</span>());
+};
+
+<span class="kw">await</span> client.<span class="fn">LoginAsync</span>(TokenType.Bot, <span class="str">"YOUR_BOT_TOKEN"</span>);
+<span class="kw">await</span> client.<span class="fn">StartAsync</span>();
+<span class="kw">await</span> Task.<span class="fn">Delay</span>(-<span class="num">1</span>);</div>
+
+        </div>
+    </div>
+
     <!-- Live Playground -->
     <div class="dev-section">
         <div class="dev-section-title">Try it Live</div>
@@ -530,11 +695,11 @@ meme = JSON.<span class="fn">parse</span>(Net::HTTP.<span class="fn">get</span>(
             <div class="info-strip">
                 <div class="info-chip">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <span>No hard rate limit right now. Please be reasonable — <strong>don't hammer the endpoint</strong>.</span>
+                    <span><strong>10 requests / second</strong> per IP. Exceeding this returns HTTP <code style="font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#f59e0b">429</code>.</span>
                 </div>
                 <div class="info-chip">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                    <span>Meme content is sourced from <strong>Reddit</strong>. All results are SFW and non-spoiler filtered.</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>All results are <strong>SFW</strong> and non-spoiler filtered.</span>
                 </div>
             </div>
         </div>
@@ -587,20 +752,11 @@ async function fetchPlayground() {
                 <div class="playground-meme">
                     <div class="playground-meme-title">${esc(data.title)}</div>
                     <div class="playground-meme-text">${esc(data.text || '')}</div>
-                    <div class="playground-meme-meta" style="margin-top:.5rem;">
-                        r/${esc(data.subreddit)} &nbsp;·&nbsp; ⬆️ ${(data.ups||0).toLocaleString()} &nbsp;·&nbsp;
-                        <a href="${esc(data.source_url)}" target="_blank" rel="noopener">View on Reddit ↗</a>
-                    </div>
                 </div>`;
         } else {
             out.innerHTML = `
                 <div class="playground-meme">
-                    <img src="${esc(data.url)}" alt="${esc(data.title)}" loading="lazy">
-                    <div class="playground-meme-title">${esc(data.title)}</div>
-                    <div class="playground-meme-meta">
-                        r/${esc(data.subreddit)} &nbsp;·&nbsp; ⬆️ ${(data.ups||0).toLocaleString()} &nbsp;·&nbsp;
-                        <a href="${esc(data.source_url)}" target="_blank" rel="noopener">View on Reddit ↗</a>
-                    </div>
+                    <img src="/api/proxy-image?url=${encodeURIComponent(data.url)}" alt="meme" loading="lazy">
                 </div>`;
         }
     } catch (e) {

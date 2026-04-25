@@ -309,12 +309,12 @@ module.exports = {
         },
 
         // ============================================
-        // LibreTranslate (Self-hosted translation engine)
-        // Free, unlimited, private — powers the /translate-setup feature.
+        // CUB MegaBrain API (LibreTranslate fallback engine)
+        // Used as a secondary fallback behind Google Translate.
         // First run downloads language models; subsequent starts are instant.
         // ============================================
         {
-            name: '7-libretranslate',
+            name: '7-cub-megabrain-api',
             script: 'start.sh',
             cwd: './apps/libretranslate',
             interpreter: 'bash',
@@ -328,8 +328,8 @@ module.exports = {
                     'en,es,fr,de,it,pt,ru,ja,zh,ko,ar,nl,pl,tr,sv,da,el,cs,uk,hi,th,vi,id,he,fi,hu,ro,bg,sk,sl'
                 ),
             },
-            error_file: './logs/libretranslate-error.log',
-            out_file: './logs/libretranslate-out.log',
+            error_file: './logs/cub-megabrain-api-error.log',
+            out_file: './logs/cub-megabrain-api-out.log',
             log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
             merge_logs: true
         },

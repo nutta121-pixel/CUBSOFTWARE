@@ -5242,7 +5242,7 @@ async function _postReactionBoardResults(guildId, item, data) {
     });
     const embed = cubEmbed()
         .setColor(0xF1C40F)
-        .setTitle(topN > 0 ? `🏆 Top ${topN} — Reaction Board Results` : '🏆 Reaction Board Results')
+        .setTitle(item.stats?.results_title ? item.stats.results_title : (topN > 0 ? `🏆 Top ${topN} — Reaction Board Results` : '🏆 Reaction Board Results'))
         .setDescription(description.slice(0, 4096))
         .setTimestamp();
     await channel.send({ embeds: [embed] }).catch(e => console.error('[ReactionBoard] Failed to post results:', e.message));

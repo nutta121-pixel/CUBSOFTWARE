@@ -8666,6 +8666,10 @@
                             <option value="10" ${item.stats?.top_n == 10 ? 'selected' : ''}>Top 10</option>
                         </select>
                     </div>
+                    <div class="form-group" style="flex:2;min-width:200px;">
+                        <label class="form-label">Results Title <span style="color:var(--text-muted);font-size:.8em;">(optional)</span></label>
+                        <input type="text" class="form-input" id="rb-title-${item.id}" value="${escapeHtml(item.stats?.results_title||'')}" placeholder="🏆 Reaction Board Results">
+                    </div>
                     <div class="form-group">
                         <button class="control-btn primary small" onclick="window.cpRBSaveStats('${item.id}')">Save Settings</button>
                     </div>
@@ -8751,7 +8755,8 @@
             const label = inputs[1]?.value?.trim();
             if (emoji && label) reaction_labels.push({ emoji, label });
         });
-        return { enabled, frequency, day_of_week, display_time, timezone, top_n, reaction_labels };
+        const results_title = document.getElementById(`rb-title-${itemId}`)?.value?.trim() || '';
+        return { enabled, frequency, day_of_week, display_time, timezone, top_n, results_title, reaction_labels };
     }
 
     window.cpRBToggleFreqOptions = function(itemId) {

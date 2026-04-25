@@ -8648,8 +8648,14 @@
                         </select>
                     </div>
                     <div class="form-group" id="rb-time-group-${item.id}" style="flex:1;min-width:140px;${(item.stats?.frequency||'daily') === 'manual' ? 'display:none' : ''}">
-                        <label class="form-label">Time (UTC)</label>
+                        <label class="form-label">Time</label>
                         <input type="time" class="form-input" id="rb-time-${item.id}" value="${escapeHtml(item.stats?.display_time||'')}">
+                    </div>
+                    <div class="form-group" id="rb-tz-group-${item.id}" style="flex:1;min-width:180px;${(item.stats?.frequency||'daily') === 'manual' ? 'display:none' : ''}">
+                        <label class="form-label">Timezone</label>
+                        <select class="form-select" id="rb-tz-${item.id}">
+                            ${_rbTimezoneOptions(item.stats?.timezone||'UTC')}
+                        </select>
                     </div>
                     <div class="form-group" style="flex:1;min-width:140px;">
                         <label class="form-label">Show in Results</label>
@@ -8735,6 +8741,7 @@
         const frequency = document.getElementById(`rb-freq-${itemId}`)?.value || 'daily';
         const day_of_week = parseInt(document.getElementById(`rb-day-${itemId}`)?.value ?? '1', 10);
         const display_time = document.getElementById(`rb-time-${itemId}`)?.value || '';
+        const timezone = document.getElementById(`rb-tz-${itemId}`)?.value || 'UTC';
         const top_n = document.getElementById(`rb-topn-${itemId}`)?.value || 'all';
         const labelRows = document.querySelectorAll(`#rb-labels-${itemId} .rb-label-row`);
         const reaction_labels = [];
@@ -8744,15 +8751,17 @@
             const label = inputs[1]?.value?.trim();
             if (emoji && label) reaction_labels.push({ emoji, label });
         });
-        return { enabled, frequency, day_of_week, display_time, top_n, reaction_labels };
+        return { enabled, frequency, day_of_week, display_time, timezone, top_n, reaction_labels };
     }
 
     window.cpRBToggleFreqOptions = function(itemId) {
         const freq = document.getElementById(`rb-freq-${itemId}`)?.value || 'daily';
         const dayGroup = document.getElementById(`rb-day-group-${itemId}`);
         const timeGroup = document.getElementById(`rb-time-group-${itemId}`);
+        const tzGroup = document.getElementById(`rb-tz-group-${itemId}`);
         if (dayGroup) dayGroup.style.display = freq === 'weekly' ? '' : 'none';
         if (timeGroup) timeGroup.style.display = freq === 'manual' ? 'none' : '';
+        if (tzGroup) tzGroup.style.display = freq === 'manual' ? 'none' : '';
     };
 
     window.cpRBAddLabel = function(itemId) {
@@ -8796,16 +8805,17 @@
         const auto_reactions = reactions.split(',').map(e => e.trim()).filter(Boolean);
         const ch = channels.find(c => c.id === channelSel);
         try {
-            await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/add`, {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/add`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ channel_id: channelSel, channel_name: ch?.name || channelSel, auto_reactions, filter, enabled: true, stats: { enabled: false, reaction_labels: [], display_time: '', top_n: 10, last_reset: null }, tracked_messages: {} }),
+                body: JSON.stringify({ channel_id: channelSel, channel_name: ch?.name || channelSel, auto_reactions, filter, enabled: true, stats: { enabled: false, reaction_labels: [], frequency: 'daily', day_of_week: 1, display_time: '', timezone: 'UTC', top_n: 'all', last_reset: null }, tracked_messages: {} }),
             });
+            if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || `HTTP ${res.status}`); }
             showToast('Channel added', 'success');
             document.getElementById('rb-add-channel').value = '';
             document.getElementById('rb-add-reactions').value = '';
             document.getElementById('rb-add-filter').value = '';
             await loadReactionBoard();
-        } catch (e) { showToast('Failed to add channel', 'error'); }
+        } catch (e) { showToast('Failed to add: ' + e.message, 'error'); }
     };
 
     window.cpRBRefreshLive = async function(itemId) {
@@ -8827,6 +8837,64 @@
     };
 
     // Populate channel select in add form when section is loaded
+    const _RB_TIMEZONES = [
+        ['UTC', 'UTC'],
+        ['Pacific/Auckland', 'New Zealand (NZST/NZDT)'],
+        ['Pacific/Chatham', 'Chatham Islands (CHAST)'],
+        ['Australia/Sydney', 'Sydney (AEST/AEDT)'],
+        ['Australia/Adelaide', 'Adelaide (ACST/ACDT)'],
+        ['Australia/Perth', 'Perth (AWST)'],
+        ['Asia/Tokyo', 'Japan (JST)'],
+        ['Asia/Seoul', 'Korea (KST)'],
+        ['Asia/Shanghai', 'China (CST)'],
+        ['Asia/Singapore', 'Singapore (SGT)'],
+        ['Asia/Dubai', 'Dubai (GST)'],
+        ['Asia/Kolkata', 'India (IST)'],
+        ['Europe/London', 'London (GMT/BST)'],
+        ['Europe/Paris', 'Central Europe (CET/CEST)'],
+        ['Europe/Helsinki', 'Helsinki (EET/EEST)'],
+        ['America/New_York', 'New York (EST/EDT)'],
+        ['America/Chicago', 'Chicago (CST/CDT)'],
+        ['America/Denver', 'Denver (MST/MDT)'],
+        ['America/Los_Angeles', 'Los Angeles (PST/PDT)'],
+        ['America/Anchorage', 'Alaska (AKST/AKDT)'],
+        ['Pacific/Honolulu', 'Hawaii (HST)'],
+        ['America/Sao_Paulo', 'São Paulo (BRT)'],
+        ['America/Argentina/Buenos_Aires', 'Buenos Aires (ART)'],
+    ];
+
+    function _rbTimezoneOptions(selected) {
+        return _RB_TIMEZONES.map(([val, label]) =>
+            `<option value="${val}" ${val === selected ? 'selected' : ''}>${escapeHtml(label)}</option>`
+        ).join('');
+    }
+
+    const _RB_EMOJI_PICKS = ['👍','👎','❤️','🔥','😂','😍','🎉','💯','🙌','✅','⭐','🏆','💎','🎵','🎶','🎸','🎮','📸','🌟','💥','🤣','😭','💀','🫡','👀','🤔','😎','🥳','🤩','🫶','💪','🍕','🎯','🎲','🚀','🌈','🦁','🐯','🐸','💩','❓','❗','🔔','📢','⚡','🌊','🍀','🍻','🎤','🎧'];
+
+    window.cpRBShowEmojiPicker = function(inputId) {
+        const picker = document.getElementById(`rb-emoji-picker-${inputId}`);
+        if (!picker) return;
+        if (picker.innerHTML === '') {
+            picker.innerHTML = _RB_EMOJI_PICKS.map(e =>
+                `<button type="button" style="background:none;border:none;font-size:1.4rem;cursor:pointer;padding:.15rem .2rem;border-radius:4px;line-height:1;" onmousedown="event.preventDefault();window.cpRBPickEmoji('${inputId}','${e}')" title="${e}">${e}</button>`
+            ).join('');
+        }
+        picker.style.display = 'flex';
+    };
+
+    window.cpRBHideEmojiPicker = function(inputId) {
+        const picker = document.getElementById(`rb-emoji-picker-${inputId}`);
+        if (picker) picker.style.display = 'none';
+    };
+
+    window.cpRBPickEmoji = function(inputId, emoji) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const cur = input.value.trim();
+        input.value = cur ? cur + ',' + emoji : emoji;
+        input.focus();
+    };
+
     const _rbOrigLoadReactionBoard = loadReactionBoard;
     loadReactionBoard = async function() {
         await _rbOrigLoadReactionBoard();

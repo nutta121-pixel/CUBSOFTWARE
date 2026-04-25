@@ -1900,9 +1900,10 @@
                                 <option value="">Select channel...</option>
                             </select>
                         </div>
-                        <div class="form-group" style="flex:2;min-width:200px;">
-                            <label class="form-label">Reactions (comma-separated emoji)</label>
-                            <input type="text" class="form-input" id="rb-add-reactions" placeholder="👍,🔥,💩">
+                        <div class="form-group" style="flex:2;min-width:200px;position:relative;">
+                            <label class="form-label">Reactions <span style="color:var(--text-muted);font-size:.8em;">(click to pick)</span></label>
+                            <input type="text" class="form-input" id="rb-add-reactions" placeholder="👍,🔥,💩" autocomplete="off" onfocus="window.cpRBShowEmojiPicker('rb-add-reactions')" onblur="setTimeout(()=>window.cpRBHideEmojiPicker('rb-add-reactions'),200)">
+                            <div id="rb-emoji-picker-rb-add-reactions" style="display:none;position:absolute;top:100%;left:0;z-index:200;background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:8px;padding:.5rem;display:none;flex-wrap:wrap;gap:.25rem;max-width:320px;box-shadow:0 4px 16px rgba(0,0,0,.4);"></div>
                         </div>
                         <div class="form-group" style="flex:2;min-width:180px;">
                             <label class="form-label">Filter (optional — e.g. spotify.com)</label>

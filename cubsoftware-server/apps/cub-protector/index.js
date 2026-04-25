@@ -5301,9 +5301,6 @@ client.once('ready', () => {
     setInterval(async () => {
         const data = loadReactionBoard();
         const now = new Date();
-        const nowH = now.getUTCHours();
-        const nowM = now.getUTCMinutes();
-        const nowDay = now.getUTCDay(); // 0=Sunday … 6=Saturday
         for (const [gId, gd] of Object.entries(data.guilds || {})) {
             if (!gd?.settings?.enabled) continue;
             for (const item of (gd.items || [])) {
@@ -5311,18 +5308,46 @@ client.once('ready', () => {
                 const freq = item.stats.frequency || 'daily';
                 if (freq === 'manual') continue;
                 if (!item.stats.display_time) continue;
-                const [h, m] = item.stats.display_time.split(':').map(Number);
-                if (isNaN(h) || isNaN(m) || nowH !== h || nowM !== m) continue;
+                const [targetH, targetM] = item.stats.display_time.split(':').map(Number);
+                if (isNaN(targetH) || isNaN(targetM)) continue;
+                // Get current time in the item's configured timezone
+                const tz = item.stats.timezone || 'UTC';
+                let nowH, nowM, nowDay;
+                try {
+                    const parts = new Intl.DateTimeFormat('en', {
+                        timeZone: tz, hour: 'numeric', minute: 'numeric',
+                        weekday: 'narrow', hour12: false,
+                    }).formatToParts(now);
+                    const get = type => parts.find(p => p.type === type)?.value;
+                    nowH = parseInt(get('hour'), 10);
+                    nowM = parseInt(get('minute'), 10);
+                    const wdMap = { M: 1, T: 2, W: 3, F: 5, S: 6, Su: 0, Sa: 6, Mo: 1, Tu: 2, We: 3, Th: 4, Fr: 5 };
+                    // Use a separate call for weekday
+                    const wdStr = new Intl.DateTimeFormat('en', { timeZone: tz, weekday: 'short' }).format(now);
+                    const wdIndex = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(wdStr);
+                    nowDay = wdIndex >= 0 ? wdIndex : now.getUTCDay();
+                } catch {
+                    nowH = now.getUTCHours(); nowM = now.getUTCMinutes(); nowDay = now.getUTCDay();
+                }
+                if (nowH !== targetH || nowM !== targetM) continue;
                 if (freq === 'weekly') {
-                    const targetDay = parseInt(item.stats.day_of_week ?? 1, 10);
-                    if (nowDay !== targetDay) continue;
+                    if (nowDay !== parseInt(item.stats.day_of_week ?? 1, 10)) continue;
                 }
                 if (item.stats.last_reset) {
                     const lr = new Date(item.stats.last_reset);
-                    if (lr.getUTCFullYear() === now.getUTCFullYear() &&
-                        lr.getUTCMonth() === now.getUTCMonth() &&
-                        lr.getUTCDate() === now.getUTCDate() &&
-                        lr.getUTCHours() === h && lr.getUTCMinutes() === m) continue;
+                    const lrParts = new Intl.DateTimeFormat('en', {
+                        timeZone: tz, year: 'numeric', month: 'numeric', day: 'numeric',
+                        hour: 'numeric', minute: 'numeric', hour12: false,
+                    }).formatToParts(lr);
+                    const lrGet = type => parseInt(lrParts.find(p => p.type === type)?.value || '0', 10);
+                    const nowParts = new Intl.DateTimeFormat('en', {
+                        timeZone: tz, year: 'numeric', month: 'numeric', day: 'numeric',
+                        hour: 'numeric', minute: 'numeric', hour12: false,
+                    }).formatToParts(now);
+                    const npGet = type => parseInt(nowParts.find(p => p.type === type)?.value || '0', 10);
+                    if (lrGet('year') === npGet('year') && lrGet('month') === npGet('month') &&
+                        lrGet('day') === npGet('day') && lrGet('hour') === npGet('hour') &&
+                        lrGet('minute') === npGet('minute')) continue;
                 }
                 await _postReactionBoardResults(gId, item, data).catch(e =>
                     console.error(`[ReactionBoard] Scheduled post failed for guild ${gId}:`, e.message)

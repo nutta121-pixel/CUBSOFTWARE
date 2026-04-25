@@ -10300,7 +10300,11 @@ client.on('interactionCreate', async (interaction) => {
                     .setColor(cat.color)
                     .setTitle(`${cat.emoji} ${post.title}`.slice(0, 256))
                     .setDescription(post.selftext.slice(0, 2000));
-                return interaction.editReply({ embeds: [embed] });
+                const msg = await interaction.editReply({ embeds: [embed] });
+                await msg.react('👍');
+                await msg.react('😂');
+                await msg.react('👎');
+                return;
             } else {
                 const imgPosts = posts.filter(p =>
                     /\.(jpg|jpeg|png|gif|webp)$/i.test(p.url) ||
@@ -10312,7 +10316,11 @@ client.on('interactionCreate', async (interaction) => {
                 const embed = cubEmbed()
                     .setColor(cat.color)
                     .setImage(post.url);
-                return interaction.editReply({ embeds: [embed] });
+                const msg = await interaction.editReply({ embeds: [embed] });
+                await msg.react('👍');
+                await msg.react('😂');
+                await msg.react('👎');
+                return;
             }
         } catch (err) {
             console.error(`CUBSOFTWARE_ERROR_CUBPROTECTOR_MEME_096 — [Meme] Failed to fetch /meme ${sub}:`, err.message);

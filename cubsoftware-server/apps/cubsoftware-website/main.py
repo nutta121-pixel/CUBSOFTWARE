@@ -20213,7 +20213,8 @@ def api_memes(category='random'):
             meme['category'] = category
             meme['author'] = 'CUBSOFTWARE'
             return jsonify(meme)
-        except Exception:
+        except Exception as _meme_err:
+            print(f'[Meme API] attempt {attempt+1} failed for category={category}: {type(_meme_err).__name__}: {_meme_err}')
             if attempt == 0:
                 continue
     return jsonify({'error': 'Meme service temporarily unavailable — try again shortly'}), 503

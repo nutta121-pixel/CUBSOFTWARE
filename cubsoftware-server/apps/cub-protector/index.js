@@ -350,7 +350,8 @@ function saveReactionBoard(data) { saveJsonFile(REACTION_BOARD_FILE, data); }
 function getGuildReactionBoardItems(guildId) {
     const data = loadReactionBoard();
     const gd = data.guilds?.[guildId];
-    if (!gd?.settings?.enabled) return [];
+    if (!gd) return [];
+    if (gd.settings?.enabled === false) return [];
     return (gd.items || []).filter(i => i.enabled !== false);
 }
 function getGuildTranslateItems(guildId) {
@@ -5302,7 +5303,7 @@ client.once('ready', () => {
         const data = loadReactionBoard();
         const now = new Date();
         for (const [gId, gd] of Object.entries(data.guilds || {})) {
-            if (!gd?.settings?.enabled) continue;
+            if (!gd || gd.settings?.enabled === false) continue;
             for (const item of (gd.items || [])) {
                 if (!item.enabled || !item.stats?.enabled) continue;
                 const freq = item.stats.frequency || 'daily';

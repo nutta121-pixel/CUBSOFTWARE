@@ -5223,29 +5223,53 @@ async function _postReactionBoardResults(guildId, item, data) {
     if (!channel) return;
     const tracked = item.tracked_messages || {};
     const entries = Object.entries(tracked);
-    const labels = {};
-    for (const rl of (item.stats?.reaction_labels || [])) labels[rl.emoji] = rl.label;
+    const labelMap = {};
+    for (const rl of (item.stats?.reaction_labels || [])) labelMap[rl.emoji] = rl.label;
     const rawTopN = item.stats?.top_n;
     const topN = (rawTopN && rawTopN !== 'all') ? parseInt(rawTopN, 10) : 0;
-    const sorted = entries.map(([msgId, msg]) => {
-        const total = Object.values(msg.reactions || {}).reduce((a, b) => a + b, 0);
-        return { msgId, msg, total };
-    }).sort((a, b) => b.total - a.total);
-    const displayed = topN > 0 ? sorted.slice(0, topN) : sorted;
-    let description = displayed.length === 0 ? 'No entries this round.' : '';
-    displayed.forEach(({ msg, total }, idx) => {
-        const reactionStr = Object.entries(msg.reactions || {})
-            .filter(([, c]) => c > 0)
-            .map(([e, c]) => `${e} **${c}**${labels[e] ? ` *(${labels[e]})*` : ''}`)
-            .join(' • ') || 'No reactions';
-        description += `**${idx + 1}.** ${msg.url}\n👤 **${msg.author_display}** • ${reactionStr}\n\n`;
-    });
-    const embed = cubEmbed()
-        .setColor(0xF1C40F)
-        .setTitle(item.stats?.results_title ? item.stats.results_title : (topN > 0 ? `🏆 Top ${topN} — Reaction Board Results` : '🏆 Reaction Board Results'))
-        .setDescription(description.slice(0, 4096))
-        .setTimestamp();
-    await channel.send({ embeds: [embed] }).catch(e => console.error('[ReactionBoard] Failed to post results:', e.message));
+    const customTitle = item.stats?.results_title || '';
+    const embeds = [];
+
+    if (Object.keys(labelMap).length > 0) {
+        // Separate leaderboard per labeled emoji
+        for (const [emoji, label] of Object.entries(labelMap)) {
+            const sorted = entries
+                .map(([, msg]) => ({ msg, count: msg.reactions?.[emoji] || 0 }))
+                .filter(e => e.count > 0)
+                .sort((a, b) => b.count - a.count);
+            const displayed = topN > 0 ? sorted.slice(0, topN) : sorted;
+            let description = displayed.length === 0 ? '*No entries this round.*' : '';
+            displayed.forEach(({ msg, count }, idx) => {
+                description += `**${idx + 1}.** ${emoji} **${count}**\nRequester: **${msg.author_display}**\nSong: [${msg.display_title || msg.url}](${msg.url})\n\n`;
+            });
+            const title = customTitle
+                ? `${customTitle} — ${emoji} ${label}`
+                : `🏆 ${emoji} ${label}${topN > 0 ? ` — Top ${topN}` : ''}`;
+            embeds.push(cubEmbed().setColor(0xF1C40F).setTitle(title).setDescription(description.slice(0, 4096)).setTimestamp());
+        }
+    } else {
+        // No labels — combined total leaderboard
+        const sorted = entries.map(([, msg]) => {
+            const total = Object.values(msg.reactions || {}).reduce((a, b) => a + b, 0);
+            return { msg, total };
+        }).sort((a, b) => b.total - a.total);
+        const displayed = topN > 0 ? sorted.slice(0, topN) : sorted;
+        let description = displayed.length === 0 ? '*No entries this round.*' : '';
+        displayed.forEach(({ msg, total }, idx) => {
+            const reactionStr = Object.entries(msg.reactions || {})
+                .filter(([, c]) => c > 0).map(([e, c]) => `${e} **${c}**`).join(' • ') || 'No reactions';
+            description += `**${idx + 1}.** ${reactionStr}\nRequester: **${msg.author_display}**\nSong: [${msg.display_title || msg.url}](${msg.url})\n\n`;
+        });
+        const title = customTitle || (topN > 0 ? `🏆 Top ${topN} — Reaction Board Results` : '🏆 Reaction Board Results');
+        embeds.push(cubEmbed().setColor(0xF1C40F).setTitle(title).setDescription(description.slice(0, 4096)).setTimestamp());
+    }
+
+    // Discord allows max 10 embeds per message
+    for (let i = 0; i < embeds.length; i += 10) {
+        await channel.send({ embeds: embeds.slice(i, i + 10) })
+            .catch(e => console.error('[ReactionBoard] Failed to post results:', e.message));
+    }
+
     // Remove bot reactions from all tracked messages
     for (const [msgId] of entries) {
         const msg = await channel.messages.fetch(msgId).catch(() => null);
@@ -5285,6 +5309,7 @@ client.on('messageCreate', async (message) => {
             const urlMatch = text.match(/https?:\/\/\S+/);
             it.tracked_messages[message.id] = {
                 url: urlMatch ? urlMatch[0] : text.slice(0, 100),
+                display_title: null,
                 content_preview: text.slice(0, 200),
                 author_id: message.author.id,
                 author_name: message.author.username,
@@ -5293,6 +5318,31 @@ client.on('messageCreate', async (message) => {
                 added_at: new Date().toISOString(),
             };
             saveReactionBoard(data);
+            // Fetch Discord's auto-embed after a delay to get song/artist metadata
+            setTimeout(async () => {
+                try {
+                    const fresh = await message.fetch();
+                    const embed = fresh.embeds?.[0];
+                    if (!embed) return;
+                    let display_title = null;
+                    if (embed.title) {
+                        // Description often contains "Artist · Album" or "Artist • Album"
+                        const desc = embed.description || '';
+                        const artistMatch = desc.split(/[·•]/)[0].trim();
+                        display_title = artistMatch ? `${embed.title} — ${artistMatch}` : embed.title;
+                    } else if (embed.author?.name) {
+                        display_title = embed.author.name;
+                    }
+                    if (display_title) {
+                        const d2 = loadReactionBoard();
+                        const it2 = d2.guilds?.[message.guildId]?.items?.find(i => i.id === rbItem.id);
+                        if (it2?.tracked_messages?.[message.id]) {
+                            it2.tracked_messages[message.id].display_title = display_title;
+                            saveReactionBoard(d2);
+                        }
+                    }
+                } catch (_) {}
+            }, 4000);
         }
     }
 });

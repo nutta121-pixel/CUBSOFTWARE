@@ -827,6 +827,27 @@ function copyUrl(inputId) {
     showToast('URL copied to clipboard!');
 }
 
+async function regenerateOverlayKey() {
+    if (!confirm('This will generate a new key. Your old OBS browser source URLs will stop working — you\'ll need to copy and update them. Continue?')) return;
+    try {
+        const res = await fetch('/api/cubreactive/regenerate-key', { method: 'POST' });
+        const data = await res.json();
+        if (!data.success) { showToast('Failed to regenerate key.'); return; }
+
+        const key = data.overlay_key;
+        const base = window.location.origin + '/apps/cubreactive/overlay/';
+
+        const indInput = document.getElementById('individual-url');
+        const grpInput = document.getElementById('group-url');
+        if (indInput) indInput.value = base + USER_ID + '?k=' + key;
+        if (grpInput) grpInput.value = base + 'group/' + USER_ID + '?k=' + key;
+
+        showToast('New key generated! Update your OBS browser source URLs.');
+    } catch (e) {
+        showToast('Error regenerating key.');
+    }
+}
+
 // Get shape styles (border-radius and clip-path)
 function getShapeStyles(shape) {
     const shapes = {
@@ -2005,7 +2026,8 @@ function initVoiceConnection() {
         voiceWs.send(JSON.stringify({
             type: 'SUBSCRIBE',
             userId: userId,
-            mode: 'channel'
+            mode: 'channel',
+            key: USER_CONFIG?.overlay_key || null
         }));
     };
 

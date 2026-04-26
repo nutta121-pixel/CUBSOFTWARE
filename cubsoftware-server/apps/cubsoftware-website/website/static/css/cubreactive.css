@@ -1474,6 +1474,52 @@
     margin-bottom: 0;
 }
 
+.key-regen-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 193, 7, 0.06);
+    border: 1px solid rgba(255, 193, 7, 0.15);
+    border-radius: 10px;
+    flex-wrap: wrap;
+}
+
+.key-regen-hint {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.key-regen-hint code {
+    background: rgba(255,255,255,0.08);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-regen-key {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.9rem;
+    background: rgba(255, 193, 7, 0.12);
+    border: 1px solid rgba(255, 193, 7, 0.35);
+    border-radius: 8px;
+    color: #ffc107;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+}
+
+.btn-regen-key:hover {
+    background: rgba(255, 193, 7, 0.22);
+    border-color: rgba(255, 193, 7, 0.6);
+}
+
 /* Individual Sources Section */
 .individual-sources-card {
     margin-top: 1.5rem;

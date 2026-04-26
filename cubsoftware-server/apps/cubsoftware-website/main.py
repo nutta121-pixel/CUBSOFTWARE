@@ -1019,6 +1019,7 @@ def add_cache_headers(response):
 
 MASCOT_EXCLUDED_PREFIXES = (
     '/apps/multi-twitch',
+    '/apps/cubreactive',
     '/dashboard',
     '/bot-dashboard',
     '/affiliate/dashboard',
@@ -4014,7 +4015,12 @@ def cubreactive_home():
     if cubreactive_user:
         users = load_cubreactive_users()
         user_config = users.get(cubreactive_user['id'])
-        if user_config:
+        if user_config is None:
+            # User is logged in but has no config yet — create a minimal entry so they get a key
+            overlay_key = secrets.token_urlsafe(32)
+            users[cubreactive_user['id']] = {'overlay_key': overlay_key, 'images': {}, 'settings': {}}
+            save_cubreactive_users(users)
+        else:
             if not user_config.get('overlay_key'):
                 user_config['overlay_key'] = secrets.token_urlsafe(32)
                 users[cubreactive_user['id']] = user_config
@@ -4221,6 +4227,19 @@ def cubreactive_get_user(user_id):
         'images': images,
         'settings': user_config.get('settings', {})
     })
+
+@app.route('/api/cubreactive/regenerate-key', methods=['POST'])
+@cubreactive_auth_required
+def cubreactive_regenerate_key():
+    """Generate a fresh overlay key for the logged-in user and return it."""
+    user = session.get('cubreactive_user')
+    users = load_cubreactive_users()
+    if user['id'] not in users:
+        users[user['id']] = {'images': {}, 'settings': {}}
+    new_key = secrets.token_urlsafe(32)
+    users[user['id']]['overlay_key'] = new_key
+    save_cubreactive_users(users)
+    return jsonify({'success': True, 'overlay_key': new_key})
 
 @app.route('/api/cubreactive/config', methods=['GET', 'POST'])
 @cubreactive_auth_required

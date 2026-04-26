@@ -8670,9 +8670,9 @@
                         <label class="form-label">Results Title <span style="color:var(--text-muted);font-size:.8em;">(optional)</span></label>
                         <input type="text" class="form-input" id="rb-title-${item.id}" value="${escapeHtml(item.stats?.results_title||'')}" placeholder="🏆 Reaction Board Results">
                     </div>
-                    <div class="form-group">
-                        <button class="control-btn primary small" onclick="window.cpRBSaveStats('${item.id}')">Save Settings</button>
-                    </div>
+                </div>
+                <div style="margin-top:.75rem;">
+                    <button class="control-btn primary" onclick="window.cpRBSaveStats('${item.id}')" style="width:100%;">Save Settings</button>
                 </div>
                 <div class="settings-row" style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border-color);">
                     <div class="settings-info"><h4>🏷️ Leaderboard Categories</h4><p>Name each emoji to give it its own separate leaderboard when results are posted</p></div>
@@ -8847,9 +8847,16 @@
             const entries = data.entries || [];
             const labels = data.labels || {};
             if (!entries.length) { container.textContent = 'No entries yet.'; return; }
+            const _rbCtLabel = { song: '🎵 Song', video: '🎬 Video', image: '🖼️ Image', link: '🔗 Link', text: '💬 Message' };
+            function _rbEntryHtml(e, i, reactionBadge) {
+                const ct = e.content_type || 'link';
+                const ctLabel = _rbCtLabel[ct] || '🔗 Link';
+                const titleText = e.display_title ? escapeHtml(e.display_title) : (ct === 'text' ? escapeHtml(e.url) : '(unknown)');
+                const linkLine = ct !== 'text' ? `<br><a href="${escapeHtml(e.url)}" target="_blank" rel="noopener" style="color:var(--accent-color);font-size:.82em;word-break:break-all;">${escapeHtml(e.url)}</a>` : '';
+                return `<div style="padding:.35rem 0;border-bottom:1px solid var(--border-color);"><strong>#${i+1}</strong> ${reactionBadge}<br>Requester: <span style="color:var(--text-secondary);">${escapeHtml(e.author_display)}</span><br>${ctLabel}: <span style="color:var(--text-primary);">${titleText}</span>${linkLine}</div>`;
+            }
             const labeledEmojis = Object.entries(labels);
             if (labeledEmojis.length > 0) {
-                // Separate standings per labeled emoji
                 let html = '';
                 for (const [emoji, label] of labeledEmojis) {
                     const sorted = entries
@@ -8858,21 +8865,16 @@
                         .sort((a, b) => b.count - a.count)
                         .slice(0, 20);
                     html += `<div style="font-weight:600;margin:.75rem 0 .4rem;font-size:.9em;">${escapeHtml(emoji)} ${escapeHtml(label)}</div>`;
-                    if (!sorted.length) {
-                        html += `<div style="color:var(--text-muted);font-size:.85em;padding:.25rem 0;">No entries yet.</div>`;
-                    } else {
-                        html += sorted.map((e, i) =>
-                            `<div style="padding:.35rem 0;border-bottom:1px solid var(--border-color);"><strong>#${i+1}</strong> ${escapeHtml(emoji)} <strong>${e.count}</strong><br>Requester: <span style="color:var(--text-secondary);">${escapeHtml(e.author_display)}</span><br>Song: <span style="color:var(--text-primary);">${e.display_title ? escapeHtml(e.display_title) : '(unknown)'}</span><br><a href="${escapeHtml(e.url)}" target="_blank" rel="noopener" style="color:var(--accent-color);font-size:.82em;word-break:break-all;">${escapeHtml(e.url)}</a></div>`
-                        ).join('');
-                    }
+                    html += sorted.length
+                        ? sorted.map((e, i) => _rbEntryHtml(e, i, `${escapeHtml(emoji)} <strong>${e.count}</strong>`)).join('')
+                        : `<div style="color:var(--text-muted);font-size:.85em;padding:.25rem 0;">No entries yet.</div>`;
                 }
                 container.innerHTML = html;
             } else {
-                // Combined standings (no labels)
                 container.innerHTML = entries.slice(0, 20).map((e, i) => {
                     const reactionStr = Object.entries(e.reactions || {}).filter(([,c]) => c > 0)
                         .map(([em, c]) => `${escapeHtml(em)} <strong>${c}</strong>`).join(' &bull; ') || 'No reactions';
-                    return `<div style="padding:.4rem 0;border-bottom:1px solid var(--border-color);"><strong>#${i+1}</strong> ${reactionStr}<br>Requester: <span style="color:var(--text-secondary);">${escapeHtml(e.author_display)}</span><br>Song: <span style="color:var(--text-primary);">${e.display_title ? escapeHtml(e.display_title) : '(unknown)'}</span><br><a href="${escapeHtml(e.url)}" target="_blank" rel="noopener" style="color:var(--accent-color);font-size:.82em;word-break:break-all;">${escapeHtml(e.url)}</a></div>`;
+                    return _rbEntryHtml(e, i, reactionStr);
                 }).join('');
             }
         } catch (e) { container.textContent = 'Failed to load live standings.'; }

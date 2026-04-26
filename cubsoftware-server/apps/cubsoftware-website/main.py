@@ -17718,6 +17718,7 @@ def cp_reaction_board_live(guild_id, item_id):
             'msg_id': msg_id,
             'url': msg.get('url', ''),
             'display_title': msg.get('display_title') or None,
+            'content_type': msg.get('content_type', 'link'),
             'author_display': msg.get('author_display', msg.get('author_name', 'Unknown')),
             'reactions': msg.get('reactions', {}),
             'total': total,

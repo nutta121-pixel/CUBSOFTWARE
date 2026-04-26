@@ -5240,7 +5240,10 @@ async function _postReactionBoardResults(guildId, item, data) {
             const displayed = topN > 0 ? sorted.slice(0, topN) : sorted;
             let description = displayed.length === 0 ? '*No entries this round.*' : '';
             displayed.forEach(({ msg, count }, idx) => {
-                description += `**${idx + 1}.** ${emoji} **${count}**\nRequester: **${msg.author_display}**\nSong: [${msg.display_title || msg.url}](${msg.url})\n\n`;
+                const ct = msg.content_type || 'link';
+                const ctLabel = _rbContentLabel[ct] || '🔗 Link';
+                const ctDisplay = ct === 'text' ? (msg.display_title || msg.url) : `[${msg.display_title || msg.url}](${msg.url})`;
+                description += `**${idx + 1}.** ${emoji} **${count}**\nRequester: **${msg.author_display}**\n${ctLabel}: ${ctDisplay}\n\n`;
             });
             const title = customTitle
                 ? `${customTitle} — ${emoji} ${label}`
@@ -5258,7 +5261,10 @@ async function _postReactionBoardResults(guildId, item, data) {
         displayed.forEach(({ msg, total }, idx) => {
             const reactionStr = Object.entries(msg.reactions || {})
                 .filter(([, c]) => c > 0).map(([e, c]) => `${e} **${c}**`).join(' • ') || 'No reactions';
-            description += `**${idx + 1}.** ${reactionStr}\nRequester: **${msg.author_display}**\nSong: [${msg.display_title || msg.url}](${msg.url})\n\n`;
+            const ct2 = msg.content_type || 'link';
+            const ctLabel2 = _rbContentLabel[ct2] || '🔗 Link';
+            const ctDisplay2 = ct2 === 'text' ? (msg.display_title || msg.url) : `[${msg.display_title || msg.url}](${msg.url})`;
+            description += `**${idx + 1}.** ${reactionStr}\nRequester: **${msg.author_display}**\n${ctLabel2}: ${ctDisplay2}\n\n`;
         });
         const title = customTitle || (topN > 0 ? `🏆 Top ${topN} — Reaction Board Results` : '🏆 Reaction Board Results');
         embeds.push(cubEmbed().setColor(0xF1C40F).setTitle(title).setDescription(description.slice(0, 4096)).setTimestamp());
@@ -5286,6 +5292,18 @@ async function _postReactionBoardResults(guildId, item, data) {
     console.log(`[ReactionBoard] Results posted and reset for channel ${item.channel_id} in guild ${guildId}`);
 }
 
+function _rbContentType(url) {
+    if (!url) return 'text';
+    const u = url.toLowerCase();
+    if (/open\.spotify\.com|spotify\.com\/track|music\.apple\.com|music\.youtube\.com|soundcloud\.com|bandcamp\.com|tidal\.com|deezer\.com/.test(u)) return 'song';
+    if (/(?<!music\.)youtube\.com\/watch|youtu\.be\/|vimeo\.com\/\d|tiktok\.com\/@.+\/video|clips\.twitch\.tv|twitch\.tv\/[^/]+\/clip|v\.redd\.it|streamable\.com/.test(u)) return 'video';
+    if (/\.(jpg|jpeg|png|gif|webp|avif|bmp)(\?|#|$)/i.test(u)) return 'image';
+    if (/\.(mp4|mov|avi|mkv|webm|m4v)(\?|#|$)/i.test(u)) return 'video';
+    return 'link';
+}
+
+const _rbContentLabel = { song: '🎵 Song', video: '🎬 Video', image: '🖼️ Image', link: '🔗 Link', text: '💬 Message' };
+
 // Auto-react when a message is posted in a monitored channel
 client.on('messageCreate', async (message) => {
     if (!message.guild || message.author.bot) return;
@@ -5307,10 +5325,12 @@ client.on('messageCreate', async (message) => {
         if (it) {
             if (!it.tracked_messages) it.tracked_messages = {};
             const urlMatch = text.match(/https?:\/\/\S+/);
+            const url = urlMatch ? urlMatch[0] : null;
+            const content_type = url ? _rbContentType(url) : 'text';
             it.tracked_messages[message.id] = {
-                url: urlMatch ? urlMatch[0] : text.slice(0, 100),
+                url: url || text.slice(0, 200),
+                content_type,
                 display_title: null,
-                content_preview: text.slice(0, 200),
                 author_id: message.author.id,
                 author_name: message.author.username,
                 author_display: message.member?.displayName || message.author.username,
@@ -5318,18 +5338,21 @@ client.on('messageCreate', async (message) => {
                 added_at: new Date().toISOString(),
             };
             saveReactionBoard(data);
-            // Fetch Discord's auto-embed after a delay to get song/artist metadata
-            setTimeout(async () => {
+            // Fetch Discord's auto-embed after a delay to get title metadata
+            if (url) setTimeout(async () => {
                 try {
                     const fresh = await message.fetch();
                     const embed = fresh.embeds?.[0];
                     if (!embed) return;
                     let display_title = null;
-                    if (embed.title) {
-                        // Description often contains "Artist · Album" or "Artist • Album"
+                    if (content_type === 'song' && embed.title) {
                         const desc = embed.description || '';
-                        const artistMatch = desc.split(/[·•]/)[0].trim();
-                        display_title = artistMatch ? `${embed.title} — ${artistMatch}` : embed.title;
+                        const artist = desc.split(/[·•]/)[0].trim();
+                        display_title = artist ? `${embed.title} — ${artist}` : embed.title;
+                    } else if (content_type === 'video' && embed.title) {
+                        display_title = embed.title;
+                    } else if (embed.title) {
+                        display_title = embed.title;
                     } else if (embed.author?.name) {
                         display_title = embed.author.name;
                     }

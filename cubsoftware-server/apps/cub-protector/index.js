@@ -5314,7 +5314,8 @@ client.on('messageCreate', async (message) => {
     const rbItem = rbItems.find(i => i.channel_id === message.channel.id);
     if (!rbItem) return;
     const text = message.content.trim();
-    if (rbItem.filter && !text.toLowerCase().includes(rbItem.filter.toLowerCase())) return;
+    const rbFilters = Array.isArray(rbItem.filters) ? rbItem.filters : (rbItem.filter ? [rbItem.filter] : []);
+    if (rbFilters.length > 0 && !rbFilters.some(f => f && text.toLowerCase().includes(f.toLowerCase()))) return;
     for (const emoji of (rbItem.auto_reactions || [])) {
         try { await message.react(emoji); } catch (_) {}
         await new Promise(res => setTimeout(res, 300));
@@ -8778,14 +8779,15 @@ client.on('interactionCreate', async (interaction) => {
             if (!auto_reactions.length) return interaction.reply({ content: '❌ Provide at least one reaction emoji.', flags: MessageFlags.Ephemeral });
             if (gd.items.find(i => i.channel_id === channel.id))
                 return interaction.reply({ content: `❌ <#${channel.id}> is already in the reaction board. Use \`/reaction-board remove\` first.`, flags: MessageFlags.Ephemeral });
+            const filters = filter ? filter.split(',').map(f => f.trim()).filter(Boolean) : [];
             gd.items.push({
                 id: String(Date.now()), channel_id: channel.id, channel_name: channel.name,
-                auto_reactions, filter, enabled: true,
-                stats: { enabled: false, reaction_labels: [], frequency: 'daily', day_of_week: 1, display_time: '', top_n: 'all', last_reset: null },
+                auto_reactions, filters, enabled: true,
+                stats: { enabled: false, categories_enabled: false, reaction_labels: [], frequency: 'daily', day_of_week: 1, display_time: '', timezone: 'UTC', top_n: 'all', last_reset: null },
                 tracked_messages: {}, created_at: new Date().toISOString(),
             });
             saveReactionBoard(data);
-            return interaction.reply({ content: `✅ <#${channel.id}> added to the reaction board.\nReactions: ${auto_reactions.join(' ')}${filter ? `\nFilter: \`${filter}\`` : ''}`, flags: MessageFlags.Ephemeral });
+            return interaction.reply({ content: `✅ <#${channel.id}> added to the reaction board.\nReactions: ${auto_reactions.join(' ')}${filters.length ? `\nFilters: ${filters.map(f => `\`${f}\``).join(', ')}` : ''}`, flags: MessageFlags.Ephemeral });
         }
 
         if (sub === 'remove') {

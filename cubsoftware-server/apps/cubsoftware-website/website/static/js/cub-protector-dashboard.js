@@ -8616,13 +8616,36 @@
                 <span style="font-size:1.5rem;min-width:2rem;text-align:center;">${emoji}</span>
                 <input class="form-input" style="flex:1;" placeholder="Category name (e.g. Liked, Disliked...)" value="${escapeHtml(existingLabels[emoji] || '')}" oninput="window.cpRBUpdateLabels('${item.id}')">
             </div>`).join('');
+        const existingFilters = (item.filters||[]).length ? item.filters : (item.filter ? [item.filter] : []);
         card.innerHTML = `
             <div class="settings-row">
                 <div class="settings-info"><h4>#${escapeHtml(item.channel_name || item.channel_id)}</h4>
-                    <p>Reactions: ${(item.auto_reactions||[]).join(' ')}${item.filter ? ` • Filter: <code>${escapeHtml(item.filter)}</code>` : ''}</p></div>
+                    <p>Reactions: ${(item.auto_reactions||[]).join(' ')}${existingFilters.length ? ` • Filters: ${existingFilters.map(f=>`<code>${escapeHtml(f)}</code>`).join(', ')}` : ''}</p></div>
                 <div style="display:flex;gap:.5rem;align-items:center;">
+                    <button class="control-btn secondary small" onclick="window.cpRBToggleEdit('${item.id}')">Edit</button>
                     <label class="toggle"><input type="checkbox" ${item.enabled !== false ? 'checked' : ''} onchange="window.cpRBToggleItem('${item.id}',this.checked)"><span class="toggle-slider"></span></label>
                     <button class="control-btn danger small" onclick="window.cpRBDeleteItem('${item.id}')">Remove</button>
+                </div>
+            </div>
+            <div id="rb-edit-${item.id}" style="display:none;margin-top:1rem;padding:1rem;background:var(--bg-tertiary);border-radius:8px;">
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;">
+                    <div class="form-group" style="flex:2;min-width:160px;">
+                        <label class="form-label">Channel</label>
+                        <select class="form-select" id="rb-edit-channel-${item.id}">
+                            <option value="${escapeHtml(item.channel_id)}">#${escapeHtml(item.channel_name || item.channel_id)}</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:2;min-width:200px;">
+                        <label class="form-label">Reactions (comma-separated)</label>
+                        <input type="text" class="form-input" id="rb-edit-reactions-${item.id}" value="${escapeHtml((item.auto_reactions||[]).join(','))}">
+                    </div>
+                    <div class="form-group" style="flex:2;min-width:200px;">
+                        <label class="form-label">Filters <span style="color:var(--text-muted);font-size:.8em;">(comma-separated, optional)</span></label>
+                        <input type="text" class="form-input" id="rb-edit-filters-${item.id}" value="${escapeHtml(existingFilters.join(', '))}">
+                    </div>
+                    <div class="form-group">
+                        <button class="control-btn primary small" onclick="window.cpRBSaveEdit('${item.id}')">Save Changes</button>
+                    </div>
                 </div>
             </div>
             <div style="margin-top:1rem;border-top:1px solid var(--border-color);padding-top:1rem;">
@@ -8717,6 +8740,42 @@
                 body: JSON.stringify({ enabled }),
             });
         } catch (e) { showToast('Failed to update', 'error'); }
+    };
+
+    window.cpRBToggleEdit = async function(itemId) {
+        const panel = document.getElementById(`rb-edit-${itemId}`);
+        if (!panel) return;
+        const opening = panel.style.display === 'none';
+        panel.style.display = opening ? '' : 'none';
+        if (opening) {
+            const sel = document.getElementById(`rb-edit-channel-${itemId}`);
+            if (sel && sel.options.length <= 1) {
+                const channels = await fetchGuildChannels();
+                const curVal = sel.value;
+                sel.innerHTML = channels.filter(c => c.type === 0)
+                    .map(c => `<option value="${c.id}" ${c.id === curVal ? 'selected' : ''}>#${escapeHtml(c.name)}</option>`).join('');
+            }
+        }
+    };
+
+    window.cpRBSaveEdit = async function(itemId) {
+        const channelId = document.getElementById(`rb-edit-channel-${itemId}`)?.value;
+        const reactionsRaw = document.getElementById(`rb-edit-reactions-${itemId}`)?.value.trim() || '';
+        const filtersRaw = document.getElementById(`rb-edit-filters-${itemId}`)?.value.trim() || '';
+        const auto_reactions = reactionsRaw.split(',').map(e => e.trim()).filter(Boolean);
+        const filters = filtersRaw ? filtersRaw.split(',').map(f => f.trim()).filter(Boolean) : [];
+        if (!auto_reactions.length) return showToast('Enter at least one reaction emoji', 'error');
+        const channels = await fetchGuildChannels();
+        const ch = channels.find(c => c.id === channelId);
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/${itemId}`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ channel_id: channelId, channel_name: ch?.name || channelId, auto_reactions, filters }),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            showToast('Channel updated', 'success');
+            await loadReactionBoard();
+        } catch (e) { showToast('Failed to save: ' + e.message, 'error'); }
     };
 
     window.cpRBToggleCats = async function(itemId, enabled) {
@@ -8818,7 +8877,8 @@
         const channels = await fetchGuildChannels();
         const channelSel = document.getElementById('rb-add-channel').value;
         const reactions = document.getElementById('rb-add-reactions').value.trim();
-        const filter = document.getElementById('rb-add-filter').value.trim();
+        const filterRaw = document.getElementById('rb-add-filter').value.trim();
+        const filters = filterRaw ? filterRaw.split(',').map(f => f.trim()).filter(Boolean) : [];
         if (!channelSel) return showToast('Select a channel', 'error');
         if (!reactions) return showToast('Enter at least one reaction emoji', 'error');
         const auto_reactions = reactions.split(',').map(e => e.trim()).filter(Boolean);
@@ -8826,7 +8886,7 @@
         try {
             const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/add`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ channel_id: channelSel, channel_name: ch?.name || channelSel, auto_reactions, filter, enabled: true, stats: { enabled: false, reaction_labels: [], frequency: 'daily', day_of_week: 1, display_time: '', timezone: 'UTC', top_n: 'all', last_reset: null }, tracked_messages: {} }),
+                body: JSON.stringify({ channel_id: channelSel, channel_name: ch?.name || channelSel, auto_reactions, filters, enabled: true, stats: { enabled: false, categories_enabled: false, reaction_labels: [], frequency: 'daily', day_of_week: 1, display_time: '', timezone: 'UTC', top_n: 'all', last_reset: null }, tracked_messages: {} }),
             });
             if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error || `HTTP ${res.status}`); }
             showToast('Channel added', 'success');

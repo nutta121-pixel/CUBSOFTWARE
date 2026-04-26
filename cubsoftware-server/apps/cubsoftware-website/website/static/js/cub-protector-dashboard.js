@@ -8609,12 +8609,12 @@
         card.dataset.rbId = item.id;
         card.style.marginBottom = '1rem';
         const statsEnabled = item.stats?.enabled || false;
-        const labels = (item.stats?.reaction_labels || []);
-        const labelsHtml = labels.map((rl, i) => `
-            <div class="rb-label-row" style="display:flex;gap:.5rem;align-items:center;margin-bottom:.4rem;">
-                <input class="form-input" style="width:70px;" placeholder="😀" value="${escapeHtml(rl.emoji || '')}" oninput="window.cpRBUpdateLabels('${item.id}')">
-                <input class="form-input" style="flex:1;" placeholder="Meaning (e.g. Love it)" value="${escapeHtml(rl.label || '')}" oninput="window.cpRBUpdateLabels('${item.id}')">
-                <button class="control-btn danger small" onclick="this.closest('.rb-label-row').remove();window.cpRBUpdateLabels('${item.id}')">✕</button>
+        const existingLabels = {};
+        for (const rl of (item.stats?.reaction_labels || [])) existingLabels[rl.emoji] = rl.label;
+        const labelsHtml = (item.auto_reactions || []).map(emoji => `
+            <div class="rb-label-row" style="display:flex;gap:.75rem;align-items:center;margin-bottom:.5rem;" data-emoji="${escapeHtml(emoji)}">
+                <span style="font-size:1.5rem;min-width:2rem;text-align:center;">${emoji}</span>
+                <input class="form-input" style="flex:1;" placeholder="Category name (e.g. Liked, Disliked...)" value="${escapeHtml(existingLabels[emoji] || '')}" oninput="window.cpRBUpdateLabels('${item.id}')">
             </div>`).join('');
         card.innerHTML = `
             <div class="settings-row">
@@ -8680,9 +8680,8 @@
                 </div>
             <div id="rb-stats-cfg-${item.id}" ${statsEnabled ? '' : 'style="display:none"'}>
                 <div style="margin-top:1rem;">
-                    <label class="form-label">Leaderboard Categories <span style="color:var(--text-muted);font-size:.8em;">each labeled emoji gets its own separate leaderboard</span></label>
+                    <label class="form-label">Leaderboard Categories <span style="color:var(--text-muted);font-size:.8em;">name each emoji to give it its own separate leaderboard</span></label>
                     <div id="rb-labels-${item.id}">${labelsHtml}</div>
-                    <button class="control-btn secondary small" style="margin-top:.5rem;" onclick="window.cpRBAddLabel('${item.id}')">+ Add Label</button>
                 </div>
                 <div style="margin-top:1.25rem;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
@@ -8750,9 +8749,8 @@
         const labelRows = document.querySelectorAll(`#rb-labels-${itemId} .rb-label-row`);
         const reaction_labels = [];
         labelRows.forEach(row => {
-            const inputs = row.querySelectorAll('input');
-            const emoji = inputs[0]?.value?.trim();
-            const label = inputs[1]?.value?.trim();
+            const emoji = row.dataset.emoji;
+            const label = row.querySelector('input')?.value?.trim();
             if (emoji && label) reaction_labels.push({ emoji, label });
         });
         const results_title = document.getElementById(`rb-title-${itemId}`)?.value?.trim() || '';

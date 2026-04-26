@@ -2689,31 +2689,36 @@ function applySettingsToForm(settings) {
         if (input && value) input.value = value;
     };
 
-    // Helper to set button group
-    const setButtonGroup = (selector, value, dataAttr) => {
+    // Helper to set button group — also updates the hidden input so saveSettings() reads correctly
+    const setButtonGroup = (selector, value, dataAttr, hiddenInputId) => {
+        if (value === undefined || value === null) return;
         const buttons = document.querySelectorAll(selector);
         buttons.forEach(btn => {
             btn.classList.remove('active');
-            if (btn.dataset[dataAttr] === value) {
+            if (btn.dataset[dataAttr] === String(value)) {
                 btn.classList.add('active');
             }
         });
+        if (hiddenInputId) {
+            const input = document.getElementById(hiddenInputId);
+            if (input) input.value = value;
+        }
     };
 
-    // Apply sliders
-    setSlider('setting-border-width', settings.borderWidth, 'border-width-value');
-    setSlider('setting-name-size', settings.nameSize, 'name-size-value');
+    // Apply sliders (all keys match the snake_case server format)
+    setSlider('setting-border-width', settings.border_width, 'border-width-value');
+    setSlider('setting-name-size', settings.name_size, 'name-size-value');
     setSlider('setting-spacing', settings.spacing, 'spacing-value');
-    setSlider('setting-speaking-ring-width', settings.speakingRingWidth, 'speaking-ring-width-value');
-    setSlider('setting-shadow-blur', settings.shadowBlur, 'shadow-blur-value');
-    setSlider('setting-transition-duration', settings.transitionDuration, 'transition-duration-value', 'ms');
-    setSlider('setting-idle-opacity', settings.idleOpacity, 'idle-opacity-value', '%');
-    setSlider('setting-animation-speed', settings.animationSpeed, 'animation-speed-value', '%');
-    setSlider('setting-entry-duration', settings.entryDuration, 'entry-duration-value', 'ms');
-    setSlider('setting-filter-brightness', settings.filterBrightness, 'filter-brightness-value', '%');
-    setSlider('setting-filter-contrast', settings.filterContrast, 'filter-contrast-value', '%');
-    setSlider('setting-filter-saturate', settings.filterSaturate, 'filter-saturate-value', '%');
-    setSlider('setting-filter-hue', settings.filterHue, 'filter-hue-value', '°');
+    setSlider('setting-speaking-ring-width', settings.speaking_ring_width, 'speaking-ring-width-value');
+    setSlider('setting-shadow-blur', settings.shadow_blur, 'shadow-blur-value');
+    setSlider('setting-transition-duration', settings.transition_duration, 'transition-duration-value', 'ms');
+    setSlider('setting-idle-opacity', settings.idle_opacity, 'idle-opacity-value', '%');
+    setSlider('setting-animation-speed', settings.animation_speed, 'animation-speed-value', '%');
+    setSlider('setting-entry-duration', settings.entry_duration, 'entry-duration-value', 'ms');
+    setSlider('setting-filter-brightness', settings.filter_brightness, 'filter-brightness-value', '%');
+    setSlider('setting-filter-contrast', settings.filter_contrast, 'filter-contrast-value', '%');
+    setSlider('setting-filter-saturate', settings.filter_saturate, 'filter-saturate-value', '%');
+    setSlider('setting-filter-hue', settings.filter_hue, 'filter-hue-value', '°');
     setSlider('setting-particle-count', settings.particle_count, 'particle-count-value', '');
     setSlider('setting-animated-border-speed', settings.animated_border_speed, 'animated-border-speed-value', '');
     setSlider('setting-bg-effect-size', settings.bg_effect_size, 'bg-effect-size-value', '%');
@@ -2724,20 +2729,20 @@ function applySettingsToForm(settings) {
     setSlider('setting-tilt-amount', settings.tilt_amount, 'tilt-amount-value', '°');
 
     // Apply checkboxes
-    setCheckbox('setting-bounce', settings.bounce);
-    setCheckbox('setting-dim', settings.dimWhenIdle);
-    setCheckbox('setting-name', settings.showName);
-    setCheckbox('setting-grayscale-muted', settings.grayscaleMuted);
-    setCheckbox('setting-grayscale-deafened', settings.grayscaleDeafened);
-    setCheckbox('setting-border', settings.border);
-    setCheckbox('setting-glow', settings.glow);
-    setCheckbox('setting-shadow', settings.shadow);
-    setCheckbox('setting-speaking-ring', settings.speakingRing);
-    setCheckbox('setting-name-bg', settings.nameBg);
-    setCheckbox('setting-flip', settings.flip);
-    setCheckbox('setting-hide-self', settings.hideSelf);
-    setCheckbox('setting-name-shadow', settings.nameShadow);
-    setCheckbox('setting-name-glow', settings.nameGlow);
+    setCheckbox('setting-bounce', settings.bounce_on_speak);
+    setCheckbox('setting-dim', settings.dim_when_idle);
+    setCheckbox('setting-name', settings.show_name);
+    setCheckbox('setting-grayscale-muted', settings.grayscale_muted);
+    setCheckbox('setting-grayscale-deafened', settings.grayscale_deafened);
+    setCheckbox('setting-border', settings.border_enabled);
+    setCheckbox('setting-glow', settings.glow_enabled);
+    setCheckbox('setting-shadow', settings.shadow_enabled);
+    setCheckbox('setting-speaking-ring', settings.speaking_ring_enabled);
+    setCheckbox('setting-name-bg', settings.name_background_enabled);
+    setCheckbox('setting-flip', settings.flip_horizontal);
+    setCheckbox('setting-hide-self', settings.hide_self);
+    setCheckbox('setting-name-shadow', settings.name_shadow_enabled);
+    setCheckbox('setting-name-glow', settings.name_glow_enabled);
     setCheckbox('setting-particles', settings.particles_enabled);
     setCheckbox('setting-animated-border', settings.animated_border_enabled);
     setCheckbox('setting-bg-effect', settings.bg_effect_enabled);
@@ -2748,42 +2753,41 @@ function applySettingsToForm(settings) {
     setCheckbox('setting-status-text-enabled', settings.status_text_enabled);
 
     // Apply colors
-    setColor('setting-border-color', settings.borderColor);
-    setColor('setting-glow-color', settings.glowColor);
-    setColor('setting-name-color', settings.nameColor);
-    setColor('setting-speaking-ring-color', settings.speakingRingColor);
-    setColor('setting-shadow-color', settings.shadowColor);
-    setColor('setting-name-bg-color', settings.nameBgColor);
-    setColor('setting-name-shadow-color', settings.nameShadowColor);
-    setColor('setting-name-glow-color', settings.nameGlowColor);
+    setColor('setting-border-color', settings.border_color);
+    setColor('setting-glow-color', settings.glow_color);
+    setColor('setting-name-color', settings.name_color);
+    setColor('setting-speaking-ring-color', settings.speaking_ring_color);
+    setColor('setting-shadow-color', settings.shadow_color);
+    setColor('setting-name-bg-color', settings.name_background_color);
+    setColor('setting-name-shadow-color', settings.name_shadow_color);
+    setColor('setting-name-glow-color', settings.name_glow_color);
     setColor('setting-particle-color', settings.particle_color);
-    // Note: animated border has no color input (uses rainbow/gradient)
     setColor('setting-bg-effect-color', settings.bg_effect_color);
     setColor('setting-outline-color', settings.outline_color);
     setColor('setting-frame-color', settings.frame_color);
     setColor('setting-voice-indicator-color', settings.voice_indicator_color);
     setColor('setting-status-text-color', settings.status_text_color);
 
-    // Apply button groups
-    setButtonGroup('.position-btn', settings.position, 'position');
-    setButtonGroup('.style-btn[data-style]', settings.animation, 'style');
-    setButtonGroup('.style-btn[data-idle-style]', settings.idleAnimation, 'idleStyle');
-    setButtonGroup('.style-btn[data-transition]', settings.transition, 'transition');
-    setButtonGroup('.style-btn[data-entry]', settings.entryAnimation, 'entry');
-    setButtonGroup('.style-btn[data-border-style]', settings.borderStyle, 'borderStyle');
-    setButtonGroup('.shape-btn', settings.shape, 'shape');
-    setButtonGroup('.style-btn[data-particle]', settings.particle_type, 'particle');
-    setButtonGroup('.style-btn[data-anim-border]', settings.animated_border_type, 'animBorder');
-    setButtonGroup('.style-btn[data-bg-effect]', settings.bg_effect_type, 'bgEffect');
-    setButtonGroup('.style-btn[data-accessory]', settings.accessory, 'accessory');
-    setButtonGroup('.style-btn[data-frame]', settings.frame, 'frame');
-    setButtonGroup('.style-btn[data-voice-indicator]', settings.voice_indicator_type, 'voiceIndicator');
-    setButtonGroup('.style-btn[data-font]', settings.name_font, 'font');
-    setButtonGroup('.style-btn[data-name-pos]', settings.name_position, 'namePos');
-    setButtonGroup('.style-btn[data-name-anim]', settings.name_animation, 'nameAnim');
-    setButtonGroup('.style-btn[data-layout]', settings.group_layout, 'layout');
-    setButtonGroup('.style-btn[data-highlight]', settings.speaking_highlight, 'highlight');
-    setButtonGroup('.style-btn[data-sort]', settings.sort_order, 'sort');
+    // Apply button groups (pass hiddenInputId so the value is committed for saveSettings)
+    setButtonGroup('.position-btn', settings.overlay_position, 'position', 'setting-position');
+    setButtonGroup('.style-btn[data-style]', settings.animation_style, 'style', 'setting-animation');
+    setButtonGroup('.style-btn[data-idle-style]', settings.idle_animation_style, 'idleStyle', 'setting-idle-animation');
+    setButtonGroup('.style-btn[data-transition]', settings.transition_style, 'transition', 'setting-transition');
+    setButtonGroup('.style-btn[data-entry]', settings.entry_animation, 'entry', 'setting-entry-animation');
+    setButtonGroup('.style-btn[data-border-style]', settings.border_style, 'borderStyle', 'setting-border-style');
+    setButtonGroup('.shape-btn', settings.avatar_shape, 'shape', 'setting-shape');
+    setButtonGroup('.style-btn[data-particle]', settings.particle_type, 'particle', 'setting-particle-type');
+    setButtonGroup('.style-btn[data-anim-border]', settings.animated_border_type, 'animBorder', 'setting-animated-border-type');
+    setButtonGroup('.style-btn[data-bg-effect]', settings.bg_effect_type, 'bgEffect', 'setting-bg-effect-type');
+    setButtonGroup('.style-btn[data-accessory]', settings.accessory, 'accessory', 'setting-accessory');
+    setButtonGroup('.style-btn[data-frame]', settings.frame, 'frame', 'setting-frame');
+    setButtonGroup('.style-btn[data-voice-indicator]', settings.voice_indicator_type, 'voiceIndicator', 'setting-voice-indicator-type');
+    setButtonGroup('.style-btn[data-font]', settings.name_font, 'font', 'setting-name-font');
+    setButtonGroup('.style-btn[data-name-pos]', settings.name_position, 'namePos', 'setting-name-position');
+    setButtonGroup('.style-btn[data-name-anim]', settings.name_animation, 'nameAnim', 'setting-name-animation');
+    setButtonGroup('.style-btn[data-layout]', settings.group_layout, 'layout', 'setting-group-layout');
+    setButtonGroup('.style-btn[data-highlight]', settings.speaking_highlight, 'highlight', 'setting-speaking-highlight');
+    setButtonGroup('.style-btn[data-sort]', settings.sort_order, 'sort', 'setting-sort-order');
 
     // Apply text inputs
     const statusTextInput = document.getElementById('setting-status-text');

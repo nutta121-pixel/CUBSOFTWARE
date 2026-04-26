@@ -418,13 +418,8 @@ class CubReactiveOverlay {
             participantsToRender = participantsToRender.slice(0, mainSettings.max_participants);
         }
 
-        // Determine position
-        let position = 'center';
-        if (MODE === 'individual') {
-            position = 'center';
-        } else {
-            position = mainSettings.overlay_position || 'bottom';
-        }
+        // Determine position — individual defaults to center but respects the setting
+        const position = mainSettings.overlay_position || (MODE === 'individual' ? 'center' : 'bottom');
 
         // Update container
         container.className = `overlay-container position-${position}`;

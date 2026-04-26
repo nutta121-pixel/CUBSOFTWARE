@@ -5230,7 +5230,7 @@ async function _postReactionBoardResults(guildId, item, data) {
     const customTitle = item.stats?.results_title || '';
     const embeds = [];
 
-    if (Object.keys(labelMap).length > 0) {
+    if (item.stats?.categories_enabled && Object.keys(labelMap).length > 0) {
         // Separate leaderboard per labeled emoji
         for (const [emoji, label] of Object.entries(labelMap)) {
             const sorted = entries

@@ -8675,14 +8675,17 @@
                     </div>
                 </div>
                 <div class="settings-row" style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border-color);">
+                    <div class="settings-info"><h4>🏷️ Leaderboard Categories</h4><p>Name each emoji to give it its own separate leaderboard when results are posted</p></div>
+                    <label class="toggle"><input type="checkbox" id="rb-cats-${item.id}" ${item.stats?.categories_enabled ? 'checked' : ''} onchange="window.cpRBToggleCats('${item.id}',this.checked)"><span class="toggle-slider"></span></label>
+                </div>
+                <div id="rb-cats-cfg-${item.id}" ${item.stats?.categories_enabled ? '' : 'style="display:none"'}>
+                    <div id="rb-labels-${item.id}" style="margin-top:.75rem;">${labelsHtml}</div>
+                </div>
+                <div class="settings-row" style="margin-top:1rem;padding-top:.75rem;border-top:1px solid var(--border-color);">
                     <div class="settings-info"><h4>📊 Track Reaction Stats</h4><p>Store per-message counts and post a ranked leaderboard at the scheduled time</p></div>
                     <label class="toggle"><input type="checkbox" id="rb-stats-${item.id}" ${statsEnabled ? 'checked' : ''} onchange="window.cpRBToggleStats('${item.id}',this.checked)"><span class="toggle-slider"></span></label>
                 </div>
             <div id="rb-stats-cfg-${item.id}" ${statsEnabled ? '' : 'style="display:none"'}>
-                <div style="margin-top:1rem;">
-                    <label class="form-label">Leaderboard Categories <span style="color:var(--text-muted);font-size:.8em;">name each emoji to give it its own separate leaderboard</span></label>
-                    <div id="rb-labels-${item.id}">${labelsHtml}</div>
-                </div>
                 <div style="margin-top:1.25rem;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
                         <strong style="font-size:.95em;">📡 Live Standings</strong>
@@ -8716,6 +8719,18 @@
         } catch (e) { showToast('Failed to update', 'error'); }
     };
 
+    window.cpRBToggleCats = async function(itemId, enabled) {
+        document.getElementById(`rb-cats-cfg-${itemId}`).style.display = enabled ? '' : 'none';
+        try {
+            const stats = _rbGetStats(itemId);
+            stats.categories_enabled = enabled;
+            await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/reaction-board/${itemId}`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stats }),
+            });
+        } catch (e) { showToast('Failed to save', 'error'); }
+    };
+
     window.cpRBToggleStats = async function(itemId, enabled) {
         document.getElementById(`rb-stats-cfg-${itemId}`).style.display = enabled ? '' : 'none';
         try {
@@ -8741,6 +8756,7 @@
 
     function _rbGetStats(itemId) {
         const enabled = document.getElementById(`rb-stats-${itemId}`)?.checked || false;
+        const categories_enabled = document.getElementById(`rb-cats-${itemId}`)?.checked || false;
         const frequency = document.getElementById(`rb-freq-${itemId}`)?.value || 'daily';
         const day_of_week = parseInt(document.getElementById(`rb-day-${itemId}`)?.value ?? '1', 10);
         const display_time = document.getElementById(`rb-time-${itemId}`)?.value || '';
@@ -8754,7 +8770,7 @@
             if (emoji && label) reaction_labels.push({ emoji, label });
         });
         const results_title = document.getElementById(`rb-title-${itemId}`)?.value?.trim() || '';
-        return { enabled, frequency, day_of_week, display_time, timezone, top_n, results_title, reaction_labels };
+        return { enabled, categories_enabled, frequency, day_of_week, display_time, timezone, top_n, results_title, reaction_labels };
     }
 
     window.cpRBToggleFreqOptions = function(itemId) {

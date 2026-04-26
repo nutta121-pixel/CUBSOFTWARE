@@ -5347,7 +5347,15 @@ client.on('messageCreate', async (message) => {
                     let display_title = null;
                     if (content_type === 'song' && embed.title) {
                         const desc = embed.description || '';
-                        const artist = desc.split(/[·•]/)[0].trim();
+                        const titleNorm = embed.title.toLowerCase().trim();
+                        // Split on separators and newlines, find first segment that isn't the title or boilerplate
+                        const parts = desc.split(/[·•\n]+/).map(s => s.trim()).filter(Boolean);
+                        const artist = parts.find(p =>
+                            p.toLowerCase() !== titleNorm &&
+                            !p.toLowerCase().startsWith('provided to') &&
+                            !p.startsWith('℗') && !p.startsWith('©') &&
+                            p.length > 1 && p.length < 80
+                        );
                         display_title = artist ? `${embed.title} — ${artist}` : embed.title;
                     } else if (content_type === 'video' && embed.title) {
                         display_title = embed.title;

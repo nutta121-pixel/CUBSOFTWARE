@@ -527,14 +527,14 @@
                             <h3>Overlay Position (Group Mode)</h3>
                             <p class="setting-description">Choose where avatars appear in the group overlay</p>
                             <div class="position-buttons">
-                                <button type="button" class="position-btn {% if not user_config or not user_config.settings.overlay_position or user_config.settings.overlay_position == 'top' %}active{% endif %}" data-position="top">
+                                <button type="button" class="position-btn {% if user_config and user_config.settings.overlay_position == 'top' %}active{% endif %}" data-position="top">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <rect x="2" y="2" width="20" height="6" rx="1"/>
                                         <rect x="2" y="10" width="20" height="12" rx="1" opacity="0.3"/>
                                     </svg>
                                     <span>Top</span>
                                 </button>
-                                <button type="button" class="position-btn {% if user_config and user_config.settings.overlay_position == 'bottom' %}active{% endif %}" data-position="bottom">
+                                <button type="button" class="position-btn {% if not user_config or not user_config.settings.overlay_position or user_config.settings.overlay_position == 'bottom' %}active{% endif %}" data-position="bottom">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <rect x="2" y="2" width="20" height="12" rx="1" opacity="0.3"/>
                                         <rect x="2" y="16" width="20" height="6" rx="1"/>

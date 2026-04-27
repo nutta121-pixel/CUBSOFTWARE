@@ -4224,7 +4224,9 @@ client.on('messageCreate', (message) => {
     const items = getGuildTranslateItems(message.guildId);
     if (!items.length) return;
 
-    const item = items.find(i => i.channel_id === message.channel.id);
+    // Specific channel config takes priority; 'all' acts as a server-wide fallback
+    const item = items.find(i => i.channel_id === message.channel.id)
+              || items.find(i => i.channel_id === 'all');
     if (!item) return;
 
     _enqueueTranslation(message.channel.id, async () => {

@@ -2721,7 +2721,8 @@ function applySettingsToForm(settings) {
     setSlider('setting-filter-hue', settings.filter_hue, 'filter-hue-value', '°');
     setSlider('setting-particle-count', settings.particle_count, 'particle-count-value', '');
     setSlider('setting-animated-border-speed', settings.animated_border_speed, 'animated-border-speed-value', '');
-    setSlider('setting-bg-effect-size', settings.bg_effect_size, 'bg-effect-size-value', '%');
+    setSlider('setting-bg-effect-size', settings.bg_effect_size, 'bg-effect-size-value', 'px');
+    setSlider('setting-max-participants', settings.max_participants, 'max-participants-value', '');
     setSlider('setting-outline-width', settings.outline_width, 'outline-width-value', 'px');
     setSlider('setting-outline-offset', settings.outline_offset, 'outline-offset-value', 'px');
     setSlider('setting-mirror-opacity', settings.mirror_opacity, 'mirror-opacity-value', '%');
@@ -2768,6 +2769,13 @@ function applySettingsToForm(settings) {
     setColor('setting-voice-indicator-color', settings.voice_indicator_color);
     setColor('setting-status-text-color', settings.status_text_color);
 
+    // Overlay background
+    if (settings.overlay_background !== undefined) {
+        const isTransparent = !settings.overlay_background || settings.overlay_background === 'transparent';
+        setCheckbox('setting-overlay-bg-transparent', isTransparent);
+        if (!isTransparent) setColor('setting-overlay-bg', settings.overlay_background);
+    }
+
     // Apply button groups (pass hiddenInputId so the value is committed for saveSettings)
     setButtonGroup('.position-btn', settings.overlay_position, 'position', 'setting-position');
     setButtonGroup('.style-btn[data-style]', settings.animation_style, 'style', 'setting-animation');
@@ -2802,13 +2810,17 @@ function applySettingsToForm(settings) {
 
     // Update toggle options visibility
     ['border', 'glow', 'shadow', 'speaking-ring', 'name-bg', 'name-shadow', 'name-glow',
-     'particles', 'animated-border', 'bg-effect', 'outline', 'mirror', 'tilt', 'voice-indicator', 'status-text-enabled'].forEach(opt => {
+     'particles', 'animated-border', 'bg-effect', 'outline', 'mirror', 'tilt', 'voice-indicator'].forEach(opt => {
         const toggle = document.getElementById(`setting-${opt}`);
         const options = document.getElementById(`${opt}-options`);
         if (toggle && options) {
             options.style.display = toggle.checked ? 'block' : 'none';
         }
     });
+    // status-text has a mismatched ID: div is 'status-text-options', not 'status-text-enabled-options'
+    const sttToggle = document.getElementById('setting-status-text-enabled');
+    const sttOptions = document.getElementById('status-text-options');
+    if (sttToggle && sttOptions) sttOptions.style.display = sttToggle.checked ? 'block' : 'none';
 }
 
 // Generate a share code (base64 encoded settings)

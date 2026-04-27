@@ -7251,9 +7251,27 @@
             document.getElementById('tr-enabled').checked = s.enabled !== false;
             _trPopulateLangSelect('tr-add-from', 'auto', true);
             _trPopulateLangSelect('tr-add-to', 'en', false);
-            populateChannelSelect('tr-add-channel', null);
+            _trPopulateChannelSelectWithAll('tr-add-channel', null);
             _trRenderList(data.items || []);
         } catch (e) { showToast('Failed to load translation settings', 'error'); }
+    }
+    function _trPopulateChannelSelectWithAll(selectId, selectedValue) {
+        const sel = document.getElementById(selectId);
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Loading...</option>';
+        fetchGuildChannels().then(channels => {
+            sel.innerHTML = '<option value="">-- Select channel --</option><option value="all">🌐 All Channels (including new ones)</option>';
+            channels.forEach(ch => {
+                if (ch.type === 0 || ch.type === 5) {
+                    const opt = document.createElement('option');
+                    opt.value = ch.id;
+                    opt.textContent = '#' + ch.name;
+                    if (ch.id === selectedValue) opt.selected = true;
+                    sel.appendChild(opt);
+                }
+            });
+            if (selectedValue === 'all') sel.value = 'all';
+        });
     }
     function _trRenderList(items) {
         const list = document.getElementById('tr-list');
@@ -7263,15 +7281,56 @@
             const fromName = TR_LANGUAGES.find(l => l.value === item.from)?.name || item.from || 'Auto-Detect';
             const toName = TR_LANGUAGES.find(l => l.value === item.to)?.name || item.to || item.to;
             const status = item.enabled === false ? '🔴' : '🟢';
-            return `<div class="list-item" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.04);border-radius:8px;">
-                <span style="font-size:0.875rem;">${status} <strong>#${escapeHtml(item.channel_name || item.channel_id)}</strong> &nbsp;—&nbsp; ${escapeHtml(fromName)} → ${escapeHtml(toName)}</span>
-                <div style="display:flex;gap:0.5rem;">
-                    <button class="control-btn small" onclick="window.cpToggleTranslateChannel('${escapeHtml(item.id)}', ${item.enabled !== false ? 'false' : 'true'})">${item.enabled === false ? 'Enable' : 'Disable'}</button>
-                    <button class="control-btn small" style="background:rgba(239,68,68,0.15);color:#ef4444;" onclick="window.cpDeleteTranslateChannel('${escapeHtml(item.id)}')">Remove</button>
+            const chLabel = item.channel_id === 'all' ? '🌐 All Channels' : `#${escapeHtml(item.channel_name || item.channel_id)}`;
+            const langOptions = TR_LANGUAGES.map(l => `<option value="${l.value}">${escapeHtml(l.name)}</option>`).join('');
+            const langOptionsNoAuto = TR_LANGUAGES.filter(l => l.value !== 'auto').map(l => `<option value="${l.value}">${escapeHtml(l.name)}</option>`).join('');
+            return `<div class="list-item" data-tr-id="${escapeHtml(item.id)}" style="flex-direction:column;gap:0.5rem;display:flex;padding:0.6rem 0.8rem;background:rgba(255,255,255,0.04);border-radius:8px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+                    <span style="font-size:0.875rem;">${status} <strong>${chLabel}</strong> &nbsp;—&nbsp; ${escapeHtml(fromName)} → ${escapeHtml(toName)}</span>
+                    <div style="display:flex;gap:0.5rem;flex-shrink:0;">
+                        <button class="control-btn small" onclick="window.cpToggleTranslateChannel('${escapeHtml(item.id)}', ${item.enabled !== false ? 'false' : 'true'})">${item.enabled === false ? 'Enable' : 'Disable'}</button>
+                        <button class="control-btn small" onclick="window.cpShowTranslateEdit('${escapeHtml(item.id)}')">Edit</button>
+                        <button class="control-btn small" style="background:rgba(239,68,68,0.15);color:#ef4444;" onclick="window.cpDeleteTranslateChannel('${escapeHtml(item.id)}')">Remove</button>
+                    </div>
+                </div>
+                <div id="tr-edit-${escapeHtml(item.id)}" style="display:none;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+                    <select id="tr-edit-from-${escapeHtml(item.id)}" class="form-select" style="flex:1;min-width:140px;"><option value="auto">Auto-Detect</option>${langOptions}</select>
+                    <span style="color:rgba(255,255,255,0.5);">→</span>
+                    <select id="tr-edit-to-${escapeHtml(item.id)}" class="form-select" style="flex:1;min-width:140px;">${langOptionsNoAuto}</select>
+                    <button class="control-btn small primary" onclick="window.cpSaveTranslateEdit('${escapeHtml(item.id)}')">Save</button>
+                    <button class="control-btn small" onclick="window.cpShowTranslateEdit('${escapeHtml(item.id)}')">Cancel</button>
                 </div>
             </div>`;
         }).join('');
+        // Set current values on the edit selects after rendering
+        items.forEach(item => {
+            const fromSel = document.getElementById(`tr-edit-from-${item.id}`);
+            const toSel = document.getElementById(`tr-edit-to-${item.id}`);
+            if (fromSel) fromSel.value = item.from || 'auto';
+            if (toSel) toSel.value = item.to || 'en';
+        });
     }
+    window.cpShowTranslateEdit = function(id) {
+        const panel = document.getElementById(`tr-edit-${id}`);
+        if (!panel) return;
+        panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+    };
+    window.cpSaveTranslateEdit = async function(id) {
+        try {
+            const fromSel = document.getElementById(`tr-edit-from-${id}`);
+            const toSel = document.getElementById(`tr-edit-to-${id}`);
+            const from = fromSel ? fromSel.value : 'auto';
+            const to = toSel ? toSel.value : 'en';
+            if (from !== 'auto' && from === to) return showToast('Source and target language must be different', 'error');
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/translate/${id}`, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ from, to })
+            });
+            const data = await res.json();
+            if (data.success) { showToast('Translation updated', 'success'); loadTranslate(); }
+            else showToast(data.error || 'Failed to update', 'error');
+        } catch (e) { showToast('Failed to update translation', 'error'); }
+    };
     window.cpToggleTranslate = async function() {
         try {
             const enabled = document.getElementById('tr-enabled').checked;
@@ -7290,12 +7349,18 @@
             const from = document.getElementById('tr-add-from').value;
             const to = document.getElementById('tr-add-to').value;
             if (!channelId) return showToast('Please select a channel', 'error');
-            if (from === to) return showToast('Source and target language must be different', 'error');
-            const channels = await fetchGuildChannels();
-            const channelObj = channels.find(c => c.id === channelId);
+            if (from !== 'auto' && from === to) return showToast('Source and target language must be different', 'error');
+            let channelName;
+            if (channelId === 'all') {
+                channelName = 'All Channels';
+            } else {
+                const channels = await fetchGuildChannels();
+                const channelObj = channels.find(c => c.id === channelId);
+                channelName = channelObj ? channelObj.name : channelId;
+            }
             const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/translate/add`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ channel_id: channelId, channel_name: channelObj ? channelObj.name : channelId, from, to, enabled: true })
+                body: JSON.stringify({ channel_id: channelId, channel_name: channelName, from, to, enabled: true })
             });
             const data = await res.json();
             if (data.success) { showToast('Translation channel added!', 'success'); loadTranslate(); }

@@ -592,7 +592,10 @@ class CubReactiveOverlay {
                 wrapper.className = 'avatar-wrapper';
                 wrapper.dataset.userId = participant.id;
                 wrapper.style.transition = `all ${transitionDuration}ms ease`;
-                wrapper.style.position = 'relative'; // For positioned children
+                wrapper.style.position = 'relative';
+                wrapper.style.display = 'flex';
+                wrapper.style.flexDirection = 'column';
+                wrapper.style.alignItems = 'center';
 
                 // Avatar element
                 const avatar = document.createElement('div');
@@ -786,6 +789,8 @@ class CubReactiveOverlay {
             // Username
             if (showName) {
                 username.style.display = '';
+                username.style.textAlign = 'center';
+                username.style.maxWidth = `${avatarSize}px`;
                 username.textContent = participant.username;
                 username.style.color = nameColor;
                 username.style.fontSize = `${nameSize}px`;

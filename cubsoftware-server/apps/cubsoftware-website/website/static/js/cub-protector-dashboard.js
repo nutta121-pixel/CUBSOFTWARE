@@ -4036,6 +4036,7 @@
                     </div>
                     <div style="display:flex;gap:0.5rem;">
                         <button class="control-btn secondary" onclick="cpEditFeed('${f.id}')">Edit</button>
+                        <button class="control-btn secondary" style="background:rgba(88,101,242,0.15);color:#7289da;" onclick="cpTestFeed('${f.id}')">Test</button>
                         <button class="control-btn secondary" onclick="cpToggleFeed('${f.id}', ${!f.enabled})">${f.enabled ? 'Disable' : 'Enable'}</button>
                         <button class="control-btn danger" onclick="cpDeleteFeed('${f.id}')">Delete</button>
                     </div>
@@ -4393,6 +4394,18 @@
                 loadSocialFeeds();
             }
         } catch (e) { showToast('Failed to delete', 'error'); }
+    };
+
+    window.cpTestFeed = async function(feedId) {
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/social-feeds/${feedId}/test`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                showToast('Test notification sent!', 'success');
+            } else {
+                showToast(data.error || 'Failed to send test', 'error');
+            }
+        } catch (e) { showToast('Failed to send test', 'error'); }
     };
 
     // ==================== BACKUPS ====================

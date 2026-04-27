@@ -126,7 +126,7 @@ _SCANNER_PATH_CONTAINS = (
     'docker-compose', 'wp-login', 'wp-admin', 'wp-includes', 'wp-content',
     'xmlrpc', 'phpmyadmin', 'adminer', 'web.config', 'webconfig',
     '/administrator/', '/admin/login', '/user/login', '/manager/html',
-    'shell.php', 'webshell', 'c99', 'r57', 'b374k', 'cmd.php', 'eval.php',
+    'shell.php', 'webshell', 'c99.php', 'c99shell', 'r57.php', 'r57shell', 'b374k', 'cmd.php', 'eval.php',
     'phpinfo', '/info.php', '/test.php', 'setup.php', 'install.php', 'installer.php',
     'terraform.tfvars', '.tfstate', 'secrets.yml', 'database.yml', 'aws.yml', 'credentials.yml',
     'passwd', '/etc/shadow', '/etc/hosts', '/proc/self',
@@ -15456,6 +15456,61 @@ def cub_protector_social_feeds_edit(guild_id, feed_id):
             break
     data['guilds'][guild_id] = guild_data
     save_cp_json(CUB_PROTECTOR_SOCIAL_FEEDS_FILE, data)
+    return jsonify({'success': True})
+
+@app.route('/api/cub-protector/guilds/<guild_id>/social-feeds/<feed_id>/test', methods=['POST'])
+@cub_protector_auth_required
+def cub_protector_social_feeds_test(guild_id, feed_id):
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    data = load_cp_json(CUB_PROTECTOR_SOCIAL_FEEDS_FILE)
+    feed = next((f for f in data.get('guilds', {}).get(guild_id, {}).get('feeds', []) if f.get('id') == feed_id), None)
+    if not feed:
+        return jsonify({'error': 'Feed not found'}), 404
+    channel_id = feed.get('channel_id', '')
+    if not channel_id:
+        return jsonify({'error': 'No channel configured for this feed'}), 400
+
+    platform = feed.get('platform', 'rss')
+    name = feed.get('name') or 'Test Creator'
+    platform_colors = {'youtube': 0xFF0000, 'tiktok': 0x69C9D0, 'rss': 0xFF8C00}
+    platform_names = {'youtube': 'YouTube', 'tiktok': 'TikTok', 'rss': 'RSS Feed'}
+    platform_emojis = {'youtube': '\U0001f534', 'tiktok': '⚫', 'rss': '\U0001f7e0'}
+
+    color = platform_colors.get(platform, 0x5865F2)
+    platform_name = platform_names.get(platform, platform.title())
+    emoji = platform_emojis.get(platform, '\U0001f4e1')
+    test_title = f'Test Post from {name}'
+    test_link = 'https://cubsoftware.site'
+
+    msg_template = feed.get('message') or '{name} posted: **{title}**\n{link}'
+    alert_msg = (msg_template
+        .replace('{name}', name)
+        .replace('{title}', test_title)
+        .replace('{link}', test_link))
+
+    import datetime as _dt
+    embed = {
+        'color': color,
+        'title': f'New {platform_name} Post (TEST)',
+        'description': alert_msg,
+        'url': test_link,
+        'footer': {'text': '⚠️ This is a test notification — not a real post'},
+        'timestamp': _dt.datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+    }
+
+    payload = {'embeds': [embed]}
+    ping_role = feed.get('ping_role', '')
+    if ping_role == 'everyone':
+        payload['content'] = '@everyone'
+    elif ping_role == 'here':
+        payload['content'] = '@here'
+    elif ping_role:
+        payload['content'] = f'<@&{ping_role}>'
+
+    result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json=payload)
+    if result is None:
+        return jsonify({'error': 'Failed to send test. Make sure the bot has access to the channel.'}), 500
     return jsonify({'success': True})
 
 # ==================== CUB PROTECTOR - LIVE ALERTS API ====================

@@ -6882,6 +6882,7 @@ client.on('interactionCreate', async (interaction) => {
         setTimeout(() => removeGoldstar(guild.id, targetUser.id, entryId), durationMs);
 
         const embedFields = [
+            { name: 'Awarded By', value: `<@${member.id}>`, inline: true },
             { name: 'Role', value: `<@&${role.id}>`, inline: true },
             { name: 'Duration', value: formatDuration(durationMs), inline: true },
             { name: 'Expires', value: `<t:${Math.floor(expiresAt / 1000)}:R>`, inline: true },

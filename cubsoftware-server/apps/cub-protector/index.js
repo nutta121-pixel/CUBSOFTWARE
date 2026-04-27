@@ -277,6 +277,7 @@ const ROLE_MENUS_FILE = path.join(DATA_DIR, 'role_menus.json');
 const PROFILES_FILE = path.join(DATA_DIR, 'profiles.json');
 const REP_FILE = path.join(DATA_DIR, 'rep.json');
 const RELATIONSHIPS_FILE = path.join(DATA_DIR, 'relationships.json');
+const GOLDSTAR_FILE = path.join(DATA_DIR, 'goldstar.json');
 const TOURNAMENTS_FILE = path.join(DATA_DIR, 'tournaments.json');
 const FEEDS_FILE = path.join(DATA_DIR, 'feeds.json');
 const DEBATE_FILE = path.join(DATA_DIR, 'debate.json');
@@ -803,6 +804,8 @@ function getRankCardTheme(guildId, userId) {
     return { ...guildTheme, ...userTheme };
 }
 function saveLiveAlertsData(data) { saveJsonFile(LIVE_ALERTS_FILE, data); }
+function loadGoldstarData() { return loadJsonFile(GOLDSTAR_FILE, { guilds: {} }); }
+function saveGoldstarData(data) { saveJsonFile(GOLDSTAR_FILE, data); }
 
 // Message Reaction Digest
 const _MR_DEFAULT = { config: { enabled: false, guild_id: '', monitor_channels: [], digest_channel: '', digest_interval: 'daily', digest_hour: 9, min_reactions: 3, top_count: 5 }, tracked: {}, last_digest: 0 };
@@ -2449,6 +2452,40 @@ const commands = [
         .addSubcommand(s => s.setName('trending').setDescription('Currently trending memes'))
         .addSubcommand(s => s.setName('irl').setDescription('Technically the truth / IRL memes')),
 
+    new SlashCommandBuilder()
+        .setName('star')
+        .setDescription('Award a star — adds a star emoji to their nickname and gives the configured star role for a set duration')
+        .addStringOption(opt => opt.setName('type').setDescription('Type of star to award').setRequired(true)
+            .addChoices(
+                { name: '★ Gold', value: 'gold' },
+                { name: '★ Silver', value: 'silver' },
+                { name: '★ Bronze', value: 'bronze' },
+                { name: '★ Black', value: 'black' },
+            ))
+        .addUserOption(opt => opt.setName('user').setDescription('The user to award').setRequired(true))
+        .addStringOption(opt => opt.setName('duration').setDescription('How long to keep the star (e.g. 1h, 7d, 2w)').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
+
+    new SlashCommandBuilder()
+        .setName('star-config')
+        .setDescription('Configure star roles and access')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+        .addSubcommand(s => s.setName('set-role')
+            .setDescription('Set the role that gets assigned for a specific star type')
+            .addStringOption(o => o.setName('type').setDescription('Star type').setRequired(true)
+                .addChoices(
+                    { name: '★ Gold', value: 'gold' },
+                    { name: '★ Silver', value: 'silver' },
+                    { name: '★ Bronze', value: 'bronze' },
+                    { name: '★ Black', value: 'black' },
+                ))
+            .addRoleOption(o => o.setName('role').setDescription('Role to assign for this star type').setRequired(true)))
+        .addSubcommand(s => s.setName('add-role').setDescription('Allow a role to use /star')
+            .addRoleOption(o => o.setName('role').setDescription('Role to allow').setRequired(true)))
+        .addSubcommand(s => s.setName('remove-role').setDescription('Remove a role\'s /star access')
+            .addRoleOption(o => o.setName('role').setDescription('Role to remove').setRequired(true)))
+        .addSubcommand(s => s.setName('list').setDescription('Show all configured star roles and who can award them')),
+
 ];
 
 // ============================================================
@@ -2580,6 +2617,38 @@ function formatDuration(ms) {
     if (ms >= 86400000) return `${Math.round(ms / 86400000)} day(s)`;
     if (ms >= 3600000) return `${Math.round(ms / 3600000)} hour(s)`;
     return `${Math.round(ms / 60000)} minute(s)`;
+}
+
+function getGoldstarGuild(data, guildId) {
+    if (!data.guilds[guildId] || Array.isArray(data.guilds[guildId])) {
+        data.guilds[guildId] = { allowed_roles: [], star_roles: {}, entries: [] };
+    }
+    if (!data.guilds[guildId].star_roles) data.guilds[guildId].star_roles = {};
+    return data.guilds[guildId];
+}
+
+async function removeGoldstar(guildId, userId, entryId) {
+    try {
+        const guild = await client.guilds.fetch(guildId).catch(() => null);
+        if (!guild) return;
+        const member = await guild.members.fetch(userId).catch(() => null);
+
+        const data = loadGoldstarData();
+        const guildData = getGoldstarGuild(data, guildId);
+        const entry = guildData.entries.find(e => e.id === entryId);
+        if (!entry) return;
+
+        if (member) {
+            await member.roles.remove(entry.role_id, 'Star expired').catch(() => {});
+            await member.setNickname(entry.original_nickname || null, 'Star expired').catch(() => {});
+        }
+
+        guildData.entries = guildData.entries.filter(e => e.id !== entryId);
+        saveGoldstarData(data);
+        console.log(`[Star] Removed ${entry.star_type || 'gold'} star from ${userId} in ${guildId}`);
+    } catch (e) {
+        console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_GOLDSTAR_REMOVE — removeGoldstar error:', e?.message);
+    }
 }
 
 // Keep-alive timers for channels
@@ -6722,6 +6791,153 @@ client.on('interactionCreate', async (interaction) => {
             .setTimestamp();
 
         await interaction.reply({ embeds: [embed] });
+    }
+
+    // ---- STAR ----
+    else if (commandName === 'star') {
+        const starType = interaction.options.getString('type');
+        const targetUser = interaction.options.getUser('user');
+        const durationStr = interaction.options.getString('duration');
+
+        const starConfig = {
+            gold:   { emoji: '★', label: 'Gold Star',   color: 0xFFD700 },
+            silver: { emoji: '★', label: 'Silver Star', color: 0xA8B2BF },
+            bronze: { emoji: '★', label: 'Bronze Star', color: 0xB87333 },
+            black:  { emoji: '★', label: 'Black Star',  color: 0x2B2D31 },
+        };
+        const star = starConfig[starType];
+
+        const durationMs = parseDuration(durationStr);
+        if (!durationMs) return interaction.reply({ content: '❌ Invalid duration. Use formats like `1h`, `7d`, `2w`.', flags: MessageFlags.Ephemeral });
+
+        const data = loadGoldstarData();
+        const guildData = getGoldstarGuild(data, guild.id);
+
+        // Permission check: must be admin or have an allowed star role
+        const isStarAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+        const hasStarRole = guildData.allowed_roles.some(r => member.roles.cache.has(r));
+        if (!isStarAdmin && !hasStarRole) {
+            return interaction.reply({ content: '❌ You don\'t have permission to award stars. An admin can grant your role access with `/star-config add-role`.', flags: MessageFlags.Ephemeral });
+        }
+
+        // Look up the pre-configured role for this star type
+        const configuredRoleId = guildData.star_roles[starType];
+        if (!configuredRoleId) {
+            return interaction.reply({ content: `❌ No role has been configured for **${star.label}** yet. An admin needs to run \`/star-config set-role type:${starType}\` first.`, flags: MessageFlags.Ephemeral });
+        }
+        const role = guild.roles.cache.get(configuredRoleId) || await guild.roles.fetch(configuredRoleId).catch(() => null);
+        if (!role) {
+            return interaction.reply({ content: `❌ The configured role for **${star.label}** no longer exists. Ask an admin to reconfigure it with \`/star-config set-role\`.`, flags: MessageFlags.Ephemeral });
+        }
+
+        const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
+        if (!targetMember) return interaction.reply({ content: '❌ Could not find that user in this server.', flags: MessageFlags.Ephemeral });
+        if (targetUser.id === member.id) return interaction.reply({ content: '❌ You cannot award a star to yourself.', flags: MessageFlags.Ephemeral });
+
+        if (!guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles)) return interaction.reply({ content: '❌ I need the **Manage Roles** permission to do this.', flags: MessageFlags.Ephemeral });
+        if (!guild.members.me.permissions.has(PermissionFlagsBits.ManageNicknames)) return interaction.reply({ content: '❌ I need the **Manage Nicknames** permission to do this.', flags: MessageFlags.Ephemeral });
+        if (role.position >= guild.members.me.roles.highest.position) return interaction.reply({ content: '❌ The configured role is above my highest role — I can\'t assign it.', flags: MessageFlags.Ephemeral });
+
+        const existing = guildData.entries.find(e => e.user_id === targetUser.id);
+        if (existing) return interaction.reply({ content: `❌ <@${targetUser.id}> already has an active star. Remove it first.`, flags: MessageFlags.Ephemeral });
+
+        const originalNickname = targetMember.nickname || null;
+        const displayName = targetMember.displayName;
+        const newNickname = (`${star.emoji} ${displayName}`).substring(0, 32);
+        const expiresAt = Date.now() + durationMs;
+        const entryId = `${guild.id}-${targetUser.id}-${Date.now()}`;
+
+        try {
+            await targetMember.roles.add(role.id, `${star.label} awarded by ${member.user.tag}`);
+            await targetMember.setNickname(newNickname, `${star.label} awarded by ${member.user.tag}`).catch(() => {});
+        } catch (e) {
+            return interaction.reply({ content: `❌ Failed to apply star: ${e.message}`, flags: MessageFlags.Ephemeral });
+        }
+
+        guildData.entries.push({
+            id: entryId,
+            user_id: targetUser.id,
+            role_id: role.id,
+            star_type: starType,
+            original_nickname: originalNickname,
+            expires_at: expiresAt,
+            granted_by: member.id,
+        });
+        saveGoldstarData(data);
+
+        setTimeout(() => removeGoldstar(guild.id, targetUser.id, entryId), durationMs);
+
+        const embed = cubEmbed()
+            .setColor(star.color)
+            .setTitle(`${star.emoji} ${star.label} Awarded!`)
+            .setDescription(`<@${targetUser.id}> has been awarded a **${star.label}**!`)
+            .addFields(
+                { name: 'Role', value: `<@&${role.id}>`, inline: true },
+                { name: 'Duration', value: formatDuration(durationMs), inline: true },
+                { name: 'Expires', value: `<t:${Math.floor(expiresAt / 1000)}:R>`, inline: true },
+            )
+            .setThumbnail(targetUser.displayAvatarURL())
+            .setTimestamp();
+        await interaction.reply({ embeds: [embed] });
+    }
+
+    // ---- STAR-CONFIG ----
+    else if (commandName === 'star-config') {
+        if (!member.permissions.has(PermissionFlagsBits.Administrator)) {
+            return interaction.reply({ content: '❌ Only administrators can manage star configuration.', flags: MessageFlags.Ephemeral });
+        }
+        const sub = interaction.options.getSubcommand();
+        const scData = loadGoldstarData();
+        const scGuild = getGoldstarGuild(scData, guild.id);
+
+        if (sub === 'set-role') {
+            const scType = interaction.options.getString('type');
+            const scRole = interaction.options.getRole('role');
+            const scTypeLabels = { gold: '★ Gold Star', silver: '★ Silver Star', bronze: '★ Bronze Star', black: '★ Black Star' };
+            scGuild.star_roles[scType] = scRole.id;
+            saveGoldstarData(scData);
+            await interaction.reply({ content: `✅ **${scTypeLabels[scType]}** will now assign <@&${scRole.id}> when awarded.`, flags: MessageFlags.Ephemeral });
+        } else if (sub === 'add-role') {
+            const scRole = interaction.options.getRole('role');
+            if (scGuild.allowed_roles.includes(scRole.id)) {
+                return interaction.reply({ content: `<@&${scRole.id}> can already use \`/star\`.`, flags: MessageFlags.Ephemeral });
+            }
+            scGuild.allowed_roles.push(scRole.id);
+            saveGoldstarData(scData);
+            await interaction.reply({ content: `✅ <@&${scRole.id}> can now award stars with \`/star\`.`, flags: MessageFlags.Ephemeral });
+        } else if (sub === 'remove-role') {
+            const scRole = interaction.options.getRole('role');
+            const idx = scGuild.allowed_roles.indexOf(scRole.id);
+            if (idx === -1) {
+                return interaction.reply({ content: `<@&${scRole.id}> doesn't have \`/star\` access.`, flags: MessageFlags.Ephemeral });
+            }
+            scGuild.allowed_roles.splice(idx, 1);
+            saveGoldstarData(scData);
+            await interaction.reply({ content: `✅ Removed \`/star\` access from <@&${scRole.id}>.`, flags: MessageFlags.Ephemeral });
+        } else if (sub === 'list') {
+            const starTypeList = [
+                { key: 'gold',   label: '★ Gold Star' },
+                { key: 'silver', label: '★ Silver Star' },
+                { key: 'bronze', label: '★ Bronze Star' },
+                { key: 'black',  label: '★ Black Star' },
+            ];
+            const roleLines = starTypeList.map(t => {
+                const rid = scGuild.star_roles[t.key];
+                return `${t.label}: ${rid ? `<@&${rid}>` : '*not set*'}`;
+            }).join('\n');
+            const accessLines = scGuild.allowed_roles.length
+                ? scGuild.allowed_roles.map(r => `<@&${r}>`).join('\n')
+                : '*Admins only*';
+            const scEmbed = cubEmbed()
+                .setColor(0xFFD700)
+                .setTitle('⭐ Star Configuration')
+                .addFields(
+                    { name: 'Star Roles', value: roleLines },
+                    { name: 'Can Award Stars', value: accessLines },
+                )
+                .setTimestamp();
+            await interaction.reply({ embeds: [scEmbed], flags: MessageFlags.Ephemeral });
+        }
     }
 
     // ---- WARNINGS ----
@@ -11925,6 +12141,24 @@ client.once('clientReady', async () => {
         }
     }
     saveModData(modDataRecovery);
+
+    // Restore active gold star timers
+    const gsData = loadGoldstarData();
+    let gsChanged = false;
+    for (const [gId, guildRaw] of Object.entries(gsData.guilds || {})) {
+        const entries = Array.isArray(guildRaw) ? guildRaw : (guildRaw.entries || []);
+        for (const entry of [...entries]) {
+            const remaining = entry.expires_at - Date.now();
+            if (remaining > 0) {
+                setTimeout(() => removeGoldstar(gId, entry.user_id, entry.id), remaining);
+                console.log(`[GoldStar] Restored timer for ${entry.user_id} in ${gId} (${Math.round(remaining / 1000)}s remaining)`);
+            } else {
+                await removeGoldstar(gId, entry.user_id, entry.id);
+                gsChanged = true;
+            }
+        }
+    }
+    if (gsChanged) saveGoldstarData(loadGoldstarData());
 
     // Periodically check for dashboard-created giveaways (every 30s)
     setInterval(() => {

@@ -4014,14 +4014,17 @@
             ]);
             const feedsData = await feedsRes.json();
             const chData = await chRes.json();
+            const rolesData = await rolesRes.json();
             const feeds = feedsData.feeds || [];
             const channels = (chData.channels || []).filter(c => c.type === 0);
+            const roles = rolesData.roles || [];
 
             const container = document.getElementById('social-feeds-list');
             if (feeds.length === 0) {
                 container.innerHTML = '<div class="empty-state"><p>No social feeds configured. Add one to get started!</p></div>';
                 return;
             }
+            window._socialFeedsCache = { feeds, channels, roles };
             const platformIcons = { youtube: '🔴', twitch: '🟣', rss: '🟠', tiktok: '⚫' };
             container.innerHTML = feeds.map(f => {
                 const ch = channels.find(c => c.id === f.channel_id);
@@ -4032,6 +4035,7 @@
                         <div style="color:var(--text-muted);font-size:0.8rem;">Posts to ${chName} | ${f.enabled ? '<span style="color:#57f287;">Active</span>' : '<span style="color:#ed4245;">Disabled</span>'}</div>
                     </div>
                     <div style="display:flex;gap:0.5rem;">
+                        <button class="control-btn secondary" onclick="cpEditFeed('${f.id}')">Edit</button>
                         <button class="control-btn secondary" onclick="cpToggleFeed('${f.id}', ${!f.enabled})">${f.enabled ? 'Disable' : 'Enable'}</button>
                         <button class="control-btn danger" onclick="cpDeleteFeed('${f.id}')">Delete</button>
                     </div>
@@ -4039,6 +4043,54 @@
             }).join('');
         } catch (e) { console.error('Failed to load social feeds:', e); }
     }
+
+    window.cpEditFeed = async function(feedId) {
+        if (document.getElementById('editFeedModal')) return;
+        const { feeds, channels, roles } = window._socialFeedsCache || {};
+        if (!feeds) return;
+        const f = feeds.find(x => x.id === feedId);
+        if (!f) return;
+        const html = `<div class="modal-overlay" id="editFeedModal" style="display:flex;">
+            <div class="modal" style="max-width:500px;">
+                <div class="modal-header"><h3>Edit Feed</h3><button class="modal-close" onclick="document.getElementById('editFeedModal').remove()">&times;</button></div>
+                <div class="modal-body">
+                    <div class="form-group"><label>Notification Channel</label><select id="ef-channel" class="form-select">
+                        ${(channels || []).map(c => `<option value="${c.id}" ${c.id === f.channel_id ? 'selected' : ''}>#${escapeHtml(c.name)}</option>`).join('')}
+                    </select></div>
+                    <div class="form-group"><label>Ping Role (optional)</label><select id="ef-ping-role" class="form-select">
+                        <option value="" ${!f.ping_role ? 'selected' : ''}>None</option>
+                        <option value="everyone" ${f.ping_role === 'everyone' ? 'selected' : ''}>@everyone</option>
+                        ${(roles || []).map(r => `<option value="${r.id}" ${f.ping_role === r.id ? 'selected' : ''}>${escapeHtml(r.name)}</option>`).join('')}
+                    </select></div>
+                    <div class="form-group"><label>Custom Message</label><textarea id="ef-message" rows="2" maxlength="500">${escapeHtml(f.message || '')}</textarea>
+                    <small style="color:var(--text-muted);">Placeholders: {name}, {title}, {link}</small></div>
+                </div>
+                <div class="modal-footer"><button class="control-btn primary" onclick="cpSaveFeed('${feedId}')">Save</button></div>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', html);
+    };
+
+    window.cpSaveFeed = async function(feedId) {
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/social-feeds/${feedId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    channel_id: document.getElementById('ef-channel').value,
+                    ping_role: document.getElementById('ef-ping-role').value,
+                    message: document.getElementById('ef-message').value
+                })
+            });
+            if ((await res.json()).success) {
+                showToast('Feed updated!', 'success');
+                document.getElementById('editFeedModal')?.remove();
+                loadSocialFeeds();
+            } else {
+                showToast('Failed to save', 'error');
+            }
+        } catch (e) { showToast('Failed to save', 'error'); }
+    };
 
     // ==================== LIVE ALERTS ====================
     let _laEditingId = null;

@@ -4258,7 +4258,7 @@
                     <div class="form-group"><label>Platform</label><select id="feed-platform" class="form-select" onchange="cpFeedPlatformChange(this.value)">
                         <option value="youtube">YouTube</option><option value="tiktok">TikTok</option><option value="rss">Custom RSS Feed</option>
                     </select></div>
-                    <div class="form-group"><label>Creator Name</label><input type="text" id="feed-name" placeholder="e.g. username" maxlength="100"></div>
+                    <div class="form-group" id="feed-name-group"><label>Creator Name</label><input type="text" id="feed-name" placeholder="e.g. PewDiePie" maxlength="100"></div>
                     <div class="form-group" id="feed-platform-id-group"><label id="feed-platform-id-label">YouTube Channel ID</label><input type="text" id="feed-platform-id" placeholder="e.g. UC-lHJZR3Gqxm24_Vd_AJ5Yw"><small id="feed-platform-id-hint" style="color:var(--text-muted);">Find this on the channel's About page or URL</small></div>
                     <div class="form-group" id="feed-url-group" style="display:none;"><label>RSS Feed URL</label><input type="text" id="feed-url" placeholder="https://..."></div>
                     <div class="form-group"><label>Notification Channel</label><select id="feed-channel" class="form-select">
@@ -4280,9 +4280,10 @@
     window.cpFeedPlatformChange = function(v) {
         document.getElementById('feed-url-group').style.display = v === 'rss' ? '' : 'none';
         document.getElementById('feed-platform-id-group').style.display = (v === 'youtube' || v === 'tiktok') ? '' : 'none';
+        document.getElementById('feed-name-group').style.display = v === 'tiktok' ? 'none' : '';
         if (v === 'tiktok') {
             document.getElementById('feed-platform-id-label').textContent = 'TikTok Username';
-            document.getElementById('feed-platform-id').placeholder = 'e.g. username (without @)';
+            document.getElementById('feed-platform-id').placeholder = 'e.g. uncokitsune (without @)';
             document.getElementById('feed-platform-id-hint').textContent = 'Enter the TikTok username without the @ symbol';
         } else {
             document.getElementById('feed-platform-id-label').textContent = 'YouTube Channel ID';
@@ -4299,7 +4300,9 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     platform: document.getElementById('feed-platform').value,
-                    name: document.getElementById('feed-name').value,
+                    name: document.getElementById('feed-platform').value === 'tiktok'
+                        ? document.getElementById('feed-platform-id').value
+                        : document.getElementById('feed-name').value,
                     platform_id: document.getElementById('feed-platform-id').value,
                     url: document.getElementById('feed-url').value,
                     channel_id: document.getElementById('feed-channel').value,

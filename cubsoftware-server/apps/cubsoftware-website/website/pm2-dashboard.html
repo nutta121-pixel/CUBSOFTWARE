@@ -436,6 +436,7 @@
                 <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0.75rem;">
                     <button class="control-btn small wl-tab-btn active" data-wl="pm2" onclick="switchWhitelistTab('pm2')">Server Dashboard</button>
                     <button class="control-btn small wl-tab-btn" data-wl="streamavatars" onclick="switchWhitelistTab('streamavatars')">StreamAvatars</button>
+                    <button class="control-btn small wl-tab-btn" data-wl="translate" onclick="switchWhitelistTab('translate')">Translation Servers</button>
                 </div>
 
                 <div id="wl-pm2-panel" class="wl-panel">
@@ -476,6 +477,27 @@
                         <div class="whitelist-users-card">
                             <h3>Whitelisted Users</h3>
                             <div class="whitelist-list" id="saWhitelistList"><div class="loading">Loading...</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="wl-translate-panel" class="wl-panel" style="display:none;">
+                    <p class="pm-section-hint">Discord servers (guilds) that can use the Auto-Translation feature. Only guilds on this list will have access to <code>/translate</code>, <code>/translate-setup</code>, and auto-translation.</p>
+                    <div class="whitelist-container">
+                        <div class="whitelist-add-card">
+                            <h3>Add Server</h3>
+                            <p class="help-text">Enable Developer Mode in Discord settings, then right-click a server → Copy ID.</p>
+                            <div class="add-user-form">
+                                <input type="text" id="newTranslateGuildId" placeholder="Discord Server (Guild) ID" class="input-field">
+                                <button class="control-btn primary" onclick="addToTranslateWhitelist()">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    Add
+                                </button>
+                            </div>
+                        </div>
+                        <div class="whitelist-users-card">
+                            <h3>Whitelisted Servers</h3>
+                            <div class="whitelist-list" id="translateWhitelistList"><div class="loading">Loading...</div></div>
                         </div>
                     </div>
                 </div>

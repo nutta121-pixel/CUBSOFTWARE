@@ -3880,6 +3880,8 @@ CUBREACTIVE_UPLOADS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)
 CUBREACTIVE_REDIRECT_URI = os.environ.get('CUBREACTIVE_REDIRECT_URI', 'https://cubsoftware.site/apps/cubreactive/auth/callback')
 CUBREACTIVE_RPC_REDIRECT_URI = os.environ.get('CUBREACTIVE_RPC_REDIRECT_URI', 'https://cubsoftware.site/apps/cubreactive/auth/rpc/callback')
 CUBREACTIVE_WS_URL = os.environ.get('CUBREACTIVE_WS_URL', 'wss://cubsoftware.site/cubreactive-ws')
+CUBSOFTWARE_GUILD_ID = os.environ.get('CUBSOFTWARE_GUILD_ID', '1284593395188367502')
+CUBSOFTWARE_INVITE = 'https://discord.gg/ngQXHUbnKg'
 
 # Whitelist of allowed settings keys for CubReactive config (prevents mass assignment)
 CUBREACTIVE_ALLOWED_SETTINGS = {
@@ -4013,6 +4015,11 @@ def cubreactive_home():
     overlay_key = None
 
     if cubreactive_user:
+        if not check_cubsoftware_membership(cubreactive_user['id']):
+            return render_template('membership-gate.html',
+                feature_name='CubReactive',
+                invite_url=CUBSOFTWARE_INVITE
+            )
         users = load_cubreactive_users()
         user_config = users.get(cubreactive_user['id'])
         if user_config is None:
@@ -4203,6 +4210,54 @@ def cubreactive_get_rpc_token():
             return jsonify({'error': 'Token expired', 'needs_auth': True}), 401
 
     return jsonify({'access_token': rpc_token})
+
+def _load_membership_cache():
+    with _membership_cache_lock:
+        try:
+            if os.path.exists(MEMBERSHIP_CACHE_FILE):
+                with open(MEMBERSHIP_CACHE_FILE, 'r') as f:
+                    return json.load(f)
+        except Exception:
+            pass
+    return {'non_members': {}}
+
+def _save_membership_cache(data):
+    with _membership_cache_lock:
+        os.makedirs(os.path.dirname(MEMBERSHIP_CACHE_FILE), exist_ok=True)
+        with open(MEMBERSHIP_CACHE_FILE, 'w') as f:
+            json.dump(data, f, indent=2)
+
+def check_cubsoftware_membership(discord_user_id):
+    """Return True if the user is a member of the official CUB SOFTWARE Discord server."""
+    if not CUBSOFTWARE_GUILD_ID or not discord_user_id:
+        return True  # Fail open if not configured
+    # File-based cache: if the bot marked this user as non-member, deny immediately
+    cache = _load_membership_cache()
+    if str(discord_user_id) in cache.get('non_members', {}):
+        return False
+    result = cub_protector_bot_request(f'/guilds/{CUBSOFTWARE_GUILD_ID}/members/{discord_user_id}', bypass_cache=True)
+    return result is not None and 'user' in result
+
+@app.route('/api/check-membership')
+def api_check_membership():
+    """Check if the logged-in user is in the CUB SOFTWARE Discord server. Result cached in session for 1 hour."""
+    cub = session.get('cub_user') or {}
+    discord = cub.get('discord') or cub
+    user_id = discord.get('id') if isinstance(discord, dict) else None
+    if not user_id:
+        return jsonify({'member': False, 'invite': CUBSOFTWARE_INVITE})
+    # File-based non-member cache takes priority over session — handles instant revocation on server leave
+    file_cache = _load_membership_cache()
+    if str(user_id) in file_cache.get('non_members', {}):
+        session.pop('_cubsw_member', None)  # clear any stale session cache
+        return jsonify({'member': False, 'invite': CUBSOFTWARE_INVITE})
+    # Check session cache
+    cached = session.get('_cubsw_member')
+    if cached and isinstance(cached, dict) and cached.get('expires', 0) > time.time():
+        return jsonify({'member': cached['member'], 'invite': CUBSOFTWARE_INVITE})
+    is_member = check_cubsoftware_membership(user_id)
+    session['_cubsw_member'] = {'member': is_member, 'expires': time.time() + 3600}
+    return jsonify({'member': is_member, 'invite': CUBSOFTWARE_INVITE})
 
 # CubReactive API Routes
 @app.route('/api/cubreactive/user/<user_id>')
@@ -5722,6 +5777,23 @@ def submit_report():
 PM2_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'pm2_config.json')
 PM2_WHITELIST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'pm2_whitelist.json')
 APP_WHITELIST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'app_whitelist.json')
+TRANSLATE_WHITELIST_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'translate_whitelist.json')
+
+def _load_translate_whitelist():
+    """Return list of whitelisted guild IDs for auto-translation."""
+    try:
+        if os.path.exists(TRANSLATE_WHITELIST_FILE):
+            with open(TRANSLATE_WHITELIST_FILE, 'r') as f:
+                data = json.load(f)
+                return data if isinstance(data, list) else data.get('guilds', [])
+    except Exception:
+        pass
+    return []
+
+def _save_translate_whitelist(guild_ids):
+    os.makedirs(os.path.dirname(TRANSLATE_WHITELIST_FILE), exist_ok=True)
+    with open(TRANSLATE_WHITELIST_FILE, 'w') as f:
+        json.dump(list(guild_ids), f, indent=2)
 
 _APP_WHITELIST_VALID = {'streamavatars'}
 
@@ -6872,6 +6944,37 @@ def admin_remove_app_whitelist(app_name):
         data[app_name]['allowed_users'].remove(user_id)
         save_app_whitelist(data)
     return jsonify({'success': True, 'allowed_users': data[app_name]['allowed_users']})
+
+@app.route('/api/admin/translate-whitelist', methods=['GET'])
+@pm2_auth_required
+def admin_get_translate_whitelist():
+    return jsonify({'guilds': _load_translate_whitelist()})
+
+@app.route('/api/admin/translate-whitelist/add', methods=['POST'])
+@pm2_auth_required
+def admin_add_translate_whitelist():
+    body = request.get_json(silent=True) or {}
+    guild_id = str(body.get('guild_id', '')).strip()
+    if not guild_id:
+        return jsonify({'error': 'guild_id is required'}), 400
+    guilds = _load_translate_whitelist()
+    if guild_id not in guilds:
+        guilds.append(guild_id)
+        _save_translate_whitelist(guilds)
+    return jsonify({'success': True, 'guilds': guilds})
+
+@app.route('/api/admin/translate-whitelist/remove', methods=['POST'])
+@pm2_auth_required
+def admin_remove_translate_whitelist():
+    body = request.get_json(silent=True) or {}
+    guild_id = str(body.get('guild_id', '')).strip()
+    if not guild_id:
+        return jsonify({'error': 'guild_id is required'}), 400
+    guilds = _load_translate_whitelist()
+    if guild_id in guilds:
+        guilds.remove(guild_id)
+        _save_translate_whitelist(guilds)
+    return jsonify({'success': True, 'guilds': guilds})
 
 # ==================== ADMIN API ENDPOINTS ====================
 
@@ -13580,6 +13683,8 @@ CUB_PROTECTOR_BACKUPS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'backups.json'
 CUB_PROTECTOR_SOCIAL_FEEDS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'social_feeds.json')
 CUB_PROTECTOR_LIVE_ALERTS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'live_alerts.json')
 CUSTOM_BOTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'custom_bots.json')
+MEMBERSHIP_CACHE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'membership_cache.json')
+_membership_cache_lock = threading.Lock()
 CUB_PROTECTOR_REACTION_ROLES_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'reaction_roles.json')
 CUB_PROTECTOR_CUSTOM_COMMANDS_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'custom_commands.json')
 CUB_PROTECTOR_STARBOARD_FILE = os.path.join(CUB_PROTECTOR_DATA_DIR, 'starboard.json')
@@ -15555,6 +15660,36 @@ def _save_custom_bots(data):
     with open(CUSTOM_BOTS_FILE, 'w') as f:
         json.dump(data, f, indent=2)
 
+def _stop_custom_bots_for_user(user_id):
+    """Stop all running custom bots created by this user and flag them as membership_suspended."""
+    data = _load_custom_bots()
+    stopped = []
+    for guild_id, entry in data.get('guilds', {}).items():
+        if str(entry.get('created_by', '')) == str(user_id) and entry.get('enabled') and not entry.get('membership_suspended'):
+            process_name = f'8-cp-custom-{guild_id}'
+            import subprocess as _sp
+            _sp.run(['pm2', 'stop', process_name], capture_output=True)
+            entry['membership_suspended'] = True
+            stopped.append(guild_id)
+    if stopped:
+        _save_custom_bots(data)
+    return stopped
+
+def _resume_custom_bots_for_user(user_id):
+    """Clear the membership_suspended flag and restart custom bots for a user who rejoined the server."""
+    data = _load_custom_bots()
+    resumed = []
+    for guild_id, entry in data.get('guilds', {}).items():
+        if str(entry.get('created_by', '')) == str(user_id) and entry.get('membership_suspended'):
+            process_name = f'8-cp-custom-{guild_id}'
+            import subprocess as _sp
+            _sp.run(['pm2', 'restart', process_name], capture_output=True)
+            entry.pop('membership_suspended', None)
+            resumed.append(guild_id)
+    if resumed:
+        _save_custom_bots(data)
+    return resumed
+
 def _get_guild_bot_token(guild_id):
     """Return the effective Discord bot token for a guild.
     Uses the custom bot token if the guild has an active custom bot, else falls back to the main bot token."""
@@ -15607,6 +15742,7 @@ def custom_bot_get(guild_id):
         'invite_url': invite_url,
         'pm2_name': f"8-cp-custom-{guild_id}",
         'presence': presence,
+        'membership_suspended': entry.get('membership_suspended', False),
     })
 
 @app.route('/api/cub-protector/guilds/<guild_id>/custom-bot', methods=['POST'])
@@ -15852,6 +15988,11 @@ def custom_bot_status(guild_id):
 def custom_bot_start(guild_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
+    # Block start if owner is not a CUB SOFTWARE server member
+    user = session.get('cub_protector_user', {})
+    user_id = user.get('id', '')
+    if user_id and not check_cubsoftware_membership(user_id):
+        return jsonify({'error': 'Server membership required to start your custom bot'}), 403
     process_name = f'8-cp-custom-{guild_id}'
     try:
         # Clear any stored intent_error so a fresh attempt can be made
@@ -17647,16 +17788,25 @@ def cp_media_channels_delete(guild_id, item_id):
 @app.route('/api/cub-protector/guilds/<guild_id>/translate', methods=['GET'])
 @cub_protector_auth_required
 def cp_translate_get(guild_id):
-    return _cp_feature_get(guild_id, CUB_PROTECTOR_TRANSLATE_FILE)
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    data = load_cp_json(CUB_PROTECTOR_TRANSLATE_FILE)
+    guild_data = data.get('guilds', {}).get(guild_id, {})
+    whitelisted = guild_id in _load_translate_whitelist()
+    return jsonify({'settings': guild_data.get('settings', {}), 'items': guild_data.get('items', []), 'whitelisted': whitelisted})
 
 @app.route('/api/cub-protector/guilds/<guild_id>/translate', methods=['PATCH'])
 @cub_protector_auth_required
 def cp_translate_update(guild_id):
+    if guild_id not in _load_translate_whitelist():
+        return jsonify({'error': 'Translation is not enabled for this server'}), 403
     return _cp_feature_update(guild_id, CUB_PROTECTOR_TRANSLATE_FILE)
 
 @app.route('/api/cub-protector/guilds/<guild_id>/translate/add', methods=['POST'])
 @cub_protector_auth_required
 def cp_translate_add(guild_id):
+    if guild_id not in _load_translate_whitelist():
+        return jsonify({'error': 'Translation is not enabled for this server'}), 403
     return _cp_feature_add_item(guild_id, CUB_PROTECTOR_TRANSLATE_FILE)
 
 @app.route('/api/cub-protector/guilds/<guild_id>/translate/<item_id>', methods=['PATCH'])
@@ -17664,6 +17814,8 @@ def cp_translate_add(guild_id):
 def cp_translate_item_update(guild_id, item_id):
     if not check_cp_guild_access(guild_id):
         return jsonify({'error': 'Access denied'}), 403
+    if guild_id not in _load_translate_whitelist():
+        return jsonify({'error': 'Translation is not enabled for this server'}), 403
     data = load_cp_json(CUB_PROTECTOR_TRANSLATE_FILE)
     items = data.get('guilds', {}).get(guild_id, {}).get('items', [])
     item = next((i for i in items if i.get('id') == item_id), None)
@@ -17678,6 +17830,8 @@ def cp_translate_item_update(guild_id, item_id):
 @app.route('/api/cub-protector/guilds/<guild_id>/translate/<item_id>', methods=['DELETE'])
 @cub_protector_auth_required
 def cp_translate_delete(guild_id, item_id):
+    if guild_id not in _load_translate_whitelist():
+        return jsonify({'error': 'Translation is not enabled for this server'}), 403
     return _cp_feature_delete_item(guild_id, item_id, CUB_PROTECTOR_TRANSLATE_FILE)
 
 @app.route('/api/cub-protector/guilds/<guild_id>/reaction-board', methods=['GET'])

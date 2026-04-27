@@ -7247,6 +7247,29 @@
         try {
             const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/translate`);
             const data = await res.json();
+            if (!data.whitelisted) {
+                const section = document.getElementById('translateSection');
+                if (section) {
+                    const existing = section.querySelector('.translate-access-gate');
+                    if (!existing) {
+                        const gate = document.createElement('div');
+                        gate.className = 'translate-access-gate';
+                        gate.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;text-align:center;gap:1rem;padding:2rem;';
+                        gate.innerHTML = `
+                            <svg width="48" height="48" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                            <div>
+                                <h3 style="font-size:1.1rem;font-weight:600;color:var(--text-primary);margin:0 0 0.5rem;">Auto-Translation not available</h3>
+                                <p style="font-size:0.875rem;color:rgba(255,255,255,0.45);max-width:380px;margin:0 auto;">This feature is only available to approved servers. Join the <a href="https://discord.gg/ngQXHUbnKg" target="_blank" style="color:rgba(255,255,255,0.65);">CUB SOFTWARE Discord</a> and contact us to request access.</p>
+                            </div>`;
+                        const sectionHeader = section.querySelector('.section-header');
+                        if (sectionHeader) sectionHeader.after(gate);
+                        else section.prepend(gate);
+                        // Hide the rest of the section content
+                        section.querySelectorAll('.settings-card, .translate-list-card, .feature-card').forEach(el => el.style.display = 'none');
+                    }
+                }
+                return;
+            }
             const s = data.settings || {};
             document.getElementById('tr-enabled').checked = s.enabled !== false;
             _trPopulateLangSelect('tr-add-from', 'auto', true);
@@ -7473,11 +7496,44 @@
         } catch (e) { showToast('Failed to save role logger', 'error'); }
     };
 
+    // ==================== SERVER MEMBERSHIP GATE ====================
+    let _membershipCache = null;
+    async function checkServerMembership() {
+        if (_membershipCache !== null) return _membershipCache;
+        try {
+            const res = await fetch('/api/check-membership');
+            const data = await res.json();
+            _membershipCache = data.member === true;
+            return _membershipCache;
+        } catch { return true; } // Fail open on network error
+    }
+    function showMembershipGate(containerId, featureName, reloadFn) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        const refreshId = `_gate_refresh_${containerId}`;
+        el.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.25rem;padding:3rem 2rem;text-align:center;background:rgba(255,255,255,0.03);border-radius:12px;border:1px solid rgba(255,255,255,0.08);">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                <div>
+                    <h3 style="margin:0 0 0.5rem;font-size:1.1rem;color:var(--text-primary);">${featureName} requires server membership</h3>
+                    <p style="margin:0;font-size:0.875rem;color:var(--text-muted);max-width:420px;">You need to be a member of the official CUB SOFTWARE Discord server to access this feature.</p>
+                </div>
+                <a href="https://discord.gg/ngQXHUbnKg" target="_blank" class="control-btn primary" style="text-decoration:none;padding:0.6rem 1.4rem;">Join the CUB SOFTWARE Server</a>
+                <button id="${refreshId}" class="control-btn small" style="font-size:0.8rem;color:var(--text-muted);">Already joined? Click to refresh</button>
+            </div>`;
+        const refreshBtn = document.getElementById(refreshId);
+        if (refreshBtn && reloadFn) {
+            refreshBtn.addEventListener('click', () => { _membershipCache = null; reloadFn(); });
+        }
+    }
+
     // ==================== CUSTOM BOT ====================
     let _customBotInviteUrl = null;
 
     async function loadCustomBot() {
         if (!selectedGuild) return;
+        const isMember = await checkServerMembership();
+        if (!isMember) { showMembershipGate('custom-bot-content', 'Custom Bot', loadCustomBot); return; }
         try {
             const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/custom-bot`);
             const data = await res.json();
@@ -7502,6 +7558,20 @@
                 if (cidEl) cidEl.textContent = data.client_id ? `ID: ${data.client_id}` : '';
                 _customBotInviteUrl = data.invite_url || null;
                 if (data.presence) _customBotPresence = data.presence;
+                // Membership suspension notice
+                let _suspendedBanner = document.getElementById('custom-bot-suspended-banner');
+                if (data.membership_suspended) {
+                    if (!_suspendedBanner) {
+                        _suspendedBanner = document.createElement('div');
+                        _suspendedBanner.id = 'custom-bot-suspended-banner';
+                        _suspendedBanner.style.cssText = 'background:rgba(250,166,26,0.12);border:1px solid rgba(250,166,26,0.35);border-radius:8px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;font-size:0.875rem;color:rgba(255,255,255,0.8);';
+                        _suspendedBanner.innerHTML = '<svg width="18" height="18" fill="none" stroke="#faa61a" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Your custom bot was stopped because you left the CUB SOFTWARE Discord server. <a href="https://discord.gg/ngQXHUbnKg" target="_blank" style="color:#faa61a;">Rejoin</a> to restore access.</span>';
+                        hero.prepend(_suspendedBanner);
+                    }
+                    _suspendedBanner.style.display = 'flex';
+                } else if (_suspendedBanner) {
+                    _suspendedBanner.style.display = 'none';
+                }
                 // Avatar
                 const avatarImg = document.getElementById('custom-bot-avatar');
                 const fallback = document.getElementById('custom-bot-avatar-fallback');

@@ -2901,23 +2901,24 @@ async function loadDebugStatus() {
         if (data.error) {
             out.textContent = 'Error: ' + data.error;
         } else {
+            const vc = data.voiceConnections || [];
+            const vs = data.voiceStates || [];
+            const oc = data.overlayConnections || [];
+            const och = data.overlayChannels || [];
             const lines = [
-                `WebSocket clients connected: ${data.wsClients}`,
+                `WebSocket clients connected: ${data.wsClients ?? 0}`,
                 '',
                 'Voice connections (bot in channel):',
-                data.voiceConnections.length ? data.voiceConnections.map(c => `  ${c.channelId}: ${c.status}`).join('\n') : '  (none)',
-                '',
-                'Audio subscriptions (speaking detection active for):',
-                data.subscriptions.length ? data.subscriptions.map(s => `  channel ${s.channelId}: [${s.users.join(', ')}]`).join('\n') : '  (none)',
+                vc.length ? vc.map(c => `  ${c.channelId}: ${c.status}`).join('\n') : '  (none)',
                 '',
                 'Voice states (users bot knows about):',
-                data.voiceStates.length ? data.voiceStates.map(s => `  ${s.username} (${s.userId}) — speaking:${s.speaking} muted:${s.muted} deaf:${s.deafened}`).join('\n') : '  (none — bot may not know you\'re in voice yet)',
+                vs.length ? vs.map(s => `  ${s.username} (${s.userId}) — speaking:${s.speaking} muted:${s.muted} deaf:${s.deafened}`).join('\n') : '  (none — bot may not know you\'re in voice yet)',
                 '',
                 'Overlay connections (overlays subscribed per user):',
-                data.overlayConnections.length ? data.overlayConnections.map(o => `  ${o.userId}: ${o.count} open connection(s)`).join('\n') : '  (none)',
+                oc.length ? oc.map(o => `  ${o.userId}: ${o.count} open connection(s)`).join('\n') : '  (none)',
                 '',
                 'Overlay channels (channels bot joined for overlays):',
-                data.overlayChannels.length ? data.overlayChannels.map(c => `  channel ${c.channelId}: [${c.users.join(', ')}]`).join('\n') : '  (none)',
+                och.length ? och.map(c => `  channel ${c.channelId}: [${c.users.join(', ')}]`).join('\n') : '  (none)',
             ];
             out.textContent = lines.join('\n');
         }

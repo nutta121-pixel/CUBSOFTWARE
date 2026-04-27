@@ -182,6 +182,7 @@
                 loadWhitelist();
                 loadAppWhitelist('streamavatars');
                 loadAppWhitelist('marbles');
+                loadTranslateWhitelist();
                 break;
             case 'ipbans':
                 loadIpBans();
@@ -1003,6 +1004,69 @@
                 loadAppWhitelist(app);
             } else throw new Error('Failed');
         } catch (e) { showToast('Failed to remove user', 'error'); }
+    };
+
+    // ==================== TRANSLATE WHITELIST ====================
+    async function loadTranslateWhitelist() {
+        const listEl = document.getElementById('translateWhitelistList');
+        if (!listEl) return;
+        try {
+            const res = await fetch('/api/admin/translate-whitelist');
+            if (!res.ok) throw new Error('Failed');
+            const data = await res.json();
+            const guilds = data.guilds || [];
+            if (guilds.length === 0) {
+                listEl.innerHTML = '<div class="empty-state" style="color:var(--text-muted);font-size:0.85rem;">No servers whitelisted — translation is disabled for all servers</div>';
+                return;
+            }
+            listEl.innerHTML = guilds.map(id => `
+                <div class="whitelist-user">
+                    <span class="whitelist-user-id">${id}</span>
+                    <button class="whitelist-remove" onclick="removeFromTranslateWhitelist('${id}')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            `).join('');
+        } catch (e) {
+            listEl.innerHTML = '<div class="loading">Failed to load</div>';
+        }
+    }
+
+    window.addToTranslateWhitelist = async function() {
+        const input = document.getElementById('newTranslateGuildId');
+        const guildId = input?.value?.trim();
+        if (!guildId) { showToast('Please enter a guild ID', 'error'); return; }
+        if (!/^\d{17,19}$/.test(guildId)) { showToast('Invalid Discord Server ID format', 'error'); return; }
+        try {
+            const res = await fetch('/api/admin/translate-whitelist/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ guild_id: guildId })
+            });
+            if (res.ok) {
+                showToast('Server added to translate whitelist', 'success');
+                if (input) input.value = '';
+                loadTranslateWhitelist();
+            } else throw new Error('Failed');
+        } catch (e) { showToast('Failed to add server', 'error'); }
+    };
+
+    window.removeFromTranslateWhitelist = async function(guildId) {
+        if (!confirm(`Remove guild ${guildId} from translate whitelist?`)) return;
+        try {
+            const res = await fetch('/api/admin/translate-whitelist/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ guild_id: guildId })
+            });
+            if (res.ok) {
+                showToast('Server removed from translate whitelist', 'success');
+                loadTranslateWhitelist();
+            } else throw new Error('Failed');
+        } catch (e) { showToast('Failed to remove server', 'error'); }
     };
 
     // ==================== IP BANS ====================

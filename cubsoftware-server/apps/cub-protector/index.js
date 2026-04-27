@@ -57,6 +57,60 @@ const DEV_GUILD_ID = process.env.DEV_GUILD_ID || null;
 const CUSTOM_BOTS_FILE = path.join(__dirname, '..', 'cubsoftware-website', 'data', 'custom_bots.json');
 const CUBAI_SERVERS_FILE = path.join(__dirname, '..', 'cubsoftware-website', 'data', 'cubai_servers.json');
 
+// CUB SOFTWARE home server — used for membership gating
+const CUBSOFTWARE_GUILD_ID = process.env.CUBSOFTWARE_GUILD_ID || '1284593395188367502';
+const MEMBERSHIP_CACHE_FILE = path.join(__dirname, '..', 'cubsoftware-website', 'data', 'membership_cache.json');
+
+function _loadMembershipCache() {
+    try {
+        if (fs.existsSync(MEMBERSHIP_CACHE_FILE))
+            return JSON.parse(fs.readFileSync(MEMBERSHIP_CACHE_FILE, 'utf8'));
+    } catch (e) {}
+    return { non_members: {} };
+}
+function _saveMembershipCache(data) {
+    try { fs.writeFileSync(MEMBERSHIP_CACHE_FILE, JSON.stringify(data, null, 2), 'utf8'); } catch (e) {}
+}
+function _noteMemberLeft(userId) {
+    const cache = _loadMembershipCache();
+    if (!cache.non_members) cache.non_members = {};
+    cache.non_members[String(userId)] = Date.now() / 1000;
+    _saveMembershipCache(cache);
+}
+function _noteMemberJoined(userId) {
+    const cache = _loadMembershipCache();
+    if (cache.non_members) delete cache.non_members[String(userId)];
+    _saveMembershipCache(cache);
+}
+function _stopCustomBotsForUser(userId) {
+    try {
+        const raw = fs.existsSync(CUSTOM_BOTS_FILE) ? JSON.parse(fs.readFileSync(CUSTOM_BOTS_FILE, 'utf8')) : { guilds: {} };
+        let changed = false;
+        for (const [guildId, entry] of Object.entries(raw.guilds || {})) {
+            if (String(entry.created_by) === String(userId) && entry.enabled && !entry.membership_suspended) {
+                try { execSync(`pm2 stop 8-cp-custom-${guildId}`, { stdio: 'ignore' }); } catch (_) {}
+                entry.membership_suspended = true;
+                changed = true;
+            }
+        }
+        if (changed) fs.writeFileSync(CUSTOM_BOTS_FILE, JSON.stringify(raw, null, 2), 'utf8');
+    } catch (e) { console.error('[Membership] _stopCustomBotsForUser error:', e.message); }
+}
+function _resumeCustomBotsForUser(userId) {
+    try {
+        const raw = fs.existsSync(CUSTOM_BOTS_FILE) ? JSON.parse(fs.readFileSync(CUSTOM_BOTS_FILE, 'utf8')) : { guilds: {} };
+        let changed = false;
+        for (const [guildId, entry] of Object.entries(raw.guilds || {})) {
+            if (String(entry.created_by) === String(userId) && entry.membership_suspended) {
+                try { execSync(`pm2 restart 8-cp-custom-${guildId}`, { stdio: 'ignore' }); } catch (_) {}
+                delete entry.membership_suspended;
+                changed = true;
+            }
+        }
+        if (changed) fs.writeFileSync(CUSTOM_BOTS_FILE, JSON.stringify(raw, null, 2), 'utf8');
+    } catch (e) { console.error('[Membership] _resumeCustomBotsForUser error:', e.message); }
+}
+
 // Cache of guilds that have an active custom bot (main bot skips these guilds)
 let _cbGuildsCache = null;
 let _cbGuildsCacheTime = 0;
@@ -231,6 +285,29 @@ const MSG_REACTIONS_FILE = path.join(DATA_DIR, 'message_reactions.json');
 const MEDIA_CHANNELS_FILE = path.join(DATA_DIR, 'media_channels.json');
 const SLOWMODE_FILE = path.join(DATA_DIR, 'slowmode.json');
 const TRANSLATE_FILE = path.join(DATA_DIR, 'translate.json');
+const TRANSLATE_WHITELIST_FILE = path.join(__dirname, '..', 'cubsoftware-website', 'data', 'translate_whitelist.json');
+
+let _translateWhitelistCache = null;
+let _translateWhitelistCacheTime = 0;
+const TRANSLATE_WL_TTL = 60000; // refresh every 60s
+
+function _getTranslateWhitelist() {
+    if (_translateWhitelistCache && Date.now() - _translateWhitelistCacheTime < TRANSLATE_WL_TTL)
+        return _translateWhitelistCache;
+    try {
+        if (fs.existsSync(TRANSLATE_WHITELIST_FILE))
+            _translateWhitelistCache = JSON.parse(fs.readFileSync(TRANSLATE_WHITELIST_FILE, 'utf8'));
+        else
+            _translateWhitelistCache = [];
+    } catch (_) { _translateWhitelistCache = []; }
+    _translateWhitelistCacheTime = Date.now();
+    return _translateWhitelistCache;
+}
+
+function _isTranslateWhitelisted(guildId) {
+    const wl = _getTranslateWhitelist();
+    return Array.isArray(wl) && wl.includes(String(guildId));
+}
 const REACTION_BOARD_FILE = path.join(DATA_DIR, 'reaction_board.json');
 const SUPPORT_SERVER_LINK = 'https://discord.gg/ngQXHUbnKg';
 const SUPPORT_USER_LINK = 'https://discord.com/users/523949187663585310';
@@ -3065,7 +3142,9 @@ function startLogServer() {
         crVoiceStates.forEach((s, uid) => states.push({ userId: uid, channelId: s.channelId, username: s.username, speaking: s.speaking, muted: s.muted, deafened: s.deafened }));
         const overlays = [];
         crOverlayConns.forEach((cs, uid) => overlays.push({ userId: uid, count: cs.filter(ws => ws.readyState === WebSocket.OPEN).length }));
-        res.json({ voiceConnections: voiceConns, voiceStates: states, overlayConnections: overlays, wsClients: crWss ? crWss.clients.size : 0 });
+        const overlayChannels = [];
+        crOverlayChannels.forEach((users, cid) => overlayChannels.push({ channelId: cid, users: [...users] }));
+        res.json({ voiceConnections: voiceConns, voiceStates: states, overlayConnections: overlays, overlayChannels, wsClients: crWss ? crWss.clients.size : 0 });
     });
 
     logApp.post('/cubreactive/test-speaking', (req, res) => {
@@ -4221,6 +4300,8 @@ client.on('messageCreate', (message) => {
     if (CUSTOM_GUILD_ID && message.guildId !== CUSTOM_GUILD_ID) return;
     if (!CUSTOM_GUILD_ID && guildHasCustomBot(message.guildId)) return;
 
+    if (message.guildId && !_isTranslateWhitelisted(message.guildId)) return;
+
     const items = getGuildTranslateItems(message.guildId);
     if (!items.length) return;
 
@@ -4421,6 +4502,15 @@ client.on('messageDeleteBulk', async (messages) => {
 client.on('guildMemberAdd', async (member) => {
     if (CUSTOM_GUILD_ID && member.guild.id !== CUSTOM_GUILD_ID) return;
 
+    // CUB SOFTWARE server membership tracking (main bot only)
+    if (!CUSTOM_GUILD_ID && member.guild.id === CUBSOFTWARE_GUILD_ID) {
+        try {
+            _noteMemberJoined(member.id);
+            _resumeCustomBotsForUser(member.id);
+            console.log(`[Membership] ${member.user.tag} joined CUB SOFTWARE server — access restored`);
+        } catch (e) { console.error('[Membership] guildMemberAdd error:', e.message); }
+    }
+
     // ---- Auto-roles run first on whichever bot receives the event ----
     // Runs before the guildHasCustomBot check so that if the custom bot is
     // configured but not running, the main bot still assigns roles.
@@ -4582,6 +4672,16 @@ client.on('guildMemberAdd', async (member) => {
 
 client.on('guildMemberRemove', async (member) => {
     if (CUSTOM_GUILD_ID && member.guild.id !== CUSTOM_GUILD_ID) return;
+
+    // CUB SOFTWARE server membership tracking (main bot only)
+    if (!CUSTOM_GUILD_ID && member.guild.id === CUBSOFTWARE_GUILD_ID) {
+        try {
+            _noteMemberLeft(member.id);
+            _stopCustomBotsForUser(member.id);
+            console.log(`[Membership] ${member.user.tag} left CUB SOFTWARE server — access revoked`);
+        } catch (e) { console.error('[Membership] guildMemberRemove error:', e.message); }
+    }
+
     if (guildHasCustomBot(member.guild.id)) return;
     // Stats tracking
     const stats = loadStatsData();
@@ -8633,6 +8733,8 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (commandName === 'translate') {
+        if (guild && !_isTranslateWhitelisted(guild.id))
+            return interaction.reply({ content: '❌ Auto-translation is not enabled for this server. Contact CUB SOFTWARE to request access.', flags: MessageFlags.Ephemeral });
         const text = interaction.options.getString('text');
         const to = interaction.options.getString('to');
         const from = interaction.options.getString('from') || 'auto';
@@ -8669,6 +8771,8 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (commandName === 'translate-setup') {
+        if (guild && !_isTranslateWhitelisted(guild.id))
+            return interaction.reply({ content: '❌ Auto-translation is not enabled for this server. Contact CUB SOFTWARE to request access.', flags: MessageFlags.Ephemeral });
         const sub = interaction.options.getSubcommand();
         console.log(`[CUB MEGABRAIN] /translate-setup ${sub}: guild=${guild?.name} (${guild?.id}) user=${interaction.user.tag}`);
         const data = loadTranslateConfig();
@@ -8734,6 +8838,8 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (commandName === 'translate-edit') {
+        if (guild && !_isTranslateWhitelisted(guild.id))
+            return interaction.reply({ content: '❌ Auto-translation is not enabled for this server. Contact CUB SOFTWARE to request access.', flags: MessageFlags.Ephemeral });
         const channel = interaction.options.getChannel('channel');
         const to = interaction.options.getString('to');
         const from = interaction.options.getString('from');

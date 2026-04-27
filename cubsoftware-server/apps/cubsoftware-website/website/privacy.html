@@ -157,11 +157,29 @@
                 <h3>6a.3 CUB Protector</h3>
                 <p>When you use CUB Protector, we collect and store:</p>
                 <ul>
-                    <li>Server ID and configuration settings you apply through the bot</li>
-                    <li>Moderation action logs (bans, kicks, warnings) for audit purposes</li>
-                    <li>User IDs of members subject to moderation actions</li>
+                    <li>Server ID and all configuration settings you apply through the dashboard or bot commands</li>
+                    <li>Moderation action logs (bans, kicks, timeouts, warnings) including user IDs, moderator IDs, reasons, and timestamps, for audit and history purposes</li>
+                    <li>XP and leveling data: user IDs, XP points, levels, and role reward assignments per server</li>
+                    <li>Ticket data: ticket channel IDs, opener user IDs, and ticket configuration settings</li>
+                    <li>Giveaway data: giveaway configuration, entry user IDs, and winner selections</li>
+                    <li>Auto-translation settings: configured channel IDs and language preferences. Message content is transmitted to third-party translation APIs (Google Translate, LibreTranslate, MyMemory) for translation but is not stored by us</li>
+                    <li>Reaction board settings: channel IDs and emoji configuration</li>
+                    <li>Dynamic voice channel configuration and active channel records</li>
+                    <li>Logging configuration: which events are logged and to which channels</li>
+                    <li>Custom Bot configuration: your Discord bot token (stored encrypted at rest), bot name, and process status. Your token is never exposed publicly and is used solely to run your custom bot instance</li>
                 </ul>
-                <p>We do NOT access or store your Discord messages beyond what is necessary for moderation rule matching.</p>
+                <p>We do NOT access or store the content of Discord messages beyond what is necessary for active moderation rule matching. Message content used for moderation checks (e.g. spam detection, link filtering) is evaluated in memory and not persisted.</p>
+
+                <h3>6a.4 CubReactive</h3>
+                <p>CubReactive is a voice-reactive streaming overlay tool. When you use CubReactive, we collect and store:</p>
+                <ul>
+                    <li>Discord user ID, username, and avatar URL, obtained via Discord OAuth</li>
+                    <li>Voice state data transmitted by the CUB Protector bot: speaking status, muted status, and deafened status. This data is processed in real time to drive overlay animations and is not permanently stored</li>
+                    <li>Overlay configuration settings: avatar images you upload, visual settings (border, glow, animations, position, etc.), and overlay preferences</li>
+                    <li>A randomly generated overlay key used to authenticate your browser source URL. This key can be regenerated at any time from your dashboard</li>
+                    <li>Images you upload for your overlay are stored on our servers and associated with your Discord user ID</li>
+                </ul>
+                <p>Access to CubReactive requires membership in the official CUB SOFTWARE Discord server. We verify this at the time of access using the Discord API. We do not store the result of this check beyond your current session.</p>
 
                 <h2>6b. Affiliate Program</h2>
                 <p>When you submit an affiliate application or participate in the CUB SOFTWARE Affiliate Program, we collect and store:</p>

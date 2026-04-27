@@ -1,0 +1,151 @@
+=== HEADLINE ===
+
+Free. No paywalls. One bot that protects, manages, and grows your Discord server automatically.
+
+
+=== LONG DESCRIPTION ===
+
+## What is CUB PROTECTOR?
+
+**CUB PROTECTOR** is a **free, full-featured Discord bot** built to handle moderation, protection, engagement, and server management — all from one clean web dashboard.
+
+> No premium tiers. No locked features. No subscriptions. Everything is free, forever.
+
+---
+
+## Smart Auto-Moderation
+
+**Every server faces spam, raids, and abuse. CUB PROTECTOR stops it automatically before it becomes a problem.**
+
+**Spam Detection** — Stops flooding and repeated messages
+**Invite Blocking** — Prevents unauthorized server advertising
+**Caps & Mention Protection** — Stops disruptive shouting and mass pings
+**Link Protection** — Detects suspicious and masked links
+**Emoji & Sticker Limits** — Prevents visual spam
+**Anti-Raid & Anti-Nuke** — Detects and responds to coordinated attacks
+**Alt Account Detection** — Flags suspicious new accounts automatically
+
+> Set it once. Let the system protect your server 24/7.
+
+---
+
+## Moderation Tools
+
+Full control over your server with a complete set of moderation actions.
+
+**Temporary and permanent bans**
+**Warnings** with stored history per user
+**Timeouts** and slowmode control
+**Channel locks** and full server lockdown
+**Bulk message deletion**
+**User notes** for mod team reference
+**Modmail** for private member support
+**Ban appeal system** built in
+
+> Every action is logged automatically for full transparency and accountability.
+
+---
+
+## Logging System
+
+**Track everything in real time. Nothing goes unnoticed.**
+
+- Message edits and deletions
+- Member joins, leaves, and bans
+- Role and nickname changes
+- Voice activity
+- Critical server actions
+
+---
+
+## Dynamic Voice Channels
+
+**Users create self-managing temporary voice channels on demand.**
+
+Members get full control over their own channel:
+
+- Lock or unlock their channel
+- Rename it
+- Set user limits
+- Transfer ownership
+- Control who can join
+
+> Perfect for gaming servers, events, and active communities.
+
+---
+
+## Leveling & Engagement
+
+**Reward activity automatically with a built-in XP system.**
+
+- Members earn XP just from chatting
+- Level-up announcements keep engagement high
+- Role rewards unlock as members progress
+- Leaderboards highlight your most active users
+
+> Encourage growth without any extra work.
+
+---
+
+## Welcome, Roles & Automation
+
+**Automate the onboarding experience from the moment someone joins.**
+
+- Custom welcome and goodbye messages (text or embed)
+- Auto-roles on join, including age-gated and bot-specific roles
+- Reaction roles for self-assignment
+- Scheduled announcements
+
+---
+
+## Tickets, Giveaways & Polls
+
+**Structured support. Exciting events. Easy decisions.**
+
+- Create ticket panels for organised member support
+- Run automated giveaways with fair, transparent winner selection
+- Built-in polling for community input
+
+---
+
+## Custom Bot
+
+**Run CUB PROTECTOR under your own bot with your own branding.**
+
+Members of the official CUB SOFTWARE Discord server can connect their own Discord bot token and run all of CUB PROTECTOR's features under a custom bot identity — with a custom name, avatar, and status.
+
+> Manage it from the same dashboard. Everything stays in sync.
+
+---
+
+## Auto-Translation
+
+**Break language barriers in your server.**
+
+CUB PROTECTOR can automatically translate messages to a target language in selected channels. This feature is available to approved servers — contact us through our Discord server to request access.
+
+> Ideal for multilingual communities and international servers.
+
+---
+
+## Web Dashboard
+
+**Manage everything from one place — no commands needed.**
+
+- Configure moderation filters
+- Adjust logging settings
+- Manage leveling and role rewards
+- Set up tickets, giveaways, and automation
+- Control reaction roles, custom commands, starboard, and more
+
+> Visit **cubsoftware.site** to access your dashboard instantly after inviting the bot.
+
+---
+
+## Get Started in 30 Seconds
+
+**1.** Invite CUB PROTECTOR to your server
+**2.** Open the dashboard at cubsoftware.site
+**3.** Enable the systems you need
+
+> Protection begins instantly. No credit card. No subscription. Always free.

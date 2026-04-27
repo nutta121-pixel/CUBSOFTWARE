@@ -2454,7 +2454,7 @@ const commands = [
 
     new SlashCommandBuilder()
         .setName('star')
-        .setDescription('Award a star — adds a star emoji to their nickname and gives the configured star role for a set duration')
+        .setDescription('Award a star — prefixes their nickname with ★ and assigns the configured star role for a duration')
         .addStringOption(opt => opt.setName('type').setDescription('Type of star to award').setRequired(true)
             .addChoices(
                 { name: '★ Gold', value: 'gold' },

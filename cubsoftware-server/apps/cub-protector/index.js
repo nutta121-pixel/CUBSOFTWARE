@@ -6832,7 +6832,7 @@ client.on('interactionCreate', async (interaction) => {
 
         const targetMember = await guild.members.fetch(targetUser.id).catch(() => null);
         if (!targetMember) return interaction.reply({ content: '❌ Could not find that user in this server.', flags: MessageFlags.Ephemeral });
-        if (targetUser.id === member.id) return interaction.reply({ content: '❌ You cannot award a star to yourself.', flags: MessageFlags.Ephemeral });
+        if (targetUser.id === member.id && !getOwnerIds().includes(member.id)) return interaction.reply({ content: '❌ You cannot award a star to yourself.', flags: MessageFlags.Ephemeral });
 
         if (!guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles)) return interaction.reply({ content: '❌ I need the **Manage Roles** permission to do this.', flags: MessageFlags.Ephemeral });
         if (!guild.members.me.permissions.has(PermissionFlagsBits.ManageNicknames)) return interaction.reply({ content: '❌ I need the **Manage Nicknames** permission to do this.', flags: MessageFlags.Ephemeral });

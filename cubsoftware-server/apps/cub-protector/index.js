@@ -2486,6 +2486,12 @@ const commands = [
             .addRoleOption(o => o.setName('role').setDescription('Role to remove').setRequired(true)))
         .addSubcommand(s => s.setName('list').setDescription('Show all configured star roles and who can award them')),
 
+    new SlashCommandBuilder()
+        .setName('star-remove')
+        .setDescription('Remove an active star from a user early')
+        .addUserOption(opt => opt.setName('user').setDescription('User to remove the star from').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
+
 ];
 
 // ============================================================
@@ -6938,6 +6944,28 @@ client.on('interactionCreate', async (interaction) => {
                 .setTimestamp();
             await interaction.reply({ embeds: [scEmbed], flags: MessageFlags.Ephemeral });
         }
+    }
+
+    // ---- STAR-REMOVE ----
+    else if (commandName === 'star-remove') {
+        const targetUser = interaction.options.getUser('user');
+
+        const srData = loadGoldstarData();
+        const srGuild = getGoldstarGuild(srData, guild.id);
+
+        const isStarAdmin = member.permissions.has(PermissionFlagsBits.Administrator);
+        const hasStarRole = srGuild.allowed_roles.some(r => member.roles.cache.has(r));
+        if (!isStarAdmin && !hasStarRole) {
+            return interaction.reply({ content: '❌ You don\'t have permission to remove stars.', flags: MessageFlags.Ephemeral });
+        }
+
+        const entry = srGuild.entries.find(e => e.user_id === targetUser.id);
+        if (!entry) {
+            return interaction.reply({ content: `❌ <@${targetUser.id}> doesn't have an active star.`, flags: MessageFlags.Ephemeral });
+        }
+
+        await removeGoldstar(guild.id, targetUser.id, entry.id);
+        await interaction.reply({ content: `✅ Removed the star from <@${targetUser.id}>.` });
     }
 
     // ---- WARNINGS ----

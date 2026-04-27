@@ -7294,6 +7294,7 @@
                     </div>
                 </div>
                 <div id="tr-edit-${escapeHtml(item.id)}" style="display:none;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+                    <select id="tr-edit-channel-${escapeHtml(item.id)}" class="form-select" style="flex:1;min-width:160px;"><option value="">Loading...</option></select>
                     <select id="tr-edit-from-${escapeHtml(item.id)}" class="form-select" style="flex:1;min-width:140px;"><option value="auto">Auto-Detect</option>${langOptions}</select>
                     <span style="color:rgba(255,255,255,0.5);">→</span>
                     <select id="tr-edit-to-${escapeHtml(item.id)}" class="form-select" style="flex:1;min-width:140px;">${langOptionsNoAuto}</select>
@@ -7308,6 +7309,7 @@
             const toSel = document.getElementById(`tr-edit-to-${item.id}`);
             if (fromSel) fromSel.value = item.from || 'auto';
             if (toSel) toSel.value = item.to || 'en';
+            _trPopulateChannelSelectWithAll(`tr-edit-channel-${item.id}`, item.channel_id);
         });
     }
     window.cpShowTranslateEdit = function(id) {
@@ -7317,14 +7319,25 @@
     };
     window.cpSaveTranslateEdit = async function(id) {
         try {
+            const chSel = document.getElementById(`tr-edit-channel-${id}`);
             const fromSel = document.getElementById(`tr-edit-from-${id}`);
             const toSel = document.getElementById(`tr-edit-to-${id}`);
+            const channelId = chSel ? chSel.value : null;
             const from = fromSel ? fromSel.value : 'auto';
             const to = toSel ? toSel.value : 'en';
+            if (!channelId) return showToast('Please select a channel', 'error');
             if (from !== 'auto' && from === to) return showToast('Source and target language must be different', 'error');
+            let channelName;
+            if (channelId === 'all') {
+                channelName = 'All Channels';
+            } else {
+                const channels = await fetchGuildChannels();
+                const channelObj = channels.find(c => c.id === channelId);
+                channelName = channelObj ? channelObj.name : channelId;
+            }
             const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/translate/${id}`, {
                 method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ from, to })
+                body: JSON.stringify({ channel_id: channelId, channel_name: channelName, from, to })
             });
             const data = await res.json();
             if (data.success) { showToast('Translation updated', 'success'); loadTranslate(); }

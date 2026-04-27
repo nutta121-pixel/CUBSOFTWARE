@@ -6841,12 +6841,12 @@ client.on('interactionCreate', async (interaction) => {
         if (targetUser.id === member.id && !getOwnerIds().includes(member.id)) return interaction.reply({ content: '❌ You cannot award a star to yourself.', flags: MessageFlags.Ephemeral });
 
         if (!guild.members.me.permissions.has(PermissionFlagsBits.ManageRoles)) return interaction.reply({ content: '❌ I need the **Manage Roles** permission to do this.', flags: MessageFlags.Ephemeral });
-        if (!guild.members.me.permissions.has(PermissionFlagsBits.ManageNicknames)) return interaction.reply({ content: '❌ I need the **Manage Nicknames** permission to do this.', flags: MessageFlags.Ephemeral });
         if (role.position >= guild.members.me.roles.highest.position) return interaction.reply({ content: '❌ The configured role is above my highest role — I can\'t assign it.', flags: MessageFlags.Ephemeral });
 
         const existing = guildData.entries.find(e => e.user_id === targetUser.id);
         if (existing) return interaction.reply({ content: `❌ <@${targetUser.id}> already has an active star. Remove it first.`, flags: MessageFlags.Ephemeral });
 
+        const isGuildOwner = targetUser.id === guild.ownerId;
         const originalNickname = targetMember.nickname || null;
         const displayName = targetMember.displayName;
         const newNickname = (`${star.emoji} ${displayName}`).substring(0, 32);
@@ -6855,7 +6855,9 @@ client.on('interactionCreate', async (interaction) => {
 
         try {
             await targetMember.roles.add(role.id, `${star.label} awarded by ${member.user.tag}`);
-            await targetMember.setNickname(newNickname, `${star.label} awarded by ${member.user.tag}`).catch(() => {});
+            if (!isGuildOwner) {
+                await targetMember.setNickname(newNickname, `${star.label} awarded by ${member.user.tag}`).catch(() => {});
+            }
         } catch (e) {
             return interaction.reply({ content: `❌ Failed to apply star: ${e.message}`, flags: MessageFlags.Ephemeral });
         }
@@ -6865,7 +6867,7 @@ client.on('interactionCreate', async (interaction) => {
             user_id: targetUser.id,
             role_id: role.id,
             star_type: starType,
-            original_nickname: originalNickname,
+            original_nickname: isGuildOwner ? null : originalNickname,
             expires_at: expiresAt,
             granted_by: member.id,
         });
@@ -6876,7 +6878,7 @@ client.on('interactionCreate', async (interaction) => {
         const embed = cubEmbed()
             .setColor(star.color)
             .setTitle(`${star.emoji} ${star.label} Awarded!`)
-            .setDescription(`<@${targetUser.id}> has been awarded a **${star.label}**!`)
+            .setDescription(`<@${targetUser.id}> has been awarded a **${star.label}**!${isGuildOwner ? '\n-# ★ Nickname change skipped — Discord doesn\'t allow bots to rename the server owner.' : ''}`)
             .addFields(
                 { name: 'Role', value: `<@&${role.id}>`, inline: true },
                 { name: 'Duration', value: formatDuration(durationMs), inline: true },

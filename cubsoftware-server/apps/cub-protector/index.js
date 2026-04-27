@@ -2464,6 +2464,9 @@ const commands = [
             ))
         .addUserOption(opt => opt.setName('user').setDescription('The user to award').setRequired(true))
         .addStringOption(opt => opt.setName('duration').setDescription('How long to keep the star (e.g. 1h, 7d, 2w)').setRequired(true))
+        .addStringOption(opt => opt.setName('reason').setDescription('Why this star is being awarded').setRequired(false))
+        .addChannelOption(opt => opt.setName('channel').setDescription('Channel to announce the award in').setRequired(false)
+            .addChannelTypes(ChannelType.GuildText))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles),
 
     new SlashCommandBuilder()
@@ -6804,6 +6807,8 @@ client.on('interactionCreate', async (interaction) => {
         const starType = interaction.options.getString('type');
         const targetUser = interaction.options.getUser('user');
         const durationStr = interaction.options.getString('duration');
+        const reason = interaction.options.getString('reason') || null;
+        const announceChannel = interaction.options.getChannel('channel') || null;
 
         const starConfig = {
             gold:   { emoji: '★', label: 'Gold Star',   color: 0xFFD700 },
@@ -6870,23 +6875,33 @@ client.on('interactionCreate', async (interaction) => {
             original_nickname: isGuildOwner ? null : originalNickname,
             expires_at: expiresAt,
             granted_by: member.id,
+            reason: reason,
         });
         saveGoldstarData(data);
 
         setTimeout(() => removeGoldstar(guild.id, targetUser.id, entryId), durationMs);
 
+        const embedFields = [
+            { name: 'Role', value: `<@&${role.id}>`, inline: true },
+            { name: 'Duration', value: formatDuration(durationMs), inline: true },
+            { name: 'Expires', value: `<t:${Math.floor(expiresAt / 1000)}:R>`, inline: true },
+        ];
+        if (reason) embedFields.push({ name: 'Reason', value: reason });
+
         const embed = cubEmbed()
             .setColor(star.color)
             .setTitle(`${star.emoji} ${star.label} Awarded!`)
             .setDescription(`<@${targetUser.id}> has been awarded a **${star.label}**!${isGuildOwner ? '\n-# ★ Nickname change skipped — Discord doesn\'t allow bots to rename the server owner.' : ''}`)
-            .addFields(
-                { name: 'Role', value: `<@&${role.id}>`, inline: true },
-                { name: 'Duration', value: formatDuration(durationMs), inline: true },
-                { name: 'Expires', value: `<t:${Math.floor(expiresAt / 1000)}:R>`, inline: true },
-            )
+            .addFields(embedFields)
             .setThumbnail(targetUser.displayAvatarURL())
             .setTimestamp();
-        await interaction.reply({ embeds: [embed] });
+
+        if (announceChannel) {
+            await announceChannel.send({ embeds: [embed] });
+            await interaction.reply({ content: `✅ ${star.label} awarded to <@${targetUser.id}> and announced in <#${announceChannel.id}>.`, flags: MessageFlags.Ephemeral });
+        } else {
+            await interaction.reply({ embeds: [embed] });
+        }
     }
 
     // ---- STAR-CONFIG ----

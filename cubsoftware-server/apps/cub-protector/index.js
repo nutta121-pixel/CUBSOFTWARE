@@ -12007,6 +12007,8 @@ client.once('clientReady', async () => {
                     let feedUrl = '';
                     if (feed.platform === 'youtube' && feed.platform_id) {
                         feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${feed.platform_id}`;
+                    } else if (feed.platform === 'tiktok' && feed.platform_id) {
+                        feedUrl = `https://rsshub.app/tiktok/user/@${feed.platform_id}`;
                     } else if (feed.platform === 'rss' && feed.url) {
                         feedUrl = feed.url;
                     } else continue;
@@ -12057,8 +12059,8 @@ client.once('clientReady', async () => {
                     const channel = await guild.channels.fetch(feed.channel_id).catch(() => null);
                     if (!channel) continue;
 
-                    const platformColors = { youtube: 0xFF0000, twitch: 0x9146FF, rss: 0xFF8C00 };
-                    const platformNames = { youtube: 'YouTube', twitch: 'Twitch', rss: 'RSS Feed' };
+                    const platformColors = { youtube: 0xFF0000, twitch: 0x9146FF, rss: 0xFF8C00, tiktok: 0x69C9D0 };
+                    const platformNames = { youtube: 'YouTube', twitch: 'Twitch', rss: 'RSS Feed', tiktok: 'TikTok' };
                     const msg = (feed.message || '{name} posted: **{title}**\n{link}')
                         .replace(/{name}/g, feed.name || 'Unknown')
                         .replace(/{title}/g, title)

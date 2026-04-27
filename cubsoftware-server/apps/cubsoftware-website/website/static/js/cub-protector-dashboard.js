@@ -4022,7 +4022,7 @@
                 container.innerHTML = '<div class="empty-state"><p>No social feeds configured. Add one to get started!</p></div>';
                 return;
             }
-            const platformIcons = { youtube: '🔴', twitch: '🟣', rss: '🟠' };
+            const platformIcons = { youtube: '🔴', twitch: '🟣', rss: '🟠', tiktok: '⚫' };
             container.innerHTML = feeds.map(f => {
                 const ch = channels.find(c => c.id === f.channel_id);
                 const chName = ch ? `#${escapeHtml(ch.name)}` : 'No channel';
@@ -4255,11 +4255,11 @@
             <div class="modal" style="max-width:500px;">
                 <div class="modal-header"><h3>Add Social Feed</h3><button class="modal-close" onclick="document.getElementById('createFeedModal').remove()">&times;</button></div>
                 <div class="modal-body">
-                    <div class="form-group"><label>Platform</label><select id="feed-platform" class="form-select" onchange="document.getElementById('feed-url-group').style.display=this.value==='rss'?'':'none';document.getElementById('feed-platform-id-group').style.display=this.value==='youtube'?'':'none';">
-                        <option value="youtube">YouTube</option><option value="rss">Custom RSS Feed</option>
+                    <div class="form-group"><label>Platform</label><select id="feed-platform" class="form-select" onchange="(function(v){document.getElementById('feed-url-group').style.display=v==='rss'?'':'none';document.getElementById('feed-platform-id-group').style.display=(v==='youtube'||v==='tiktok')?'':'none';document.getElementById('feed-platform-id-label').textContent=v==='tiktok'?'TikTok Username':'YouTube Channel ID';document.getElementById('feed-platform-id').placeholder=v==='tiktok'?'e.g. username':'e.g. UC-lHJZR3Gqxm24_Vd_AJ5Yw';document.getElementById('feed-platform-id-hint').textContent=v==='tiktok'?'Enter the TikTok username (without @)':'Find this on the channel\'s About page or URL';})(this.value)">
+                        <option value="youtube">YouTube</option><option value="tiktok">TikTok</option><option value="rss">Custom RSS Feed</option>
                     </select></div>
                     <div class="form-group"><label>Creator Name</label><input type="text" id="feed-name" placeholder="e.g. PewDiePie" maxlength="100"></div>
-                    <div class="form-group" id="feed-platform-id-group"><label>YouTube Channel ID</label><input type="text" id="feed-platform-id" placeholder="e.g. UC-lHJZR3Gqxm24_Vd_AJ5Yw"><small style="color:var(--text-muted);">Find this on the channel's About page or URL</small></div>
+                    <div class="form-group" id="feed-platform-id-group"><label id="feed-platform-id-label">YouTube Channel ID</label><input type="text" id="feed-platform-id" placeholder="e.g. UC-lHJZR3Gqxm24_Vd_AJ5Yw"><small id="feed-platform-id-hint" style="color:var(--text-muted);">Find this on the channel's About page or URL</small></div>
                     <div class="form-group" id="feed-url-group" style="display:none;"><label>RSS Feed URL</label><input type="text" id="feed-url" placeholder="https://..."></div>
                     <div class="form-group"><label>Notification Channel</label><select id="feed-channel" class="form-select">
                         ${channels.map(c => `<option value="${c.id}">#${escapeHtml(c.name)}</option>`).join('')}

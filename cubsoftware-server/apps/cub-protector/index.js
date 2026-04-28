@@ -12284,60 +12284,67 @@ client.once('clientReady', async () => {
             for (const feed of (guildFeeds.feeds || [])) {
                 if (!feed.enabled || !feed.channel_id) continue;
                 try {
-                    let feedUrls = [];
-                    if (feed.platform === 'youtube' && feed.platform_id) {
-                        feedUrls = [`https://www.youtube.com/feeds/videos.xml?channel_id=${feed.platform_id}`];
-                    } else if (feed.platform === 'tiktok' && feed.platform_id) {
-                        const u = feed.platform_id.replace(/^@/, '');
-                        feedUrls = [
-                            `https://rsshub.app/tiktok/user/@${u}`,
-                            `https://rsshub.rssforever.com/tiktok/user/@${u}`,
-                            `https://hub.slarker.me/tiktok/user/@${u}`,
-                        ];
-                    } else if (feed.platform === 'rss' && feed.url) {
-                        feedUrls = [feed.url];
-                    } else continue;
-
                     const https = require('https');
                     const http = require('http');
-                    const fetchUrl = (url) => new Promise((resolve, reject) => {
-                        const mod = url.startsWith('https') ? https : http;
-                        mod.get(url, { timeout: 10000 }, (res) => {
-                            if (res.statusCode >= 400) { res.resume(); return reject(new Error(`HTTP ${res.statusCode}`)); }
-                            let data = '';
-                            res.on('data', chunk => data += chunk);
-                            res.on('end', () => resolve(data));
-                        }).on('error', reject);
-                    });
+                    let title = '', link = '', postId = '', pubDate = '';
 
-                    let xml = null;
-                    for (const url of feedUrls) {
-                        try { xml = await fetchUrl(url); break; } catch {}
+                    if (feed.platform === 'tiktok' && feed.platform_id) {
+                        // TikWM API — more reliable than RSSHub for TikTok
+                        const username = feed.platform_id.replace(/^@/, '');
+                        const tikwmJson = await new Promise((resolve) => {
+                            https.get(
+                                `https://www.tikwm.com/api/user/posts?unique_id=${encodeURIComponent(username)}&count=1&cursor=0`,
+                                { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 10000 },
+                                (res) => {
+                                    let d = '';
+                                    res.on('data', c => d += c);
+                                    res.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve(null); } });
+                                }
+                            ).on('error', () => resolve(null));
+                        });
+                        if (!tikwmJson || tikwmJson.code !== 0 || !tikwmJson.data?.videos?.length) continue;
+                        const video = tikwmJson.data.videos[0];
+                        const videoId = video.video_id || video.id || '';
+                        title = video.title || video.desc || 'New TikTok Video';
+                        link = video.share_url || (videoId ? `https://www.tiktok.com/@${username}/video/${videoId}` : '');
+                        postId = videoId || link;
+                    } else {
+                        // RSS/YouTube flow
+                        let feedUrl = '';
+                        if (feed.platform === 'youtube' && feed.platform_id) {
+                            feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${feed.platform_id}`;
+                        } else if (feed.platform === 'rss' && feed.url) {
+                            feedUrl = feed.url;
+                        } else continue;
+
+                        const xml = await new Promise((resolve, reject) => {
+                            const mod = feedUrl.startsWith('https') ? https : http;
+                            mod.get(feedUrl, { timeout: 10000 }, (res) => {
+                                let data = '';
+                                res.on('data', chunk => data += chunk);
+                                res.on('end', () => resolve(data));
+                            }).on('error', reject);
+                        });
+
+                        const entries = xml.match(/<entry>[\s\S]*?<\/entry>|<item>[\s\S]*?<\/item>/g) || [];
+                        if (entries.length === 0) continue;
+                        const latest = entries[0];
+                        const titleMatch = latest.match(/<title[^>]*>([\s\S]*?)<\/title>/);
+                        const linkMatch = latest.match(/<link[^>]*href="([^"]*)"/) || latest.match(/<link>([\s\S]*?)<\/link>/);
+                        const pubMatch = latest.match(/<published>([\s\S]*?)<\/published>/) || latest.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
+                        title = titleMatch?.[1]?.replace(/<!\[CDATA\[|\]\]>/g, '').trim() || 'New Post';
+                        link = linkMatch?.[1]?.trim() || '';
+                        pubDate = pubMatch?.[1]?.trim() || '';
+                        postId = link || title;
                     }
-                    if (!xml) continue;
 
-                    // Simple XML parsing for <entry> or <item> tags
-                    const entries = xml.match(/<entry>[\s\S]*?<\/entry>|<item>[\s\S]*?<\/item>/g) || [];
-                    if (entries.length === 0) continue;
-
-                    const latest = entries[0];
-                    const titleMatch = latest.match(/<title[^>]*>([\s\S]*?)<\/title>/);
-                    const linkMatch = latest.match(/<link[^>]*href="([^"]*)"/) || latest.match(/<link>([\s\S]*?)<\/link>/);
-                    const pubMatch = latest.match(/<published>([\s\S]*?)<\/published>/) || latest.match(/<pubDate>([\s\S]*?)<\/pubDate>/);
-
-                    const title = titleMatch?.[1]?.replace(/<!\[CDATA\[|\]\]>/g, '').trim() || 'New Post';
-                    const link = linkMatch?.[1]?.trim() || '';
-                    const pubDate = pubMatch?.[1]?.trim() || '';
-
-                    // Check if this is new
-                    const postId = link || title;
+                    if (!postId) continue;
                     if (feed.last_post_id === postId) continue;
 
-                    // On first check (no last_post_id yet), skip old posts silently to avoid
-                    // spamming historical content — but only suppress on the very first run.
-                    if (!feed.last_post_id && pubDate) {
-                        const pubTime = new Date(pubDate).getTime();
-                        if (Date.now() - pubTime > 600000) {
+                    // On first check, set last_post_id without notifying to avoid
+                    // spamming historical content (for RSS check pubDate, for TikTok always skip first).
+                    if (!feed.last_post_id) {
+                        if (!pubDate || (Date.now() - new Date(pubDate).getTime() > 600000)) {
                             feed.last_post_id = postId;
                             saveSocialFeedsData(feedData);
                             continue;

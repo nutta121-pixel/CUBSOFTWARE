@@ -15529,43 +15529,61 @@ def cub_protector_social_feeds_post_latest(guild_id, feed_id):
 
     platform = feed.get('platform', 'rss')
     platform_id = feed.get('platform_id', '')
-    if platform == 'youtube' and platform_id:
-        feed_urls = [f'https://www.youtube.com/feeds/videos.xml?channel_id={platform_id}']
-    elif platform == 'tiktok' and platform_id:
-        u = platform_id.lstrip('@')
-        feed_urls = [
-            f'https://rsshub.app/tiktok/user/@{u}',
-            f'https://rsshub.rssforever.com/tiktok/user/@{u}',
-            f'https://hub.slarker.me/tiktok/user/@{u}',
-        ]
-    elif platform == 'rss' and feed.get('url'):
-        feed_urls = [feed['url']]
-    else:
-        return jsonify({'error': 'Feed URL cannot be determined'}), 400
 
-    import urllib.request, re as _re
-    xml = None
-    last_err = ''
-    for feed_url in feed_urls:
+    import urllib.request, re as _re, json as _json
+    title, link = '', ''
+
+    if platform == 'tiktok' and platform_id:
+        username = platform_id.lstrip('@')
+        try:
+            from urllib.parse import quote as _quote
+            req = urllib.request.Request(
+                f'https://www.tikwm.com/api/user/posts?unique_id={_quote(username)}&count=1&cursor=0',
+                headers={'User-Agent': 'Mozilla/5.0'}
+            )
+            with urllib.request.urlopen(req, timeout=15) as r:
+                tikwm = _json.loads(r.read())
+        except Exception as e:
+            return jsonify({'error': f'Failed to reach TikWM API: {str(e)}'}), 503
+        if tikwm.get('code') != 0 or not tikwm.get('data', {}).get('videos'):
+            return jsonify({'error': 'No videos found. The TikTok account may be private or the username is wrong.'}), 404
+        video = tikwm['data']['videos'][0]
+        video_id = video.get('video_id') or video.get('id', '')
+        title = video.get('title') or video.get('desc') or 'New TikTok Video'
+        link = video.get('share_url') or (f'https://www.tiktok.com/@{username}/video/{video_id}' if video_id else '')
+    elif platform == 'youtube' and platform_id:
+        feed_url = f'https://www.youtube.com/feeds/videos.xml?channel_id={platform_id}'
         try:
             req = urllib.request.Request(feed_url, headers={'User-Agent': 'Mozilla/5.0 CUBSoftware/1.0'})
             with urllib.request.urlopen(req, timeout=15) as r:
                 xml = r.read().decode('utf-8', errors='replace')
-            break
         except Exception as e:
-            last_err = str(e)
-    if not xml:
-        return jsonify({'error': f'All feed sources failed. TikTok may be blocking RSS access. Last error: {last_err}'}), 503
-
-    entries = _re.findall(r'<entry>[\s\S]*?</entry>|<item>[\s\S]*?</item>', xml)
-    if not entries:
-        return jsonify({'error': 'No posts found in feed (TikTok may be blocking the request)'}), 404
-
-    latest = entries[0]
-    title_m = _re.search(r'<title[^>]*>([\s\S]*?)</title>', latest)
-    link_m = _re.search(r'<link[^>]*href="([^"]*)"', latest) or _re.search(r'<link>([\s\S]*?)</link>', latest)
-    title = _re.sub(r'<!\[CDATA\[|\]\]>', '', title_m.group(1) if title_m else 'New Post').strip()
-    link = (link_m.group(1) if link_m else '').strip()
+            return jsonify({'error': f'Failed to fetch YouTube feed: {str(e)}'}), 503
+        entries = _re.findall(r'<entry>[\s\S]*?</entry>', xml)
+        if not entries:
+            return jsonify({'error': 'No posts found in feed'}), 404
+        latest = entries[0]
+        title_m = _re.search(r'<title[^>]*>([\s\S]*?)</title>', latest)
+        link_m = _re.search(r'<link[^>]*href="([^"]*)"', latest)
+        title = _re.sub(r'<!\[CDATA\[|\]\]>', '', title_m.group(1) if title_m else 'New Post').strip()
+        link = (link_m.group(1) if link_m else '').strip()
+    elif platform == 'rss' and feed.get('url'):
+        try:
+            req = urllib.request.Request(feed.get('url'), headers={'User-Agent': 'Mozilla/5.0 CUBSoftware/1.0'})
+            with urllib.request.urlopen(req, timeout=15) as r:
+                xml = r.read().decode('utf-8', errors='replace')
+        except Exception as e:
+            return jsonify({'error': f'Failed to fetch RSS feed: {str(e)}'}), 503
+        entries = _re.findall(r'<entry>[\s\S]*?</entry>|<item>[\s\S]*?</item>', xml)
+        if not entries:
+            return jsonify({'error': 'No posts found in feed'}), 404
+        latest = entries[0]
+        title_m = _re.search(r'<title[^>]*>([\s\S]*?)</title>', latest)
+        link_m = _re.search(r'<link[^>]*href="([^"]*)"', latest) or _re.search(r'<link>([\s\S]*?)</link>', latest)
+        title = _re.sub(r'<!\[CDATA\[|\]\]>', '', title_m.group(1) if title_m else 'New Post').strip()
+        link = (link_m.group(1) if link_m else '').strip()
+    else:
+        return jsonify({'error': 'Feed URL cannot be determined'}), 400
 
     platform_colors = {'youtube': 0xFF0000, 'tiktok': 0x69C9D0, 'rss': 0xFF8C00}
     platform_names = {'youtube': 'YouTube', 'tiktok': 'TikTok', 'rss': 'RSS Feed'}

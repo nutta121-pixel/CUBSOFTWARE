@@ -15534,23 +15534,22 @@ def cub_protector_social_feeds_post_latest(guild_id, feed_id):
     title, link = '', ''
 
     if platform == 'tiktok' and platform_id:
+        import subprocess
         username = platform_id.lstrip('@')
         try:
-            from urllib.parse import quote as _quote
-            req = urllib.request.Request(
-                f'https://www.tikwm.com/api/user/posts?unique_id={_quote(username)}&count=1&cursor=0',
-                headers={'User-Agent': 'Mozilla/5.0'}
+            result = subprocess.run(
+                ['/snap/bin/yt-dlp', '--flat-playlist', '-j', '--playlist-items', '1', '--no-warnings',
+                 f'https://www.tiktok.com/@{username}'],
+                capture_output=True, text=True, timeout=30
             )
-            with urllib.request.urlopen(req, timeout=15) as r:
-                tikwm = _json.loads(r.read())
+            if result.returncode != 0 or not result.stdout.strip():
+                return jsonify({'error': f'yt-dlp could not fetch TikTok data: {result.stderr[:200]}'}), 503
+            yt_data = _json.loads(result.stdout.strip())
         except Exception as e:
-            return jsonify({'error': f'Failed to reach TikWM API: {str(e)}'}), 503
-        if tikwm.get('code') != 0 or not tikwm.get('data', {}).get('videos'):
-            return jsonify({'error': 'No videos found. The TikTok account may be private or the username is wrong.'}), 404
-        video = tikwm['data']['videos'][0]
-        video_id = video.get('video_id') or video.get('id', '')
-        title = video.get('title') or video.get('desc') or 'New TikTok Video'
-        link = video.get('share_url') or (f'https://www.tiktok.com/@{username}/video/{video_id}' if video_id else '')
+            return jsonify({'error': f'Failed to run yt-dlp: {str(e)}'}), 503
+        video_id = yt_data.get('id', '')
+        title = yt_data.get('title') or yt_data.get('description') or 'New TikTok Video'
+        link = f'https://www.tiktok.com/@{username}/video/{video_id}' if video_id else ''
     elif platform == 'youtube' and platform_id:
         feed_url = f'https://www.youtube.com/feeds/videos.xml?channel_id={platform_id}'
         try:

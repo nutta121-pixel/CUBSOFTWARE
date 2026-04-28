@@ -12289,24 +12289,22 @@ client.once('clientReady', async () => {
                     let title = '', link = '', postId = '', pubDate = '';
 
                     if (feed.platform === 'tiktok' && feed.platform_id) {
-                        // TikWM API — more reliable than RSSHub for TikTok
+                        // Use yt-dlp to fetch latest TikTok video (bypasses Cloudflare blocks)
                         const username = feed.platform_id.replace(/^@/, '');
-                        const tikwmJson = await new Promise((resolve) => {
-                            https.get(
-                                `https://www.tikwm.com/api/user/posts?unique_id=${encodeURIComponent(username)}&count=1&cursor=0`,
-                                { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 10000 },
-                                (res) => {
-                                    let d = '';
-                                    res.on('data', c => d += c);
-                                    res.on('end', () => { try { resolve(JSON.parse(d)); } catch { resolve(null); } });
-                                }
-                            ).on('error', () => resolve(null));
+                        const { execFile } = require('child_process');
+                        const ytdlpResult = await new Promise((resolve) => {
+                            execFile('/snap/bin/yt-dlp', [
+                                '--flat-playlist', '-j', '--playlist-items', '1', '--no-warnings',
+                                `https://www.tiktok.com/@${username}`
+                            ], { timeout: 30000 }, (err, stdout) => {
+                                if (err || !stdout?.trim()) return resolve(null);
+                                try { resolve(JSON.parse(stdout.trim())); } catch { resolve(null); }
+                            });
                         });
-                        if (!tikwmJson || tikwmJson.code !== 0 || !tikwmJson.data?.videos?.length) continue;
-                        const video = tikwmJson.data.videos[0];
-                        const videoId = video.video_id || video.id || '';
-                        title = video.title || video.desc || 'New TikTok Video';
-                        link = video.share_url || (videoId ? `https://www.tiktok.com/@${username}/video/${videoId}` : '');
+                        if (!ytdlpResult) continue;
+                        const videoId = ytdlpResult.id || '';
+                        title = ytdlpResult.title || ytdlpResult.description || 'New TikTok Video';
+                        link = videoId ? `https://www.tiktok.com/@${username}/video/${videoId}` : '';
                         postId = videoId || link;
                     } else {
                         // RSS/YouTube flow

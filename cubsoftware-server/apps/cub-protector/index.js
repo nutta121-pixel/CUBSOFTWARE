@@ -12321,12 +12321,13 @@ client.once('clientReady', async () => {
                     const postId = link || title;
                     if (feed.last_post_id === postId) continue;
 
-                    // Check if publish date is recent (within last 10 min)
-                    if (pubDate) {
+                    // On first check (no last_post_id yet), skip old posts silently to avoid
+                    // spamming historical content — but only suppress on the very first run.
+                    if (!feed.last_post_id && pubDate) {
                         const pubTime = new Date(pubDate).getTime();
                         if (Date.now() - pubTime > 600000) {
-                            // Not new, just first check - set last_post_id without notifying
-                            if (!feed.last_post_id) { feed.last_post_id = postId; saveSocialFeedsData(feedData); }
+                            feed.last_post_id = postId;
+                            saveSocialFeedsData(feedData);
                             continue;
                         }
                     }

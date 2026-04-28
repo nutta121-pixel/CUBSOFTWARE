@@ -4036,6 +4036,7 @@
                     </div>
                     <div style="display:flex;gap:0.5rem;">
                         <button class="control-btn secondary" onclick="cpEditFeed('${f.id}')">Edit</button>
+                        <button class="control-btn secondary" style="background:rgba(105,201,208,0.15);color:#69C9D0;" onclick="cpPostLatestFeed('${f.id}')">Post Latest</button>
                         <button class="control-btn secondary" style="background:rgba(88,101,242,0.15);color:#7289da;" onclick="cpTestFeed('${f.id}')">Test</button>
                         <button class="control-btn secondary" onclick="cpToggleFeed('${f.id}', ${!f.enabled})">${f.enabled ? 'Disable' : 'Enable'}</button>
                         <button class="control-btn danger" onclick="cpDeleteFeed('${f.id}')">Delete</button>
@@ -4406,6 +4407,19 @@
                 showToast(data.error || 'Failed to send test', 'error');
             }
         } catch (e) { showToast('Failed to send test', 'error'); }
+    };
+
+    window.cpPostLatestFeed = async function(feedId) {
+        try {
+            showToast('Fetching latest post...', 'info');
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/social-feeds/${feedId}/post-latest`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                showToast(`Posted: ${data.title || 'Latest post sent!'}`, 'success');
+            } else {
+                showToast(data.error || 'Failed to fetch latest post', 'error');
+            }
+        } catch (e) { showToast('Failed to post latest', 'error'); }
     };
 
     // ==================== BACKUPS ====================

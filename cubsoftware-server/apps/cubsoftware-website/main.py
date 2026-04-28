@@ -15513,6 +15513,89 @@ def cub_protector_social_feeds_test(guild_id, feed_id):
         return jsonify({'error': 'Failed to send test. Make sure the bot has access to the channel.'}), 500
     return jsonify({'success': True})
 
+@app.route('/api/cub-protector/guilds/<guild_id>/social-feeds/<feed_id>/post-latest', methods=['POST'])
+@cub_protector_auth_required
+def cub_protector_social_feeds_post_latest(guild_id, feed_id):
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    data = load_cp_json(CUB_PROTECTOR_SOCIAL_FEEDS_FILE)
+    guild_feeds = data.get('guilds', {}).get(guild_id, {})
+    feed = next((f for f in guild_feeds.get('feeds', []) if f.get('id') == feed_id), None)
+    if not feed:
+        return jsonify({'error': 'Feed not found'}), 404
+    channel_id = feed.get('channel_id', '')
+    if not channel_id:
+        return jsonify({'error': 'No channel configured for this feed'}), 400
+
+    platform = feed.get('platform', 'rss')
+    platform_id = feed.get('platform_id', '')
+    feed_url = feed.get('url', '')
+    if platform == 'youtube' and platform_id:
+        feed_url = f'https://www.youtube.com/feeds/videos.xml?channel_id={platform_id}'
+    elif platform == 'tiktok' and platform_id:
+        feed_url = f'https://rsshub.app/tiktok/user/@{platform_id}'
+    elif platform == 'rss' and feed_url:
+        pass
+    else:
+        return jsonify({'error': 'Feed URL cannot be determined'}), 400
+
+    import urllib.request, re as _re
+    try:
+        req = urllib.request.Request(feed_url, headers={'User-Agent': 'Mozilla/5.0 CUBSoftware/1.0'})
+        with urllib.request.urlopen(req, timeout=15) as r:
+            xml = r.read().decode('utf-8', errors='replace')
+    except Exception as e:
+        return jsonify({'error': f'Failed to fetch feed: {str(e)}'}), 502
+
+    entries = _re.findall(r'<entry>[\s\S]*?</entry>|<item>[\s\S]*?</item>', xml)
+    if not entries:
+        return jsonify({'error': 'No posts found in feed (TikTok may be blocking the request)'}), 404
+
+    latest = entries[0]
+    title_m = _re.search(r'<title[^>]*>([\s\S]*?)</title>', latest)
+    link_m = _re.search(r'<link[^>]*href="([^"]*)"', latest) or _re.search(r'<link>([\s\S]*?)</link>', latest)
+    title = _re.sub(r'<!\[CDATA\[|\]\]>', '', title_m.group(1) if title_m else 'New Post').strip()
+    link = (link_m.group(1) if link_m else '').strip()
+
+    platform_colors = {'youtube': 0xFF0000, 'tiktok': 0x69C9D0, 'rss': 0xFF8C00}
+    platform_names = {'youtube': 'YouTube', 'tiktok': 'TikTok', 'rss': 'RSS Feed'}
+    name = feed.get('name') or 'Unknown'
+    msg_template = feed.get('message') or '{name} posted: **{title}**\n{link}'
+    alert_msg = msg_template.replace('{name}', name).replace('{title}', title).replace('{link}', link)
+
+    import datetime as _dt
+    embed = {
+        'color': platform_colors.get(platform, 0x5865F2),
+        'title': f'New {platform_names.get(platform, platform.title())} Post',
+        'description': alert_msg,
+        'timestamp': _dt.datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+    }
+    if link:
+        embed['url'] = link
+
+    payload = {'embeds': [embed]}
+    ping_role = feed.get('ping_role', '')
+    if ping_role == 'everyone':
+        payload['content'] = '@everyone'
+    elif ping_role == 'here':
+        payload['content'] = '@here'
+    elif ping_role:
+        payload['content'] = f'<@&{ping_role}>'
+
+    result = _guild_bot_request(guild_id, 'POST', f'/channels/{channel_id}/messages', json=payload)
+    if result is None:
+        return jsonify({'error': 'Failed to send message. Make sure the bot has access to the channel.'}), 500
+
+    # Update last_post_id so the bot won't double-notify on next poll
+    post_id = link or title
+    for f in data.get('guilds', {}).get(guild_id, {}).get('feeds', []):
+        if f.get('id') == feed_id:
+            f['last_post_id'] = post_id
+            break
+    save_cp_json(CUB_PROTECTOR_SOCIAL_FEEDS_FILE, data)
+
+    return jsonify({'success': True, 'title': title})
+
 # ==================== CUB PROTECTOR - LIVE ALERTS API ====================
 
 @app.route('/api/cub-protector/guilds/<guild_id>/live-alerts', methods=['GET'])

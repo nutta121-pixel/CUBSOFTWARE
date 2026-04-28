@@ -4066,6 +4066,10 @@
                     </select></div>
                     <div class="form-group"><label>Custom Message</label><textarea id="ef-message" rows="2" maxlength="500">${escapeHtml(f.message || '')}</textarea>
                     <small style="color:var(--text-muted);">Placeholders: {name}, {title}, {link}</small></div>
+                    <div class="form-group" style="display:flex;align-items:center;gap:0.75rem;">
+                        <label class="toggle" style="margin:0;"><input type="checkbox" id="ef-show-thumbnail" ${f.show_thumbnail !== false ? 'checked' : ''}><span class="toggle-slider"></span></label>
+                        <label style="margin:0;cursor:pointer;" onclick="document.getElementById('ef-show-thumbnail').click()">Show video thumbnail in notification</label>
+                    </div>
                 </div>
                 <div class="modal-footer"><button class="control-btn primary" onclick="cpSaveFeed('${feedId}')">Save</button></div>
             </div>
@@ -4081,7 +4085,8 @@
                 body: JSON.stringify({
                     channel_id: document.getElementById('ef-channel').value,
                     ping_role: document.getElementById('ef-ping-role').value,
-                    message: document.getElementById('ef-message').value
+                    message: document.getElementById('ef-message').value,
+                    show_thumbnail: document.getElementById('ef-show-thumbnail').checked
                 })
             });
             if ((await res.json()).success) {

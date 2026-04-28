@@ -12286,7 +12286,7 @@ client.once('clientReady', async () => {
                 try {
                     const https = require('https');
                     const http = require('http');
-                    let title = '', link = '', postId = '', pubDate = '';
+                    let title = '', link = '', postId = '', pubDate = '', thumbnail = '';
 
                     if (feed.platform === 'tiktok' && feed.platform_id) {
                         // Use yt-dlp to fetch latest TikTok video (bypasses Cloudflare blocks)
@@ -12294,7 +12294,7 @@ client.once('clientReady', async () => {
                         const { execFile } = require('child_process');
                         const ytdlpResult = await new Promise((resolve) => {
                             execFile('/snap/bin/yt-dlp', [
-                                '--flat-playlist', '-j', '--playlist-items', '1', '--no-warnings',
+                                '-j', '--playlist-items', '1', '--no-warnings',
                                 `https://www.tiktok.com/@${username}`
                             ], { timeout: 30000 }, (err, stdout) => {
                                 if (err || !stdout?.trim()) return resolve(null);
@@ -12306,6 +12306,7 @@ client.once('clientReady', async () => {
                         title = ytdlpResult.title || ytdlpResult.description || 'New TikTok Video';
                         link = videoId ? `https://www.tiktok.com/@${username}/video/${videoId}` : '';
                         postId = videoId || link;
+                        thumbnail = ytdlpResult.thumbnail || '';
                     } else {
                         // RSS/YouTube flow
                         let feedUrl = '';
@@ -12370,6 +12371,7 @@ client.once('clientReady', async () => {
                         .setDescription(msg)
                         .setTimestamp();
                     if (link) embed.setURL(link);
+                    if (thumbnail && feed.show_thumbnail !== false) embed.setImage(thumbnail);
 
                     const payload = { embeds: [embed] };
                     if (feed.ping_role) {

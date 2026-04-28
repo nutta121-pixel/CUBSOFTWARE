@@ -15416,6 +15416,7 @@ def cub_protector_social_feeds_create(guild_id):
         'channel_id': str(body.get('channel_id', '')),
         'message': str(body.get('message', '{name} posted: **{title}**\n{link}'))[:500],
         'ping_role': str(body.get('ping_role', '')),
+        'show_thumbnail': bool(body.get('show_thumbnail', True)),
         'enabled': True,
         'last_post_id': '',
     }
@@ -15453,6 +15454,8 @@ def cub_protector_social_feeds_edit(guild_id, feed_id):
                 feed['message'] = str(body['message'])[:500]
             if 'ping_role' in body:
                 feed['ping_role'] = str(body['ping_role'])
+            if 'show_thumbnail' in body:
+                feed['show_thumbnail'] = bool(body['show_thumbnail'])
             break
     data['guilds'][guild_id] = guild_data
     save_cp_json(CUB_PROTECTOR_SOCIAL_FEEDS_FILE, data)
@@ -15538,7 +15541,7 @@ def cub_protector_social_feeds_post_latest(guild_id, feed_id):
         username = platform_id.lstrip('@')
         try:
             result = subprocess.run(
-                ['/snap/bin/yt-dlp', '--flat-playlist', '-j', '--playlist-items', '1', '--no-warnings',
+                ['/snap/bin/yt-dlp', '-j', '--playlist-items', '1', '--no-warnings',
                  f'https://www.tiktok.com/@{username}'],
                 capture_output=True, text=True, timeout=30
             )
@@ -15550,6 +15553,7 @@ def cub_protector_social_feeds_post_latest(guild_id, feed_id):
         video_id = yt_data.get('id', '')
         title = yt_data.get('title') or yt_data.get('description') or 'New TikTok Video'
         link = f'https://www.tiktok.com/@{username}/video/{video_id}' if video_id else ''
+        thumbnail = yt_data.get('thumbnail', '')
     elif platform == 'youtube' and platform_id:
         feed_url = f'https://www.youtube.com/feeds/videos.xml?channel_id={platform_id}'
         try:
@@ -15599,6 +15603,8 @@ def cub_protector_social_feeds_post_latest(guild_id, feed_id):
     }
     if link:
         embed['url'] = link
+    if feed.get('show_thumbnail', True) and locals().get('thumbnail'):
+        embed['image'] = {'url': thumbnail}
 
     payload = {'embeds': [embed]}
     ping_role = feed.get('ping_role', '')

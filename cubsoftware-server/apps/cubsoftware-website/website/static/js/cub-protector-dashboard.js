@@ -182,6 +182,14 @@
                 guilds.map(renderServerCard).join('') +
                 setupGuilds.map(renderSetupCard).join('');
 
+            // Auto-restore last selected guild + section on refresh
+            const savedGuildId = localStorage.getItem('cp_last_guild');
+            const hashSection = window.location.hash.replace('#', '');
+            if (savedGuildId && guilds.find(g => g.id === savedGuildId)) {
+                cpSelectServer(savedGuildId);
+                if (hashSection) switchSection(hashSection);
+            }
+
         } catch (e) {
             console.error('Failed to load servers:', e);
             elements.pickerGrid.innerHTML = `<div class="server-picker-empty"><p>Failed to load servers. Please refresh the page.</p></div>`;
@@ -209,6 +217,7 @@
         if (!guild) return;
 
         selectedGuild = guild;
+        localStorage.setItem('cp_last_guild', guildId);
 
         // Clear and pre-fetch channels/roles cache for this guild
         cachedChannels = null;
@@ -246,6 +255,7 @@
 
     window.cpBackToServerPicker = function() {
         selectedGuild = null;
+        localStorage.removeItem('cp_last_guild');
         elements.dashboardLayout.style.display = 'none';
         elements.pickerScreen.style.display = '';
         // Restore site header on the server picker screen

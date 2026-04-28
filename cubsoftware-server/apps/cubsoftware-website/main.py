@@ -15529,23 +15529,33 @@ def cub_protector_social_feeds_post_latest(guild_id, feed_id):
 
     platform = feed.get('platform', 'rss')
     platform_id = feed.get('platform_id', '')
-    feed_url = feed.get('url', '')
     if platform == 'youtube' and platform_id:
-        feed_url = f'https://www.youtube.com/feeds/videos.xml?channel_id={platform_id}'
+        feed_urls = [f'https://www.youtube.com/feeds/videos.xml?channel_id={platform_id}']
     elif platform == 'tiktok' and platform_id:
-        feed_url = f'https://rsshub.app/tiktok/user/@{platform_id}'
-    elif platform == 'rss' and feed_url:
-        pass
+        u = platform_id.lstrip('@')
+        feed_urls = [
+            f'https://rsshub.app/tiktok/user/@{u}',
+            f'https://rsshub.rssforever.com/tiktok/user/@{u}',
+            f'https://hub.slarker.me/tiktok/user/@{u}',
+        ]
+    elif platform == 'rss' and feed.get('url'):
+        feed_urls = [feed['url']]
     else:
         return jsonify({'error': 'Feed URL cannot be determined'}), 400
 
     import urllib.request, re as _re
-    try:
-        req = urllib.request.Request(feed_url, headers={'User-Agent': 'Mozilla/5.0 CUBSoftware/1.0'})
-        with urllib.request.urlopen(req, timeout=15) as r:
-            xml = r.read().decode('utf-8', errors='replace')
-    except Exception as e:
-        return jsonify({'error': f'Failed to fetch feed: {str(e)}'}), 502
+    xml = None
+    last_err = ''
+    for feed_url in feed_urls:
+        try:
+            req = urllib.request.Request(feed_url, headers={'User-Agent': 'Mozilla/5.0 CUBSoftware/1.0'})
+            with urllib.request.urlopen(req, timeout=15) as r:
+                xml = r.read().decode('utf-8', errors='replace')
+            break
+        except Exception as e:
+            last_err = str(e)
+    if not xml:
+        return jsonify({'error': f'All feed sources failed. TikTok may be blocking RSS access. Last error: {last_err}'}), 503
 
     entries = _re.findall(r'<entry>[\s\S]*?</entry>|<item>[\s\S]*?</item>', xml)
     if not entries:

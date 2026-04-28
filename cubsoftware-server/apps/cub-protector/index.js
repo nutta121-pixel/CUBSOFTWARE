@@ -12284,25 +12284,37 @@ client.once('clientReady', async () => {
             for (const feed of (guildFeeds.feeds || [])) {
                 if (!feed.enabled || !feed.channel_id) continue;
                 try {
-                    let feedUrl = '';
+                    let feedUrls = [];
                     if (feed.platform === 'youtube' && feed.platform_id) {
-                        feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${feed.platform_id}`;
+                        feedUrls = [`https://www.youtube.com/feeds/videos.xml?channel_id=${feed.platform_id}`];
                     } else if (feed.platform === 'tiktok' && feed.platform_id) {
-                        feedUrl = `https://rsshub.app/tiktok/user/@${feed.platform_id}`;
+                        const u = feed.platform_id.replace(/^@/, '');
+                        feedUrls = [
+                            `https://rsshub.app/tiktok/user/@${u}`,
+                            `https://rsshub.rssforever.com/tiktok/user/@${u}`,
+                            `https://hub.slarker.me/tiktok/user/@${u}`,
+                        ];
                     } else if (feed.platform === 'rss' && feed.url) {
-                        feedUrl = feed.url;
+                        feedUrls = [feed.url];
                     } else continue;
 
                     const https = require('https');
                     const http = require('http');
-                    const fetchModule = feedUrl.startsWith('https') ? https : http;
-                    const xml = await new Promise((resolve, reject) => {
-                        fetchModule.get(feedUrl, { timeout: 10000 }, (res) => {
+                    const fetchUrl = (url) => new Promise((resolve, reject) => {
+                        const mod = url.startsWith('https') ? https : http;
+                        mod.get(url, { timeout: 10000 }, (res) => {
+                            if (res.statusCode >= 400) { res.resume(); return reject(new Error(`HTTP ${res.statusCode}`)); }
                             let data = '';
                             res.on('data', chunk => data += chunk);
                             res.on('end', () => resolve(data));
                         }).on('error', reject);
                     });
+
+                    let xml = null;
+                    for (const url of feedUrls) {
+                        try { xml = await fetchUrl(url); break; } catch {}
+                    }
+                    if (!xml) continue;
 
                     // Simple XML parsing for <entry> or <item> tags
                     const entries = xml.match(/<entry>[\s\S]*?<\/entry>|<item>[\s\S]*?<\/item>/g) || [];

@@ -549,10 +549,15 @@ def _before_request_logging():
     if ip and not _is_static_req:
         _allowed, _retry = check_rate_limit(ip, 'global')
         if not _allowed:
-            _resp = jsonify({'error': 'Too many requests', 'retry_after': int(_retry)})
-            _resp.status_code = 429
-            _resp.headers['Retry-After'] = str(int(_retry))
-            return _resp
+            if request.path.startswith('/api/') or request.is_json:
+                _resp = jsonify({'error': 'Too many requests', 'retry_after': int(_retry)})
+                _resp.status_code = 429
+                _resp.headers['Retry-After'] = str(int(_retry))
+                return _resp
+            else:
+                _resp = make_response(render_template('rate_limited.html', ip=ip, retry_after=int(_retry)), 429)
+                _resp.headers['Retry-After'] = str(int(_retry))
+                return _resp
 
     # Trusted IPs — server owner IPs, never banned under any circumstances
     if ip and ip in _TRUSTED_IPS:

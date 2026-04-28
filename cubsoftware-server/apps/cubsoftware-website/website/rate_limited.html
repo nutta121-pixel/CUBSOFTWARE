@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f59e0b">
+    <title>Slow Down - CUB SOFTWARE</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="/static/images/company-logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/shared.css?v={{ v }}">
+    <link rel="stylesheet" href="/static/css/state-pages.css?v={{ v }}">
+</head>
+<body class="state-glow-yellow">
+    <div class="state-page-full">
+        <div class="state-card-wide">
+
+            <div style="text-align:center;margin-bottom:2rem;">
+                <div class="state-icon state-icon-yellow" style="margin-bottom:1.5rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <h1 class="state-title state-title-yellow">Slow Down</h1>
+                <p class="state-subtitle">You're sending too many requests. Please wait before trying again.</p>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-label">Reason</div>
+                    <div class="info-value">Too many requests in a short period</div>
+                </div>
+
+                <div class="info-card">
+                    <div class="info-label">Your IP</div>
+                    <div class="info-value highlight">{{ ip or 'Unknown' }}</div>
+                </div>
+
+                <div class="info-card full-width">
+                    <div class="info-label" style="text-align:center;margin-bottom:0.5rem;">Try Again In</div>
+                    <div class="countdown-grid" id="countdown-grid">
+                        <div class="countdown-unit">
+                            <span class="countdown-num" id="cd-mins">--</span>
+                            <div class="countdown-label">Mins</div>
+                        </div>
+                        <div class="countdown-sep">:</div>
+                        <div class="countdown-unit">
+                            <span class="countdown-num" id="cd-secs">--</span>
+                            <div class="countdown-label">Secs</div>
+                        </div>
+                    </div>
+                    <div id="expired-notice" style="display:none;text-align:center;margin-top:1rem;color:var(--text-muted);">
+                        You should be good to go now. <a href="/" style="color:#f59e0b;">Go back home</a>
+                    </div>
+                </div>
+
+                <div class="info-card full-width">
+                    <div class="info-label">What happened?</div>
+                    <div class="info-value" style="font-size:0.9rem;line-height:1.6;color:rgba(255,255,255,0.7);">
+                        Our servers limit how many requests a single IP can make in a short window to keep things running
+                        smoothly for everyone. You've hit that limit. This is temporary — just wait for the timer above
+                        and you'll automatically be let back in. No action needed on your end.
+                    </div>
+                </div>
+            </div>
+
+            <div class="state-actions">
+                <a href="/" class="state-btn-ghost">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="17" height="17">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9 22 9 12 15 12 15 22"/>
+                    </svg>
+                    Go Home
+                </a>
+            </div>
+
+            <p class="state-contact">
+                If you think this is a mistake, contact us on
+                <a href="https://discord.com/users/378501056008683530" target="_blank">Discord</a>.
+            </p>
+
+        </div>
+    </div>
+
+    <script>
+        const retryAfter = {{ retry_after | int }};
+        let remaining = retryAfter;
+
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        function tick() {
+            if (remaining <= 0) {
+                document.getElementById('countdown-grid').style.display = 'none';
+                document.getElementById('expired-notice').style.display = 'block';
+                return;
+            }
+            const mins = Math.floor(remaining / 60);
+            const secs = remaining % 60;
+            document.getElementById('cd-mins').textContent = pad(mins);
+            document.getElementById('cd-secs').textContent = pad(secs);
+            remaining--;
+        }
+
+        tick();
+        setInterval(tick, 1000);
+    </script>
+</body>
+</html>

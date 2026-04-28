@@ -15619,8 +15619,8 @@ def cub_protector_social_feeds_post_latest(guild_id, feed_id):
     if result is None:
         return jsonify({'error': 'Failed to send message. Make sure the bot has access to the channel.'}), 500
 
-    # Update last_post_id so the bot won't double-notify on next poll
-    post_id = link or title
+    # Update last_post_id — use video_id for TikTok to match what the bot stores
+    post_id = locals().get('video_id') or link or title
     for f in data.get('guilds', {}).get(guild_id, {}).get('feeds', []):
         if f.get('id') == feed_id:
             f['last_post_id'] = post_id

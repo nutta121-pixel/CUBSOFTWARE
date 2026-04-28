@@ -12278,7 +12278,10 @@ client.once('clientReady', async () => {
     }, 60000);
 
     // Social media feed checker (every 5 min)
+    // Track startup time so the first poll after a restart never notifies — it just syncs state.
+    const _feedCheckerStartTime = Date.now();
     setInterval(async () => {
+        const _isFirstPoll = (Date.now() - _feedCheckerStartTime) < 360000; // within first 6 min = startup poll
         const feedData = loadSocialFeedsData();
         for (const [gId, guildFeeds] of Object.entries(feedData.guilds || {})) {
             for (const feed of (guildFeeds.feeds || [])) {
@@ -12342,7 +12345,8 @@ client.once('clientReady', async () => {
 
                     // On first check, set last_post_id without notifying to avoid
                     // spamming historical content (for RSS check pubDate, for TikTok always skip first).
-                    if (!feed.last_post_id) {
+                    // On first poll after startup, or on first-ever check, just sync state without notifying.
+                    if (_isFirstPoll || !feed.last_post_id) {
                         if (!pubDate || (Date.now() - new Date(pubDate).getTime() > 600000)) {
                             feed.last_post_id = postId;
                             saveSocialFeedsData(feedData);

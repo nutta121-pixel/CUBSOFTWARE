@@ -431,7 +431,7 @@
             case 'overview': await loadOverviewData(); break;
             case 'hubs': await loadHubs(); break;
             case 'active-channels': await loadActiveChannels(); break;
-            case 'voice-mods': await loadVoiceMods(); break;
+
             case 'moderation': await loadModLogs(); break;
             case 'automod': await loadAutoMod(); break;
             case 'logging': await loadLogging(); break;
@@ -1066,93 +1066,6 @@
 
     window.refreshActiveChannels = function() {
         loadActiveChannels();
-    };
-
-    // ==================== VOICE MODERATORS ====================
-    async function loadVoiceMods() {
-        try {
-            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/voice-mods`);
-            const data = await res.json();
-            const mods = data.voice_moderators || { roles: [], users: [] };
-
-            // Render roles list
-            const rolesList = document.getElementById('voicemods-roles-list');
-            if (mods.roles.length === 0) {
-                rolesList.innerHTML = '<div style="color:var(--text-muted);padding:0.5rem;">No moderator roles configured</div>';
-            } else {
-                rolesList.innerHTML = mods.roles.map(r =>
-                    `<div class="list-item"><span>@${escapeHtml(r.name || r.id)}</span>
-                    <button class="btn btn-sm btn-danger" onclick="window.cpRemoveVoiceModRole('${r.id}')">Remove</button></div>`
-                ).join('');
-            }
-
-            // Render users list
-            const usersList = document.getElementById('voicemods-users-list');
-            if (mods.users.length === 0) {
-                usersList.innerHTML = '<div style="color:var(--text-muted);padding:0.5rem;">No individual moderators configured</div>';
-            } else {
-                usersList.innerHTML = mods.users.map(u =>
-                    `<div class="list-item"><span>${escapeHtml(u.username || u.id)} (${u.id})</span>
-                    <button class="btn btn-sm btn-danger" onclick="window.cpRemoveVoiceModUser('${u.id}')">Remove</button></div>`
-                ).join('');
-            }
-
-            // Populate role selector
-            populateRoleSelectGeneric('voicemods-add-role', '');
-
-        } catch (e) { showToast('Failed to load voice moderators', 'error'); }
-    }
-
-    window.cpAddVoiceModRole = async function() {
-        const roleId = document.getElementById('voicemods-add-role').value;
-        if (!roleId) return showToast('Select a role first', 'error');
-        try {
-            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/voice-mods/roles`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ role_id: roleId })
-            });
-            const data = await res.json();
-            if (data.success) { showToast('Moderator role added!', 'success'); loadVoiceMods(); }
-            else showToast(data.error || 'Failed to add role', 'error');
-        } catch (e) { showToast('Failed to add role', 'error'); }
-    };
-
-    window.cpRemoveVoiceModRole = async function(roleId) {
-        try {
-            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/voice-mods/roles`, {
-                method: 'DELETE', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ role_id: roleId })
-            });
-            const data = await res.json();
-            if (data.success) { showToast('Moderator role removed', 'success'); loadVoiceMods(); }
-            else showToast(data.error || 'Failed to remove role', 'error');
-        } catch (e) { showToast('Failed to remove role', 'error'); }
-    };
-
-    window.cpAddVoiceModUser = async function() {
-        const userId = document.getElementById('voicemods-add-user').value.trim();
-        if (!userId) return showToast('Enter a user ID first', 'error');
-        try {
-            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/voice-mods/users`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: userId })
-            });
-            const data = await res.json();
-            if (data.success) { showToast('Moderator added!', 'success'); document.getElementById('voicemods-add-user').value = ''; loadVoiceMods(); }
-            else showToast(data.error || 'Failed to add user', 'error');
-        } catch (e) { showToast('Failed to add user', 'error'); }
-    };
-
-    window.cpRemoveVoiceModUser = async function(userId) {
-        try {
-            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/voice-mods/users`, {
-                method: 'DELETE', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ user_id: userId })
-            });
-            const data = await res.json();
-            if (data.success) { showToast('Moderator removed', 'success'); loadVoiceMods(); }
-            else showToast(data.error || 'Failed to remove user', 'error');
-        } catch (e) { showToast('Failed to remove user', 'error'); }
     };
 
     // ==================== BOT MASTERS ====================

@@ -131,10 +131,6 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
                         <span>Active Channels</span>
                     </a>
-                    <a href="#voice-mods" class="nav-item" data-section="voice-mods">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                        <span>Voice Mods</span>
-                    </a>
                 </div>
 
                 <div class="nav-section">
@@ -537,36 +533,6 @@
                 </div>
 
                 <div id="active-channels-list"></div>
-            </section>
-
-            <!-- Voice Moderators Section -->
-            <section class="content-section" id="voiceModsSection" data-section="voice-mods">
-                <div class="section-header">
-                    <div class="section-title">
-                        <h1>Voice Moderators</h1>
-                        <p>Manage global voice channel moderator roles and individual moderators</p>
-                    </div>
-                </div>
-
-                <div class="settings-card" style="margin-bottom:1rem;">
-                    <h3 style="margin-bottom:0.75rem;">Moderator Roles</h3>
-                    <p style="color:rgba(255,255,255,0.4);margin-bottom:1rem;font-size:0.85rem;">Roles that can moderate all temporary voice channels (lock, kick, ban, etc.)</p>
-                    <div id="voicemods-roles-list" style="margin-bottom:1rem;">Loading...</div>
-                    <div class="add-row">
-                        <div class="form-group"><select id="voicemods-add-role" class="form-select"><option value="">-- Select Role --</option></select></div>
-                        <button class="control-btn primary small" onclick="window.cpAddVoiceModRole()">+ Add Role</button>
-                    </div>
-                </div>
-
-                <div class="settings-card">
-                    <h3 style="margin-bottom:0.75rem;">Individual Moderators</h3>
-                    <p style="color:rgba(255,255,255,0.4);margin-bottom:1rem;font-size:0.85rem;">Individual users who can moderate all temporary voice channels</p>
-                    <div id="voicemods-users-list" style="margin-bottom:1rem;">Loading...</div>
-                    <div class="add-row">
-                        <div class="form-group"><input type="text" id="voicemods-add-user" class="form-input" placeholder="Enter Discord User ID"></div>
-                        <button class="control-btn primary small" onclick="window.cpAddVoiceModUser()">+ Add User</button>
-                    </div>
-                </div>
             </section>
 
             <!-- Moderation Logs Section -->
@@ -4112,7 +4078,7 @@
                 <h3>Edit Voice Channel Hub</h3>
                 <button class="modal-close" onclick="closeEditHubModal()">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="overflow-y:auto;max-height:70vh;">
                 <input type="hidden" id="edit-hub-id">
                 <div class="form-group">
                     <label>Hub Name</label>
@@ -4174,7 +4140,6 @@
                         </select>
                     </div>
                 </div>
-            </div>
                 <hr style="border-color:rgba(255,255,255,0.1);margin:1rem 0;">
                 <h4 style="margin-bottom:0.5rem;">Hub Moderator Roles</h4>
                 <p style="color:rgba(255,255,255,0.4);font-size:0.82rem;margin-bottom:0.75rem;">Roles that can moderate temp channels created from this hub only</p>

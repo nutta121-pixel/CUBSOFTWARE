@@ -1708,21 +1708,25 @@ const commands = [
 
     new SlashCommandBuilder()
         .setName('voice-hub-moderator')
-        .setDescription('Add or remove a moderator role for a hub')
+        .setDescription('Add or remove a moderator role or user for a hub')
         .addChannelOption(opt =>
             opt.setName('hub')
                 .setDescription('The hub channel')
                 .addChannelTypes(ChannelType.GuildVoice)
-                .setRequired(true))
-        .addRoleOption(opt =>
-            opt.setName('role')
-                .setDescription('The moderator role')
                 .setRequired(true))
         .addStringOption(opt =>
             opt.setName('action')
                 .setDescription('Add or remove')
                 .addChoices({ name: 'Add', value: 'add' }, { name: 'Remove', value: 'remove' })
                 .setRequired(true))
+        .addRoleOption(opt =>
+            opt.setName('role')
+                .setDescription('The moderator role (provide role or user, not both)')
+                .setRequired(false))
+        .addUserOption(opt =>
+            opt.setName('user')
+                .setDescription('The moderator user (provide role or user, not both)')
+                .setRequired(false))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 
     new SlashCommandBuilder()
@@ -2580,11 +2584,13 @@ function isChannelOwner(userId, channelData) {
 }
 
 function isChannelModerator(member, channelData, guildData) {
-    // Check hub-specific moderator roles
+    // Check hub-specific moderator roles and users
     const hubData = guildData.hubs[channelData.hub_id];
     if (hubData) {
         const modRoles = hubData.moderator_roles || [];
         if (modRoles.some(roleId => member.roles.cache.has(roleId))) return true;
+        const modUsers = hubData.moderator_users || [];
+        if (modUsers.includes(member.id)) return true;
     }
 
     // Check global voice moderator roles & users
@@ -3448,6 +3454,24 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
                 });
             }
 
+            // Add hub-specific moderator users
+            const hubModUsers = hub.moderator_users || [];
+            for (const userId of hubModUsers) {
+                if (userId !== member.id) {
+                    permOverwrites.push({
+                        id: userId,
+                        type: OverwriteType.Member,
+                        allow: [
+                            PermissionsBitField.Flags.ViewChannel,
+                            PermissionsBitField.Flags.Connect,
+                            PermissionsBitField.Flags.MoveMembers,
+                            PermissionsBitField.Flags.MuteMembers,
+                            PermissionsBitField.Flags.DeafenMembers,
+                        ],
+                    });
+                }
+            }
+
             // Add global voice moderator roles
             const globalMods = guildData.voice_moderators || {};
             for (const roleId of (globalMods.roles || [])) {
@@ -3468,7 +3492,7 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
             // Add global voice moderator users
             for (const userId of (globalMods.users || [])) {
-                if (userId !== member.id) {
+                if (userId !== member.id && !hubModUsers.includes(userId)) {
                     permOverwrites.push({
                         id: userId,
                         type: OverwriteType.Member,
@@ -5896,6 +5920,7 @@ client.on('interactionCreate', async (interaction) => {
                 keep_alive: keepAlive,
                 ownership_lock: ownershipLock,
                 moderator_roles: [],
+                moderator_users: [],
                 ignored_roles: [],
                 created_by: member.id,
                 created_at: Math.floor(Date.now() / 1000),
@@ -5993,6 +6018,7 @@ client.on('interactionCreate', async (interaction) => {
                 { name: 'Keep Alive', value: hub.keep_alive === -1 ? 'Never delete' : hub.keep_alive === 0 ? 'Immediate' : `${hub.keep_alive} min`, inline: true },
                 { name: 'Ownership Lock', value: hub.ownership_lock === -1 ? 'Never claimable' : hub.ownership_lock === 0 ? 'Immediate' : `${hub.ownership_lock} min`, inline: true },
                 { name: 'Moderator Roles', value: (hub.moderator_roles || []).length > 0 ? hub.moderator_roles.map(r => `<@&${r}>`).join(', ') : 'None', inline: true },
+                { name: 'Moderator Users', value: (hub.moderator_users || []).length > 0 ? hub.moderator_users.map(u => `<@${u}>`).join(', ') : 'None', inline: true },
                 { name: 'Ignored Roles', value: (hub.ignored_roles || []).length > 0 ? hub.ignored_roles.map(r => `<@&${r}>`).join(', ') : 'None', inline: true },
             );
 
@@ -6003,25 +6029,46 @@ client.on('interactionCreate', async (interaction) => {
     else if (commandName === 'voice-hub-moderator') {
         const hubChannel = interaction.options.getChannel('hub');
         const role = interaction.options.getRole('role');
+        const user = interaction.options.getUser('user');
         const action = interaction.options.getString('action');
         const data = loadTempVoiceData();
         const guildData = data.guilds[guild.id];
+
+        if (!role && !user) {
+            return interaction.reply({ content: 'You must provide either a role or a user.', flags: MessageFlags.Ephemeral });
+        }
+        if (role && user) {
+            return interaction.reply({ content: 'Provide either a role or a user, not both.', flags: MessageFlags.Ephemeral });
+        }
 
         if (!guildData || !guildData.hubs[hubChannel.id]) {
             return interaction.reply({ content: 'That channel is not a hub.', flags: MessageFlags.Ephemeral });
         }
 
         const hub = guildData.hubs[hubChannel.id];
-        if (!hub.moderator_roles) hub.moderator_roles = [];
 
-        if (action === 'add') {
-            if (!hub.moderator_roles.includes(role.id)) hub.moderator_roles.push(role.id);
-            saveTempVoiceData(data);
-            await interaction.reply({ content: `Added <@&${role.id}> as a moderator role for this hub.`, flags: MessageFlags.Ephemeral });
+        if (role) {
+            if (!hub.moderator_roles) hub.moderator_roles = [];
+            if (action === 'add') {
+                if (!hub.moderator_roles.includes(role.id)) hub.moderator_roles.push(role.id);
+                saveTempVoiceData(data);
+                await interaction.reply({ content: `Added <@&${role.id}> as a moderator role for this hub.`, flags: MessageFlags.Ephemeral });
+            } else {
+                hub.moderator_roles = hub.moderator_roles.filter(r => r !== role.id);
+                saveTempVoiceData(data);
+                await interaction.reply({ content: `Removed <@&${role.id}> from moderator roles for this hub.`, flags: MessageFlags.Ephemeral });
+            }
         } else {
-            hub.moderator_roles = hub.moderator_roles.filter(r => r !== role.id);
-            saveTempVoiceData(data);
-            await interaction.reply({ content: `Removed <@&${role.id}> from moderator roles for this hub.`, flags: MessageFlags.Ephemeral });
+            if (!hub.moderator_users) hub.moderator_users = [];
+            if (action === 'add') {
+                if (!hub.moderator_users.includes(user.id)) hub.moderator_users.push(user.id);
+                saveTempVoiceData(data);
+                await interaction.reply({ content: `Added <@${user.id}> as a moderator user for this hub.`, flags: MessageFlags.Ephemeral });
+            } else {
+                hub.moderator_users = hub.moderator_users.filter(u => u !== user.id);
+                saveTempVoiceData(data);
+                await interaction.reply({ content: `Removed <@${user.id}> from moderator users for this hub.`, flags: MessageFlags.Ephemeral });
+            }
         }
     }
 
@@ -9238,7 +9285,7 @@ function buildHelpCategories(member) {
                 { name: 'voice-setup', desc: 'Create a temporary voice channel hub' },
                 { name: 'voice-hub-delete', desc: 'Delete a voice channel hub' },
                 { name: 'voice-hub-settings', desc: 'View or modify hub settings' },
-                { name: 'voice-hub-moderator', desc: 'Add/remove hub moderator role' },
+                { name: 'voice-hub-moderator', desc: 'Add/remove hub moderator role or user' },
                 { name: 'voice-hub-ignored', desc: 'Add/remove ignored role for a hub' },
                 { name: 'voice-mod-role', desc: 'Add/remove global voice mod role' },
                 { name: 'voice-mod-user', desc: 'Add/remove individual voice moderator' },

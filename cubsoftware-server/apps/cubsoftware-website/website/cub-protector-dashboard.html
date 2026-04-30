@@ -4175,6 +4175,23 @@
                     </div>
                 </div>
             </div>
+                <hr style="border-color:rgba(255,255,255,0.1);margin:1rem 0;">
+                <h4 style="margin-bottom:0.5rem;">Hub Moderator Roles</h4>
+                <p style="color:rgba(255,255,255,0.4);font-size:0.82rem;margin-bottom:0.75rem;">Roles that can moderate temp channels created from this hub only</p>
+                <div id="edit-hub-mod-roles-list" style="margin-bottom:0.75rem;">Loading...</div>
+                <div class="add-row">
+                    <div class="form-group"><select id="edit-hub-add-mod-role" class="form-select"><option value="">-- Select Role --</option></select></div>
+                    <button class="control-btn primary small" onclick="window.cpAddHubModRole()">+ Add Role</button>
+                </div>
+                <hr style="border-color:rgba(255,255,255,0.1);margin:1rem 0;">
+                <h4 style="margin-bottom:0.5rem;">Hub Moderator Users</h4>
+                <p style="color:rgba(255,255,255,0.4);font-size:0.82rem;margin-bottom:0.75rem;">Individual users that can moderate temp channels from this hub only</p>
+                <div id="edit-hub-mod-users-list" style="margin-bottom:0.75rem;">Loading...</div>
+                <div class="add-row">
+                    <div class="form-group"><input type="text" id="edit-hub-add-mod-user" class="form-input" placeholder="Enter Discord User ID"></div>
+                    <button class="control-btn primary small" onclick="window.cpAddHubModUser()">+ Add User</button>
+                </div>
+            </div>
             <div class="modal-footer">
                 <button class="control-btn" onclick="closeEditHubModal()">Cancel</button>
                 <button class="control-btn primary" onclick="saveHubEdit()">Save Changes</button>

@@ -693,6 +693,14 @@
                             <div class="hub-setting-label">Active Channels</div>
                             <div class="hub-setting-value">${hub.active_count || 0}</div>
                         </div>
+                        <div class="hub-setting">
+                            <div class="hub-setting-label">Mod Roles</div>
+                            <div class="hub-setting-value">${(hub.moderator_roles || []).length}</div>
+                        </div>
+                        <div class="hub-setting">
+                            <div class="hub-setting-label">Mod Users</div>
+                            <div class="hub-setting-value">${(hub.moderator_users || []).length}</div>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -884,7 +892,137 @@
         document.getElementById('edit-hub-keep-alive').value = String(hub.keep_alive !== undefined ? hub.keep_alive : 0);
         document.getElementById('edit-hub-ownership-lock').value = String(hub.ownership_lock !== undefined ? hub.ownership_lock : 0);
 
+        renderHubModRoles(hub.moderator_roles || []);
+        renderHubModUsers(hub.moderator_users || []);
+        populateRoleSelectGeneric('edit-hub-add-mod-role', '');
+
         document.getElementById('editHubModal').style.display = '';
+    };
+
+    function renderHubModRoles(roleIds) {
+        const list = document.getElementById('edit-hub-mod-roles-list');
+        if (!list) return;
+        if (roleIds.length === 0) {
+            list.innerHTML = '<div style="color:var(--text-muted);padding:0.4rem 0;">No moderator roles set for this hub</div>';
+            return;
+        }
+        fetchGuildRoles().then(roles => {
+            const roleMap = Object.fromEntries(roles.map(r => [r.id, r.name]));
+            list.innerHTML = roleIds.map(id =>
+                `<div class="list-item"><span>@${escapeHtml(roleMap[id] || id)}</span>
+                <button class="btn btn-sm btn-danger" onclick="window.cpRemoveHubModRole('${id}')">Remove</button></div>`
+            ).join('');
+        });
+    }
+
+    function renderHubModUsers(userIds) {
+        const list = document.getElementById('edit-hub-mod-users-list');
+        if (!list) return;
+        if (userIds.length === 0) {
+            list.innerHTML = '<div style="color:var(--text-muted);padding:0.4rem 0;">No moderator users set for this hub</div>';
+            return;
+        }
+        list.innerHTML = userIds.map(id =>
+            `<div class="list-item"><span>${escapeHtml(id)}</span>
+            <button class="btn btn-sm btn-danger" onclick="window.cpRemoveHubModUser('${id}')">Remove</button></div>`
+        ).join('');
+    }
+
+    window.cpAddHubModRole = async function() {
+        const hubId = document.getElementById('edit-hub-id').value;
+        const roleId = document.getElementById('edit-hub-add-mod-role').value;
+        if (!hubId || !roleId) return;
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/hubs/${hubId}/moderators/roles`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role_id: roleId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const hub = currentHubs.find(h => h.hub_id === hubId);
+                if (hub) {
+                    if (!hub.moderator_roles) hub.moderator_roles = [];
+                    if (!hub.moderator_roles.includes(roleId)) hub.moderator_roles.push(roleId);
+                    renderHubModRoles(hub.moderator_roles);
+                }
+                showToast('Moderator role added', 'success');
+            } else {
+                showToast(data.error || 'Failed to add role', 'error');
+            }
+        } catch (e) { showToast('Failed to add role', 'error'); }
+    };
+
+    window.cpRemoveHubModRole = async function(roleId) {
+        const hubId = document.getElementById('edit-hub-id').value;
+        if (!hubId) return;
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/hubs/${hubId}/moderators/roles`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role_id: roleId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const hub = currentHubs.find(h => h.hub_id === hubId);
+                if (hub) {
+                    hub.moderator_roles = (hub.moderator_roles || []).filter(r => r !== roleId);
+                    renderHubModRoles(hub.moderator_roles);
+                }
+                showToast('Moderator role removed', 'success');
+            } else {
+                showToast(data.error || 'Failed to remove role', 'error');
+            }
+        } catch (e) { showToast('Failed to remove role', 'error'); }
+    };
+
+    window.cpAddHubModUser = async function() {
+        const hubId = document.getElementById('edit-hub-id').value;
+        const userId = document.getElementById('edit-hub-add-mod-user').value.trim();
+        if (!hubId || !userId) return;
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/hubs/${hubId}/moderators/users`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const hub = currentHubs.find(h => h.hub_id === hubId);
+                if (hub) {
+                    if (!hub.moderator_users) hub.moderator_users = [];
+                    if (!hub.moderator_users.includes(userId)) hub.moderator_users.push(userId);
+                    renderHubModUsers(hub.moderator_users);
+                }
+                document.getElementById('edit-hub-add-mod-user').value = '';
+                showToast('Moderator user added', 'success');
+            } else {
+                showToast(data.error || 'Failed to add user', 'error');
+            }
+        } catch (e) { showToast('Failed to add user', 'error'); }
+    };
+
+    window.cpRemoveHubModUser = async function(userId) {
+        const hubId = document.getElementById('edit-hub-id').value;
+        if (!hubId) return;
+        try {
+            const res = await fetch(`/api/cub-protector/guilds/${selectedGuild.id}/hubs/${hubId}/moderators/users`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const hub = currentHubs.find(h => h.hub_id === hubId);
+                if (hub) {
+                    hub.moderator_users = (hub.moderator_users || []).filter(u => u !== userId);
+                    renderHubModUsers(hub.moderator_users);
+                }
+                showToast('Moderator user removed', 'success');
+            } else {
+                showToast(data.error || 'Failed to remove user', 'error');
+            }
+        } catch (e) { showToast('Failed to remove user', 'error'); }
     };
 
     window.closeEditHubModal = function() {

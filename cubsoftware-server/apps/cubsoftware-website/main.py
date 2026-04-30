@@ -13229,7 +13229,9 @@ def cub_protector_get_hubs(guild_id):
             'keep_alive': hub.get('keep_alive', 0),
             'ownership_lock': hub.get('ownership_lock', -1),
             'category_id': hub.get('category_id', ''),
-            'active_count': active_count
+            'active_count': active_count,
+            'moderator_roles': hub.get('moderator_roles', []),
+            'moderator_users': hub.get('moderator_users', []),
         })
 
     return jsonify({'hubs': hub_list})
@@ -13389,6 +13391,84 @@ def cub_protector_edit_hub(guild_id, hub_id):
     if 'ownership_lock' in req_data:
         hub['ownership_lock'] = int(req_data['ownership_lock'])
 
+    save_cub_protector_data(tv_data)
+    return jsonify({'success': True})
+
+@app.route('/api/cub-protector/guilds/<guild_id>/hubs/<hub_id>/moderators/roles', methods=['POST'])
+@cub_protector_auth_required
+def cub_protector_add_hub_mod_role(guild_id, hub_id):
+    """Add a moderator role to a specific hub"""
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    req_data = request.get_json()
+    role_id = req_data.get('role_id')
+    if not role_id:
+        return jsonify({'error': 'role_id required'}), 400
+    tv_data = load_cub_protector_data()
+    hub = tv_data.get('guilds', {}).get(guild_id, {}).get('hubs', {}).get(hub_id)
+    if not hub:
+        return jsonify({'error': 'Hub not found'}), 404
+    if 'moderator_roles' not in hub:
+        hub['moderator_roles'] = []
+    if role_id not in hub['moderator_roles']:
+        hub['moderator_roles'].append(role_id)
+        save_cub_protector_data(tv_data)
+    return jsonify({'success': True})
+
+@app.route('/api/cub-protector/guilds/<guild_id>/hubs/<hub_id>/moderators/roles', methods=['DELETE'])
+@cub_protector_auth_required
+def cub_protector_remove_hub_mod_role(guild_id, hub_id):
+    """Remove a moderator role from a specific hub"""
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    req_data = request.get_json()
+    role_id = req_data.get('role_id')
+    if not role_id:
+        return jsonify({'error': 'role_id required'}), 400
+    tv_data = load_cub_protector_data()
+    hub = tv_data.get('guilds', {}).get(guild_id, {}).get('hubs', {}).get(hub_id)
+    if not hub:
+        return jsonify({'error': 'Hub not found'}), 404
+    hub['moderator_roles'] = [r for r in hub.get('moderator_roles', []) if r != role_id]
+    save_cub_protector_data(tv_data)
+    return jsonify({'success': True})
+
+@app.route('/api/cub-protector/guilds/<guild_id>/hubs/<hub_id>/moderators/users', methods=['POST'])
+@cub_protector_auth_required
+def cub_protector_add_hub_mod_user(guild_id, hub_id):
+    """Add a moderator user to a specific hub"""
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    req_data = request.get_json()
+    user_id = req_data.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'user_id required'}), 400
+    tv_data = load_cub_protector_data()
+    hub = tv_data.get('guilds', {}).get(guild_id, {}).get('hubs', {}).get(hub_id)
+    if not hub:
+        return jsonify({'error': 'Hub not found'}), 404
+    if 'moderator_users' not in hub:
+        hub['moderator_users'] = []
+    if user_id not in hub['moderator_users']:
+        hub['moderator_users'].append(user_id)
+        save_cub_protector_data(tv_data)
+    return jsonify({'success': True})
+
+@app.route('/api/cub-protector/guilds/<guild_id>/hubs/<hub_id>/moderators/users', methods=['DELETE'])
+@cub_protector_auth_required
+def cub_protector_remove_hub_mod_user(guild_id, hub_id):
+    """Remove a moderator user from a specific hub"""
+    if not check_cp_guild_access(guild_id):
+        return jsonify({'error': 'Access denied'}), 403
+    req_data = request.get_json()
+    user_id = req_data.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'user_id required'}), 400
+    tv_data = load_cub_protector_data()
+    hub = tv_data.get('guilds', {}).get(guild_id, {}).get('hubs', {}).get(hub_id)
+    if not hub:
+        return jsonify({'error': 'Hub not found'}), 404
+    hub['moderator_users'] = [u for u in hub.get('moderator_users', []) if u != user_id]
     save_cub_protector_data(tv_data)
     return jsonify({'success': True})
 

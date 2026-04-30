@@ -3684,8 +3684,8 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 // Message Handler (DM response, Auto-Mod, XP, AFK, Custom Commands)
 // ============================================================
 client.on('messageCreate', async (message) => {
-    if (CUSTOM_GUILD_ID && message.guildId !== CUSTOM_GUILD_ID) return;
-    if (guildHasCustomBot(message.guildId)) return;
+    if (CUSTOM_GUILD_ID && message.guildId && message.guildId !== CUSTOM_GUILD_ID) return;
+    if (message.guildId && guildHasCustomBot(message.guildId)) return;
     if (message.author.bot) return;
 
     // ---- Auto-slowmode on spam detection ----

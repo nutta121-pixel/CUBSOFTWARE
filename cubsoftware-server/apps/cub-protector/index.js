@@ -10020,6 +10020,9 @@ client.on('interactionCreate', async (interaction) => {
                 return interaction.reply({ content: `You already have an open modmail thread. Please wait for staff to respond or for your current thread to be closed.`, flags: MessageFlags.Ephemeral });
             }
 
+            // Defer early — channel creation + DM sending can exceed the 3s interaction window
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
             // Create modmail channel in the configured category
             const permissionOverwrites = [
                 { id: interaction.guild.id, type: OverwriteType.Role,   deny: [PermissionsBitField.Flags.ViewChannel] },
@@ -10077,10 +10080,10 @@ client.on('interactionCreate', async (interaction) => {
                 .setFooter({ text: 'Reply to this DM to send messages to staff' });
             await interaction.user.send({ embeds: [dmEmbed] }).catch(() => {});
 
-            await interaction.reply({ content: 'Your modmail thread has been created! Check your DMs to communicate with staff.', flags: MessageFlags.Ephemeral });
+            await interaction.editReply({ content: 'Your modmail thread has been created! Check your DMs to communicate with staff.' });
         } catch (e) {
             console.error('CUBSOFTWARE_ERROR_CUBPROTECTOR_MODMAIL_CONTACT_050 — Modmail contact error:', e);
-            await interaction.reply({ content: 'Failed to create modmail thread. Please try again later.', flags: MessageFlags.Ephemeral }).catch(() => {});
+            await interaction.editReply({ content: 'Failed to create modmail thread. Please try again later.' }).catch(() => {});
         }
     }
 

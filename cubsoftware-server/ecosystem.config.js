@@ -40,6 +40,23 @@ function s(key, fallback) { return process.env[key] || fallback || ''; }
 module.exports = {
     apps: [
         // ============================================
+        // Cloudflare Tunnel (replaces port forwarding)
+        // ============================================
+        {
+            name: 'CUBSOFTWARE Tunnel',
+            script: '/usr/bin/cloudflared',
+            args: 'tunnel run cubsoftware',
+            watch: false,
+            autorestart: true,
+            max_restarts: 10,
+            restart_delay: 3000,
+            error_file: './logs/cloudflared-error.log',
+            out_file: './logs/cloudflared-out.log',
+            log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+            merge_logs: true
+        },
+
+        // ============================================
         // CubSoftware Website (Flask/Python)
         // ============================================
         {

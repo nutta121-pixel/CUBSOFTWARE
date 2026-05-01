@@ -1,0 +1,15 @@
+tunnel: 01b0e4ee-7b0f-42e4-bb95-186bc33fdcbc
+credentials-file: /home/thorton/.cloudflared/01b0e4ee-7b0f-42e4-bb95-186bc33fdcbc.json
+
+ingress:
+  - hostname: cubsoftware.site
+    service: http://localhost:3000
+  - hostname: www.cubsoftware.site
+    service: http://localhost:3000
+  - hostname: cubsw.link
+    service: http://localhost:3000
+  - hostname: questcord.fun
+    service: http://localhost:3003
+  - hostname: www.questcord.fun
+    service: http://localhost:3003
+  - service: http_status:404

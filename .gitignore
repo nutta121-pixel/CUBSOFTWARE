@@ -80,3 +80,7 @@ tmp_cubai_in_*.wav
 # ── Local dev scripts (never commit) ──────────────────────────
 *.bat
 dev_server.py
+
+# ── Galaxy Files ──────────────────────────
+/galaxy/Guildsettings.json
+/galaxy/UserInfo.json

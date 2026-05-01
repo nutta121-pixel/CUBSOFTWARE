@@ -43,7 +43,7 @@ module.exports = {
         // Cloudflare Tunnel (replaces port forwarding)
         // ============================================
         {
-            name: 'CUBSOFTWARE Tunnel',
+            name: '0-cubsoftware-tunnel',
             script: '/usr/bin/cloudflared',
             args: 'tunnel run cubsoftware',
             watch: false,
